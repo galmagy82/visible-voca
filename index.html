@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Word Feel</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0f0f0f;
+    color: #e0e0e0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 80px 20px;
+  }
+  h1 {
+    font-size: 1.4rem;
+    font-weight: 300;
+    color: #888;
+    margin-bottom: 40px;
+    letter-spacing: 0.1em;
+  }
+  .search-box {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    max-width: 420px;
+    margin-bottom: 48px;
+  }
+  input {
+    flex: 1;
+    padding: 14px 20px;
+    font-size: 1.1rem;
+    border: 1px solid #333;
+    border-radius: 12px;
+    background: #1a1a1a;
+    color: #fff;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus { border-color: #555; }
+  input::placeholder { color: #555; }
+  button {
+    padding: 14px 24px;
+    font-size: 1rem;
+    border: none;
+    border-radius: 12px;
+    background: #2a2a2a;
+    color: #ccc;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  button:hover { background: #3a3a3a; }
+  #result {
+    width: 100%;
+    max-width: 520px;
+    min-height: 60px;
+  }
+  .word-title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+  .phonetic {
+    font-size: 0.95rem;
+    color: #666;
+    margin-bottom: 28px;
+  }
+  .feel {
+    font-size: 1.1rem;
+    line-height: 2;
+    color: #bbb;
+    white-space: pre-wrap;
+  }
+  .error {
+    color: #666;
+    font-size: 1rem;
+  }
+  .loading {
+    color: #555;
+    font-size: 1rem;
+  }
+</style>
+</head>
+<body>
+
+<h1>WORD FEEL</h1>
+
+<div class="search-box">
+  <input type="text" id="wordInput" placeholder="영어 단어를 입력하세요" autofocus>
+  <button onclick="lookup()">검색</button>
+</div>
+
+<div id="result"></div>
+
+<script>
+const API_KEY = 'AIzaSyAIYXgDJgg9QdwfxWUES1IE7QgWWFo3BJY';
+const MODEL = 'gemini-2.5-flash';
+const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`;
+
+const input = document.getElementById('wordInput');
+const result = document.getElementById('result');
+
+input.addEventListener('keydown', e => {
+  if (e.key === 'Enter') lookup();
+});
+
+async function lookup() {
+  const word = input.value.trim().toLowerCase();
+  if (!word) return;
+
+  result.innerHTML = '<div class="loading">느낌을 찾는 중...</div>';
+
+  const prompt = `너는 한국어로만 대답하는 영어 단어 느낌 사전이야. 절대 영어로 사고하거나 영어 문장을 먼저 만들지 마. 처음부터 끝까지 한국어로 사고하고 한국어로 작성해.
+
+"${word}"
+
+위 영어 단어의 핵심 느낌을 설명해줘.
+
+형식:
+1줄: 핵심 느낌을 큰따옴표로 감싸서 한 문장 요약. 예) "하나였던 것이 딱 갈라지는" 이미지예요.
+2줄: 그 느낌을 바로 이해할 수 있는 비유나 장면 1~2문장.
+3줄 이후: 자주 쓰이는 예시 2~3개. (영어 예문 → 한국어 해석)
+
+규칙:
+- 반드시 한국어로만 설명할 것
+- 번역투 금지. 자연스러운 한국어 구어체로 작성
+- 짧고 간결하게
+- 마크다운 서식 쓰지 말 것`;
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.7, maxOutputTokens: 1024 }
+      })
+    });
+
+    if (!res.ok) {
+      result.innerHTML = '<div class="error">API 오류가 발생했습니다.</div>';
+      return;
+    }
+
+    const data = await res.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!text) {
+      result.innerHTML = '<div class="error">응답을 받지 못했습니다.</div>';
+      return;
+    }
+
+    result.innerHTML = `<div class="word-title">${word}</div><div class="feel">${text}</div>`;
+  } catch (err) {
+    result.innerHTML = '<div class="error">오류가 발생했습니다.</div>';
+  }
+}
+</script>
+
+</body>
+</html>
