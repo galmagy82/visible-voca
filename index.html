@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Word Feel</title>
+<title>Word Buddy</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -211,7 +211,7 @@
 
 <button class="settings-btn" onclick="openSettings()" title="설정">&#9881;</button>
 
-<h1>WORD FEEL</h1>
+<h1>WORD BUDDY</h1>
 
 <div class="search-box">
   <input type="text" id="wordInput" placeholder="영어 단어를 입력하세요" autofocus>
@@ -246,13 +246,13 @@
 <script>
 // --- 설정 관리 ---
 function getSettings() {
-  const saved = localStorage.getItem('wordFeel_settings');
+  const saved = localStorage.getItem('wordBuddy_settings');
   if (saved) return JSON.parse(saved);
   return { provider: 'gemini', apiKey: '' };
 }
 
 function saveSettingsToStorage(provider, apiKey) {
-  localStorage.setItem('wordFeel_settings', JSON.stringify({ provider, apiKey }));
+  localStorage.setItem('wordBuddy_settings', JSON.stringify({ provider, apiKey }));
 }
 
 function openSettings() {
