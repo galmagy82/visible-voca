@@ -84,9 +84,114 @@
     color: #555;
     font-size: 1rem;
   }
+
+  /* 설정 버튼 */
+  .settings-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    color: #888;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .settings-btn:hover { border-color: #555; color: #ccc; }
+
+  /* 설정 모달 */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.active { display: flex; }
+
+  .modal {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 16px;
+    padding: 32px;
+    width: 90%;
+    max-width: 400px;
+  }
+  .modal h2 {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #ddd;
+    margin-bottom: 24px;
+  }
+  .modal label {
+    display: block;
+    font-size: 0.9rem;
+    color: #888;
+    margin-bottom: 8px;
+  }
+  .modal select {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 1rem;
+    border: 1px solid #333;
+    border-radius: 10px;
+    background: #0f0f0f;
+    color: #fff;
+    outline: none;
+    margin-bottom: 20px;
+    appearance: none;
+    cursor: pointer;
+  }
+  .modal select:focus { border-color: #555; }
+  .modal input[type="password"] {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 1rem;
+    border: 1px solid #333;
+    border-radius: 10px;
+    background: #0f0f0f;
+    color: #fff;
+    outline: none;
+    margin-bottom: 24px;
+    flex: unset;
+  }
+  .modal input[type="password"]:focus { border-color: #555; }
+  .modal input[type="password"]::placeholder { color: #555; }
+  .modal-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+  .modal-actions button {
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    border-radius: 10px;
+  }
+  .btn-save { background: #2d4a2d; color: #8f8; }
+  .btn-save:hover { background: #3a5c3a; }
+  .btn-cancel { background: #2a2a2a; color: #aaa; }
+
+  .status-msg {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 16px;
+  }
+  .status-msg.ok { color: #6a6; }
+  .status-msg.warn { color: #a86; }
 </style>
 </head>
 <body>
+
+<button class="settings-btn" onclick="openSettings()" title="설정">&#9881;</button>
 
 <h1>WORD FEEL</h1>
 
@@ -97,11 +202,84 @@
 
 <div id="result"></div>
 
-<script>
-const API_KEY = 'AIzaSyAIYXgDJgg9QdwfxWUES1IE7QgWWFo3BJY';
-const MODEL = 'gemini-2.5-flash';
-const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`;
+<!-- 설정 모달 -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <h2>API 설정</h2>
 
+    <label for="providerSelect">AI 서비스</label>
+    <select id="providerSelect" onchange="onProviderChange()">
+      <option value="gemini">Gemini</option>
+      <option value="chatgpt">ChatGPT (OpenAI)</option>
+    </select>
+
+    <label for="apiKeyInput">API Key</label>
+    <input type="password" id="apiKeyInput" placeholder="API 키를 입력하세요">
+
+    <div id="statusMsg" class="status-msg"></div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeSettings()">취소</button>
+      <button class="btn-save" onclick="saveSettings()">저장</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// --- 설정 관리 ---
+function getSettings() {
+  const saved = localStorage.getItem('wordFeel_settings');
+  if (saved) return JSON.parse(saved);
+  return { provider: 'gemini', apiKey: '' };
+}
+
+function saveSettingsToStorage(provider, apiKey) {
+  localStorage.setItem('wordFeel_settings', JSON.stringify({ provider, apiKey }));
+}
+
+function openSettings() {
+  const s = getSettings();
+  document.getElementById('providerSelect').value = s.provider;
+  document.getElementById('apiKeyInput').value = s.apiKey;
+  document.getElementById('apiKeyInput').placeholder = s.provider === 'gemini'
+    ? 'AIza... 형태의 Gemini API 키' : 'sk-... 형태의 OpenAI API 키';
+  document.getElementById('statusMsg').textContent = '';
+  document.getElementById('settingsModal').classList.add('active');
+}
+
+function closeSettings() {
+  document.getElementById('settingsModal').classList.remove('active');
+}
+
+function onProviderChange() {
+  const provider = document.getElementById('providerSelect').value;
+  document.getElementById('apiKeyInput').placeholder = provider === 'gemini'
+    ? 'AIza... 형태의 Gemini API 키' : 'sk-... 형태의 OpenAI API 키';
+}
+
+function saveSettings() {
+  const provider = document.getElementById('providerSelect').value;
+  const apiKey = document.getElementById('apiKeyInput').value.trim();
+  const msg = document.getElementById('statusMsg');
+
+  if (!apiKey) {
+    msg.textContent = 'API 키를 입력해주세요.';
+    msg.className = 'status-msg warn';
+    return;
+  }
+
+  saveSettingsToStorage(provider, apiKey);
+  msg.textContent = '저장되었습니다.';
+  msg.className = 'status-msg ok';
+  setTimeout(closeSettings, 600);
+}
+
+// 모달 바깥 클릭 시 닫기
+document.getElementById('settingsModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeSettings();
+});
+
+// --- 검색 ---
 const input = document.getElementById('wordInput');
 const result = document.getElementById('result');
 
@@ -109,15 +287,9 @@ input.addEventListener('keydown', e => {
   if (e.key === 'Enter') lookup();
 });
 
-async function lookup() {
-  const word = input.value.trim().toLowerCase();
-  if (!word) return;
+const PROMPT_TEMPLATE = `너는 한국어로만 대답하는 영어 단어 느낌 사전이야. 절대 영어로 사고하거나 영어 문장을 먼저 만들지 마. 처음부터 끝까지 한국어로 사고하고 한국어로 작성해.
 
-  result.innerHTML = '<div class="loading">느낌을 찾는 중...</div>';
-
-  const prompt = `너는 한국어로만 대답하는 영어 단어 느낌 사전이야. 절대 영어로 사고하거나 영어 문장을 먼저 만들지 마. 처음부터 끝까지 한국어로 사고하고 한국어로 작성해.
-
-"${word}"
+"{{WORD}}"
 
 위 영어 단어의 핵심 느낌을 설명해줘.
 
@@ -132,23 +304,61 @@ async function lookup() {
 - 짧고 간결하게
 - 마크다운 서식 쓰지 말 것`;
 
+async function callGemini(apiKey, prompt) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.7, maxOutputTokens: 1024 }
+    })
+  });
+  if (!res.ok) throw new Error('API 오류');
+  const data = await res.json();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text;
+}
+
+async function callChatGPT(apiKey, prompt) {
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.7,
+      max_tokens: 1024
+    })
+  });
+  if (!res.ok) throw new Error('API 오류');
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content;
+}
+
+async function lookup() {
+  const word = input.value.trim().toLowerCase();
+  if (!word) return;
+
+  const settings = getSettings();
+  if (!settings.apiKey) {
+    result.innerHTML = '<div class="error">설정에서 API 키를 먼저 입력해주세요.</div>';
+    return;
+  }
+
+  result.innerHTML = '<div class="loading">느낌을 찾는 중...</div>';
+
+  const prompt = PROMPT_TEMPLATE.replace('{{WORD}}', word);
+
   try {
-    const res = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.7, maxOutputTokens: 1024 }
-      })
-    });
-
-    if (!res.ok) {
-      result.innerHTML = '<div class="error">API 오류가 발생했습니다.</div>';
-      return;
+    let text;
+    if (settings.provider === 'gemini') {
+      text = await callGemini(settings.apiKey, prompt);
+    } else {
+      text = await callChatGPT(settings.apiKey, prompt);
     }
-
-    const data = await res.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!text) {
       result.innerHTML = '<div class="error">응답을 받지 못했습니다.</div>';
@@ -157,7 +367,7 @@ async function lookup() {
 
     result.innerHTML = `<div class="word-title">${word}</div><div class="feel">${text}</div>`;
   } catch (err) {
-    result.innerHTML = '<div class="error">오류가 발생했습니다.</div>';
+    result.innerHTML = '<div class="error">API 오류가 발생했습니다. 설정에서 API 키를 확인해주세요.</div>';
   }
 }
 </script>
