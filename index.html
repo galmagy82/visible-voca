@@ -94,6 +94,23 @@
     border-top: 1px solid #222;
     padding-top: 20px;
   }
+
+  /* 이미지 표시 영역 */
+  .feel-image-container {
+    margin: 24px 0;
+    text-align: center;
+  }
+  .feel-image-container img {
+    max-width: 100%;
+    max-height: 400px;
+    border-radius: 12px;
+    border: 1px solid #333;
+  }
+  .feel-image-loading {
+    color: #555;
+    font-size: 0.9rem;
+    padding: 40px 0;
+  }
   .error {
     color: #666;
     font-size: 1rem;
@@ -359,6 +376,65 @@ async function callChatGPT(apiKey, prompt) {
   return data.choices?.[0]?.message?.content;
 }
 
+// --- 이미지 생성 ---
+// Gemini 이미지 생성 모델을 사용하여 단어의 느낌을 표현하는 이미지 생성
+async function generateImageGemini(apiKey, word) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`;
+  const imagePrompt = `Generate an image: Create an illustration that captures the feeling and mood of the English word "${word}". Use a concrete, recognizable scene or situation rather than abstract shapes, but keep it stylish and sophisticated — not cartoonish or childish. Think editorial illustration style with warm, natural colors and clean composition. No text in the image.`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: imagePrompt }] }],
+      generationConfig: {
+        responseModalities: ['IMAGE', 'TEXT']
+      }
+    })
+  });
+  if (!res.ok) {
+    const errBody = await res.text();
+    console.error('Gemini 이미지 API 오류:', res.status, errBody);
+    throw new Error('이미지 생성 API 오류');
+  }
+  const data = await res.json();
+  console.log('Gemini 이미지 API 응답 구조:', JSON.stringify(Object.keys(data)));
+  // Gemini 이미지 응답에서 인라인 이미지 데이터 추출
+  const parts = data.candidates?.[0]?.content?.parts || [];
+  for (const part of parts) {
+    if (part.inlineData) {
+      return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+    }
+  }
+  console.error('이미지 파트를 찾을 수 없음. 응답 parts:', JSON.stringify(parts).substring(0, 300));
+  throw new Error('이미지 데이터를 찾을 수 없습니다.');
+}
+
+// OpenAI DALL-E 3 API를 사용하여 단어의 느낌을 표현하는 이미지 생성
+async function generateImageDalle(apiKey, word) {
+  const imagePrompt = `Create an illustration that captures the feeling and mood of the English word "${word}". Use a concrete, recognizable scene or situation rather than abstract shapes, but keep it stylish and sophisticated — not cartoonish or childish. Think editorial illustration style with warm, natural colors and clean composition. No text in the image.`;
+  const res = await fetch('https://api.openai.com/v1/images/generations', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: 'dall-e-3',
+      prompt: imagePrompt,
+      n: 1,
+      size: '1024x1024',
+      quality: 'standard'
+    })
+  });
+  if (!res.ok) {
+    const errBody = await res.text();
+    console.error('DALL-E API 오류:', res.status, errBody);
+    throw new Error('이미지 생성 API 오류');
+  }
+  const data = await res.json();
+  return data.data?.[0]?.url;
+}
+
 async function lookup() {
   const word = input.value.trim().toLowerCase();
   if (!word) return;
@@ -374,12 +450,17 @@ async function lookup() {
   const prompt = PROMPT_TEMPLATE.replace('{{WORD}}', word);
 
   try {
-    let text;
-    if (settings.provider === 'gemini') {
-      text = await callGemini(settings.apiKey, prompt);
-    } else {
-      text = await callChatGPT(settings.apiKey, prompt);
-    }
+    // 텍스트와 이미지를 병렬로 요청
+    const textPromise = settings.provider === 'gemini'
+      ? callGemini(settings.apiKey, prompt)
+      : callChatGPT(settings.apiKey, prompt);
+
+    const imagePromise = settings.provider === 'gemini'
+      ? generateImageGemini(settings.apiKey, word)
+      : generateImageDalle(settings.apiKey, word);
+
+    // 텍스트 응답 먼저 처리
+    const text = await textPromise;
 
     if (!text) {
       result.innerHTML = '<div class="error">응답을 받지 못했습니다.</div>';
@@ -400,8 +481,24 @@ async function lookup() {
     let html = `<div class="word-title">${corrected || word}</div>`;
     if (corrected) html += `<div class="corrected">${word} → <span>${corrected}</span></div>`;
     html += `<div class="feel-desc">${desc}</div>`;
+    // 이미지 로딩 영역 (이미지가 로드되면 교체됨)
+    html += `<div class="feel-image-container" id="imageContainer"><div class="feel-image-loading">이미지 생성 중...</div></div>`;
     if (examples) html += `<div class="feel-examples">${examples}</div>`;
     result.innerHTML = html;
+
+    // 이미지 응답 처리 (비동기로 텍스트 이후에 표시)
+    try {
+      const imageUrl = await imagePromise;
+      const container = document.getElementById('imageContainer');
+      if (container) {
+        container.innerHTML = `<img src="${imageUrl}" alt="${word}의 느낌을 표현한 이미지">`;
+      }
+    } catch (imgErr) {
+      console.error('이미지 생성 실패:', imgErr);
+      // 이미지 생성 실패 시 영역 제거
+      const container = document.getElementById('imageContainer');
+      if (container) container.remove();
+    }
   } catch (err) {
     result.innerHTML = '<div class="error">API 오류가 발생했습니다. 설정에서 API 키를 확인해주세요.</div>';
   }
