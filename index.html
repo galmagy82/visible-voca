@@ -450,7 +450,29 @@ const result = document.getElementById('result');
 // 여러 단어 검색을 위한 상태
 let wordList = [];
 let currentWordIndex = 0;
-let wordResults = {}; // 검색 결과 캐시 { word: { html, imageUrl } }
+let wordResults = {}; // 세션 내 결과 캐시
+
+// --- 브라우저 캐시 (localStorage) ---
+const CACHE_KEY = 'visualVoca_resultCache';
+
+function loadCache() {
+  try { return JSON.parse(localStorage.getItem(CACHE_KEY)) || {}; }
+  catch { return {}; }
+}
+
+function saveCacheEntry(word, html) {
+  try {
+    const cache = loadCache();
+    cache[word] = html;
+    localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+  } catch (e) {
+    console.warn('캐시 저장 실패:', e);
+  }
+}
+
+function getCacheEntry(word) {
+  return loadCache()[word] || null;
+}
 
 input.addEventListener('keydown', e => {
   if (e.key === 'Enter') startLookup();
@@ -609,6 +631,14 @@ function showCachedResult(word) {
 
 // 개별 단어 검색
 async function lookupWord(word) {
+  // 브라우저 캐시 확인
+  const cached = getCacheEntry(word);
+  if (cached) {
+    wordResults[word] = { html: cached };
+    showCachedResult(word);
+    return;
+  }
+
   const settings = getSettings();
   if (!settings.apiKey) {
     result.innerHTML = '<div class="error">설정에서 API 키를 먼저 입력해주세요.</div>';
@@ -673,6 +703,7 @@ async function lookupWord(word) {
         `<img src="${imageUrl}" alt="${word}의 느낌을 표현한 이미지">`
       );
       wordResults[word] = { html: imgHtml };
+      saveCacheEntry(word, imgHtml);
     } catch (imgErr) {
       console.error('이미지 생성 실패:', imgErr);
       const container = document.getElementById('imageContainer');
@@ -683,6 +714,7 @@ async function lookupWord(word) {
         ''
       );
       wordResults[word] = { html: noImgHtml };
+      saveCacheEntry(word, noImgHtml);
     }
   } catch (err) {
     result.innerHTML = '<div class="error">API 오류가 발생했습니다. 설정에서 API 키를 확인해주세요.</div>';
