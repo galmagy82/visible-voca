@@ -320,7 +320,7 @@
   <input type="text" id="wordInput" placeholder="영어 단어를 입력하세요" autofocus>
   <button onclick="lookup()">검색</button>
   <button class="attach-btn" onclick="document.getElementById('photoInput').click()" title="사진에서 단어 추출">&#128247;</button>
-  <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhoto(this)">
+  <input type="file" id="photoInput" accept="image/*" multiple style="display:none" onchange="handlePhoto(this)">
 </div>
 
 <div id="result"></div>
@@ -704,10 +704,10 @@ async function extractWordsFromPhoto(apiKey, base64Data, mimeType) {
   return data.candidates?.[0]?.content?.parts?.[0]?.text;
 }
 
-// 사진 첨부 처리
+// 사진 첨부 처리 (여러 장 지원)
 async function handlePhoto(inputEl) {
-  const file = inputEl.files[0];
-  if (!file) return;
+  const files = Array.from(inputEl.files);
+  if (files.length === 0) return;
 
   const settings = getSettings();
   if (!settings.apiKey) {
@@ -716,20 +716,29 @@ async function handlePhoto(inputEl) {
     return;
   }
 
-  result.innerHTML = '<div class="loading">사진에서 단어를 추출하는 중...</div>';
+  result.innerHTML = `<div class="loading">사진 ${files.length}장에서 단어를 추출하는 중...</div>`;
 
   try {
-    const base64Data = await fileToBase64(file);
-    const extracted = await extractWordsFromPhoto(settings.apiKey, base64Data, file.type);
+    // 모든 사진을 병렬로 처리
+    const promises = files.map(async (file) => {
+      const base64Data = await fileToBase64(file);
+      return extractWordsFromPhoto(settings.apiKey, base64Data, file.type);
+    });
+    const results = await Promise.all(promises);
 
-    if (!extracted || !extracted.trim()) {
+    // 각 사진에서 추출된 단어를 합침
+    const allWords = results
+      .filter(r => r && r.trim())
+      .join(', ');
+
+    if (!allWords) {
       result.innerHTML = '<div class="error">#표시된 단어를 찾지 못했습니다.</div>';
       inputEl.value = '';
       return;
     }
 
     // 추출된 단어를 입력창에 넣고 멀티 검색 시작
-    input.value = extracted.trim();
+    input.value = allWords;
     inputEl.value = '';
     startLookup();
   } catch (err) {
