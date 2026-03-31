@@ -131,6 +131,24 @@
     font-size: 1rem;
   }
 
+  /* 가이드 영역 */
+  .guide {
+    width: 100%;
+    max-width: 620px;
+    margin-bottom: 40px;
+    padding: 20px 28px;
+    background: #1a1a1a;
+    border: 1px solid #282828;
+    border-radius: 12px;
+    line-height: 1.8;
+    color: #777;
+    font-size: 0.9rem;
+  }
+  .guide strong {
+    color: #aaa;
+    font-size: 0.95rem;
+  }
+
   /* Prev/Next 버튼 및 진행 표시 */
   .nav-bar {
     display: flex;
@@ -191,6 +209,15 @@
   <button onclick="lookup()">검색</button>
   <button class="attach-btn" onclick="document.getElementById('photoInput').click()" title="사진에서 단어 추출">&#128247;</button>
   <input type="file" id="photoInput" accept="image/*" multiple style="display:none" onchange="handlePhoto(this)">
+</div>
+
+<!-- 사진 검색 가이드 -->
+<div class="guide" id="guide">
+  <strong>사진으로 단어 검색하기</strong><br><br>
+  책을 읽다가 모르는 단어나 표현에 동그라미(○), 밑줄(_), 또는 #표시를 해두세요.<br>
+  미리 찍어둔 페이지의 사진을 &#128247; 버튼을 눌러서 올리세요.<br>
+  표시된 단어를 자동으로 찾아서 검색합니다.<br><br>
+  사진은 여러 장을 한꺼번에 올릴 수 있어요.
 </div>
 
 <div id="result"></div>
@@ -405,6 +432,7 @@ async function lookupWord(word) {
     return;
   }
 
+  document.getElementById('guide').style.display = 'none';
   result.innerHTML = '<div class="loading">느낌을 찾는 중...</div>';
 
   const prompt = PROMPT_TEMPLATE.replace('{{WORD}}', word);
@@ -536,6 +564,7 @@ async function handlePhoto(inputEl) {
     return;
   }
 
+  document.getElementById('guide').style.display = 'none';
   result.innerHTML = `<div class="loading">사진 ${files.length}장에서 단어를 추출하는 중...</div>`;
 
   try {
