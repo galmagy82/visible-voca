@@ -111,6 +111,21 @@
     font-size: 0.9rem;
     padding: 40px 0;
   }
+  /* 사진 첨부 버튼 */
+  .attach-btn {
+    padding: 14px 16px;
+    font-size: 1.2rem;
+    border: 1px solid #333;
+    border-radius: 12px;
+    background: #2a2a2a;
+    color: #888;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .attach-btn:hover { background: #3a3a3a; border-color: #555; color: #ccc; }
   .error {
     color: #666;
     font-size: 1rem;
@@ -304,6 +319,8 @@
 <div class="search-box">
   <input type="text" id="wordInput" placeholder="영어 단어를 입력하세요" autofocus>
   <button onclick="lookup()">검색</button>
+  <button class="attach-btn" onclick="document.getElementById('photoInput').click()" title="사진에서 단어 추출">&#128247;</button>
+  <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhoto(this)">
 </div>
 
 <div id="result"></div>
@@ -649,6 +666,78 @@ async function lookupWord(word) {
 
 // 기존 lookup 호환 (검색 버튼용)
 function lookup() { startLookup(); }
+
+// --- 사진에서 단어 추출 ---
+// 첨부된 사진을 base64로 변환
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// Gemini Vision API로 사진에서 #표시된 단어 추출
+async function extractWordsFromPhoto(apiKey, base64Data, mimeType) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+  const extractPrompt = `이 사진은 영어 소설(Novel)의 페이지를 찍은 것입니다.
+사진에서 #표시, #표시와 동그라미, 또는 #표시와 밑줄로 표시된 영어 단어, 숙어, 또는 문장을 모두 찾아주세요.
+결과는 쉼표로 구분하여 한 줄로 출력해주세요. 다른 설명 없이 추출된 단어/표현만 출력하세요.
+예시: split, break down, take off`;
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{
+        parts: [
+          { text: extractPrompt },
+          { inlineData: { mimeType: mimeType, data: base64Data } }
+        ]
+      }],
+      generationConfig: { temperature: 0.2, maxOutputTokens: 1024 }
+    })
+  });
+  if (!res.ok) throw new Error('사진 분석 API 오류');
+  const data = await res.json();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text;
+}
+
+// 사진 첨부 처리
+async function handlePhoto(inputEl) {
+  const file = inputEl.files[0];
+  if (!file) return;
+
+  const settings = getSettings();
+  if (!settings.apiKey) {
+    result.innerHTML = '<div class="error">설정에서 API 키를 먼저 입력해주세요.</div>';
+    inputEl.value = '';
+    return;
+  }
+
+  result.innerHTML = '<div class="loading">사진에서 단어를 추출하는 중...</div>';
+
+  try {
+    const base64Data = await fileToBase64(file);
+    const extracted = await extractWordsFromPhoto(settings.apiKey, base64Data, file.type);
+
+    if (!extracted || !extracted.trim()) {
+      result.innerHTML = '<div class="error">#표시된 단어를 찾지 못했습니다.</div>';
+      inputEl.value = '';
+      return;
+    }
+
+    // 추출된 단어를 입력창에 넣고 멀티 검색 시작
+    input.value = extracted.trim();
+    inputEl.value = '';
+    startLookup();
+  } catch (err) {
+    console.error('사진 분석 실패:', err);
+    result.innerHTML = '<div class="error">사진 분석에 실패했습니다. 다시 시도해주세요.</div>';
+    inputEl.value = '';
+  }
+}
 </script>
 
 </body>
