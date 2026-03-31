@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Story Kongko - Visual Voca</title>
+<style>
+  /* 공통 스타일 */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0f0f0f;
+    color: #e0e0e0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 80px 20px;
+  }
+  h1 {
+    font-size: 1.4rem;
+    font-weight: 300;
+    color: #888;
+    margin-bottom: 40px;
+    letter-spacing: 0.1em;
+  }
+  .search-box {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    max-width: 420px;
+    margin-bottom: 48px;
+  }
+  input {
+    flex: 1;
+    padding: 14px 20px;
+    font-size: 1.1rem;
+    border: 1px solid #333;
+    border-radius: 12px;
+    background: #1a1a1a;
+    color: #fff;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus { border-color: #555; }
+  input::placeholder { color: #555; }
+  button {
+    padding: 14px 24px;
+    font-size: 1rem;
+    border: none;
+    border-radius: 12px;
+    background: #2a2a2a;
+    color: #ccc;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  button:hover { background: #3a3a3a; }
+  #result {
+    width: 100%;
+    max-width: 680px;
+    min-height: 60px;
+  }
+  .word-title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+  .corrected {
+    font-size: 0.95rem;
+    color: #6a9955;
+    margin-bottom: 16px;
+  }
+  .corrected span {
+    color: #8abf6a;
+    font-weight: 500;
+  }
+  .feel-desc {
+    font-size: 1.1rem;
+    line-height: 2;
+    color: #bbb;
+    white-space: pre-wrap;
+    margin-bottom: 24px;
+  }
+  .feel-examples {
+    font-size: 1rem;
+    line-height: 2;
+    color: #999;
+    white-space: pre-wrap;
+    border-top: 1px solid #222;
+    padding-top: 20px;
+  }
+
+  /* 이미지 표시 영역 */
+  .feel-image-container {
+    margin: 24px 0;
+    text-align: center;
+  }
+  .feel-image-container img {
+    max-width: 100%;
+    max-height: 400px;
+    border-radius: 12px;
+    border: 1px solid #333;
+  }
+  .feel-image-loading {
+    color: #555;
+    font-size: 0.9rem;
+    padding: 40px 0;
+  }
+  /* 사진 첨부 버튼 */
+  .attach-btn {
+    padding: 14px 16px;
+    font-size: 1.2rem;
+    border: 1px solid #333;
+    border-radius: 12px;
+    background: #2a2a2a;
+    color: #888;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .attach-btn:hover { background: #3a3a3a; border-color: #555; color: #ccc; }
+  .error {
+    color: #666;
+    font-size: 1rem;
+  }
+  .loading {
+    color: #555;
+    font-size: 1rem;
+  }
+
+  /* Prev/Next 버튼 및 진행 표시 */
+  .nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid #222;
+  }
+  .nav-bar .progress {
+    font-size: 0.9rem;
+    color: #666;
+  }
+  .nav-bar .nav-btn {
+    padding: 10px 28px;
+    font-size: 1rem;
+    border: 1px solid #444;
+    border-radius: 10px;
+    background: #2a2a2a;
+    color: #ccc;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .nav-bar .nav-btn:hover { background: #3a3a3a; border-color: #555; }
+
+  /* 홈/설정 버튼 */
+  .top-btn {
+    position: fixed;
+    top: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    color: #888;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .top-btn:hover { border-color: #555; color: #ccc; }
+  .home-btn { left: 20px; }
+</style>
+</head>
+<body>
+
+<!-- 홈/설정 버튼 -->
+<a class="top-btn home-btn" href="index.html" title="홈">&#8592;</a>
+
+<h1>VISUAL VOCA</h1>
+
+<div class="search-box">
+  <input type="text" id="wordInput" placeholder="단어, 숙어, 문장을 입력하세요" autofocus>
+  <button onclick="lookup()">검색</button>
+  <button class="attach-btn" onclick="document.getElementById('photoInput').click()" title="사진에서 단어 추출">&#128247;</button>
+  <input type="file" id="photoInput" accept="image/*" multiple style="display:none" onchange="handlePhoto(this)">
+</div>
+
+<div id="result"></div>
+
+
+<script>
+// --- 설정 (localStorage 공유) ---
+function getSettings() {
+  const saved = localStorage.getItem('visibleVoca_settings');
+  if (saved) return JSON.parse(saved);
+  return { provider: 'gemini', apiKey: '' };
+}
+
+// --- 검색 ---
+const input = document.getElementById('wordInput');
+const result = document.getElementById('result');
+
+// 여러 단어 검색을 위한 상태
+let wordList = [];
+let currentWordIndex = 0;
+let wordResults = {};
+
+// --- 브라우저 캐시 (localStorage) ---
+const CACHE_KEY = 'visualVoca_resultCache';
+
+function loadCache() {
+  try { return JSON.parse(localStorage.getItem(CACHE_KEY)) || {}; }
+  catch { return {}; }
+}
+
+function saveCacheEntry(word, html) {
+  try {
+    const cache = loadCache();
+    cache[word] = html;
+    localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+  } catch (e) {
+    console.warn('캐시 저장 실패:', e);
+  }
+}
+
+function getCacheEntry(word) {
+  return loadCache()[word] || null;
+}
+
+function resetCache() {
+  if (!confirm('캐시를 초기화하시겠습니까?\n같은 단어를 다시 검색하면 비용이 발생합니다.')) return;
+  localStorage.removeItem(CACHE_KEY);
+  wordResults = {};
+  const msg = document.getElementById('cacheStatusMsg');
+  msg.textContent = '캐시가 초기화되었습니다.';
+  msg.className = 'status-msg ok';
+}
+
+input.addEventListener('keydown', e => {
+  if (e.key === 'Enter') startLookup();
+});
+
+const PROMPT_TEMPLATE = `너는 한국어로만 대답하는 영어 단어 느낌 사전이야. 절대 영어로 사고하거나 영어 문장을 먼저 만들지 마. 처음부터 끝까지 한국어로 사고하고 한국어로 작성해.
+
+"{{WORD}}"
+
+위 영어 단어(또는 문장/표현)의 핵심 느낌을 설명해줘.
+
+형식:
+만약 입력에 문법 오류나 오타가 있다면, 첫 줄에 [CORRECTED: 올바른 표현] 형식으로 교정된 문장을 적어줘. 오류가 없으면 이 줄은 생략.
+1줄: 핵심 느낌을 큰따옴표로 감싸서 한 문장 요약. 예) "하나였던 것이 딱 갈라지는" 이미지예요.
+2줄: 그 느낌을 바로 이해할 수 있는 비유나 장면 1~2문장.
+---
+3줄 이후: 자주 쓰이는 예시 2~3개. 영어 예문과 한국어 해석을 각각 한 줄씩 적되, "영어:", "한국어:" 같은 라벨 없이 바로 문장만 적을 것. 예문과 예문 사이에는 빈 줄 하나를 넣어서 구분할 것.
+
+규칙:
+- 반드시 한국어로만 설명할 것 ([CORRECTED: ...] 안의 영어만 예외)
+- 번역투 금지. 자연스러운 한국어 구어체로 작성
+- 짧고 간결하게
+- 마크다운 서식 쓰지 말 것
+- 느낌 설명과 예시 사이에 반드시 --- 구분선을 넣을 것`;
+
+// --- API 호출 ---
+async function callGemini(apiKey, prompt) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
+    })
+  });
+  if (!res.ok) throw new Error('API 오류');
+  const data = await res.json();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text;
+}
+
+async function callChatGPT(apiKey, prompt) {
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.7,
+      max_tokens: 2048
+    })
+  });
+  if (!res.ok) throw new Error('API 오류');
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content;
+}
+
+// --- 이미지 생성 ---
+async function generateImageGemini(apiKey, word) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`;
+  const imagePrompt = `Generate an image: Create an illustration that captures the feeling and mood of the English word "${word}". Use a concrete, recognizable scene or situation rather than abstract shapes, but keep it stylish and sophisticated — not cartoonish or childish. Think editorial illustration style with warm, natural colors and clean composition. Minimize unnecessary objects — only include objects essential to explaining the word. No text in the image.`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: imagePrompt }] }],
+      generationConfig: {
+        responseModalities: ['IMAGE', 'TEXT']
+      }
+    })
+  });
+  if (!res.ok) {
+    const errBody = await res.text();
+    console.error('Gemini 이미지 API 오류:', res.status, errBody);
+    throw new Error('이미지 생성 API 오류');
+  }
+  const data = await res.json();
+  const parts = data.candidates?.[0]?.content?.parts || [];
+  for (const part of parts) {
+    if (part.inlineData) {
+      return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+    }
+  }
+  throw new Error('이미지 데이터를 찾을 수 없습니다.');
+}
+
+async function generateImageDalle(apiKey, word) {
+  const imagePrompt = `Create an illustration that captures the feeling and mood of the English word "${word}". Use a concrete, recognizable scene or situation rather than abstract shapes, but keep it stylish and sophisticated — not cartoonish or childish. Think editorial illustration style with warm, natural colors and clean composition. No text in the image.`;
+  const res = await fetch('https://api.openai.com/v1/images/generations', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: 'dall-e-3',
+      prompt: imagePrompt,
+      n: 1,
+      size: '1024x1024',
+      quality: 'standard'
+    })
+  });
+  if (!res.ok) throw new Error('이미지 생성 API 오류');
+  const data = await res.json();
+  return data.data?.[0]?.url;
+}
+
+// --- 멀티 단어 검색 ---
+function startLookup() {
+  const raw = input.value.trim();
+  if (!raw) return;
+  wordList = raw.split(',').map(w => w.trim().toLowerCase()).filter(w => w);
+  if (wordList.length === 0) return;
+  currentWordIndex = 0;
+  wordResults = {};
+  lookupWord(wordList[currentWordIndex]);
+}
+
+function prevWord() {
+  if (currentWordIndex > 0) {
+    currentWordIndex--;
+    showCachedResult(wordList[currentWordIndex]);
+  }
+}
+
+function nextWord() {
+  currentWordIndex++;
+  if (currentWordIndex < wordList.length) {
+    const word = wordList[currentWordIndex];
+    if (wordResults[word]) {
+      showCachedResult(word);
+    } else {
+      lookupWord(word);
+    }
+  }
+}
+
+function showCachedResult(word) {
+  const cached = wordResults[word];
+  if (!cached) return;
+  result.innerHTML = cached.html + buildNavBar();
+}
+
+// --- 개별 단어 검색 ---
+async function lookupWord(word) {
+  // 브라우저 캐시 확인
+  const cached = getCacheEntry(word);
+  if (cached) {
+    wordResults[word] = { html: cached };
+    showCachedResult(word);
+    return;
+  }
+
+  const settings = getSettings();
+  if (!settings.apiKey) {
+    result.innerHTML = '<div class="error">홈에서 설정 버튼을 눌러 API 키를 먼저 입력해주세요.</div>';
+    return;
+  }
+
+  result.innerHTML = '<div class="loading">느낌을 찾는 중...</div>';
+
+  const prompt = PROMPT_TEMPLATE.replace('{{WORD}}', word);
+
+  try {
+    const textPromise = settings.provider === 'gemini'
+      ? callGemini(settings.apiKey, prompt)
+      : callChatGPT(settings.apiKey, prompt);
+
+    const imagePromise = settings.provider === 'gemini'
+      ? generateImageGemini(settings.apiKey, word)
+      : generateImageDalle(settings.apiKey, word);
+
+    const text = await textPromise;
+
+    if (!text) {
+      result.innerHTML = '<div class="error">응답을 받지 못했습니다.</div>';
+      return;
+    }
+
+    let corrected = '';
+    let body = text;
+    const corrMatch = text.match(/\[CORRECTED:\s*(.+?)\]/i);
+    if (corrMatch) {
+      corrected = corrMatch[1].trim();
+      body = text.replace(/\[CORRECTED:\s*.+?\]\n?/i, '');
+    }
+
+    const parts = body.split(/\n---\n?/);
+    const desc = parts[0].trim();
+    const examples = parts.length > 1 ? parts[1].trim() : '';
+    let html = `<div class="word-title">${corrected || word}</div>`;
+    if (corrected) html += `<div class="corrected">${word} → <span>${corrected}</span></div>`;
+    html += `<div class="feel-desc">${desc}</div>`;
+    html += `<div class="feel-image-container" id="imageContainer"><div class="feel-image-loading">이미지 생성 중...</div></div>`;
+    if (examples) html += `<div class="feel-examples">${examples}</div>`;
+
+    wordResults[word] = { html };
+    result.innerHTML = html + buildNavBar();
+
+    try {
+      const imageUrl = await imagePromise;
+      const container = document.getElementById('imageContainer');
+      if (container) {
+        container.innerHTML = `<img src="${imageUrl}" alt="${word}의 느낌을 표현한 이미지">`;
+      }
+      const imgHtml = html.replace(
+        '<div class="feel-image-loading">이미지 생성 중...</div>',
+        `<img src="${imageUrl}" alt="${word}의 느낌을 표현한 이미지">`
+      );
+      wordResults[word] = { html: imgHtml };
+      saveCacheEntry(word, imgHtml);
+    } catch (imgErr) {
+      console.error('이미지 생성 실패:', imgErr);
+      const container = document.getElementById('imageContainer');
+      if (container) container.remove();
+      const noImgHtml = html.replace(
+        '<div class="feel-image-container" id="imageContainer"><div class="feel-image-loading">이미지 생성 중...</div></div>',
+        ''
+      );
+      wordResults[word] = { html: noImgHtml };
+      saveCacheEntry(word, noImgHtml);
+    }
+  } catch (err) {
+    result.innerHTML = '<div class="error">API 오류가 발생했습니다. 홈에서 API 키를 확인해주세요.</div>';
+  }
+}
+
+// --- 네비게이션 바 ---
+function buildNavBar() {
+  if (wordList.length <= 1) return '';
+  let html = `<div class="nav-bar">`;
+  if (currentWordIndex > 0) {
+    html += `<button class="nav-btn" onclick="prevWord()">Prev</button>`;
+  }
+  html += `<span class="progress">${currentWordIndex + 1} / ${wordList.length}</span>`;
+  if (currentWordIndex < wordList.length - 1) {
+    html += `<button class="nav-btn" onclick="nextWord()">Next</button>`;
+  }
+  html += `</div>`;
+  return html;
+}
+
+function lookup() { startLookup(); }
+
+// --- 사진에서 단어 추출 ---
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function extractWordsFromPhoto(apiKey, base64Data, mimeType) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+  const extractPrompt = `이 사진은 영어 소설(Novel)의 페이지를 찍은 것입니다.
+사진에서 #표시, #표시와 동그라미, 또는 #표시와 밑줄로 표시된 영어 단어, 숙어, 또는 문장을 모두 찾아주세요.
+결과는 쉼표로 구분하여 한 줄로 출력해주세요. 다른 설명 없이 추출된 단어/표현만 출력하세요.
+예시: split, break down, take off`;
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{
+        parts: [
+          { text: extractPrompt },
+          { inlineData: { mimeType: mimeType, data: base64Data } }
+        ]
+      }],
+      generationConfig: { temperature: 0.2, maxOutputTokens: 1024 }
+    })
+  });
+  if (!res.ok) throw new Error('사진 분석 API 오류');
+  const data = await res.json();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text;
+}
+
+async function handlePhoto(inputEl) {
+  const files = Array.from(inputEl.files);
+  if (files.length === 0) return;
+
+  const settings = getSettings();
+  if (!settings.apiKey) {
+    result.innerHTML = '<div class="error">홈에서 설정 버튼을 눌러 API 키를 먼저 입력해주세요.</div>';
+    inputEl.value = '';
+    return;
+  }
+
+  result.innerHTML = `<div class="loading">사진 ${files.length}장에서 단어를 추출하는 중...</div>`;
+
+  try {
+    const promises = files.map(async (file) => {
+      const base64Data = await fileToBase64(file);
+      return extractWordsFromPhoto(settings.apiKey, base64Data, file.type);
+    });
+    const results = await Promise.all(promises);
+
+    const allWords = results
+      .filter(r => r && r.trim())
+      .join(', ');
+
+    if (!allWords) {
+      result.innerHTML = '<div class="error">#표시된 단어를 찾지 못했습니다.</div>';
+      inputEl.value = '';
+      return;
+    }
+
+    input.value = allWords;
+    inputEl.value = '';
+    startLookup();
+  } catch (err) {
+    console.error('사진 분석 실패:', err);
+    result.innerHTML = '<div class="error">사진 분석에 실패했습니다. 다시 시도해주세요.</div>';
+    inputEl.value = '';
+  }
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Story Kongko - Writing</title>
+<style>
+  /* 공통 스타일 */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0f0f0f;
+    color: #e0e0e0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 80px 20px;
+  }
+  h1 {
+    font-size: 1.4rem;
+    font-weight: 300;
+    color: #888;
+    margin-bottom: 40px;
+    letter-spacing: 0.1em;
+  }
+  /* 홈 버튼 */
+  .home-btn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    color: #888;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: border-color 0.2s, color 0.2s;
+    text-decoration: none;
+  }
+  .home-btn:hover { border-color: #555; color: #ccc; }
+  /* 개발 중 표시 */
+  .wip {
+    text-align: center;
+    padding: 80px 20px;
+  }
+  .wip-title {
+    font-size: 1.3rem;
+    color: #888;
+    margin-bottom: 12px;
+  }
+  .wip-desc {
+    font-size: 0.95rem;
+    color: #555;
+  }
+</style>
+</head>
+<body>
+
+<!-- 홈 버튼 -->
+<a class="home-btn" href="index.html" title="홈">&#8592;</a>
+
+<h1>WRITING</h1>
+
+<div class="wip">
+  <div class="wip-title">개발 중</div>
+  <div class="wip-desc">Writing 기능을 준비하고 있습니다.</div>
+</div>
+
+</body>
+</html>
