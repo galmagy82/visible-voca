@@ -120,6 +120,32 @@
     font-size: 1rem;
   }
 
+  /* Next 버튼 및 진행 표시 */
+  .nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid #222;
+  }
+  .nav-bar .progress {
+    font-size: 0.9rem;
+    color: #666;
+  }
+  .nav-bar .next-btn {
+    padding: 10px 28px;
+    font-size: 1rem;
+    border: 1px solid #444;
+    border-radius: 10px;
+    background: #2a2a2a;
+    color: #ccc;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .nav-bar .next-btn:hover { background: #3a3a3a; border-color: #555; }
+
   /* 설정 버튼 */
   .settings-btn {
     position: fixed;
@@ -404,8 +430,12 @@ document.getElementById('settingsModal').addEventListener('click', e => {
 const input = document.getElementById('wordInput');
 const result = document.getElementById('result');
 
+// 여러 단어 검색을 위한 상태
+let wordList = [];
+let currentWordIndex = 0;
+
 input.addEventListener('keydown', e => {
-  if (e.key === 'Enter') lookup();
+  if (e.key === 'Enter') startLookup();
 });
 
 const PROMPT_TEMPLATE = `너는 한국어로만 대답하는 영어 단어 느낌 사전이야. 절대 영어로 사고하거나 영어 문장을 먼저 만들지 마. 처음부터 끝까지 한국어로 사고하고 한국어로 작성해.
@@ -521,10 +551,26 @@ async function generateImageDalle(apiKey, word) {
   return data.data?.[0]?.url;
 }
 
-async function lookup() {
-  const word = input.value.trim().toLowerCase();
-  if (!word) return;
+// 입력값을 파싱하여 단어 목록을 만들고 첫 번째 단어 검색 시작
+function startLookup() {
+  const raw = input.value.trim();
+  if (!raw) return;
+  wordList = raw.split(',').map(w => w.trim().toLowerCase()).filter(w => w);
+  if (wordList.length === 0) return;
+  currentWordIndex = 0;
+  lookupWord(wordList[currentWordIndex]);
+}
 
+// Next 버튼 클릭 시 다음 단어 검색
+function nextWord() {
+  currentWordIndex++;
+  if (currentWordIndex < wordList.length) {
+    lookupWord(wordList[currentWordIndex]);
+  }
+}
+
+// 개별 단어 검색
+async function lookupWord(word) {
   const settings = getSettings();
   if (!settings.apiKey) {
     result.innerHTML = '<div class="error">설정에서 API 키를 먼저 입력해주세요.</div>';
@@ -570,6 +616,17 @@ async function lookup() {
     // 이미지 로딩 영역 (이미지가 로드되면 교체됨)
     html += `<div class="feel-image-container" id="imageContainer"><div class="feel-image-loading">이미지 생성 중...</div></div>`;
     if (examples) html += `<div class="feel-examples">${examples}</div>`;
+
+    // 여러 단어일 때 진행 표시 및 Next 버튼
+    if (wordList.length > 1) {
+      html += `<div class="nav-bar">`;
+      html += `<span class="progress">${currentWordIndex + 1} / ${wordList.length}</span>`;
+      if (currentWordIndex < wordList.length - 1) {
+        html += `<button class="next-btn" onclick="nextWord()">Next</button>`;
+      }
+      html += `</div>`;
+    }
+
     result.innerHTML = html;
 
     // 이미지 응답 처리 (비동기로 텍스트 이후에 표시)
@@ -589,6 +646,9 @@ async function lookup() {
     result.innerHTML = '<div class="error">API 오류가 발생했습니다. 설정에서 API 키를 확인해주세요.</div>';
   }
 }
+
+// 기존 lookup 호환 (검색 버튼용)
+function lookup() { startLookup(); }
 </script>
 
 </body>
