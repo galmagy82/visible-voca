@@ -329,11 +329,14 @@
   }
   .wordbook-toolbar .toolbar-btn:hover { background: #3a3a3a; color: #ccc; }
 
-  /* 단어장 리스트 — 칩 형태, 자동 줄바꿈 */
+  /* 단어장 리스트 — 칩 형태, 자동 줄바꿈, 높이 제한 */
   .wordbook-list {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
+    max-height: 60vh;
+    overflow-y: auto;
+    padding-right: 4px;
   }
   .wordbook-item {
     display: flex;
