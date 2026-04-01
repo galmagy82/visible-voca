@@ -452,6 +452,146 @@
   }
   .wb-modal-close:hover { color: #ccc; }
 
+  /* 퀴즈 설정 화면 */
+  .quiz-setup-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #ddd;
+    margin-bottom: 24px;
+  }
+  .quiz-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .quiz-option label {
+    font-size: 0.9rem;
+    color: #888;
+    min-width: 70px;
+  }
+  .quiz-option select, .quiz-option input[type="date"] {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    border: 1px solid #333;
+    border-radius: 8px;
+    background: #1a1a1a;
+    color: #ccc;
+    outline: none;
+  }
+  .quiz-start-btn {
+    margin-top: 24px;
+    padding: 12px 32px;
+    font-size: 1rem;
+    border: 1px solid #444;
+    border-radius: 10px;
+    background: #2a2a2a;
+    color: #ccc;
+    cursor: pointer;
+  }
+  .quiz-start-btn:hover { background: #3a3a3a; }
+  .quiz-msg {
+    margin-top: 12px;
+    font-size: 0.9rem;
+    color: #c66;
+  }
+
+  /* 퀴즈 문제 화면 */
+  .quiz-progress {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 20px;
+  }
+  .quiz-question {
+    margin-bottom: 24px;
+    min-height: 60px;
+  }
+  .quiz-question .feel-text {
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: #bbb;
+    white-space: pre-wrap;
+  }
+  .quiz-question img {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: 12px;
+    border: 1px solid #333;
+  }
+  .quiz-choices {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 400px;
+  }
+  .quiz-choice {
+    padding: 12px 20px;
+    font-size: 0.95rem;
+    border: 1px solid #333;
+    border-radius: 10px;
+    background: #1a1a1a;
+    color: #ccc;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+    text-align: left;
+  }
+  .quiz-choice:hover { background: #222; border-color: #555; }
+  .quiz-choice.correct {
+    background: #1a2e1a;
+    border-color: #6a9955;
+    color: #8abf6a;
+  }
+  .quiz-choice.wrong {
+    background: #2e1a1a;
+    border-color: #994444;
+    color: #c66;
+  }
+  .quiz-choice.disabled { pointer-events: none; }
+  .quiz-feedback {
+    margin-top: 16px;
+    font-size: 0.9rem;
+    color: #888;
+    min-height: 20px;
+  }
+  .quiz-next-btn {
+    margin-top: 20px;
+    padding: 10px 28px;
+    font-size: 0.95rem;
+    border: 1px solid #444;
+    border-radius: 10px;
+    background: #2a2a2a;
+    color: #ccc;
+    cursor: pointer;
+  }
+  .quiz-next-btn:hover { background: #3a3a3a; }
+
+  /* 퀴즈 결과 화면 */
+  .quiz-result-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #ddd;
+    margin-bottom: 20px;
+  }
+  .quiz-score {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #8abf6a;
+    margin-bottom: 24px;
+  }
+  .quiz-wrong-list {
+    margin-bottom: 24px;
+  }
+  .quiz-wrong-item {
+    padding: 8px 0;
+    font-size: 0.9rem;
+    color: #999;
+    border-bottom: 1px solid #1a1a1a;
+  }
+  .quiz-wrong-item span {
+    color: #c66;
+    font-weight: 500;
+  }
+
   /* 홈 버튼 */
   .top-btn {
     position: fixed;
@@ -591,7 +731,53 @@
 
     <!-- 탭4: Quiz -->
     <div class="tab-content" id="tabQuiz">
-      <div class="empty-tab">준비 중입니다.</div>
+      <!-- 퀴즈 설정 화면 -->
+      <div id="quizSetup">
+        <div class="quiz-setup-title">퀴즈 설정</div>
+        <div class="quiz-option">
+          <label>유형</label>
+          <select id="quizType">
+            <option value="feel">느낌 맞추기</option>
+            <option value="image">이미지 보고 맞추기</option>
+          </select>
+        </div>
+        <div class="quiz-option">
+          <label>문제 수</label>
+          <select id="quizCount">
+            <option value="5">5문제</option>
+            <option value="10" selected>10문제</option>
+            <option value="20">20문제</option>
+          </select>
+        </div>
+        <div class="quiz-option">
+          <label>출제 범위</label>
+          <select id="quizRange">
+            <option value="all">전체</option>
+            <option value="recent">최근 추가</option>
+          </select>
+        </div>
+        <div class="quiz-option" id="quizDateOption" style="display:none;">
+          <label>기준 날짜</label>
+          <input type="date" id="quizDate">
+        </div>
+        <button class="quiz-start-btn" onclick="startQuiz()">퀴즈 시작</button>
+        <div class="quiz-msg" id="quizMsg"></div>
+      </div>
+      <!-- 퀴즈 문제 화면 -->
+      <div id="quizPlay" style="display:none;">
+        <div class="quiz-progress" id="quizProgress"></div>
+        <div class="quiz-question" id="quizQuestion"></div>
+        <div class="quiz-choices" id="quizChoices"></div>
+        <div class="quiz-feedback" id="quizFeedback"></div>
+        <button class="quiz-next-btn" id="quizNextBtn" style="display:none;" onclick="nextQuestion()">다음</button>
+      </div>
+      <!-- 퀴즈 결과 화면 -->
+      <div id="quizResult" style="display:none;">
+        <div class="quiz-result-title">퀴즈 결과</div>
+        <div class="quiz-score" id="quizScore"></div>
+        <div class="quiz-wrong-list" id="quizWrongList"></div>
+        <button class="quiz-start-btn" onclick="resetQuiz()">다시 하기</button>
+      </div>
     </div>
 
   </div>
@@ -1273,7 +1459,262 @@ switchTab = function(tab) {
     closeWbModal();
     renderWordbook();
   }
+  if (tab === 'quiz') {
+    resetQuiz();
+  }
 };
+
+// --- 퀴즈 ---
+
+/* 오답 보기용 내장 영단어 목록 */
+const DECOY_WORDS = [
+  'abandon','ability','absorb','abstract','abuse','accept','access','accident','account','achieve',
+  'acquire','adapt','adjust','admire','admit','adopt','advance','adventure','afford','afraid',
+  'aggressive','agree','aim','allow','ambition','amount','analyze','ancient','announce','annual',
+  'anxious','apparent','appeal','appetite','apply','approach','approve','argue','arrange','arrest',
+  'assist','assume','attach','attempt','attract','authority','available','average','avoid','aware',
+  'balance','bargain','barrier','battle','behave','belong','beneath','benefit','betray','bitter',
+  'blame','blend','blessing','blind','block','bloom','bold','bond','border','bother',
+  'bounce','boundary','brave','breathe','brief','brilliant','broadcast','budget','burden','burst',
+  'calculate','capable','capture','career','caution','celebrate','challenge','chapter','character','charge',
+  'charity','chase','chemical','chief','claim','clarify','classic','climate','cling','collapse',
+  'combine','comfort','command','commit','communicate','companion','compare','compete','complain','complex',
+  'concern','conclude','condition','conduct','confident','confirm','conflict','confuse','connect','conscious',
+  'consequence','consider','consist','constant','construct','consume','contact','contain','content','contrast',
+  'contribute','control','convenient','convince','cooperate','cope','courage','crash','create','creature',
+  'crisis','critical','crucial','cruel','cultivate','culture','curious','current','custom','cycle',
+  'damage','dare','debate','debt','decade','decent','declare','decline','decorate','dedicate',
+  'defeat','defend','define','delay','deliberate','delicate','deliver','demand','demonstrate','deny',
+  'depend','depict','deposit','depress','derive','describe','deserve','desire','desperate','destroy',
+  'detect','determine','develop','device','devote','digital','dignity','dilemma','dimension','direct',
+  'disappear','disaster','discipline','discover','discuss','dismiss','display','dispute','dissolve','distance',
+  'distinct','distribute','disturb','diverse','divide','domestic','dominant','donate','doubt','draft',
+  'dramatic','dread','durable','duty','dynamic','eager','earn','educate','effect','efficient',
+  'effort','elaborate','elegant','eliminate','embrace','emerge','emotion','emphasize','employ','enable',
+  'encounter','encourage','endure','engage','enhance','enormous','ensure','entire','environment','episode',
+  'equal','equip','escape','essential','establish','estimate','evaluate','eventual','evidence','evolve',
+  'examine','exceed','exchange','excite','exclude','execute','exercise','exhaust','exhibit','exist',
+  'expand','expect','expense','experience','experiment','expert','explain','explode','exploit','explore',
+  'expose','express','extend','extent','external','extreme','fabric','facility','factor','fade',
+  'failure','faith','familiar','fascinate','fashion','favor','feature','fellow','fiction','fierce',
+  'figure','finance','flexible','float','flood','flow','focus','fold','forbid','forecast',
+  'foreign','formal','former','fortune','foundation','fragment','frame','frequent','frustrate','fulfill',
+  'function','fundamental','furnish','gather','generate','generous','gentle','genuine','gesture','giant',
+  'glimpse','global','glory','govern','grab','grace','gradual','grant','grateful','grave',
+  'grip','guarantee','guardian','guide','guilty','habit','handle','harbor','harmony','harvest',
+  'hasty','hatred','hazard','heal','heritage','hesitate','highlight','hire','hollow','honest',
+  'honor','horizon','hostile','humble','humor','ideal','identify','ignore','illustrate','imagine',
+  'immediate','immune','impact','imply','impose','impress','improve','incident','include','income',
+  'incredible','indicate','individual','industry','inevitable','influence','inform','inherit','initial','innocent',
+  'inquire','insert','insight','inspire','install','instance','instant','instinct','institute','insult'
+];
+
+/* 출제 범위 옵션 토글 */
+document.getElementById('quizRange').addEventListener('change', function() {
+  const dateOpt = document.getElementById('quizDateOption');
+  dateOpt.style.display = this.value === 'recent' ? 'flex' : 'none';
+  if (this.value === 'recent' && !document.getElementById('quizDate').value) {
+    const d = new Date();
+    d.setDate(d.getDate() - 7);
+    document.getElementById('quizDate').value = d.toISOString().split('T')[0];
+  }
+});
+
+/* 퀴즈 상태 */
+let quizQuestions = [];
+let quizIndex = 0;
+let quizCorrect = 0;
+let quizWrongs = [];
+
+/* 퀴즈 설정 화면으로 초기화 */
+function resetQuiz() {
+  document.getElementById('quizSetup').style.display = 'block';
+  document.getElementById('quizPlay').style.display = 'none';
+  document.getElementById('quizResult').style.display = 'none';
+  document.getElementById('quizMsg').textContent = '';
+}
+
+/* 퀴즈 시작 */
+async function startQuiz() {
+  const type = document.getElementById('quizType').value;
+  const count = parseInt(document.getElementById('quizCount').value);
+  const range = document.getElementById('quizRange').value;
+  const msgEl = document.getElementById('quizMsg');
+
+  /* 단어장에서 단어 가져오기 */
+  let words = await getWordbookAll();
+
+  /* 출제 범위 필터 */
+  if (range === 'recent') {
+    const dateStr = document.getElementById('quizDate').value;
+    if (!dateStr) {
+      msgEl.textContent = '기준 날짜를 선택해주세요.';
+      return;
+    }
+    const since = new Date(dateStr).getTime();
+    words = words.filter(w => w.addedAt >= since);
+  }
+
+  if (words.length === 0) {
+    msgEl.textContent = '단어장에 단어가 없습니다. 단어를 먼저 추가해주세요.';
+    return;
+  }
+
+  /* 이미지 퀴즈인 경우 캐시에 이미지가 있는 단어만 필터 */
+  if (type === 'image') {
+    const wordsWithImage = [];
+    for (const w of words) {
+      const cached = await getCacheEntry(w.word);
+      if (cached && cached.includes('<img ')) {
+        wordsWithImage.push(w);
+      }
+    }
+    words = wordsWithImage;
+    if (words.length === 0) {
+      msgEl.textContent = '이미지가 있는 단어가 없습니다. 느낌 맞추기를 이용해주세요.';
+      return;
+    }
+  }
+
+  /* 문제 생성 */
+  const shuffled = words.sort(() => Math.random() - 0.5);
+  const selected = shuffled.slice(0, Math.min(count, words.length));
+
+  quizQuestions = [];
+  for (const w of selected) {
+    const cached = await getCacheEntry(w.word);
+    /* 보기 생성: 정답 + 오답 3개 */
+    const decoys = getDecoys(w.word, words.map(x => x.word), 3);
+    const choices = [w.word, ...decoys].sort(() => Math.random() - 0.5);
+
+    let questionData = '';
+    if (type === 'feel') {
+      /* 캐시에서 느낌 설명 추출 */
+      questionData = extractFeelText(cached);
+    } else {
+      /* 캐시에서 이미지 추출 */
+      questionData = extractImage(cached);
+    }
+
+    quizQuestions.push({
+      word: w.word,
+      type: type,
+      questionData: questionData,
+      choices: choices
+    });
+  }
+
+  quizIndex = 0;
+  quizCorrect = 0;
+  quizWrongs = [];
+
+  document.getElementById('quizSetup').style.display = 'none';
+  document.getElementById('quizPlay').style.display = 'block';
+  document.getElementById('quizResult').style.display = 'none';
+
+  showQuestion();
+}
+
+/* 오답 보기 3개 생성 */
+function getDecoys(answer, wordbookWords, count) {
+  /* 단어장의 다른 단어들 우선 사용 */
+  const candidates = wordbookWords.filter(w => w !== answer);
+  /* 부족하면 내장 목록에서 추가 */
+  const extra = DECOY_WORDS.filter(w => w !== answer && !wordbookWords.includes(w));
+  const pool = [...candidates, ...extra].sort(() => Math.random() - 0.5);
+  return pool.slice(0, count);
+}
+
+/* 캐시된 HTML에서 느낌 설명 텍스트 추출 */
+function extractFeelText(html) {
+  if (!html) return '(설명 없음)';
+  const match = html.match(/<div class="feel-desc">([\s\S]*?)<\/div>/);
+  return match ? match[1].trim() : '(설명 없음)';
+}
+
+/* 캐시된 HTML에서 이미지 태그 추출 */
+function extractImage(html) {
+  if (!html) return '';
+  const match = html.match(/<img [^>]+>/);
+  return match ? match[0] : '';
+}
+
+/* 문제 표시 */
+function showQuestion() {
+  const q = quizQuestions[quizIndex];
+  document.getElementById('quizProgress').textContent = `${quizIndex + 1} / ${quizQuestions.length}`;
+  document.getElementById('quizFeedback').textContent = '';
+  document.getElementById('quizNextBtn').style.display = 'none';
+
+  /* 문제 영역 */
+  const questionEl = document.getElementById('quizQuestion');
+  if (q.type === 'feel') {
+    questionEl.innerHTML = `<div class="feel-text">${q.questionData}</div>`;
+  } else {
+    questionEl.innerHTML = q.questionData;
+  }
+
+  /* 보기 */
+  const choicesEl = document.getElementById('quizChoices');
+  choicesEl.innerHTML = q.choices.map((c, i) =>
+    `<button class="quiz-choice" onclick="selectAnswer(${i})">${c}</button>`
+  ).join('');
+}
+
+/* 보기 선택 */
+function selectAnswer(index) {
+  const q = quizQuestions[quizIndex];
+  const chosen = q.choices[index];
+  const isCorrect = chosen === q.word;
+  const buttons = document.querySelectorAll('.quiz-choice');
+
+  /* 모든 버튼 비활성화 */
+  buttons.forEach((btn, i) => {
+    btn.classList.add('disabled');
+    if (q.choices[i] === q.word) btn.classList.add('correct');
+  });
+
+  if (isCorrect) {
+    quizCorrect++;
+    document.getElementById('quizFeedback').textContent = '정답!';
+    document.getElementById('quizFeedback').style.color = '#8abf6a';
+  } else {
+    buttons[index].classList.add('wrong');
+    quizWrongs.push(q.word);
+    document.getElementById('quizFeedback').textContent = `오답! 정답은 "${q.word}" 입니다.`;
+    document.getElementById('quizFeedback').style.color = '#c66';
+  }
+
+  document.getElementById('quizNextBtn').style.display = 'inline-block';
+}
+
+/* 다음 문제 */
+function nextQuestion() {
+  quizIndex++;
+  if (quizIndex < quizQuestions.length) {
+    showQuestion();
+  } else {
+    showQuizResult();
+  }
+}
+
+/* 결과 화면 */
+function showQuizResult() {
+  document.getElementById('quizPlay').style.display = 'none';
+  document.getElementById('quizResult').style.display = 'block';
+
+  const total = quizQuestions.length;
+  document.getElementById('quizScore').textContent = `${total}문제 중 ${quizCorrect}개 정답`;
+
+  if (quizWrongs.length > 0) {
+    document.getElementById('quizWrongList').innerHTML =
+      '<div style="font-size:0.9rem;color:#888;margin-bottom:8px;">틀린 단어:</div>' +
+      quizWrongs.map(w => `<div class="quiz-wrong-item"><span>${w}</span></div>`).join('');
+  } else {
+    document.getElementById('quizWrongList').innerHTML =
+      '<div style="font-size:0.9rem;color:#8abf6a;">모두 맞았습니다!</div>';
+  }
+}
 </script>
 
 </body>
