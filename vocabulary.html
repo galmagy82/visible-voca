@@ -29,7 +29,7 @@
   .main-layout {
     display: flex;
     width: 100%;
-    max-width: 800px;
+    max-width: 860px;
     gap: 0;
   }
 
@@ -47,16 +47,16 @@
     color: #666;
     background: transparent;
     border: none;
-    border-left: 2px solid transparent;
+    border: none;
     cursor: pointer;
     text-align: left;
-    transition: color 0.2s, border-color 0.2s;
+    transition: color 0.2s, font-weight 0.2s;
     white-space: nowrap;
   }
   .sidebar .tab:hover { color: #aaa; }
   .sidebar .tab.active {
     color: #e0e0e0;
-    border-left-color: #e0e0e0;
+    font-weight: 600;
   }
 
   /* 오른쪽 컨텐츠 영역 */
@@ -74,7 +74,7 @@
     display: flex;
     gap: 8px;
     width: 100%;
-    max-width: 420px;
+    max-width: 600px;
     margin-bottom: 32px;
   }
   .search-box input {
@@ -105,7 +105,7 @@
   /* 가이드 영역 */
   .guide {
     width: 100%;
-    max-width: 520px;
+    max-width: 580px;
     margin-bottom: 32px;
     padding: 20px 28px;
     background: #1a1a1a;
@@ -114,6 +114,7 @@
     line-height: 1.8;
     color: #777;
     font-size: 0.9rem;
+    text-align: center;
   }
   .guide strong {
     color: #aaa;
@@ -334,14 +335,55 @@
     <!-- 탭2: 사진에서 검색 -->
     <div class="tab-content" id="tabPhoto">
       <div class="photo-upload-area">
-        <button class="upload-btn" onclick="document.getElementById('photoInput').click()">&#128247; 사진 올리기</button>
+        <button class="upload-btn" onclick="document.getElementById('photoInput').click()">&#128194; 사진 올리기</button>
         <input type="file" id="photoInput" accept="image/*" multiple style="display:none" onchange="handlePhoto(this)">
       </div>
       <!-- 가이드 -->
       <div class="guide" id="guidePhoto">
         <strong>사진에서 검색</strong><br><br>
+        <!-- 가이드 일러스트: 책 페이지에 표시된 단어 예시 -->
+        <svg width="320" height="160" viewBox="0 0 320 160" style="display:block; margin:0 auto 16px;">
+          <!-- 책 페이지 배경 -->
+          <rect x="30" y="10" width="260" height="140" rx="4" fill="#252525" stroke="#444" stroke-width="1"/>
+          <!-- 책 중앙 접힌 선 -->
+          <line x1="160" y1="10" x2="160" y2="150" stroke="#333" stroke-width="1" stroke-dasharray="4,3"/>
+          <!-- 왼쪽 페이지 텍스트 줄 -->
+          <rect x="50" y="30" width="90" height="4" rx="2" fill="#444"/>
+          <rect x="50" y="42" width="80" height="4" rx="2" fill="#444"/>
+          <!-- 동그라미 표시된 단어 -->
+          <rect x="50" y="56" width="36" height="4" rx="2" fill="#7ab36a"/>
+          <ellipse cx="68" cy="58" rx="24" ry="10" fill="none" stroke="#7ab36a" stroke-width="1.5"/>
+          <rect x="92" y="56" width="50" height="4" rx="2" fill="#444"/>
+          <rect x="50" y="70" width="90" height="4" rx="2" fill="#444"/>
+          <!-- 밑줄 표시된 단어 -->
+          <rect x="50" y="84" width="45" height="4" rx="2" fill="#444"/>
+          <rect x="100" y="84" width="40" height="4" rx="2" fill="#d4a04a"/>
+          <line x1="98" y1="92" x2="142" y2="92" stroke="#d4a04a" stroke-width="1.5"/>
+          <rect x="50" y="98" width="90" height="4" rx="2" fill="#444"/>
+          <!-- #표시된 단어 -->
+          <text x="50" y="118" font-size="10" fill="#cc6666" font-family="monospace">#</text>
+          <rect x="60" y="112" width="35" height="4" rx="2" fill="#cc6666"/>
+          <rect x="100" y="112" width="40" height="4" rx="2" fill="#444"/>
+          <rect x="50" y="126" width="90" height="4" rx="2" fill="#444"/>
+          <!-- 오른쪽 페이지 텍스트 줄 -->
+          <rect x="180" y="30" width="90" height="4" rx="2" fill="#444"/>
+          <rect x="180" y="42" width="80" height="4" rx="2" fill="#444"/>
+          <rect x="180" y="56" width="90" height="4" rx="2" fill="#444"/>
+          <rect x="180" y="70" width="70" height="4" rx="2" fill="#444"/>
+          <rect x="180" y="84" width="90" height="4" rx="2" fill="#444"/>
+          <rect x="180" y="98" width="85" height="4" rx="2" fill="#444"/>
+          <rect x="180" y="112" width="90" height="4" rx="2" fill="#444"/>
+          <rect x="180" y="126" width="60" height="4" rx="2" fill="#444"/>
+          <!-- 범례 -->
+          <ellipse cx="186" cy="58" rx="6" ry="6" fill="none" stroke="#7ab36a" stroke-width="1"/>
+          <text x="196" y="61" font-size="8" fill="#7ab36a" font-family="sans-serif">동그라미</text>
+          <line x1="180" y1="74" x2="192" y2="74" stroke="#d4a04a" stroke-width="1.5"/>
+          <text x="196" y="77" font-size="8" fill="#d4a04a" font-family="sans-serif">밑줄</text>
+          <text x="180" y="93" font-size="10" fill="#cc6666" font-family="monospace">#</text>
+          <text x="196" y="93" font-size="8" fill="#cc6666" font-family="sans-serif">#표시</text>
+        </svg>
         책을 읽다가 모르는 단어나 표현에 동그라미(○), 밑줄(_), 또는 #표시를 해두세요.<br>
-        미리 찍어둔 페이지의 사진을 위 버튼을 눌러서 올리세요.<br>
+        표시한 페이지의 사진을 찍어 &#128247; 버튼을 눌러서 올리세요.<br>
         표시된 단어를 자동으로 찾아서 검색합니다.<br><br>
         사진은 여러 장을 한꺼번에 올릴 수 있어요.
       </div>
