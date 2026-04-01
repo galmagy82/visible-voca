@@ -15,23 +15,69 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 80px 20px;
+    padding: 60px 20px 40px;
   }
   h1 {
     font-size: 1.4rem;
     font-weight: 300;
     color: #888;
-    margin-bottom: 40px;
+    margin-bottom: 24px;
     letter-spacing: 0.1em;
   }
+
+  /* 메인 레이아웃: 왼쪽 탭 + 오른쪽 컨텐츠 */
+  .main-layout {
+    display: flex;
+    width: 100%;
+    max-width: 800px;
+    gap: 0;
+  }
+
+  /* 왼쪽 탭 사이드바 */
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 100px;
+    padding-top: 4px;
+  }
+  .sidebar .tab {
+    padding: 12px 16px;
+    font-size: 0.85rem;
+    color: #666;
+    background: transparent;
+    border: none;
+    border-left: 2px solid transparent;
+    cursor: pointer;
+    text-align: left;
+    transition: color 0.2s, border-color 0.2s;
+    white-space: nowrap;
+  }
+  .sidebar .tab:hover { color: #aaa; }
+  .sidebar .tab.active {
+    color: #e0e0e0;
+    border-left-color: #e0e0e0;
+  }
+
+  /* 오른쪽 컨텐츠 영역 */
+  .content {
+    flex: 1;
+    padding-left: 24px;
+    border-left: 1px solid #222;
+    min-height: 60vh;
+  }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* 검색창 */
   .search-box {
     display: flex;
     gap: 8px;
     width: 100%;
     max-width: 420px;
-    margin-bottom: 48px;
+    margin-bottom: 32px;
   }
-  input {
+  .search-box input {
     flex: 1;
     padding: 14px 20px;
     font-size: 1.1rem;
@@ -42,8 +88,8 @@
     outline: none;
     transition: border-color 0.2s;
   }
-  input:focus { border-color: #555; }
-  input::placeholder { color: #555; }
+  .search-box input:focus { border-color: #555; }
+  .search-box input::placeholder { color: #555; }
   button {
     padding: 14px 24px;
     font-size: 1rem;
@@ -55,16 +101,60 @@
     transition: background 0.2s;
   }
   button:hover { background: #3a3a3a; }
-  #result {
+
+  /* 가이드 영역 */
+  .guide {
+    width: 100%;
+    max-width: 520px;
+    margin-bottom: 32px;
+    padding: 20px 28px;
+    background: #1a1a1a;
+    border: 1px solid #282828;
+    border-radius: 12px;
+    line-height: 1.8;
+    color: #777;
+    font-size: 0.9rem;
+  }
+  .guide strong {
+    color: #aaa;
+    font-size: 0.95rem;
+  }
+
+  /* 결과 영역 */
+  .result-area {
     width: 100%;
     max-width: 680px;
     min-height: 60px;
+  }
+  /* 단어 헤더 (제목 + 발음 버튼) */
+  .word-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
   }
   .word-title {
     font-size: 2rem;
     font-weight: 600;
     color: #fff;
-    margin-bottom: 6px;
+  }
+  .speak-btn {
+    padding: 6px 10px;
+    font-size: 1.2rem;
+    border: 1px solid #333;
+    border-radius: 8px;
+    background: #1a1a1a;
+    color: #888;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+  .speak-btn:hover { background: #2a2a2a; color: #ccc; }
+  /* 품사 표시 */
+  .word-pos {
+    font-size: 0.9rem;
+    color: #6a9955;
+    margin-bottom: 12px;
+    font-style: italic;
   }
   .corrected {
     font-size: 0.95rem;
@@ -107,46 +197,45 @@
     font-size: 0.9rem;
     padding: 40px 0;
   }
+
   /* 사진 첨부 버튼 */
-  .attach-btn {
-    padding: 14px 16px;
-    font-size: 1.2rem;
-    border: 1px solid #333;
+  .photo-upload-area {
+    margin-bottom: 24px;
+  }
+  .upload-btn {
+    padding: 14px 20px;
+    font-size: 1rem;
+    border: 1px dashed #444;
     border-radius: 12px;
-    background: #2a2a2a;
+    background: #1a1a1a;
     color: #888;
     cursor: pointer;
     transition: background 0.2s, border-color 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
-  .attach-btn:hover { background: #3a3a3a; border-color: #555; color: #ccc; }
-  .error {
-    color: #666;
-    font-size: 1rem;
-  }
-  .loading {
-    color: #555;
-    font-size: 1rem;
-  }
+  .upload-btn:hover { background: #222; border-color: #666; color: #ccc; }
 
-  /* 가이드 영역 */
-  .guide {
-    width: 100%;
-    max-width: 620px;
-    margin-bottom: 40px;
-    padding: 20px 28px;
-    background: #1a1a1a;
-    border: 1px solid #282828;
-    border-radius: 12px;
-    line-height: 1.8;
-    color: #777;
-    font-size: 0.9rem;
+  /* 추출된 단어 리스트 */
+  .word-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 24px;
   }
-  .guide strong {
+  .word-chip {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    border: 1px solid #333;
+    border-radius: 20px;
+    background: #1a1a1a;
     color: #aaa;
-    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+  }
+  .word-chip:hover { background: #2a2a2a; border-color: #555; color: #ddd; }
+  .word-chip.active {
+    background: #2a2a2a;
+    border-color: #888;
+    color: #fff;
   }
 
   /* Prev/Next 버튼 및 진행 표시 */
@@ -175,7 +264,18 @@
   }
   .nav-bar .nav-btn:hover { background: #3a3a3a; border-color: #555; }
 
-  /* 홈/설정 버튼 */
+  .error { color: #666; font-size: 1rem; }
+  .loading { color: #555; font-size: 1rem; }
+
+  /* 빈 탭 안내 */
+  .empty-tab {
+    color: #555;
+    font-size: 1rem;
+    padding-top: 40px;
+    text-align: center;
+  }
+
+  /* 홈 버튼 */
   .top-btn {
     position: fixed;
     top: 20px;
@@ -199,34 +299,91 @@
 </head>
 <body>
 
-<!-- 홈/설정 버튼 -->
+<!-- 홈 버튼 -->
 <a class="top-btn home-btn" href="index.html" title="홈">&#8592;</a>
 
 <h1>VISUAL VOCA</h1>
 
-<div class="search-box">
-  <input type="text" id="wordInput" placeholder="단어, 숙어, 문장을 입력하세요" autofocus>
-  <button onclick="lookup()">검색</button>
-  <button class="attach-btn" onclick="document.getElementById('photoInput').click()" title="사진에서 단어 추출">&#128247;</button>
-  <input type="file" id="photoInput" accept="image/*" multiple style="display:none" onchange="handlePhoto(this)">
+<div class="main-layout">
+  <!-- 왼쪽 탭 사이드바 -->
+  <div class="sidebar">
+    <button class="tab active" onclick="switchTab('search')">일반검색</button>
+    <button class="tab" onclick="switchTab('photo')">사진에서 검색</button>
+    <button class="tab" onclick="switchTab('wordbook')">단어장</button>
+    <button class="tab" onclick="switchTab('quiz')">Quiz</button>
+  </div>
+
+  <!-- 오른쪽 컨텐츠 -->
+  <div class="content">
+
+    <!-- 탭1: 일반검색 -->
+    <div class="tab-content active" id="tabSearch">
+      <div class="search-box">
+        <input type="text" id="wordInput" placeholder="단어, 숙어, 문장을 입력하세요" autofocus>
+        <button onclick="lookup()">검색</button>
+      </div>
+      <!-- 가이드 -->
+      <div class="guide" id="guideSearch">
+        <strong>일반 검색</strong><br><br>
+        단어, 숙어, 문장을 직접 입력하고 검색 버튼을 누르세요.<br>
+        여러 단어를 쉼표(,)로 구분하면 한꺼번에 검색할 수 있어요.
+      </div>
+      <div class="result-area" id="resultSearch"></div>
+    </div>
+
+    <!-- 탭2: 사진에서 검색 -->
+    <div class="tab-content" id="tabPhoto">
+      <div class="photo-upload-area">
+        <button class="upload-btn" onclick="document.getElementById('photoInput').click()">&#128247; 사진 올리기</button>
+        <input type="file" id="photoInput" accept="image/*" multiple style="display:none" onchange="handlePhoto(this)">
+      </div>
+      <!-- 가이드 -->
+      <div class="guide" id="guidePhoto">
+        <strong>사진에서 검색</strong><br><br>
+        책을 읽다가 모르는 단어나 표현에 동그라미(○), 밑줄(_), 또는 #표시를 해두세요.<br>
+        미리 찍어둔 페이지의 사진을 위 버튼을 눌러서 올리세요.<br>
+        표시된 단어를 자동으로 찾아서 검색합니다.<br><br>
+        사진은 여러 장을 한꺼번에 올릴 수 있어요.
+      </div>
+      <!-- 추출된 단어 리스트 -->
+      <div class="word-list" id="wordList"></div>
+      <div class="result-area" id="resultPhoto"></div>
+    </div>
+
+    <!-- 탭3: 단어장 -->
+    <div class="tab-content" id="tabWordbook">
+      <div class="empty-tab">준비 중입니다.</div>
+    </div>
+
+    <!-- 탭4: Quiz -->
+    <div class="tab-content" id="tabQuiz">
+      <div class="empty-tab">준비 중입니다.</div>
+    </div>
+
+  </div>
 </div>
-
-<!-- 사진 검색 가이드 -->
-<div class="guide" id="guide">
-  <strong>일반 검색</strong><br><br>
-  단어, 숙어, 문장을 직접 입력하고 검색 버튼을 누르세요.<br>
-  여러 단어를 쉼표(,)로 구분하면 한꺼번에 검색할 수 있어요.<br><br>
-  <strong>Book 검색</strong><br><br>
-  책을 읽다가 모르는 단어나 표현에 동그라미(○), 밑줄(_), 또는 #표시를 해두세요.<br>
-  미리 찍어둔 페이지의 사진을 &#128247; 버튼을 눌러서 올리세요.<br>
-  표시된 단어를 자동으로 찾아서 검색합니다.<br><br>
-  사진은 여러 장을 한꺼번에 올릴 수 있어요.
-</div>
-
-<div id="result"></div>
-
 
 <script>
+// --- 발음 듣기 (브라우저 TTS) ---
+function speak(text) {
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-US';
+  u.rate = 0.9;
+  speechSynthesis.speak(u);
+}
+
+// --- 탭 전환 ---
+function switchTab(tab) {
+  /* 사이드바 탭 활성화 */
+  document.querySelectorAll('.sidebar .tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  const map = { search: 0, photo: 1, wordbook: 2, quiz: 3 };
+  document.querySelectorAll('.sidebar .tab')[map[tab]].classList.add('active');
+  const panels = { search: 'tabSearch', photo: 'tabPhoto', wordbook: 'tabWordbook', quiz: 'tabQuiz' };
+  document.getElementById(panels[tab]).classList.add('active');
+}
+
 // --- 설정 (localStorage 공유) ---
 function getSettings() {
   const saved = localStorage.getItem('visibleVoca_settings');
@@ -234,44 +391,70 @@ function getSettings() {
   return { provider: 'gemini', apiKey: '' };
 }
 
-// --- 검색 ---
+// --- 일반검색 ---
 const input = document.getElementById('wordInput');
-const result = document.getElementById('result');
+const resultSearch = document.getElementById('resultSearch');
 
-// 여러 단어 검색을 위한 상태
+/* 여러 단어 검색을 위한 상태 */
 let wordList = [];
 let currentWordIndex = 0;
 let wordResults = {};
 
-// --- 브라우저 캐시 (localStorage) ---
-const CACHE_KEY = 'visualVoca_resultCache';
+// --- 브라우저 캐시 (IndexedDB) ---
+const DB_NAME = 'visualVoca';
+const DB_VERSION = 1;
+const STORE_NAME = 'resultCache';
 
-function loadCache() {
-  try { return JSON.parse(localStorage.getItem(CACHE_KEY)) || {}; }
-  catch { return {}; }
+/* IndexedDB 열기 */
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME);
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
 }
 
-function saveCacheEntry(word, html) {
+/* 캐시 저장 */
+async function saveCacheEntry(word, html) {
   try {
-    const cache = loadCache();
-    cache[word] = html;
-    localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+    const db = await openDB();
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    tx.objectStore(STORE_NAME).put(html, word);
   } catch (e) {
     console.warn('캐시 저장 실패:', e);
   }
 }
 
-function getCacheEntry(word) {
-  return loadCache()[word] || null;
+/* 캐시 조회 */
+async function getCacheEntry(word) {
+  try {
+    const db = await openDB();
+    return new Promise((resolve) => {
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const req = tx.objectStore(STORE_NAME).get(word);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => resolve(null);
+    });
+  } catch {
+    return null;
+  }
 }
 
-function resetCache() {
-  if (!confirm('캐시를 초기화하시겠습니까?\n같은 단어를 다시 검색하면 비용이 발생합니다.')) return;
-  localStorage.removeItem(CACHE_KEY);
-  wordResults = {};
-  const msg = document.getElementById('cacheStatusMsg');
-  msg.textContent = '캐시가 초기화되었습니다.';
-  msg.className = 'status-msg ok';
+/* 캐시 전체 삭제 */
+async function clearCache() {
+  try {
+    const db = await openDB();
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    tx.objectStore(STORE_NAME).clear();
+  } catch (e) {
+    console.warn('캐시 삭제 실패:', e);
+  }
 }
 
 input.addEventListener('keydown', e => {
@@ -286,13 +469,14 @@ const PROMPT_TEMPLATE = `너는 한국어로만 대답하는 영어 단어 느�
 
 형식:
 만약 입력에 문법 오류나 오타가 있다면, 첫 줄에 [CORRECTED: 올바른 표현] 형식으로 교정된 문장을 적어줘. 오류가 없으면 이 줄은 생략.
+입력이 단어나 숙어인 경우, [POS: 품사] 형식으로 품사를 적어줘. 품사는 영어 약어로 적을 것 (noun, verb, adj, adv, phrase 등). 여러 품사가 가능하면 쉼표로 구분. 입력이 문장이면 이 줄은 생략.
 1줄: 핵심 느낌을 큰따옴표로 감싸서 한 문장 요약. 예) "하나였던 것이 딱 갈라지는" 이미지예요.
 2줄: 그 느낌을 바로 이해할 수 있는 비유나 장면 1~2문장.
 ---
 3줄 이후: 자주 쓰이는 예시 2~3개. 영어 예문과 한국어 해석을 각각 한 줄씩 적되, "영어:", "한국어:" 같은 라벨 없이 바로 문장만 적을 것. 예문과 예문 사이에는 빈 줄 하나를 넣어서 구분할 것.
 
 규칙:
-- 반드시 한국어로만 설명할 것 ([CORRECTED: ...] 안의 영어만 예외)
+- 반드시 한국어로만 설명할 것 ([CORRECTED: ...], [POS: ...] 안의 영어만 예외)
 - 번역투 금지. 자연스러운 한국어 구어체로 작성
 - 짧고 간결하게
 - 마크다운 서식 쓰지 말 것
@@ -342,16 +526,10 @@ async function generateImageGemini(apiKey, word) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       contents: [{ parts: [{ text: imagePrompt }] }],
-      generationConfig: {
-        responseModalities: ['IMAGE', 'TEXT']
-      }
+      generationConfig: { responseModalities: ['IMAGE', 'TEXT'] }
     })
   });
-  if (!res.ok) {
-    const errBody = await res.text();
-    console.error('Gemini 이미지 API 오류:', res.status, errBody);
-    throw new Error('이미지 생성 API 오류');
-  }
+  if (!res.ok) throw new Error('이미지 생성 API 오류');
   const data = await res.json();
   const parts = data.candidates?.[0]?.content?.parts || [];
   for (const part of parts) {
@@ -383,7 +561,99 @@ async function generateImageDalle(apiKey, word) {
   return data.data?.[0]?.url;
 }
 
-// --- 멀티 단어 검색 ---
+// --- 공통: 단어 검색 후 결과 HTML 생성 ---
+async function fetchWordResult(word, targetEl) {
+  /* 브라우저 캐시 확인 (IndexedDB) */
+  const cached = await getCacheEntry(word);
+  if (cached) {
+    wordResults[word] = { html: cached };
+    return cached;
+  }
+
+  const settings = getSettings();
+  if (!settings.apiKey) {
+    targetEl.innerHTML = '<div class="error">홈에서 설정 버튼을 눌러 API 키를 먼저 입력해주세요.</div>';
+    return null;
+  }
+
+  targetEl.innerHTML = '<div class="loading">느낌을 찾는 중...</div>';
+
+  const prompt = PROMPT_TEMPLATE.replace('{{WORD}}', word);
+
+  const textPromise = settings.provider === 'gemini'
+    ? callGemini(settings.apiKey, prompt)
+    : callChatGPT(settings.apiKey, prompt);
+
+  const imagePromise = settings.provider === 'gemini'
+    ? generateImageGemini(settings.apiKey, word)
+    : generateImageDalle(settings.apiKey, word);
+
+  const text = await textPromise;
+  if (!text) {
+    targetEl.innerHTML = '<div class="error">응답을 받지 못했습니다.</div>';
+    return null;
+  }
+
+  let corrected = '';
+  let pos = '';
+  let body = text;
+  const corrMatch = text.match(/\[CORRECTED:\s*(.+?)\]/i);
+  if (corrMatch) {
+    corrected = corrMatch[1].trim();
+    body = text.replace(/\[CORRECTED:\s*.+?\]\n?/i, '');
+  }
+  const posMatch = body.match(/\[POS:\s*(.+?)\]/i);
+  if (posMatch) {
+    pos = posMatch[1].trim();
+    body = body.replace(/\[POS:\s*.+?\]\n?/i, '');
+  }
+
+  const parts = body.split(/\n---\n?/);
+  const desc = parts[0].trim();
+  const examples = parts.length > 1 ? parts[1].trim() : '';
+  const speakWord = (corrected || word).replace(/'/g, "\\'");
+  let html = `<div class="word-header">`;
+  html += `<div class="word-title">${corrected || word}</div>`;
+  html += `<button class="speak-btn" onclick="speak('${speakWord}')" title="발음 듣기">&#128264;</button>`;
+  html += `</div>`;
+  if (pos) html += `<div class="word-pos">${pos}</div>`;
+  if (corrected) html += `<div class="corrected">${word} → <span>${corrected}</span></div>`;
+  html += `<div class="feel-desc">${desc}</div>`;
+  html += `<div class="feel-image-container" id="imageContainer"><div class="feel-image-loading">이미지 생성 중...</div></div>`;
+  if (examples) html += `<div class="feel-examples">${examples}</div>`;
+
+  wordResults[word] = { html };
+  targetEl.innerHTML = html;
+
+  /* 이미지 비동기 처리 — targetEl 내부에서 컨테이너를 찾음 */
+  try {
+    const imageUrl = await imagePromise;
+    const container = targetEl.querySelector('.feel-image-container');
+    if (container) {
+      container.innerHTML = `<img src="${imageUrl}" alt="${word}의 느낌을 표현한 이미지">`;
+    }
+    const imgHtml = html.replace(
+      '<div class="feel-image-loading">이미지 생성 중...</div>',
+      `<img src="${imageUrl}" alt="${word}의 느낌을 표현한 이미지">`
+    );
+    wordResults[word] = { html: imgHtml };
+    saveCacheEntry(word, imgHtml);
+  } catch (imgErr) {
+    console.error('이미지 생성 실패:', imgErr);
+    const container = targetEl.querySelector('.feel-image-container');
+    if (container) container.remove();
+    const noImgHtml = html.replace(
+      '<div class="feel-image-container" id="imageContainer"><div class="feel-image-loading">이미지 생성 중...</div></div>',
+      ''
+    );
+    wordResults[word] = { html: noImgHtml };
+    saveCacheEntry(word, noImgHtml);
+  }
+
+  return wordResults[word].html;
+}
+
+// --- 일반검색: 멀티 단어 ---
 function startLookup() {
   const raw = input.value.trim();
   if (!raw) return;
@@ -391,13 +661,14 @@ function startLookup() {
   if (wordList.length === 0) return;
   currentWordIndex = 0;
   wordResults = {};
+  document.getElementById('guideSearch').style.display = 'none';
   lookupWord(wordList[currentWordIndex]);
 }
 
 function prevWord() {
   if (currentWordIndex > 0) {
     currentWordIndex--;
-    showCachedResult(wordList[currentWordIndex]);
+    showSearchResult(wordList[currentWordIndex]);
   }
 }
 
@@ -406,105 +677,35 @@ function nextWord() {
   if (currentWordIndex < wordList.length) {
     const word = wordList[currentWordIndex];
     if (wordResults[word]) {
-      showCachedResult(word);
+      showSearchResult(word);
     } else {
       lookupWord(word);
     }
   }
 }
 
-function showCachedResult(word) {
+function showSearchResult(word) {
   const cached = wordResults[word];
   if (!cached) return;
-  result.innerHTML = cached.html + buildNavBar();
+  resultSearch.innerHTML = cached.html + buildNavBar();
 }
 
-// --- 개별 단어 검색 ---
 async function lookupWord(word) {
-  // 브라우저 캐시 확인
-  const cached = getCacheEntry(word);
+  const cached = await getCacheEntry(word);
   if (cached) {
     wordResults[word] = { html: cached };
-    showCachedResult(word);
+    showSearchResult(word);
     return;
   }
-
-  const settings = getSettings();
-  if (!settings.apiKey) {
-    result.innerHTML = '<div class="error">홈에서 설정 버튼을 눌러 API 키를 먼저 입력해주세요.</div>';
-    return;
-  }
-
-  document.getElementById('guide').style.display = 'none';
-  result.innerHTML = '<div class="loading">느낌을 찾는 중...</div>';
-
-  const prompt = PROMPT_TEMPLATE.replace('{{WORD}}', word);
 
   try {
-    const textPromise = settings.provider === 'gemini'
-      ? callGemini(settings.apiKey, prompt)
-      : callChatGPT(settings.apiKey, prompt);
-
-    const imagePromise = settings.provider === 'gemini'
-      ? generateImageGemini(settings.apiKey, word)
-      : generateImageDalle(settings.apiKey, word);
-
-    const text = await textPromise;
-
-    if (!text) {
-      result.innerHTML = '<div class="error">응답을 받지 못했습니다.</div>';
-      return;
-    }
-
-    let corrected = '';
-    let body = text;
-    const corrMatch = text.match(/\[CORRECTED:\s*(.+?)\]/i);
-    if (corrMatch) {
-      corrected = corrMatch[1].trim();
-      body = text.replace(/\[CORRECTED:\s*.+?\]\n?/i, '');
-    }
-
-    const parts = body.split(/\n---\n?/);
-    const desc = parts[0].trim();
-    const examples = parts.length > 1 ? parts[1].trim() : '';
-    let html = `<div class="word-title">${corrected || word}</div>`;
-    if (corrected) html += `<div class="corrected">${word} → <span>${corrected}</span></div>`;
-    html += `<div class="feel-desc">${desc}</div>`;
-    html += `<div class="feel-image-container" id="imageContainer"><div class="feel-image-loading">이미지 생성 중...</div></div>`;
-    if (examples) html += `<div class="feel-examples">${examples}</div>`;
-
-    wordResults[word] = { html };
-    result.innerHTML = html + buildNavBar();
-
-    try {
-      const imageUrl = await imagePromise;
-      const container = document.getElementById('imageContainer');
-      if (container) {
-        container.innerHTML = `<img src="${imageUrl}" alt="${word}의 느낌을 표현한 이미지">`;
-      }
-      const imgHtml = html.replace(
-        '<div class="feel-image-loading">이미지 생성 중...</div>',
-        `<img src="${imageUrl}" alt="${word}의 느낌을 표현한 이미지">`
-      );
-      wordResults[word] = { html: imgHtml };
-      saveCacheEntry(word, imgHtml);
-    } catch (imgErr) {
-      console.error('이미지 생성 실패:', imgErr);
-      const container = document.getElementById('imageContainer');
-      if (container) container.remove();
-      const noImgHtml = html.replace(
-        '<div class="feel-image-container" id="imageContainer"><div class="feel-image-loading">이미지 생성 중...</div></div>',
-        ''
-      );
-      wordResults[word] = { html: noImgHtml };
-      saveCacheEntry(word, noImgHtml);
-    }
+    await fetchWordResult(word, resultSearch);
+    resultSearch.innerHTML = (wordResults[word]?.html || '') + buildNavBar();
   } catch (err) {
-    result.innerHTML = '<div class="error">API 오류가 발생했습니다. 홈에서 API 키를 확인해주세요.</div>';
+    resultSearch.innerHTML = '<div class="error">API 오류가 발생했습니다. 홈에서 API 키를 확인해주세요.</div>';
   }
 }
 
-// --- 네비게이션 바 ---
 function buildNavBar() {
   if (wordList.length <= 1) return '';
   let html = `<div class="nav-bar">`;
@@ -521,7 +722,11 @@ function buildNavBar() {
 
 function lookup() { startLookup(); }
 
-// --- 사진에서 단어 추출 ---
+// --- 사진에서 검색 ---
+const resultPhoto = document.getElementById('resultPhoto');
+const wordListEl = document.getElementById('wordList');
+let photoWords = [];
+
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -556,19 +761,21 @@ async function extractWordsFromPhoto(apiKey, base64Data, mimeType) {
   return data.candidates?.[0]?.content?.parts?.[0]?.text;
 }
 
+/* 사진 업로드 처리 → 단어 리스트 표시 */
 async function handlePhoto(inputEl) {
   const files = Array.from(inputEl.files);
   if (files.length === 0) return;
 
   const settings = getSettings();
   if (!settings.apiKey) {
-    result.innerHTML = '<div class="error">홈에서 설정 버튼을 눌러 API 키를 먼저 입력해주세요.</div>';
+    resultPhoto.innerHTML = '<div class="error">홈에서 설정 버튼을 눌러 API 키를 먼저 입력해주세요.</div>';
     inputEl.value = '';
     return;
   }
 
-  document.getElementById('guide').style.display = 'none';
-  result.innerHTML = `<div class="loading">사진 ${files.length}장에서 단어를 추출하는 중...</div>`;
+  document.getElementById('guidePhoto').style.display = 'none';
+  wordListEl.innerHTML = '';
+  resultPhoto.innerHTML = `<div class="loading">사진 ${files.length}장에서 단어를 추출하는 중...</div>`;
 
   try {
     const promises = files.map(async (file) => {
@@ -577,23 +784,53 @@ async function handlePhoto(inputEl) {
     });
     const results = await Promise.all(promises);
 
-    const allWords = results
-      .filter(r => r && r.trim())
-      .join(', ');
-
+    const allWords = results.filter(r => r && r.trim()).join(', ');
     if (!allWords) {
-      result.innerHTML = '<div class="error">#표시된 단어를 찾지 못했습니다.</div>';
+      resultPhoto.innerHTML = '<div class="error">#표시된 단어를 찾지 못했습니다.</div>';
       inputEl.value = '';
       return;
     }
 
-    input.value = allWords;
+    /* 추출된 단어를 칩 리스트로 표시 */
+    photoWords = allWords.split(',').map(w => w.trim().toLowerCase()).filter(w => w);
+    wordResults = {};
+    resultPhoto.innerHTML = '';
+
+    wordListEl.innerHTML = photoWords.map((w, i) =>
+      `<button class="word-chip" onclick="selectPhotoWord(${i})">${w}</button>`
+    ).join('');
+
     inputEl.value = '';
-    startLookup();
   } catch (err) {
     console.error('사진 분석 실패:', err);
-    result.innerHTML = '<div class="error">사진 분석에 실패했습니다. 다시 시도해주세요.</div>';
+    resultPhoto.innerHTML = '<div class="error">사진 분석에 실패했습니다. 다시 시도해주세요.</div>';
     inputEl.value = '';
+  }
+}
+
+/* 단어 칩 클릭 → 해당 단어 결과 표시 */
+async function selectPhotoWord(index) {
+  const word = photoWords[index];
+
+  /* 활성 칩 표시 */
+  document.querySelectorAll('.word-chip').forEach((el, i) => {
+    el.classList.toggle('active', i === index);
+  });
+
+  /* 메모리 캐시 확인 */
+  if (wordResults[word]) {
+    resultPhoto.innerHTML = wordResults[word].html;
+    return;
+  }
+
+  try {
+    const cachedHtml = await fetchWordResult(word, resultPhoto);
+    /* IndexedDB 캐시 히트 시 fetchWordResult가 렌더링하지 않으므로 직접 표시 */
+    if (cachedHtml && wordResults[word]) {
+      resultPhoto.innerHTML = wordResults[word].html;
+    }
+  } catch (err) {
+    resultPhoto.innerHTML = '<div class="error">API 오류가 발생했습니다. 홈에서 API 키를 확인해주세요.</div>';
   }
 }
 </script>

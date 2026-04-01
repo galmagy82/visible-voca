@@ -414,13 +414,28 @@ function saveSettings() {
   setTimeout(closeSettings, 600);
 }
 
-// --- 캐시 관리 ---
-function resetCache() {
+// --- 캐시 관리 (IndexedDB) ---
+async function resetCache() {
   if (!confirm('캐시를 초기화하시겠습니까?\n같은 단어를 다시 검색하면 비용이 발생합니다.')) return;
-  localStorage.removeItem('visualVoca_resultCache');
-  const msg = document.getElementById('cacheStatusMsg');
-  msg.textContent = '캐시가 초기화되었습니다.';
-  msg.className = 'status-msg ok';
+  try {
+    const req = indexedDB.open('visualVoca', 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains('resultCache')) {
+        db.createObjectStore('resultCache');
+      }
+    };
+    req.onsuccess = () => {
+      const db = req.result;
+      const tx = db.transaction('resultCache', 'readwrite');
+      tx.objectStore('resultCache').clear();
+      const msg = document.getElementById('cacheStatusMsg');
+      msg.textContent = '캐시가 초기화되었습니다.';
+      msg.className = 'status-msg ok';
+    };
+  } catch (e) {
+    console.warn('캐시 초기화 실패:', e);
+  }
 }
 
 // 모달 바깥 클릭 시 닫기
