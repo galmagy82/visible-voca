@@ -419,11 +419,14 @@ function saveSettings() {
 async function resetCache() {
   if (!confirm('캐시를 초기화하시겠습니까?\n같은 단어를 다시 검색하면 비용이 발생합니다.')) return;
   try {
-    const req = indexedDB.open('visualVoca', 1);
+    const req = indexedDB.open('visualVoca', 2);
     req.onupgradeneeded = () => {
       const db = req.result;
       if (!db.objectStoreNames.contains('resultCache')) {
         db.createObjectStore('resultCache');
+      }
+      if (!db.objectStoreNames.contains('wordbook')) {
+        db.createObjectStore('wordbook', { keyPath: 'word' });
       }
     };
     req.onsuccess = () => {
