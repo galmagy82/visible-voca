@@ -58,6 +58,115 @@
     text-decoration: none;
   }
   .start-btn:hover { background: #3a3a3a; }
+
+  /* API 키 모달 오버레이 */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.active { display: flex; }
+
+  /* API 키 모달 */
+  .modal {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 16px;
+    padding: 32px;
+    width: 90%;
+    max-width: 400px;
+  }
+  .modal h2 {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #ddd;
+    margin-bottom: 24px;
+  }
+  .modal label {
+    display: block;
+    font-size: 0.9rem;
+    color: #888;
+    margin-bottom: 8px;
+  }
+  .modal select,
+  .modal input[type="password"] {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 1rem;
+    border: 1px solid #333;
+    border-radius: 10px;
+    background: #0f0f0f;
+    color: #fff;
+    outline: none;
+    margin-bottom: 20px;
+  }
+  .modal select { appearance: none; cursor: pointer; }
+  .modal select:focus,
+  .modal input[type="password"]:focus { border-color: #555; }
+  .modal input[type="password"]::placeholder { color: #555; }
+
+  /* 가이드 아코디언 */
+  .guide-toggle {
+    display: inline-block;
+    font-size: 0.85rem;
+    color: #6a9955;
+    cursor: pointer;
+    margin-bottom: 16px;
+    transition: color 0.2s;
+  }
+  .guide-toggle:hover { color: #8abf6a; }
+  .guide-content {
+    display: none;
+    background: #0f0f0f;
+    border: 1px solid #333;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 20px;
+    font-size: 0.85rem;
+    line-height: 1.8;
+    color: #aaa;
+  }
+  .guide-content.active { display: block; }
+  .guide-content h3 {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #ddd;
+    margin-bottom: 8px;
+  }
+  .guide-content ol { padding-left: 20px; margin-bottom: 12px; }
+  .guide-content a { color: #6a9955; text-decoration: none; }
+  .guide-content a:hover { text-decoration: underline; }
+  .guide-content .guide-note {
+    color: #888;
+    font-size: 0.8rem;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #222;
+  }
+
+  /* 상태 메시지 */
+  .status-msg { font-size: 0.85rem; color: #666; margin-bottom: 16px; }
+  .status-msg.ok { color: #6a6; }
+  .status-msg.warn { color: #a86; }
+
+  /* 모달 버튼 */
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+  .modal-actions button {
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-save { background: #2d4a2d; color: #8f8; }
+  .btn-save:hover { background: #3a5c3a; }
+  .btn-cancel { background: #2a2a2a; color: #aaa; }
+  .btn-cancel:hover { background: #3a3a3a; }
 </style>
 </head>
 <body>
@@ -74,8 +183,99 @@
   </video>
 </div>
 
-<!-- 시작하기 버튼 — main.html로 이동 -->
-<a class="start-btn" href="main.html">시작하기</a>
+<!-- 시작하기 버튼 -->
+<a class="start-btn" href="#" id="startBtn">시작하기</a>
+
+<!-- API 키 등록 모달 -->
+<div class="modal-overlay" id="apiModal">
+  <div class="modal">
+    <h2>API 키 등록</h2>
+
+    <label for="providerSelect">AI 서비스</label>
+    <select id="providerSelect" onchange="onProviderChange()">
+      <option value="gemini">Gemini</option>
+    </select>
+
+    <label for="apiKeyInput">API Key</label>
+    <input type="password" id="apiKeyInput" placeholder="AIza... 형태의 Gemini API 키">
+
+    <span class="guide-toggle" onclick="toggleGuide()">&#9656; API 키 발급 가이드</span>
+    <div class="guide-content" id="guideContent">
+      <div id="guideGemini">
+        <h3>Gemini API 키 발급 방법</h3>
+        <ol>
+          <li><a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio</a>에 접속합니다.</li>
+          <li>Google 계정으로 로그인합니다.</li>
+          <li>"API 키 만들기" 버튼을 클릭합니다.</li>
+          <li>생성된 키를 복사하여 위에 붙여넣습니다.</li>
+        </ol>
+        <div class="guide-note">단어 검색은 무료입니다.<br>이미지 생성(Visual Voca) 기능은 Google AI Studio에서 결제 연동하면 동작합니다.</div>
+      </div>
+    </div>
+
+    <div id="statusMsg" class="status-msg"></div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">취소</button>
+      <button class="btn-save" onclick="saveAndGo()">저장 후 시작</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* 시작 버튼 클릭 — API 키 유무 확인 */
+document.getElementById('startBtn').addEventListener('click', function(e) {
+  e.preventDefault();
+  var saved = localStorage.getItem('visibleVoca_settings');
+  var settings = saved ? JSON.parse(saved) : null;
+  if (settings && settings.apiKey) {
+    location.href = 'main.html';
+  } else {
+    document.getElementById('apiModal').classList.add('active');
+  }
+});
+
+/* 모달 닫기 */
+function closeModal() {
+  document.getElementById('apiModal').classList.remove('active');
+}
+
+/* 모달 바깥 클릭 시 닫기 */
+document.getElementById('apiModal').addEventListener('click', function(e) {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+/* 프로바이더 변경 */
+function onProviderChange() {
+  var provider = document.getElementById('providerSelect').value;
+  document.getElementById('apiKeyInput').placeholder = provider === 'gemini'
+    ? 'AIza... 형태의 Gemini API 키' : 'sk-... 형태의 OpenAI API 키';
+}
+
+/* 가이드 토글 */
+function toggleGuide() {
+  var content = document.getElementById('guideContent');
+  var toggle = document.querySelector('.guide-toggle');
+  content.classList.toggle('active');
+  toggle.innerHTML = content.classList.contains('active') ? '&#9662; API 키 발급 가이드' : '&#9656; API 키 발급 가이드';
+}
+
+/* 저장 후 이동 */
+function saveAndGo() {
+  var provider = document.getElementById('providerSelect').value;
+  var apiKey = document.getElementById('apiKeyInput').value.trim();
+  var msg = document.getElementById('statusMsg');
+  if (!apiKey) {
+    msg.textContent = 'API 키를 입력해주세요.';
+    msg.className = 'status-msg warn';
+    return;
+  }
+  localStorage.setItem('visibleVoca_settings', JSON.stringify({ provider: provider, apiKey: apiKey }));
+  msg.textContent = '저장되었습니다.';
+  msg.className = 'status-msg ok';
+  setTimeout(function() { location.href = 'main.html'; }, 500);
+}
+</script>
 
 </body>
 </html>
