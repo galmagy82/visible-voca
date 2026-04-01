@@ -414,11 +414,40 @@
     text-align: center;
     padding-top: 40px;
   }
-  .wordbook-detail {
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid #222;
+  /* 단어장 상세 모달 */
+  .wb-modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
   }
+  .wb-modal-overlay.active { display: flex; }
+  .wb-modal {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 14px;
+    padding: 32px;
+    width: 90%;
+    max-width: 680px;
+    max-height: 85vh;
+    overflow-y: auto;
+    position: relative;
+  }
+  .wb-modal-close {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    font-size: 1.3rem;
+    border: none;
+    background: transparent;
+    color: #666;
+    cursor: pointer;
+    padding: 4px 8px;
+  }
+  .wb-modal-close:hover { color: #ccc; }
 
   /* 홈 버튼 */
   .top-btn {
@@ -555,8 +584,6 @@
       </div>
       <!-- 단어 목록 -->
       <div class="wordbook-list" id="wordbookList"></div>
-      <!-- 단어 상세 -->
-      <div class="wordbook-detail" id="wordbookDetail" style="display:none;"></div>
     </div>
 
     <!-- 탭4: Quiz -->
@@ -564,6 +591,14 @@
       <div class="empty-tab">준비 중입니다.</div>
     </div>
 
+  </div>
+</div>
+
+<!-- 단어장 상세 모달 -->
+<div class="wb-modal-overlay" id="wbModal" onclick="if(event.target===this)closeWbModal()">
+  <div class="wb-modal">
+    <button class="wb-modal-close" onclick="closeWbModal()">&#10005;</button>
+    <div id="wbModalContent"></div>
   </div>
 </div>
 
@@ -1121,7 +1156,7 @@ function enterSelectMode() {
   selectMode = true;
   document.getElementById('wordbookList').classList.add('select-mode');
   document.getElementById('selectActions').classList.add('active');
-  document.getElementById('wordbookDetail').style.display = 'none';
+  closeWbModal();
   updateSelCount();
 }
 
@@ -1156,7 +1191,7 @@ async function deleteSelected() {
     await removeFromWordbook(el.dataset.word);
   }
   exitSelectMode();
-  document.getElementById('wordbookDetail').style.display = 'none';
+  closeWbModal();
   renderWordbook();
 }
 
@@ -1192,27 +1227,39 @@ async function renderWordbook() {
   }).join('');
 }
 
-/* 단어장 상세 보기 */
+/* 단어장 상세 모달 열기 */
 async function showWordbookDetail(word, itemEl) {
   /* 활성 표시 */
   document.querySelectorAll('.wordbook-item').forEach(el => el.classList.remove('active'));
   if (itemEl) itemEl.classList.add('active');
 
-  const detailEl = document.getElementById('wordbookDetail');
-  detailEl.style.display = 'block';
+  const contentEl = document.getElementById('wbModalContent');
+  const modal = document.getElementById('wbModal');
+  modal.classList.add('active');
+  /* 스크롤 최상단 초기화 */
+  modal.querySelector('.wb-modal').scrollTop = 0;
 
   /* 캐시에서 결과 가져오기 */
   const cached = await getCacheEntry(word);
   if (cached) {
-    detailEl.innerHTML = cached;
+    contentEl.innerHTML = cached;
   } else {
-    detailEl.innerHTML = `<div class="loading">${word}의 결과를 불러오는 중...</div>`;
+    contentEl.innerHTML = `<div class="loading">${word}의 결과를 불러오는 중...</div>`;
     try {
-      await fetchWordResult(word, detailEl);
+      await fetchWordResult(word, contentEl);
     } catch {
-      detailEl.innerHTML = '<div class="error">결과를 불러올 수 없습니다.</div>';
+      contentEl.innerHTML = '<div class="error">결과를 불러올 수 없습니다.</div>';
     }
   }
+  /* 모달에서는 "단어장에 추가" 버튼 숨기기 */
+  const addBtn = contentEl.querySelector('.add-wordbook-btn');
+  if (addBtn) addBtn.style.display = 'none';
+}
+
+/* 단어장 상세 모달 닫기 */
+function closeWbModal() {
+  document.getElementById('wbModal').classList.remove('active');
+  document.querySelectorAll('.wordbook-item').forEach(el => el.classList.remove('active'));
 }
 
 /* 탭 전환 시 단어장 목록 로드 — 기존 switchTab 확장 */
@@ -1220,7 +1267,7 @@ const _origSwitchTab = switchTab;
 switchTab = function(tab) {
   _origSwitchTab(tab);
   if (tab === 'wordbook') {
-    document.getElementById('wordbookDetail').style.display = 'none';
+    closeWbModal();
     renderWordbook();
   }
 };
