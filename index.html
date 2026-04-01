@@ -3,10 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Story Kongko</title>
+<title>Story Kongko - Welcome</title>
 <style>
-  /* 공통 스타일 */
+  /* 공통 초기화 */
   * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /* 전체 화면 배경 */
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     background: #0f0f0f;
@@ -15,434 +17,65 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 80px 20px;
+    justify-content: center;
+    padding: 40px 20px;
   }
+
+  /* 타이틀 */
   h1 {
     font-size: 2.2rem;
     font-weight: 700;
     color: #e0e0e0;
-    margin-bottom: 48px;
+    margin-bottom: 36px;
     letter-spacing: 0.15em;
   }
-  button {
-    padding: 14px 24px;
-    font-size: 1rem;
+
+  /* 영상 컨테이너 */
+  .video-wrap {
+    width: 100%;
+    max-width: 640px;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid #333;
+    margin-bottom: 40px;
+    background: #000;
+  }
+  .video-wrap video {
+    width: 100%;
+    display: block;
+  }
+
+  /* 시작하기 버튼 */
+  .start-btn {
+    padding: 16px 48px;
+    font-size: 1.1rem;
     border: none;
     border-radius: 12px;
     background: #2a2a2a;
     color: #ccc;
     cursor: pointer;
     transition: background 0.2s;
-  }
-  button:hover { background: #3a3a3a; }
-
-  /* 카테고리 메뉴 */
-  .menu {
-    width: 100%;
-    max-width: 420px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-  .menu-card {
-    padding: 28px 24px;
-    background: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 14px;
-    cursor: pointer;
-    transition: border-color 0.2s, background 0.2s;
-    text-decoration: none;
-    color: inherit;
-  }
-  .menu-card:hover { border-color: #555; background: #222; }
-  .menu-card h2 {
-    font-size: 1.15rem;
-    font-weight: 500;
-    color: #ddd;
-    margin-bottom: 6px;
-  }
-  .menu-card p {
-    font-size: 0.9rem;
-    color: #777;
-  }
-
-  /* 설정 버튼 */
-  .settings-btn {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: #1a1a1a;
-    border: 1px solid #333;
-    color: #888;
-    font-size: 1.2rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    transition: border-color 0.2s, color 0.2s;
-  }
-  .settings-btn:hover { border-color: #555; color: #ccc; }
-
-  /* 설정 모달 */
-  .modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.6);
-    z-index: 100;
-    align-items: center;
-    justify-content: center;
-  }
-  .modal-overlay.active { display: flex; }
-  .modal {
-    background: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 16px;
-    padding: 32px;
-    width: 90%;
-    max-width: 400px;
-  }
-  .modal h2 {
-    font-size: 1.2rem;
-    font-weight: 500;
-    color: #ddd;
-    margin-bottom: 24px;
-  }
-  .modal label {
-    display: block;
-    font-size: 0.9rem;
-    color: #888;
-    margin-bottom: 8px;
-  }
-  .modal select {
-    width: 100%;
-    padding: 12px 16px;
-    font-size: 1rem;
-    border: 1px solid #333;
-    border-radius: 10px;
-    background: #0f0f0f;
-    color: #fff;
-    outline: none;
-    margin-bottom: 20px;
-    appearance: none;
-    cursor: pointer;
-  }
-  .modal select:focus { border-color: #555; }
-  .modal input[type="password"] {
-    width: 100%;
-    padding: 12px 16px;
-    font-size: 1rem;
-    border: 1px solid #333;
-    border-radius: 10px;
-    background: #0f0f0f;
-    color: #fff;
-    outline: none;
-    margin-bottom: 24px;
-  }
-  .modal input[type="password"]:focus { border-color: #555; }
-  .modal input[type="password"]::placeholder { color: #555; }
-  .modal-actions {
-    display: flex;
-    gap: 8px;
-    justify-content: flex-end;
-  }
-  .modal-actions button {
-    padding: 10px 20px;
-    font-size: 0.95rem;
-    border-radius: 10px;
-  }
-  .btn-save { background: #2d4a2d; color: #8f8; }
-  .btn-save:hover { background: #3a5c3a; }
-  .btn-cancel { background: #2a2a2a; color: #aaa; }
-
-  /* 가이드 아코디언 */
-  .guide-toggle {
-    display: inline-block;
-    font-size: 0.85rem;
-    color: #6a9955;
-    cursor: pointer;
-    margin-bottom: 16px;
-    transition: color 0.2s;
-  }
-  .guide-toggle:hover { color: #8abf6a; }
-  .guide-content {
-    display: none;
-    background: #0f0f0f;
-    border: 1px solid #333;
-    border-radius: 10px;
-    padding: 16px;
-    margin-bottom: 20px;
-    font-size: 0.85rem;
-    line-height: 1.8;
-    color: #aaa;
-  }
-  .guide-content.active { display: block; }
-  .guide-content h3 {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: #ddd;
-    margin-bottom: 8px;
-  }
-  .guide-content ol {
-    padding-left: 20px;
-    margin-bottom: 12px;
-  }
-  .guide-content a {
-    color: #6a9955;
     text-decoration: none;
   }
-  .guide-content a:hover { text-decoration: underline; }
-  .guide-content .guide-note {
-    color: #888;
-    font-size: 0.8rem;
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px solid #222;
-  }
-  .status-msg {
-    font-size: 0.85rem;
-    color: #666;
-    margin-bottom: 16px;
-  }
-  .status-msg.ok { color: #6a6; }
-  .status-msg.warn { color: #a86; }
-
-  /* 탭 메뉴 */
-  .modal-tabs {
-    display: flex;
-    gap: 0;
-    margin-bottom: 24px;
-    border-bottom: 1px solid #333;
-  }
-  .modal-tab {
-    flex: 1;
-    padding: 10px 0;
-    font-size: 0.9rem;
-    color: #666;
-    background: none;
-    border: none;
-    border-bottom: 2px solid transparent;
-    cursor: pointer;
-    transition: color 0.2s, border-color 0.2s;
-  }
-  .modal-tab:hover { color: #aaa; }
-  .modal-tab.active { color: #ddd; border-bottom-color: #ddd; }
-  .tab-content { display: none; }
-  .tab-content.active { display: block; }
-
-  /* 캐시 관리 */
-  .cache-desc {
-    font-size: 0.8rem;
-    color: #888;
-    line-height: 1.6;
-    margin-bottom: 16px;
-  }
-  .btn-reset {
-    padding: 10px 20px;
-    font-size: 0.95rem;
-    border-radius: 10px;
-    background: #4a2d2d;
-    color: #f88;
-    border: none;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-  .btn-reset:hover { background: #5c3a3a; }
+  .start-btn:hover { background: #3a3a3a; }
 </style>
 </head>
 <body>
 
-<!-- 설정 버튼 -->
-<button class="settings-btn" onclick="openSettings()" title="설정">&#9881;</button>
-
+<!-- 앱 타이틀 -->
 <h1>STORY KONGKO</h1>
 
-<!-- 카테고리 메뉴 -->
-<div class="menu">
-  <a class="menu-card" href="vocabulary.html">
-    <h2>Visual Voca</h2>
-    <p>단어의 느낌과 뉘앙스를 이미지와 함께 알아보세요</p>
-  </a>
-  <a class="menu-card" href="writing.html">
-    <h2>Visual Essay</h2>
-    <p>에세이를 코칭받고, 나만의 그림책으로 만들어보세요</p>
-  </a>
+<!-- 홍보 영상 -->
+<div class="video-wrap">
+  <video controls autoplay muted playsinline>
+    <source src="assets/kongko_video.mp4" type="video/mp4">
+    <!-- 브라우저가 video 태그를 지원하지 않을 때 표시 -->
+    영상을 재생할 수 없습니다.
+  </video>
 </div>
 
-<!-- 설정 모달 (API 설정 + 캐시 관리) -->
-<div class="modal-overlay" id="settingsModal">
-  <div class="modal">
-    <div class="modal-tabs">
-      <button class="modal-tab active" onclick="switchTab('api')">API 설정</button>
-      <button class="modal-tab" onclick="switchTab('cache')">캐시 관리</button>
-    </div>
-
-    <!-- API 설정 탭 -->
-    <div class="tab-content active" id="tabApi">
-      <label for="providerSelect">AI 서비스</label>
-      <select id="providerSelect" onchange="onProviderChange()">
-        <option value="gemini">Gemini</option>
-        <!-- <option value="chatgpt">ChatGPT / OpenAI</option> -->
-      </select>
-
-      <label for="apiKeyInput">API Key</label>
-      <input type="password" id="apiKeyInput" placeholder="API 키를 입력하세요">
-
-      <span class="guide-toggle" onclick="toggleGuide()">&#9656; API 키 발급 가이드</span>
-      <div class="guide-content" id="guideContent">
-        <div id="guideGemini">
-          <h3>Gemini API 키 발급 방법</h3>
-          <ol>
-            <li><a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio</a>에 접속합니다.</li>
-            <li>Google 계정으로 로그인합니다.</li>
-            <li>"API 키 만들기" 버튼을 클릭합니다.</li>
-            <li>생성된 키를 복사하여 위에 붙여넣습니다.</li>
-          </ol>
-          <div class="guide-note">단어 검색은 무료입니다.<br>이미지 생성(Visual Voca) 기능은 Google AI Studio에서 결제 연동하면 동작합니다.</div>
-        </div>
-        <div id="guideChatGPT" style="display:none;">
-          <h3>OpenAI API 키 발급 방법</h3>
-          <ol>
-            <li><a href="https://platform.openai.com/api-keys" target="_blank">OpenAI Platform</a>에 접속합니다.</li>
-            <li>OpenAI 계정으로 로그인합니다.</li>
-            <li>"Create new secret key" 버튼을 클릭합니다.</li>
-            <li>생성된 키를 복사하여 위에 붙여넣습니다.</li>
-          </ol>
-          <div class="guide-note">OpenAI에서 결제 연동이 필요합니다.<br>검색 1회당 약 50원의 비용이 발생합니다.</div>
-        </div>
-      </div>
-
-      <div id="statusMsg" class="status-msg"></div>
-
-      <div class="modal-actions">
-        <button class="btn-cancel" onclick="closeSettings()">취소</button>
-        <button class="btn-save" onclick="saveSettings()">저장</button>
-      </div>
-    </div>
-
-    <!-- 캐시 관리 탭 -->
-    <div class="tab-content" id="tabCache">
-      <div class="cache-desc">
-        이전에 검색한 단어는 캐시에 저장되어 다시 검색해도 비용이 발생하지 않습니다.<br>
-        캐시를 초기화하면 같은 단어를 다시 검색할 때 새로운 이미지가 생성되며 비용이 발생합니다.
-      </div>
-      <button class="btn-reset" onclick="resetCache()">캐시 초기화</button>
-      <div id="cacheStatusMsg" class="status-msg"></div>
-    </div>
-  </div>
-</div>
-
-<script>
-// --- 설정 관리 ---
-function getSettings() {
-  const saved = localStorage.getItem('visibleVoca_settings');
-  if (saved) return JSON.parse(saved);
-  return { provider: 'gemini', apiKey: '' };
-}
-
-function saveSettingsToStorage(provider, apiKey) {
-  localStorage.setItem('visibleVoca_settings', JSON.stringify({ provider, apiKey }));
-}
-
-function openSettings() {
-  const s = getSettings();
-  document.getElementById('providerSelect').value = s.provider;
-  document.getElementById('apiKeyInput').value = s.apiKey;
-  document.getElementById('apiKeyInput').placeholder = s.provider === 'gemini'
-    ? 'AIza... 형태의 Gemini API 키' : 'sk-... 형태의 OpenAI API 키';
-  document.getElementById('statusMsg').textContent = '';
-  document.getElementById('guideContent').classList.remove('active');
-  updateGuideContent(s.provider);
-  switchTab('api');
-  document.getElementById('cacheStatusMsg').textContent = '';
-  document.getElementById('settingsModal').classList.add('active');
-}
-
-// --- 탭 전환 ---
-function switchTab(tab) {
-  document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  if (tab === 'api') {
-    document.querySelector('.modal-tab:nth-child(1)').classList.add('active');
-    document.getElementById('tabApi').classList.add('active');
-  } else {
-    document.querySelector('.modal-tab:nth-child(2)').classList.add('active');
-    document.getElementById('tabCache').classList.add('active');
-  }
-}
-
-function closeSettings() {
-  document.getElementById('settingsModal').classList.remove('active');
-}
-
-function onProviderChange() {
-  const provider = document.getElementById('providerSelect').value;
-  document.getElementById('apiKeyInput').placeholder = provider === 'gemini'
-    ? 'AIza... 형태의 Gemini API 키' : 'sk-... 형태의 OpenAI API 키';
-  updateGuideContent(provider);
-}
-
-// --- 가이드 ---
-function toggleGuide() {
-  const content = document.getElementById('guideContent');
-  const toggle = document.querySelector('.guide-toggle');
-  content.classList.toggle('active');
-  toggle.innerHTML = content.classList.contains('active') ? '&#9662; API 키 발급 가이드' : '&#9656; API 키 발급 가이드';
-}
-
-function updateGuideContent(provider) {
-  document.getElementById('guideGemini').style.display = provider === 'gemini' ? 'block' : 'none';
-  document.getElementById('guideChatGPT').style.display = provider === 'chatgpt' ? 'block' : 'none';
-}
-
-function saveSettings() {
-  const provider = document.getElementById('providerSelect').value;
-  const apiKey = document.getElementById('apiKeyInput').value.trim();
-  const msg = document.getElementById('statusMsg');
-  if (!apiKey) {
-    msg.textContent = 'API 키를 입력해주세요.';
-    msg.className = 'status-msg warn';
-    return;
-  }
-  saveSettingsToStorage(provider, apiKey);
-  msg.textContent = '저장되었습니다.';
-  msg.className = 'status-msg ok';
-  setTimeout(closeSettings, 600);
-}
-
-// --- 캐시 관리 (IndexedDB) ---
-async function resetCache() {
-  if (!confirm('캐시를 초기화하시겠습니까?\n같은 단어를 다시 검색하면 비용이 발생합니다.')) return;
-  try {
-    const req = indexedDB.open('visualVoca', 1);
-    req.onupgradeneeded = () => {
-      const db = req.result;
-      if (!db.objectStoreNames.contains('resultCache')) {
-        db.createObjectStore('resultCache');
-      }
-    };
-    req.onsuccess = () => {
-      const db = req.result;
-      const tx = db.transaction('resultCache', 'readwrite');
-      tx.objectStore('resultCache').clear();
-      const msg = document.getElementById('cacheStatusMsg');
-      msg.textContent = '캐시가 초기화되었습니다.';
-      msg.className = 'status-msg ok';
-    };
-  } catch (e) {
-    console.warn('캐시 초기화 실패:', e);
-  }
-}
-
-// 모달 바깥 클릭 시 닫기
-document.getElementById('settingsModal').addEventListener('click', e => {
-  if (e.target === e.currentTarget) closeSettings();
-});
-</script>
+<!-- 시작하기 버튼 — main.html로 이동 -->
+<a class="start-btn" href="main.html">시작하기</a>
 
 </body>
 </html>
