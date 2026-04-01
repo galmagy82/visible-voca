@@ -268,12 +268,135 @@
   .error { color: #666; font-size: 1rem; }
   .loading { color: #555; font-size: 1rem; }
 
-  /* 빈 탭 안내 */
-  .empty-tab {
-    color: #555;
+  /* 단어장에 추가 버튼 */
+  .add-wordbook-btn {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    border: 1px solid #333;
+    border-radius: 10px;
+    background: #1a1a1a;
+    color: #888;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+  }
+  .add-wordbook-btn:hover { background: #2a2a2a; color: #ccc; border-color: #555; }
+  .add-wordbook-btn.added {
+    color: #6a9955;
+    border-color: #6a9955;
+    cursor: default;
+  }
+
+  /* 단어장 탭 */
+  .wordbook-toolbar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .wordbook-toolbar input {
+    flex: 1;
+    min-width: 150px;
+    padding: 10px 16px;
+    font-size: 0.9rem;
+    border: 1px solid #333;
+    border-radius: 10px;
+    background: #1a1a1a;
+    color: #fff;
+    outline: none;
+  }
+  .wordbook-toolbar input:focus { border-color: #555; }
+  .wordbook-toolbar input::placeholder { color: #555; }
+  .wordbook-toolbar select {
+    padding: 10px 12px;
+    font-size: 0.85rem;
+    border: 1px solid #333;
+    border-radius: 10px;
+    background: #1a1a1a;
+    color: #ccc;
+    outline: none;
+    cursor: pointer;
+  }
+  .wordbook-toolbar .toolbar-btn {
+    padding: 10px 16px;
+    font-size: 0.85rem;
+    border: 1px solid #444;
+    border-radius: 10px;
+    background: #2a2a2a;
+    color: #aaa;
+    cursor: pointer;
+  }
+  .wordbook-toolbar .toolbar-btn:hover { background: #3a3a3a; color: #ccc; }
+
+  /* 단어장 리스트 */
+  .wordbook-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .wordbook-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border: 1px solid #222;
+    border-radius: 10px;
+    background: #141414;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .wordbook-item:hover { background: #1a1a1a; border-color: #333; }
+  .wordbook-item.active { background: #1e1e1e; border-color: #444; }
+  .wordbook-item-word {
     font-size: 1rem;
-    padding-top: 40px;
+    font-weight: 500;
+    color: #ddd;
+    min-width: 100px;
+  }
+  .wordbook-item-pos {
+    font-size: 0.8rem;
+    color: #6a9955;
+    font-style: italic;
+    min-width: 50px;
+  }
+  .wordbook-item-summary {
+    flex: 1;
+    font-size: 0.85rem;
+    color: #777;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .wordbook-item-speak {
+    padding: 4px 8px;
+    font-size: 1rem;
+    border: 1px solid #333;
+    border-radius: 6px;
+    background: transparent;
+    color: #666;
+    cursor: pointer;
+  }
+  .wordbook-item-speak:hover { color: #ccc; }
+  .wordbook-item-del {
+    padding: 4px 8px;
+    font-size: 0.85rem;
+    border: none;
+    background: transparent;
+    color: #555;
+    cursor: pointer;
+  }
+  .wordbook-item-del:hover { color: #c66; }
+  .wordbook-empty {
+    color: #555;
+    font-size: 0.95rem;
     text-align: center;
+    padding-top: 40px;
+  }
+  .wordbook-detail {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #222;
   }
 
   /* 홈 버튼 */
@@ -394,7 +517,19 @@
 
     <!-- 탭3: 단어장 -->
     <div class="tab-content" id="tabWordbook">
-      <div class="empty-tab">준비 중입니다.</div>
+      <!-- 검색/정렬/전체삭제 툴바 -->
+      <div class="wordbook-toolbar">
+        <input type="text" id="wordbookFilter" placeholder="단어 검색..." oninput="renderWordbook()">
+        <select id="wordbookSort" onchange="renderWordbook()">
+          <option value="recent">최근 추가순</option>
+          <option value="alpha">알파벳순</option>
+        </select>
+        <button class="toolbar-btn" onclick="clearWordbook()">전체 삭제</button>
+      </div>
+      <!-- 단어 목록 -->
+      <div class="wordbook-list" id="wordbookList"></div>
+      <!-- 단어 상세 -->
+      <div class="wordbook-detail" id="wordbookDetail" style="display:none;"></div>
     </div>
 
     <!-- 탭4: Quiz -->
@@ -444,17 +579,21 @@ let wordResults = {};
 
 // --- 브라우저 캐시 (IndexedDB) ---
 const DB_NAME = 'visualVoca';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_NAME = 'resultCache';
+const WB_STORE = 'wordbook';
 
 /* IndexedDB 열기 */
 function openDB() {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onupgradeneeded = () => {
+    req.onupgradeneeded = (e) => {
       const db = req.result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         db.createObjectStore(STORE_NAME);
+      }
+      if (!db.objectStoreNames.contains(WB_STORE)) {
+        db.createObjectStore(WB_STORE, { keyPath: 'word' });
       }
     };
     req.onsuccess = () => resolve(req.result);
@@ -663,9 +802,14 @@ async function fetchWordResult(word, targetEl) {
   html += `<div class="feel-desc">${desc}</div>`;
   html += `<div class="feel-image-container" id="imageContainer"><div class="feel-image-loading">이미지 생성 중...</div></div>`;
   if (examples) html += `<div class="feel-examples">${examples}</div>`;
+  /* 단어장에 추가 버튼 */
+  html += `<button class="add-wordbook-btn" data-wb-word>+ 단어장에 추가</button>`;
+  /* 렌더링 후 이벤트 바인딩을 위해 데이터 보관 */
+  window._lastWbData = { word, pos, summary: desc.split('\n')[0].substring(0, 60) };
 
   wordResults[word] = { html };
   targetEl.innerHTML = html;
+  bindWbButton(targetEl);
 
   /* 이미지 비동기 처리 — targetEl 내부에서 컨테이너를 찾음 */
   try {
@@ -730,6 +874,7 @@ function showSearchResult(word) {
   const cached = wordResults[word];
   if (!cached) return;
   resultSearch.innerHTML = cached.html + buildNavBar();
+  bindWbButton(resultSearch, word);
 }
 
 async function lookupWord(word) {
@@ -743,6 +888,7 @@ async function lookupWord(word) {
   try {
     await fetchWordResult(word, resultSearch);
     resultSearch.innerHTML = (wordResults[word]?.html || '') + buildNavBar();
+    bindWbButton(resultSearch, word);
   } catch (err) {
     resultSearch.innerHTML = '<div class="error">API 오류가 발생했습니다. 홈에서 API 키를 확인해주세요.</div>';
   }
@@ -862,6 +1008,7 @@ async function selectPhotoWord(index) {
   /* 메모리 캐시 확인 */
   if (wordResults[word]) {
     resultPhoto.innerHTML = wordResults[word].html;
+    bindWbButton(resultPhoto, word);
     return;
   }
 
@@ -871,10 +1018,156 @@ async function selectPhotoWord(index) {
     if (cachedHtml && wordResults[word]) {
       resultPhoto.innerHTML = wordResults[word].html;
     }
+    bindWbButton(resultPhoto, word);
   } catch (err) {
     resultPhoto.innerHTML = '<div class="error">API 오류가 발생했습니다. 홈에서 API 키를 확인해주세요.</div>';
   }
 }
+
+// --- 단어장 ---
+/* 단어장 추가 버튼 이벤트 바인딩 */
+function bindWbButton(container, wordOverride) {
+  const btn = container.querySelector('[data-wb-word]');
+  if (!btn || btn._bound) return;
+  btn._bound = true;
+  /* wordOverride가 있으면 캐시에서 로드한 경우 — 최소 정보로 바인딩 */
+  const data = wordOverride ? { word: wordOverride, pos: '', summary: '' } : window._lastWbData;
+  if (!data) return;
+  const { word, pos, summary } = data;
+  btn.addEventListener('click', () => {
+    addToWordbook(word, pos, summary, btn);
+  });
+}
+
+/* 단어장에 추가 */
+async function addToWordbook(word, pos, summary, btnEl) {
+  try {
+    const db = await openDB();
+    const tx = db.transaction(WB_STORE, 'readwrite');
+    const entry = {
+      word: word,
+      pos: pos || '',
+      summary: summary || '',
+      addedAt: Date.now()
+    };
+    tx.objectStore(WB_STORE).put(entry);
+    if (btnEl) {
+      btnEl.textContent = '단어장에 추가됨';
+      btnEl.classList.add('added');
+      btnEl.onclick = null;
+    }
+  } catch (e) {
+    console.warn('단어장 추가 실패:', e);
+  }
+}
+
+/* 단어장 전체 목록 조회 */
+async function getWordbookAll() {
+  try {
+    const db = await openDB();
+    return new Promise((resolve) => {
+      const tx = db.transaction(WB_STORE, 'readonly');
+      const req = tx.objectStore(WB_STORE).getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = () => resolve([]);
+    });
+  } catch {
+    return [];
+  }
+}
+
+/* 단어장에서 삭제 */
+async function removeFromWordbook(word) {
+  try {
+    const db = await openDB();
+    const tx = db.transaction(WB_STORE, 'readwrite');
+    tx.objectStore(WB_STORE).delete(word);
+  } catch (e) {
+    console.warn('단어장 삭제 실패:', e);
+  }
+  renderWordbook();
+}
+
+/* 단어장 전체 삭제 */
+async function clearWordbook() {
+  if (!confirm('단어장을 전체 삭제하시겠습니까?')) return;
+  try {
+    const db = await openDB();
+    const tx = db.transaction(WB_STORE, 'readwrite');
+    tx.objectStore(WB_STORE).clear();
+  } catch (e) {
+    console.warn('단어장 전체 삭제 실패:', e);
+  }
+  document.getElementById('wordbookDetail').style.display = 'none';
+  renderWordbook();
+}
+
+/* 단어장 목록 렌더링 */
+async function renderWordbook() {
+  const list = await getWordbookAll();
+  const filter = (document.getElementById('wordbookFilter').value || '').toLowerCase();
+  const sort = document.getElementById('wordbookSort').value;
+  const listEl = document.getElementById('wordbookList');
+
+  /* 필터 */
+  let filtered = list.filter(item => item.word.toLowerCase().includes(filter));
+
+  /* 정렬 */
+  if (sort === 'alpha') {
+    filtered.sort((a, b) => a.word.localeCompare(b.word));
+  } else {
+    filtered.sort((a, b) => b.addedAt - a.addedAt);
+  }
+
+  if (filtered.length === 0) {
+    listEl.innerHTML = '<div class="wordbook-empty">저장된 단어가 없습니다.</div>';
+    return;
+  }
+
+  listEl.innerHTML = filtered.map(item => {
+    const safeWord = item.word.replace(/'/g, "\\'");
+    return `<div class="wordbook-item" onclick="showWordbookDetail('${safeWord}', this)">
+      <span class="wordbook-item-word">${item.word}</span>
+      <span class="wordbook-item-pos">${item.pos || ''}</span>
+      <span class="wordbook-item-summary">${item.summary || ''}</span>
+      <button class="wordbook-item-speak" onclick="event.stopPropagation(); speak('${safeWord}')" title="발음">&#128264;</button>
+      <button class="wordbook-item-del" onclick="event.stopPropagation(); removeFromWordbook('${safeWord}')" title="삭제">&#10005;</button>
+    </div>`;
+  }).join('');
+}
+
+/* 단어장 상세 보기 */
+async function showWordbookDetail(word, itemEl) {
+  /* 활성 표시 */
+  document.querySelectorAll('.wordbook-item').forEach(el => el.classList.remove('active'));
+  if (itemEl) itemEl.classList.add('active');
+
+  const detailEl = document.getElementById('wordbookDetail');
+  detailEl.style.display = 'block';
+
+  /* 캐시에서 결과 가져오기 */
+  const cached = await getCacheEntry(word);
+  if (cached) {
+    detailEl.innerHTML = cached;
+  } else {
+    detailEl.innerHTML = `<div class="loading">${word}의 결과를 불러오는 중...</div>`;
+    try {
+      await fetchWordResult(word, detailEl);
+    } catch {
+      detailEl.innerHTML = '<div class="error">결과를 불러올 수 없습니다.</div>';
+    }
+  }
+}
+
+/* 탭 전환 시 단어장 목록 로드 — 기존 switchTab 확장 */
+const _origSwitchTab = switchTab;
+switchTab = function(tab) {
+  _origSwitchTab(tab);
+  if (tab === 'wordbook') {
+    document.getElementById('wordbookDetail').style.display = 'none';
+    renderWordbook();
+  }
+};
 </script>
 
 </body>
