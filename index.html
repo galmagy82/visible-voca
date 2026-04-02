@@ -11,8 +11,8 @@
   /* 전체 화면 배경 */
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: #0f0f0f;
-    color: #e0e0e0;
+    background: #F7F6F3;
+    color: #2D2B28;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -25,7 +25,7 @@
   h1 {
     font-size: 2.2rem;
     font-weight: 700;
-    color: #e0e0e0;
+    color: #4A4641;
     margin-bottom: 36px;
     letter-spacing: 0.15em;
   }
@@ -36,9 +36,9 @@
     max-width: 640px;
     border-radius: 14px;
     overflow: hidden;
-    border: 1px solid #333;
+    border: 1px solid #D5D2CC;
     margin-bottom: 40px;
-    background: #000;
+    background: #EDECEA;
   }
   .video-wrap video {
     width: 100%;
@@ -51,20 +51,20 @@
     font-size: 1.1rem;
     border: none;
     border-radius: 12px;
-    background: #2a2a2a;
-    color: #ccc;
+    background: #4A4641;
+    color: #fff;
     cursor: pointer;
     transition: background 0.2s;
     text-decoration: none;
   }
-  .start-btn:hover { background: #3a3a3a; }
+  .start-btn:hover { background: #5C5752; }
 
   /* API 키 모달 오버레이 */
   .modal-overlay {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.6);
+    background: rgba(0,0,0,0.3);
     z-index: 100;
     align-items: center;
     justify-content: center;
@@ -73,23 +73,24 @@
 
   /* API 키 모달 */
   .modal {
-    background: #1a1a1a;
-    border: 1px solid #333;
+    background: #FFFFFF;
+    border: 1px solid #D5D2CC;
     border-radius: 16px;
     padding: 32px;
     width: 90%;
     max-width: 400px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.1);
   }
   .modal h2 {
     font-size: 1.2rem;
     font-weight: 500;
-    color: #ddd;
+    color: #2D2B28;
     margin-bottom: 24px;
   }
   .modal label {
     display: block;
     font-size: 0.9rem;
-    color: #888;
+    color: #4A4641;
     margin-bottom: 8px;
   }
   .modal select,
@@ -97,61 +98,61 @@
     width: 100%;
     padding: 12px 16px;
     font-size: 1rem;
-    border: 1px solid #333;
+    border: 1px solid #D5D2CC;
     border-radius: 10px;
-    background: #0f0f0f;
-    color: #fff;
+    background: #F7F6F3;
+    color: #2D2B28;
     outline: none;
     margin-bottom: 20px;
   }
   .modal select { appearance: none; cursor: pointer; }
   .modal select:focus,
-  .modal input[type="password"]:focus { border-color: #555; }
-  .modal input[type="password"]::placeholder { color: #555; }
+  .modal input[type="password"]:focus { border-color: #B0ACA6; }
+  .modal input[type="password"]::placeholder { color: #B0ACA6; }
 
   /* 가이드 아코디언 */
   .guide-toggle {
     display: inline-block;
     font-size: 0.85rem;
-    color: #6a9955;
+    color: #5A8A42;
     cursor: pointer;
     margin-bottom: 16px;
     transition: color 0.2s;
   }
-  .guide-toggle:hover { color: #8abf6a; }
+  .guide-toggle:hover { color: #6B9E52; }
   .guide-content {
     display: none;
-    background: #0f0f0f;
-    border: 1px solid #333;
+    background: #F7F6F3;
+    border: 1px solid #D5D2CC;
     border-radius: 10px;
     padding: 16px;
     margin-bottom: 20px;
     font-size: 0.85rem;
     line-height: 1.8;
-    color: #aaa;
+    color: #4A4641;
   }
   .guide-content.active { display: block; }
   .guide-content h3 {
     font-size: 0.9rem;
     font-weight: 500;
-    color: #ddd;
+    color: #2D2B28;
     margin-bottom: 8px;
   }
   .guide-content ol { padding-left: 20px; margin-bottom: 12px; }
-  .guide-content a { color: #6a9955; text-decoration: none; }
+  .guide-content a { color: #5A8A42; text-decoration: none; }
   .guide-content a:hover { text-decoration: underline; }
   .guide-content .guide-note {
-    color: #888;
+    color: #6B6660;
     font-size: 0.8rem;
     margin-top: 8px;
     padding-top: 8px;
-    border-top: 1px solid #222;
+    border-top: 1px solid #E5E2DE;
   }
 
   /* 상태 메시지 */
-  .status-msg { font-size: 0.85rem; color: #666; margin-bottom: 16px; }
-  .status-msg.ok { color: #6a6; }
-  .status-msg.warn { color: #a86; }
+  .status-msg { font-size: 0.85rem; color: #6B6660; margin-bottom: 16px; }
+  .status-msg.ok { color: #5A8A42; }
+  .status-msg.warn { color: #B8863A; }
 
   /* 모달 버튼 */
   .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
@@ -163,10 +164,10 @@
     cursor: pointer;
     transition: background 0.2s;
   }
-  .btn-save { background: #2d4a2d; color: #8f8; }
-  .btn-save:hover { background: #3a5c3a; }
-  .btn-cancel { background: #2a2a2a; color: #aaa; }
-  .btn-cancel:hover { background: #3a3a3a; }
+  .btn-save { background: #5A8A42; color: #fff; }
+  .btn-save:hover { background: #6B9E52; }
+  .btn-cancel { background: #EDECEA; color: #4A4641; }
+  .btn-cancel:hover { background: #E0DEDA; }
 </style>
 </head>
 <body>
