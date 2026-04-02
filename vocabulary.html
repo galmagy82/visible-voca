@@ -612,6 +612,46 @@
   }
   .top-btn:hover { border-color: #555; color: #ccc; }
   .home-btn { left: 20px; }
+
+  /* 모바일 반응형 */
+  @media (max-width: 600px) {
+    body {
+      padding: 60px 12px 24px;
+    }
+    .main-layout {
+      flex-direction: column;
+    }
+    .sidebar {
+      flex-direction: row;
+      min-width: 0;
+      gap: 0;
+      border-bottom: 1px solid #222;
+      margin-bottom: 16px;
+      overflow-x: auto;
+    }
+    .sidebar .tab {
+      padding: 10px 14px;
+      font-size: 0.8rem;
+      white-space: nowrap;
+    }
+    .content {
+      padding-left: 0;
+      border-left: none;
+      min-height: auto;
+    }
+    .word-title {
+      font-size: 1.4rem;
+    }
+    .word-header {
+      flex-wrap: wrap;
+    }
+    .add-wordbook-btn {
+      margin-left: 0;
+      margin-top: 4px;
+      width: 100%;
+      text-align: center;
+    }
+  }
 </style>
 </head>
 <body>
