@@ -1272,7 +1272,8 @@ async function fetchWordResult(word, targetEl) {
       placeholderHtml
     );
     wordResults[word] = { html: noImgHtml };
-    /* 결제 연동 안내는 캐시하지 않음 — 결제 연동 후 다시 검색하면 이미지 생성 시도 */
+    /* 이미지 없이 텍스트 결과만 캐시 — 단어장에서 재조회 시 API 재호출 방지 */
+    saveCacheEntry(word, noImgHtml);
   }
 
   return wordResults[word].html;
@@ -1630,6 +1631,8 @@ async function showWordbookDetail(word, itemEl) {
 
   const contentEl = document.getElementById('wbModalContent');
   const modal = document.getElementById('wbModal');
+  /* 이전 내용 즉시 비우기 — 이전 단어가 잠깐 보이는 현상 방지 */
+  contentEl.innerHTML = '';
   modal.classList.add('active');
   /* 스크롤 최상단 초기화 */
   modal.querySelector('.wb-modal').scrollTop = 0;
