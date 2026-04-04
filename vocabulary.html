@@ -200,6 +200,125 @@
     padding: 40px 0;
   }
 
+  /* 이미지 결제 연동 안내 플레이스홀더 */
+  .image-billing-placeholder {
+    margin: 24px 0;
+    padding: 32px 24px;
+    background: linear-gradient(135deg, #FFF8F0, #F5F1EA);
+    border: 1px dashed #D5D2CC;
+    border-radius: 14px;
+    text-align: center;
+  }
+  .image-billing-placeholder .placeholder-icon {
+    font-size: 2rem;
+    margin-bottom: 12px;
+    opacity: 0.6;
+  }
+  .image-billing-placeholder .placeholder-msg {
+    font-size: 0.95rem;
+    color: #4A4641;
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+  .image-billing-placeholder .placeholder-btn {
+    padding: 10px 22px;
+    font-size: 0.88rem;
+    border: 1px solid #D5D2CC;
+    border-radius: 10px;
+    background: #FFFFFF;
+    color: #4A4641;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .image-billing-placeholder .placeholder-btn:hover {
+    background: #F0EBE3;
+    border-color: #B0ACA6;
+  }
+
+  /* 결제 연동 가이드 모달 */
+  .billing-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.3);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .billing-modal-overlay.active { display: flex; }
+  .billing-modal {
+    background: #FFFFFF;
+    border-radius: 16px;
+    padding: 32px;
+    width: 92%;
+    max-width: 540px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+  }
+  .billing-modal h3 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #2D2B28;
+    margin-bottom: 20px;
+  }
+  .billing-modal .info-section {
+    margin-bottom: 20px;
+  }
+  .billing-modal .info-section h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #4A4641;
+    margin-bottom: 8px;
+  }
+  .billing-modal .info-section p,
+  .billing-modal .info-section li {
+    font-size: 0.88rem;
+    color: #6B6660;
+    line-height: 1.8;
+  }
+  .billing-modal .info-section ol {
+    padding-left: 20px;
+  }
+  .billing-modal .info-section a {
+    color: #5A8A42;
+    text-decoration: none;
+  }
+  .billing-modal .info-section a:hover {
+    text-decoration: underline;
+  }
+  .billing-modal .safe-note {
+    background: #F0F7EC;
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-size: 0.85rem;
+    color: #4A7A38;
+    line-height: 1.7;
+    margin-bottom: 20px;
+  }
+  .billing-modal .cost-note {
+    background: #FFF8F0;
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-size: 0.85rem;
+    color: #8A6A3A;
+    line-height: 1.7;
+    margin-bottom: 20px;
+  }
+  .billing-modal .close-btn {
+    display: block;
+    margin: 0 auto;
+    padding: 10px 32px;
+    font-size: 0.95rem;
+    border: none;
+    border-radius: 10px;
+    background: #EDECEA;
+    color: #4A4641;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .billing-modal .close-btn:hover { background: #E0DEDA; }
+
   /* 사진 첨부 버튼 */
   .photo-upload-area {
     margin-bottom: 24px;
@@ -1139,13 +1258,21 @@ async function fetchWordResult(word, targetEl) {
   } catch (imgErr) {
     console.error('이미지 생성 실패:', imgErr);
     const container = targetEl.querySelector('.feel-image-container');
-    if (container) container.remove();
+    /* 결제 연동 안내 플레이스홀더 표시 */
+    const placeholderHtml = `<div class="image-billing-placeholder">
+      <div class="placeholder-icon">🎨</div>
+      <div class="placeholder-msg">그림으로 보면 더 오래 기억돼요</div>
+      <button class="placeholder-btn" onclick="openBillingModal()">자세히 보기</button>
+    </div>`;
+    if (container) {
+      container.outerHTML = placeholderHtml;
+    }
     const noImgHtml = html.replace(
       '<div class="feel-image-container" id="imageContainer"><div class="feel-image-loading">이미지 생성 중...</div></div>',
-      ''
+      placeholderHtml
     );
     wordResults[word] = { html: noImgHtml };
-    saveCacheEntry(word, noImgHtml);
+    /* 결제 연동 안내는 캐시하지 않음 — 결제 연동 후 다시 검색하면 이미지 생성 시도 */
   }
 
   return wordResults[word].html;
@@ -1794,7 +1921,49 @@ function showQuizResult() {
       '<div style="font-size:0.9rem;color:#5A8A42;">모두 맞았습니다!</div>';
   }
 }
+
+/* 결제 연동 가이드 모달 열기/닫기 */
+function openBillingModal() {
+  document.getElementById('billingModal').classList.add('active');
+}
+function closeBillingModal() {
+  document.getElementById('billingModal').classList.remove('active');
+}
+document.getElementById('billingModal').addEventListener('click', function(e) {
+  if (e.target === e.currentTarget) closeBillingModal();
+});
 </script>
+
+<!-- 결제 연동 가이드 모달 -->
+<div class="billing-modal-overlay" id="billingModal">
+  <div class="billing-modal">
+    <h3>그림으로 보면 더 오래 기억돼요</h3>
+
+    <div class="info-section">
+      <h4>결제 연동 방법</h4>
+      <ol>
+        <li><a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio</a>에 접속합니다.</li>
+        <li>좌측 메뉴에서 <strong>Settings → Billing</strong>으로 이동합니다.</li>
+        <li>결제 수단(카드)을 등록하면 이미지 생성이 활성화됩니다.</li>
+      </ol>
+    </div>
+
+    <div class="cost-note">
+      💰 <strong>예상 비용:</strong> 이미지 1장당 약 $0.039 (약 ₩50원) 수준입니다.<br>
+      * 단어 100개 검색 시 약 ₩5,000원<br><br>
+      단어 텍스트 설명은 결제 연동 없이 무료로 계속 사용 가능합니다.
+    </div>
+
+    <div class="safe-note">
+      🔒 <strong>API 키 안전 안내</strong><br>
+      입력하신 API 키는 이 기기의 브라우저(localStorage)에만 저장되며, 개발자의 서버로 전송되지 않습니다.<br>
+      Google/OpenAI API 호출 시에만 Google서비스로 직접 전송됩니다.<br>
+      공용 PC에서는 사용 후 설정에서 키를 삭제해 주세요.
+    </div>
+
+    <button class="close-btn" onclick="closeBillingModal()">확인</button>
+  </div>
+</div>
 
 </body>
 </html>
