@@ -995,6 +995,12 @@ function switchTab(tab) {
   document.getElementById(panels[tab]).classList.add('active');
 }
 
+// --- HTML 이스케이프 (XSS 방지) ---
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 // --- Supabase 초기화 ---
 const SUPABASE_URL = 'https://grdtxvpebjtfhuqdngfn.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_Ca5H8oz6gJ72mfgUW8zYvg_U6IVwooW';
@@ -1297,19 +1303,21 @@ async function generateImageDalle(apiKey, word) {
 
 /* DB 결과를 HTML로 변환 (Supabase에서 가져온 데이터용) */
 function buildHtmlFromDB(dbData, word) {
-  const speakWord = (dbData.corrected || word).replace(/'/g, "\\'");
+  const safeWord = escapeHtml(word);
+  const safeCorrected = escapeHtml(dbData.corrected);
+  const speakWord = (safeCorrected || safeWord).replace(/'/g, "\\'");
   let html = `<div class="word-header">`;
-  html += `<div class="word-title">${dbData.corrected || word}</div>`;
+  html += `<div class="word-title">${safeCorrected || safeWord}</div>`;
   html += `<button class="speak-btn" onclick="speak('${speakWord}')" title="발음 듣기">&#128264;</button>`;
   html += `<button class="add-wordbook-btn" data-wb-word>+ 단어장에 추가</button>`;
   html += `</div>`;
-  if (dbData.pos || dbData.ipa) html += `<div class="word-pos">${dbData.pos || ''}${dbData.pos && dbData.ipa ? ' · ' : ''}${dbData.ipa || ''}</div>`;
-  if (dbData.corrected) html += `<div class="corrected">${word} → <span>${dbData.corrected}</span></div>`;
-  html += `<div class="feel-desc">${dbData.description}</div>`;
+  if (dbData.pos || dbData.ipa) html += `<div class="word-pos">${escapeHtml(dbData.pos) || ''}${dbData.pos && dbData.ipa ? ' · ' : ''}${escapeHtml(dbData.ipa) || ''}</div>`;
+  if (safeCorrected) html += `<div class="corrected">${safeWord} → <span>${safeCorrected}</span></div>`;
+  html += `<div class="feel-desc">${escapeHtml(dbData.description)}</div>`;
   if (dbData.imageUrl) {
-    html += `<div class="feel-image-container"><img src="${dbData.imageUrl}" alt="${word}의 느낌을 표현한 이미지"></div>`;
+    html += `<div class="feel-image-container"><img src="${escapeHtml(dbData.imageUrl)}" alt="${safeWord}의 느낌을 표현한 이미지"></div>`;
   }
-  if (dbData.examples) html += `<div class="feel-examples">${dbData.examples}</div>`;
+  if (dbData.examples) html += `<div class="feel-examples">${escapeHtml(dbData.examples)}</div>`;
   window._lastWbData = { word, pos: dbData.pos, summary: dbData.description.split('\n')[0].substring(0, 60) };
   return html;
 }
@@ -1401,15 +1409,17 @@ async function fetchWordResult(word, targetEl) {
   const parts = body.split(/\n---\n?/);
   const desc = parts[0].trim();
   const examples = parts.length > 1 ? parts[1].trim() : '';
-  const speakWord = (corrected || word).replace(/'/g, "\\'");
+  const safeWord = escapeHtml(word);
+  const safeCorrected = escapeHtml(corrected);
+  const speakWord = (safeCorrected || safeWord).replace(/'/g, "\\'");
   let html = `<div class="word-header">`;
-  html += `<div class="word-title">${corrected || word}</div>`;
+  html += `<div class="word-title">${safeCorrected || safeWord}</div>`;
   html += `<button class="speak-btn" onclick="speak('${speakWord}')" title="발음 듣기">&#128264;</button>`;
   html += `<button class="add-wordbook-btn" data-wb-word>+ 단어장에 추가</button>`;
   html += `</div>`;
-  if (pos || ipa) html += `<div class="word-pos">${pos}${pos && ipa ? ' · ' : ''}${ipa}</div>`;
-  if (corrected) html += `<div class="corrected">${word} → <span>${corrected}</span></div>`;
-  html += `<div class="feel-desc">${desc}</div>`;
+  if (pos || ipa) html += `<div class="word-pos">${escapeHtml(pos)}${pos && ipa ? ' · ' : ''}${escapeHtml(ipa)}</div>`;
+  if (corrected) html += `<div class="corrected">${safeWord} → <span>${safeCorrected}</span></div>`;
+  html += `<div class="feel-desc">${escapeHtml(desc)}</div>`;
   if (imagePromise) {
     html += `<div class="feel-image-container" id="imageContainer"><div class="feel-image-loading">이미지 생성 중...</div></div>`;
   } else {
@@ -1419,7 +1429,7 @@ async function fetchWordResult(word, targetEl) {
       <button class="placeholder-btn" onclick="openBillingModal()">자세히 보기</button>
     </div>`;
   }
-  if (examples) html += `<div class="feel-examples">${examples}</div>`;
+  if (examples) html += `<div class="feel-examples">${escapeHtml(examples)}</div>`;
   /* 렌더링 후 이벤트 바인딩을 위해 데이터 보관 */
   window._lastWbData = { word, pos, summary: desc.split('\n')[0].substring(0, 60) };
 
@@ -1438,11 +1448,11 @@ async function fetchWordResult(word, targetEl) {
     const imageUrl = await imagePromise;
     const container = targetEl.querySelector('.feel-image-container');
     if (container) {
-      container.innerHTML = `<img src="${imageUrl}" alt="${word}의 느낌을 표현한 이미지">`;
+      container.innerHTML = `<img src="${escapeHtml(imageUrl)}" alt="${safeWord}의 느낌을 표현한 이미지">`;
     }
     const imgHtml = html.replace(
       '<div class="feel-image-loading">이미지 생성 중...</div>',
-      `<img src="${imageUrl}" alt="${word}의 느낌을 표현한 이미지">`
+      `<img src="${escapeHtml(imageUrl)}" alt="${safeWord}의 느낌을 표현한 이미지">`
     );
     wordResults[word] = { html: imgHtml };
     saveCacheEntry(word, imgHtml);
