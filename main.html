@@ -301,6 +301,15 @@
       <label for="apiKeyInput">API Key</label>
       <input type="password" id="apiKeyInput" placeholder="API 키를 입력하세요">
 
+      <!-- 이미지 생성 체크박스 -->
+      <div style="margin-top:12px; display:flex; align-items:flex-start; gap:8px;">
+        <input type="checkbox" id="imageEnabledCheck" style="margin-top:3px;">
+        <label for="imageEnabledCheck" style="font-size:13px; color:#5A5754; line-height:1.5; cursor:pointer;">
+          이미지 생성 사용 (결제 연동 필요)<br>
+          <span style="font-size:11px; color:#8C8985;">체크하지 않으면 텍스트 설명만 제공됩니다.<br>결제 미연동 상태에서 체크하면 하루 검색 한도가 빨리 소모됩니다.</span>
+        </label>
+      </div>
+
       <span class="guide-toggle" onclick="toggleGuide()">&#9656; API 키 발급 가이드</span>
       <div class="guide-content" id="guideContent">
         <div id="guideGemini">
@@ -351,17 +360,18 @@
 function getSettings() {
   const saved = localStorage.getItem('visibleVoca_settings');
   if (saved) return JSON.parse(saved);
-  return { provider: 'gemini', apiKey: '' };
+  return { provider: 'gemini', apiKey: '', imageEnabled: false };
 }
 
-function saveSettingsToStorage(provider, apiKey) {
-  localStorage.setItem('visibleVoca_settings', JSON.stringify({ provider, apiKey }));
+function saveSettingsToStorage(provider, apiKey, imageEnabled) {
+  localStorage.setItem('visibleVoca_settings', JSON.stringify({ provider, apiKey, imageEnabled }));
 }
 
 function openSettings() {
   const s = getSettings();
   document.getElementById('providerSelect').value = s.provider;
   document.getElementById('apiKeyInput').value = s.apiKey;
+  document.getElementById('imageEnabledCheck').checked = s.imageEnabled || false;
   document.getElementById('apiKeyInput').placeholder = s.provider === 'gemini'
     ? 'AIza... 형태의 Gemini API 키' : 'sk-... 형태의 OpenAI API 키';
   document.getElementById('statusMsg').textContent = '';
@@ -418,7 +428,8 @@ function saveSettings() {
     msg.className = 'status-msg warn';
     return;
   }
-  saveSettingsToStorage(provider, apiKey);
+  const imageEnabled = document.getElementById('imageEnabledCheck').checked;
+  saveSettingsToStorage(provider, apiKey, imageEnabled);
   msg.textContent = '저장되었습니다.';
   msg.className = 'status-msg ok';
   setTimeout(closeSettings, 600);
