@@ -993,6 +993,15 @@ body {
     <label for="apiKeyInput">API Key</label>
     <input type="password" id="apiKeyInput" placeholder="AIza... 형태의 Gemini API 키">
 
+    <!-- 이미지 생성 체크박스 -->
+    <div style="margin-top:12px; display:flex; align-items:flex-start; gap:8px;">
+      <input type="checkbox" id="imageEnabledCheck" style="margin-top:3px;">
+      <label for="imageEnabledCheck" style="font-size:13px; color:#5A5754; line-height:1.5; cursor:pointer;">
+        이미지 생성 사용<br>
+        <span style="font-size:11px; color:#8C8985;">API 결제 설정을 하지 않은 경우 체크를 해제해 주세요.</span>
+      </label>
+    </div>
+
     <span class="guide-toggle" onclick="toggleGuide()">&#9656; API 키 발급 가이드</span>
     <div class="guide-content" id="guideContent">
       <div id="guideGemini">
@@ -1003,7 +1012,23 @@ body {
           <li>"API 키 만들기" 버튼을 클릭합니다.</li>
           <li>생성된 키를 복사하여 위에 붙여넣습니다.</li>
         </ol>
-        <div class="guide-note">단어 검색은 무료입니다.<br>이미지 생성(Visual Voca) 기능은 Google AI Studio에서 결제 연동하면 동작합니다.</div>
+        <div class="guide-note">
+          <strong>Gemini API 키 결제 미설정 시</strong><br>
+          · 단어 검색: 하루 무료 제공량 안에서 사용 가능<br>
+          · 이미지 생성: 사용 불가<br><br>
+          <strong>Gemini API 키 결제 설정 시 (사용량에 따라 과금)</strong><br>
+          · 단어 검색: 제한 없음<br>
+          · 이미지 생성: 사용 가능
+        </div>
+      </div>
+    </div>
+
+    <span class="guide-toggle" onclick="toggleSafetyGuide()">&#9656; API 키 안전 안내</span>
+    <div class="guide-content" id="safetyGuideContent">
+      <div class="guide-note" style="border-top:none; padding-top:0;">
+        입력하신 API 키는 이 기기의 브라우저(localStorage)에만 저장되며, 개발자의 서버로 전송되지 않습니다.<br>
+        Google/OpenAI API 호출 시에만 해당 서비스로 직접 전송됩니다.<br>
+        공용 PC에서는 사용 후 설정에서 키를 삭제해 주세요.
       </div>
     </div>
 
@@ -1083,22 +1108,31 @@ function onProviderChange() {
 /* 가이드 토글 */
 function toggleGuide() {
   var content = document.getElementById('guideContent');
-  var toggle = document.querySelector('.guide-toggle');
   content.classList.toggle('active');
-  toggle.innerHTML = content.classList.contains('active') ? '&#9662; API 키 발급 가이드' : '&#9656; API 키 발급 가이드';
+  var toggles = document.querySelectorAll('.guide-toggle');
+  toggles[0].innerHTML = content.classList.contains('active') ? '&#9662; API 키 발급 가이드' : '&#9656; API 키 발급 가이드';
+}
+
+/* 안전 안내 토글 */
+function toggleSafetyGuide() {
+  var content = document.getElementById('safetyGuideContent');
+  content.classList.toggle('active');
+  var toggles = document.querySelectorAll('.guide-toggle');
+  toggles[1].innerHTML = content.classList.contains('active') ? '&#9662; API 키 안전 안내' : '&#9656; API 키 안전 안내';
 }
 
 /* 저장 후 이동 */
 function saveAndGo() {
   var provider = document.getElementById('providerSelect').value;
   var apiKey = document.getElementById('apiKeyInput').value.trim();
+  var imageEnabled = document.getElementById('imageEnabledCheck').checked;
   var msg = document.getElementById('statusMsg');
   if (!apiKey) {
     msg.textContent = 'API 키를 입력해주세요.';
     msg.className = 'status-msg warn';
     return;
   }
-  localStorage.setItem('visibleVoca_settings', JSON.stringify({ provider: provider, apiKey: apiKey }));
+  localStorage.setItem('visibleVoca_settings', JSON.stringify({ provider: provider, apiKey: apiKey, imageEnabled: imageEnabled }));
   msg.textContent = '저장되었습니다.';
   msg.className = 'status-msg ok';
   setTimeout(function() { location.href = 'main.html'; }, 500);
