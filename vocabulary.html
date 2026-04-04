@@ -12,6 +12,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Story Kongko - Visual Voca</title>
+<!-- Supabase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
   /* 공통 스타일 */
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -993,6 +995,108 @@ function switchTab(tab) {
   document.getElementById(panels[tab]).classList.add('active');
 }
 
+// --- Supabase 초기화 ---
+const SUPABASE_URL = 'https://grdtxvpebjtfhuqdngfn.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_Ca5H8oz6gJ72mfgUW8zYvg_U6IVwooW';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* 데이터 수집 충분 기준 */
+const TEXT_THRESHOLD = 10;
+const IMAGE_THRESHOLD = 50;
+
+/* 사용자 데이터 수집 동의 여부 확인 */
+function hasDataConsent() {
+  return localStorage.getItem('visibleVoca_dataConsent') === 'true';
+}
+
+/* Supabase에서 단어 데이터 충분 여부 확인 후 랜덤 반환 */
+async function fetchFromSupabase(word) {
+  try {
+    /* 해당 단어의 텍스트 수, 이미지 수 조회 */
+    const { data, error } = await supabaseClient
+      .from('word_results')
+      .select('*')
+      .eq('word', word.toLowerCase());
+
+    if (error || !data || data.length === 0) return null;
+
+    const textCount = data.filter(r => r.description).length;
+    const imageCount = data.filter(r => r.image_path).length;
+
+    /* 데이터가 충분하면 랜덤 선택 후 반환 */
+    if (textCount >= TEXT_THRESHOLD && imageCount >= IMAGE_THRESHOLD) {
+      const textRow = data.filter(r => r.description)[Math.floor(Math.random() * textCount)];
+      const imageRows = data.filter(r => r.image_path);
+      const imageRow = imageRows[Math.floor(Math.random() * imageCount)];
+
+      /* 이미지 공개 URL 생성 */
+      const { data: urlData } = supabaseClient.storage
+        .from('word-images')
+        .getPublicUrl(imageRow.image_path);
+
+      return {
+        word: textRow.word,
+        corrected: textRow.corrected,
+        pos: textRow.pos,
+        ipa: textRow.ipa,
+        description: textRow.description,
+        examples: textRow.examples,
+        imageUrl: urlData?.publicUrl || null,
+        fromDB: true
+      };
+    }
+
+    return null;
+  } catch (e) {
+    console.warn('Supabase 조회 실패:', e);
+    return null;
+  }
+}
+
+/* Supabase에 단어 결과 저장 + 이미지 업로드 */
+async function saveToSupabase(word, parsed, imageDataUrl) {
+  if (!hasDataConsent()) return;
+
+  try {
+    let imagePath = null;
+
+    /* 이미지가 있으면 Storage에 업로드 */
+    if (imageDataUrl && imageDataUrl.startsWith('data:')) {
+      const res = await fetch(imageDataUrl);
+      const blob = await res.blob();
+      const ext = blob.type.split('/')[1] || 'png';
+      const fileName = `${word.toLowerCase()}/${Date.now()}.${ext}`;
+
+      const { error: uploadErr } = await supabaseClient.storage
+        .from('word-images')
+        .upload(fileName, blob, { contentType: blob.type });
+
+      if (!uploadErr) {
+        imagePath = fileName;
+      } else {
+        console.warn('이미지 업로드 실패:', uploadErr);
+      }
+    }
+
+    /* DB에 텍스트 결과 저장 */
+    const { error: insertErr } = await supabaseClient
+      .from('word_results')
+      .insert({
+        word: word.toLowerCase(),
+        corrected: parsed.corrected || null,
+        pos: parsed.pos || null,
+        ipa: parsed.ipa || null,
+        description: parsed.description || null,
+        examples: parsed.examples || null,
+        image_path: imagePath
+      });
+
+    if (insertErr) console.warn('DB 저장 실패:', insertErr);
+  } catch (e) {
+    console.warn('Supabase 저장 실패:', e);
+  }
+}
+
 // --- 설정 (localStorage 공유) ---
 function getSettings() {
   const saved = localStorage.getItem('visibleVoca_settings');
@@ -1191,11 +1295,30 @@ async function generateImageDalle(apiKey, word) {
   return data.data?.[0]?.url;
 }
 
+/* DB 결과를 HTML로 변환 (Supabase에서 가져온 데이터용) */
+function buildHtmlFromDB(dbData, word) {
+  const speakWord = (dbData.corrected || word).replace(/'/g, "\\'");
+  let html = `<div class="word-header">`;
+  html += `<div class="word-title">${dbData.corrected || word}</div>`;
+  html += `<button class="speak-btn" onclick="speak('${speakWord}')" title="발음 듣기">&#128264;</button>`;
+  html += `<button class="add-wordbook-btn" data-wb-word>+ 단어장에 추가</button>`;
+  html += `</div>`;
+  if (dbData.pos || dbData.ipa) html += `<div class="word-pos">${dbData.pos || ''}${dbData.pos && dbData.ipa ? ' · ' : ''}${dbData.ipa || ''}</div>`;
+  if (dbData.corrected) html += `<div class="corrected">${word} → <span>${dbData.corrected}</span></div>`;
+  html += `<div class="feel-desc">${dbData.description}</div>`;
+  if (dbData.imageUrl) {
+    html += `<div class="feel-image-container"><img src="${dbData.imageUrl}" alt="${word}의 느낌을 표현한 이미지"></div>`;
+  }
+  if (dbData.examples) html += `<div class="feel-examples">${dbData.examples}</div>`;
+  window._lastWbData = { word, pos: dbData.pos, summary: dbData.description.split('\n')[0].substring(0, 60) };
+  return html;
+}
+
 // --- 공통: 단어 검색 후 결과 HTML 생성 ---
 async function fetchWordResult(word, targetEl) {
   const settings = getSettings();
 
-  /* 브라우저 캐시 확인 (IndexedDB) */
+  /* ① 브라우저 캐시 확인 (IndexedDB) */
   const cached = await getCacheEntry(word);
   if (cached) {
     /* 이미지 생성 활성화 상태인데 캐시에 이미지가 없으면 캐시 무시하고 재검색 */
@@ -1206,6 +1329,19 @@ async function fetchWordResult(word, targetEl) {
       return cached;
     }
   }
+
+  /* ② Supabase DB 조회 — 데이터 충분하면 API 호출 없이 반환 */
+  const dbResult = await fetchFromSupabase(word);
+  if (dbResult && dbResult.fromDB) {
+    const dbHtml = buildHtmlFromDB(dbResult, word);
+    wordResults[word] = { html: dbHtml };
+    targetEl.innerHTML = dbHtml;
+    bindWbButton(targetEl);
+    saveCacheEntry(word, dbHtml);
+    return dbHtml;
+  }
+
+  /* ③ API 호출 — 데이터 부족 또는 없음 */
   if (!settings.apiKey) {
     targetEl.innerHTML = '<div class="error">홈에서 설정 버튼을 눌러 API 키를 먼저 입력해주세요.</div>';
     return null;
@@ -1284,7 +1420,6 @@ async function fetchWordResult(word, targetEl) {
     </div>`;
   }
   if (examples) html += `<div class="feel-examples">${examples}</div>`;
-  /* 단어장에 추가 버튼은 word-header 안에 배치됨 */
   /* 렌더링 후 이벤트 바인딩을 위해 데이터 보관 */
   window._lastWbData = { word, pos, summary: desc.split('\n')[0].substring(0, 60) };
 
@@ -1295,6 +1430,8 @@ async function fetchWordResult(word, targetEl) {
   /* 이미지 비동기 처리 — imagePromise가 있을 때만 */
   if (!imagePromise) {
     saveCacheEntry(word, html);
+    /* Supabase에 텍스트만 저장 */
+    saveToSupabase(word, { corrected, pos, ipa, description: desc, examples }, null);
     return html;
   }
   try {
@@ -1309,6 +1446,8 @@ async function fetchWordResult(word, targetEl) {
     );
     wordResults[word] = { html: imgHtml };
     saveCacheEntry(word, imgHtml);
+    /* Supabase에 텍스트 + 이미지 저장 */
+    saveToSupabase(word, { corrected, pos, ipa, description: desc, examples }, imageUrl);
   } catch (imgErr) {
     console.error('이미지 생성 실패:', imgErr);
     const container = targetEl.querySelector('.feel-image-container');
@@ -1331,8 +1470,9 @@ async function fetchWordResult(word, targetEl) {
       placeholderHtml
     );
     wordResults[word] = { html: noImgHtml };
-    /* 이미지 없이 텍스트 결과만 캐시 — 단어장에서 재조회 시 API 재호출 방지 */
     saveCacheEntry(word, noImgHtml);
+    /* Supabase에 텍스트만 저장 (이미지 실패) */
+    saveToSupabase(word, { corrected, pos, ipa, description: desc, examples }, null);
   }
 
   return wordResults[word].html;
@@ -2056,6 +2196,29 @@ function closeBillingModal() {
 document.getElementById('billingModal').addEventListener('click', function(e) {
   if (e.target === e.currentTarget) closeBillingModal();
 });
+</script>
+
+<!-- 데이터 수집 동의 배너 -->
+<div id="consentBanner" style="display:none; position:fixed; bottom:0; left:0; right:0; background:#2D2B28; color:#F7F6F3; padding:16px 20px; z-index:9999; box-shadow:0 -2px 10px rgba(0,0,0,0.2);">
+  <div style="max-width:600px; margin:0 auto;">
+    <p style="font-size:13px; line-height:1.6; margin-bottom:12px;">
+      검색된 단어와 AI 생성 결과(텍스트, 이미지)는 서비스 품질 개선을 위해 서버에 저장됩니다. 개인을 식별할 수 있는 정보는 수집하지 않습니다.
+    </p>
+    <div style="display:flex; gap:8px; justify-content:flex-end;">
+      <button onclick="respondConsent(false)" style="padding:8px 16px; border:1px solid #8C8985; background:transparent; color:#F7F6F3; border-radius:6px; cursor:pointer; font-size:13px;">거부</button>
+      <button onclick="respondConsent(true)" style="padding:8px 16px; border:none; background:#E8A87C; color:#2D2B28; border-radius:6px; cursor:pointer; font-size:13px; font-weight:600;">동의합니다</button>
+    </div>
+  </div>
+</div>
+<script>
+/* 동의 배너: 아직 응답하지 않은 경우에만 표시 */
+if (localStorage.getItem('visibleVoca_dataConsent') === null) {
+  document.getElementById('consentBanner').style.display = 'block';
+}
+function respondConsent(agreed) {
+  localStorage.setItem('visibleVoca_dataConsent', agreed ? 'true' : 'false');
+  document.getElementById('consentBanner').style.display = 'none';
+}
 </script>
 
 </body>
