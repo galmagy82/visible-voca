@@ -997,7 +997,7 @@ function switchTab(tab) {
 function getSettings() {
   const saved = localStorage.getItem('visibleVoca_settings');
   if (saved) return JSON.parse(saved);
-  return { provider: 'gemini', apiKey: '', imageEnabled: false };
+  return { provider: 'gemini', apiKey: '', imageEnabled: true };
 }
 
 // --- 일반검색 ---
