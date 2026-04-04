@@ -993,15 +993,6 @@ body {
     <label for="apiKeyInput">API Key</label>
     <input type="password" id="apiKeyInput" placeholder="AIza... 형태의 Gemini API 키">
 
-    <!-- 이미지 생성 체크박스 -->
-    <div style="margin-top:12px; display:flex; align-items:flex-start; gap:8px;">
-      <input type="checkbox" id="imageEnabledCheck" style="margin-top:3px;">
-      <label for="imageEnabledCheck" style="font-size:13px; color:#5A5754; line-height:1.5; cursor:pointer;">
-        이미지 생성 사용<br>
-        <span style="font-size:11px; color:#8C8985;">API 결제 설정을 하지 않은 경우 체크를 해제해 주세요.</span>
-      </label>
-    </div>
-
     <span class="guide-toggle" onclick="toggleGuide()">&#9656; API 키 발급 가이드</span>
     <div class="guide-content" id="guideContent">
       <div id="guideGemini">
@@ -1125,14 +1116,13 @@ function toggleSafetyGuide() {
 function saveAndGo() {
   var provider = document.getElementById('providerSelect').value;
   var apiKey = document.getElementById('apiKeyInput').value.trim();
-  var imageEnabled = document.getElementById('imageEnabledCheck').checked;
   var msg = document.getElementById('statusMsg');
   if (!apiKey) {
     msg.textContent = 'API 키를 입력해주세요.';
     msg.className = 'status-msg warn';
     return;
   }
-  localStorage.setItem('visibleVoca_settings', JSON.stringify({ provider: provider, apiKey: apiKey, imageEnabled: imageEnabled }));
+  localStorage.setItem('visibleVoca_settings', JSON.stringify({ provider: provider, apiKey: apiKey, imageEnabled: false }));
   msg.textContent = '저장되었습니다.';
   msg.className = 'status-msg ok';
   setTimeout(function() { location.href = 'main.html'; }, 500);
