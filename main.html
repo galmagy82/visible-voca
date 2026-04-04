@@ -306,7 +306,7 @@
         <input type="checkbox" id="imageEnabledCheck" style="margin-top:3px;">
         <label for="imageEnabledCheck" style="font-size:13px; color:#5A5754; line-height:1.5; cursor:pointer;">
           이미지 생성 사용<br>
-          <span style="font-size:11px; color:#8C8985;">체크하지 않으면 텍스트 설명만 제공됩니다.</span>
+          <span style="font-size:11px; color:#8C8985;">API 결제 설정을 하지 않은 경우 체크를 해제해 주세요.</span>
         </label>
       </div>
 
@@ -338,6 +338,15 @@
             <li>생성된 키를 복사하여 위에 붙여넣습니다.</li>
           </ol>
           <div class="guide-note">OpenAI에서 결제 연동이 필요합니다.<br>검색 1회당 약 50원의 비용이 발생합니다.</div>
+        </div>
+      </div>
+
+      <span class="guide-toggle" onclick="toggleSafetyGuide()">&#9656; API 키 안전 안내</span>
+      <div class="guide-content" id="safetyGuideContent">
+        <div class="guide-note" style="border-top:none; padding-top:0;">
+          입력하신 API 키는 이 기기의 브라우저(localStorage)에만 저장되며, 개발자의 서버로 전송되지 않습니다.<br>
+          Google/OpenAI API 호출 시에만 해당 서비스로 직접 전송됩니다.<br>
+          공용 PC에서는 사용 후 설정에서 키를 삭제해 주세요.
         </div>
       </div>
 
@@ -419,6 +428,14 @@ function toggleGuide() {
   const toggle = document.querySelector('.guide-toggle');
   content.classList.toggle('active');
   toggle.innerHTML = content.classList.contains('active') ? '&#9662; API 키 발급 가이드' : '&#9656; API 키 발급 가이드';
+}
+
+function toggleSafetyGuide() {
+  const content = document.getElementById('safetyGuideContent');
+  const toggles = document.querySelectorAll('.guide-toggle');
+  const toggle = toggles[1];
+  content.classList.toggle('active');
+  toggle.innerHTML = content.classList.contains('active') ? '&#9662; API 키 안전 안내' : '&#9656; API 키 안전 안내';
 }
 
 function updateGuideContent(provider) {
