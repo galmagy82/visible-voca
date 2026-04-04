@@ -1307,32 +1307,15 @@ async function fetchWordResult(word, targetEl) {
     console.error('이미지 생성 실패:', imgErr);
     const container = targetEl.querySelector('.feel-image-container');
 
-    /* 에러 코드별 분기 처리 */
-    let placeholderHtml;
-    if (imgErr.status === 402 || imgErr.status === 403) {
-      /* 결제 미연동 — 이미지 생성 자동 비활성화 */
-      const s = getSettings();
-      s.imageEnabled = false;
-      localStorage.setItem('visibleVoca_settings', JSON.stringify(s));
-      placeholderHtml = `<div class="image-billing-placeholder">
-        <div class="placeholder-icon">🎨</div>
-        <div class="placeholder-msg">그림으로 보면 더 오래 기억돼요</div>
-        <button class="placeholder-btn" onclick="openBillingModal()">자세히 보기</button>
-      </div>`;
-    } else if (imgErr.status === 429) {
-      /* 요청 한도 초과 */
-      placeholderHtml = `<div class="image-billing-placeholder">
-        <div class="placeholder-icon">⏳</div>
-        <div class="placeholder-msg">하루 무료 요청 한도를 초과했습니다.<br>내일 다시 시도해주세요.</div>
-      </div>`;
-    } else {
-      /* 기타 오류 (네트워크, 서버 등) 또는 이미지 비활성화 */
-      placeholderHtml = `<div class="image-billing-placeholder">
-        <div class="placeholder-icon">🎨</div>
-        <div class="placeholder-msg">그림으로 보면 더 오래 기억돼요</div>
-        <button class="placeholder-btn" onclick="openBillingModal()">자세히 보기</button>
-      </div>`;
-    }
+    /* 이미지 생성 실패 — 자동 비활성화 + 결제 안내 플레이스홀더 표시 */
+    const s = getSettings();
+    s.imageEnabled = false;
+    localStorage.setItem('visibleVoca_settings', JSON.stringify(s));
+    const placeholderHtml = `<div class="image-billing-placeholder">
+      <div class="placeholder-icon">🎨</div>
+      <div class="placeholder-msg">그림으로 보면 더 오래 기억돼요</div>
+      <button class="placeholder-btn" onclick="openBillingModal()">자세히 보기</button>
+    </div>`;
 
     if (container) {
       container.outerHTML = placeholderHtml;
