@@ -2015,9 +2015,6 @@ function onBillingImageCheck() {
 function closeBillingModal() {
   document.getElementById('billingModal').classList.remove('active');
 }
-document.getElementById('billingModal').addEventListener('click', function(e) {
-  if (e.target === e.currentTarget) closeBillingModal();
-});
 </script>
 
 <!-- 결제 연동 가이드 모달 -->
@@ -2053,6 +2050,13 @@ document.getElementById('billingModal').addEventListener('click', function(e) {
     <button class="close-btn" onclick="closeBillingModal()">확인</button>
   </div>
 </div>
+
+<!-- 모달 바깥 클릭 시 닫기 -->
+<script>
+document.getElementById('billingModal').addEventListener('click', function(e) {
+  if (e.target === e.currentTarget) closeBillingModal();
+});
+</script>
 
 </body>
 </html>
