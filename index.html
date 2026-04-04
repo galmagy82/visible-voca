@@ -42,13 +42,11 @@ body {
 }
 
 .section {
-  min-height: 100vh;
-  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 24px;
+  padding: 220px 24px;
   position: relative;
   opacity: 0;
   transform: translateY(40px);
@@ -62,6 +60,8 @@ body {
 
 /* ===== SECTION 0: HERO INTRO ===== */
 .s0 {
+  min-height: 100vh;
+  min-height: 100dvh;
   background: var(--bg);
   text-align: center;
 }
@@ -205,7 +205,7 @@ body {
 }
 
 /* ===== SECTION 2: OLD WAY ===== */
-.s2 { background: #F5F1EA; }
+.s2 { background: var(--bg); }
 
 .dict-box {
   width: 380px;
@@ -320,7 +320,7 @@ body {
 }
 
 /* ===== SECTION 4: APP WAY ===== */
-.s4 { background: #F5F1EA; }
+.s4 { background: var(--bg); }
 
 .s4-label {
   font-size: 14px;
@@ -423,7 +423,7 @@ body {
 }
 
 /* ===== SECTION 6: RE-UNDERSTAND ===== */
-.s6 { background: #F5F1EA; }
+.s6 { background: var(--bg); }
 
 .s6 .app-frame {
   margin-bottom: 24px;
@@ -539,7 +539,9 @@ body {
 
 /* ===== SECTION 9: ENDING ===== */
 .s9 {
-  background: linear-gradient(180deg, var(--bg) 0%, #F0EBE3 100%);
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--bg);
 }
 
 .brand-name {
