@@ -315,7 +315,7 @@
   }
   .billing-modal .close-btn {
     display: block;
-    margin: 0 auto;
+    margin: 16px auto 0;
     padding: 10px 32px;
     font-size: 0.95rem;
     border: none;
@@ -1998,9 +1998,19 @@ function showQuizResult() {
   }
 }
 
-/* 결제 연동 가이드 모달 열기/닫기 */
+/* 결제 연동 가이드 창 열기/닫기 */
 function openBillingModal() {
+  /* 현재 설정 상태를 체크박스에 반영 */
+  const s = getSettings();
+  document.getElementById('billingImageCheck').checked = s.imageEnabled !== false;
   document.getElementById('billingModal').classList.add('active');
+}
+
+/* 결제 안내 창에서 이미지 생성 체크 변경 시 설정에 반영 */
+function onBillingImageCheck() {
+  const s = getSettings();
+  s.imageEnabled = document.getElementById('billingImageCheck').checked;
+  localStorage.setItem('visibleVoca_settings', JSON.stringify(s));
 }
 function closeBillingModal() {
   document.getElementById('billingModal').classList.remove('active');
@@ -2016,7 +2026,7 @@ document.getElementById('billingModal').addEventListener('click', function(e) {
     <h3>그림으로 보면 더 오래 기억돼요</h3>
 
     <div class="info-section">
-      <h4>결제 연동 방법</h4>
+      <h4>결제 설정 방법</h4>
       <ol>
         <li><a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio</a>에 접속합니다.</li>
         <li>좌측 메뉴에서 <strong>Settings → Billing</strong>으로 이동합니다.</li>
@@ -2027,7 +2037,18 @@ document.getElementById('billingModal').addEventListener('click', function(e) {
     <div class="cost-note">
       💰 <strong>예상 비용:</strong> 이미지 1장당 약 $0.039 (약 ₩50원) 수준입니다.<br>
       * 단어 100개 검색 시 약 ₩5,000원<br><br>
-      단어 텍스트 설명은 결제 연동 없이 무료로 계속 사용 가능합니다.
+      단어 텍스트 설명은 결제 설정 없이 무료로 계속 사용 가능합니다.
+    </div>
+
+    <div style="margin-top:16px; padding-top:14px; border-top:1px solid #E5E2DE;">
+      <div style="font-size:13px; color:#5A5754; font-weight:500; margin-bottom:8px;">결제 설정을 완료하셨나요?</div>
+      <div style="display:flex; align-items:flex-start; gap:8px;">
+        <input type="checkbox" id="billingImageCheck" style="margin-top:3px;" onchange="onBillingImageCheck()">
+        <label for="billingImageCheck" style="font-size:13px; color:#5A5754; line-height:1.5; cursor:pointer;">
+          이미지 생성 사용<br>
+          <span style="font-size:11px; color:#8C8985;">API 결제 설정을 하지 않은 경우 체크를 해제해 주세요.</span>
+        </label>
+      </div>
     </div>
 
     <button class="close-btn" onclick="closeBillingModal()">확인</button>
