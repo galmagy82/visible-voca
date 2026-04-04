@@ -1193,14 +1193,19 @@ async function generateImageDalle(apiKey, word) {
 
 // --- 공통: 단어 검색 후 결과 HTML 생성 ---
 async function fetchWordResult(word, targetEl) {
+  const settings = getSettings();
+
   /* 브라우저 캐시 확인 (IndexedDB) */
   const cached = await getCacheEntry(word);
   if (cached) {
-    wordResults[word] = { html: cached };
-    return cached;
+    /* 이미지 생성 활성화 상태인데 캐시에 이미지가 없으면 캐시 무시하고 재검색 */
+    if (settings.imageEnabled && !cached.includes('<img ')) {
+      /* 캐시 무시 — 아래로 계속 진행 */
+    } else {
+      wordResults[word] = { html: cached };
+      return cached;
+    }
   }
-
-  const settings = getSettings();
   if (!settings.apiKey) {
     targetEl.innerHTML = '<div class="error">홈에서 설정 버튼을 눌러 API 키를 먼저 입력해주세요.</div>';
     return null;
@@ -1383,11 +1388,15 @@ function showSearchResult(word) {
 }
 
 async function lookupWord(word) {
+  const settings = getSettings();
   const cached = await getCacheEntry(word);
   if (cached) {
-    wordResults[word] = { html: cached };
-    showSearchResult(word);
-    return;
+    /* 이미지 생성 활성화 상태인데 캐시에 이미지가 없으면 캐시 무시하고 재검색 */
+    if (!(settings.imageEnabled && !cached.includes('<img '))) {
+      wordResults[word] = { html: cached };
+      showSearchResult(word);
+      return;
+    }
   }
 
   try {
