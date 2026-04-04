@@ -1276,6 +1276,12 @@ async function fetchWordResult(word, targetEl) {
   html += `<div class="feel-desc">${desc}</div>`;
   if (imagePromise) {
     html += `<div class="feel-image-container" id="imageContainer"><div class="feel-image-loading">이미지 생성 중...</div></div>`;
+  } else {
+    html += `<div class="image-billing-placeholder">
+      <div class="placeholder-icon">🎨</div>
+      <div class="placeholder-msg">그림으로 보면 더 오래 기억돼요</div>
+      <button class="placeholder-btn" onclick="openBillingModal()">자세히 보기</button>
+    </div>`;
   }
   if (examples) html += `<div class="feel-examples">${examples}</div>`;
   /* 단어장에 추가 버튼은 word-header 안에 배치됨 */
