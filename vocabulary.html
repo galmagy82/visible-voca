@@ -1441,22 +1441,21 @@ async function fetchWordResult(word, targetEl) {
     console.error('이미지 생성 실패:', imgErr);
     const container = targetEl.querySelector('.feel-image-container');
 
-    /* 이미지 생성 실패 — 자동 비활성화 + 결제 안내 플레이스홀더 표시 */
-    const s = getSettings();
-    s.imageEnabled = false;
-    localStorage.setItem('visibleVoca_settings', JSON.stringify(s));
-    const placeholderHtml = `<div class="image-billing-placeholder">
-      <div class="placeholder-icon">🎨</div>
-      <div class="placeholder-msg">${t('imagePlaceholderMsg')}</div>
-      <button class="placeholder-btn" onclick="openBillingModal()">${t('imagePlaceholderBtn')}</button>
-    </div>`;
+    /* HTTP 에러(403 등 결제 문제)일 때만 자동 비활성화 */
+    const isBillingError = imgErr.status && (imgErr.status === 403 || imgErr.status === 402);
+    if (isBillingError) {
+      const s = getSettings();
+      s.imageEnabled = false;
+      localStorage.setItem('visibleVoca_settings', JSON.stringify(s));
+    }
 
+    /* 이미지 영역 제거 — 이미지 없이 텍스트만 표시 */
     if (container) {
-      container.outerHTML = placeholderHtml;
+      container.remove();
     }
     const noImgHtml = html.replace(
       /<div class="feel-image-container" id="imageContainer"><div class="feel-image-loading">[^<]*<\/div><\/div>/,
-      placeholderHtml
+      ''
     );
     wordResults[word] = { html: noImgHtml };
     saveCacheEntry(word, noImgHtml);
