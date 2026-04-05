@@ -764,6 +764,11 @@ body {
 </head>
 <body>
 
+<!-- 재방문자용 상단 바 -->
+<div id="quickStartBar" style="display:none; position:fixed; top:0; left:0; right:0; z-index:9999; background:rgba(45,43,40,0.95); padding:12px 20px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,0.15);">
+  <a href="main.html" style="color:#F7F6F3; text-decoration:none; font-size:14px; font-weight:500; letter-spacing:0.05em;">바로 시작하기 &rarr;</a>
+</div>
+
 <div class="progress-bar" id="progressBar"></div>
 
 <div class="scroll-indicator" id="scrollIndicator">
@@ -1046,6 +1051,13 @@ const observer = new IntersectionObserver((entries) => {
 });
 
 sections.forEach(s => observer.observe(s));
+
+/* 재방문자(API 키 있음)에게 상단 바로 시작하기 바 표시 */
+var savedSettings = localStorage.getItem('visibleVoca_settings');
+var parsedSettings = savedSettings ? JSON.parse(savedSettings) : null;
+if (parsedSettings && parsedSettings.apiKey) {
+  document.getElementById('quickStartBar').style.display = 'block';
+}
 
 const progressBar = document.getElementById('progressBar');
 const scrollIndicator = document.getElementById('scrollIndicator');
