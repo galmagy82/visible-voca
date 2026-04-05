@@ -985,6 +985,11 @@ body {
   <div class="brand-tagline" data-i18n="heroTagline">머리에 남는 영어</div>
   <button class="cta-btn" id="startBtn" data-i18n="startBtn">시작하기</button>
   <a href="https://open.kakao.com/o/pgDSZSoi" target="_blank" style="margin-top:12px; font-size:14px; color:var(--muted); text-decoration:none; border-bottom:1px solid var(--muted); padding-bottom:2px;" data-i18n="feedback">의견 보내기</a>
+  <div id="langToggle" style="margin-top:16px; font-size:13px; color:var(--muted); letter-spacing:0.02em;">
+    <span id="langKoBtn" style="cursor:pointer; padding:4px 2px;">한국어</span>
+    <span style="opacity:0.3; margin:0 4px;">|</span>
+    <span id="langEnBtn" style="cursor:pointer; padding:4px 2px;">English</span>
+  </div>
 </div>
 
 <!-- API 키 등록 모달 -->
@@ -1147,6 +1152,28 @@ function saveAndGo() {
 /* 다국어 적용 */
 document.documentElement.lang = getLang();
 applyI18n();
+
+/* 언어 토글 */
+function updateLangToggle() {
+  var lang = getLang();
+  document.getElementById('langKoBtn').style.fontWeight = lang === 'ko' ? '700' : '400';
+  document.getElementById('langKoBtn').style.color = lang === 'ko' ? 'var(--text)' : 'var(--muted)';
+  document.getElementById('langEnBtn').style.fontWeight = lang === 'en' ? '700' : '400';
+  document.getElementById('langEnBtn').style.color = lang === 'en' ? 'var(--text)' : 'var(--muted)';
+}
+document.getElementById('langKoBtn').addEventListener('click', function() {
+  setLang('ko');
+  document.documentElement.lang = 'ko';
+  applyI18n();
+  updateLangToggle();
+});
+document.getElementById('langEnBtn').addEventListener('click', function() {
+  setLang('en');
+  document.documentElement.lang = 'en';
+  applyI18n();
+  updateLangToggle();
+});
+updateLangToggle();
 </script>
 
 </body>
