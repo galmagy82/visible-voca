@@ -12,6 +12,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Story Kongko - Visual Voca</title>
+<!-- 다국어 지원 -->
+<script src="i18n.js"></script>
 <!-- Supabase SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
@@ -800,17 +802,17 @@
 <body>
 
 <!-- 홈 버튼 -->
-<a class="top-btn home-btn" href="main.html" title="홈">&#8592;</a>
+<a class="top-btn home-btn" href="main.html" data-i18n-title="home" title="홈">&#8592;</a>
 
 <h1>VISUAL VOCA</h1>
 
 <div class="main-layout">
   <!-- 왼쪽 탭 사이드바 -->
   <div class="sidebar">
-    <button class="tab active" onclick="switchTab('search')">일반검색</button>
-    <button class="tab" onclick="switchTab('photo')">사진에서 검색</button>
-    <button class="tab" onclick="switchTab('wordbook')">단어장</button>
-    <button class="tab" onclick="switchTab('quiz')">Quiz</button>
+    <button class="tab active" onclick="switchTab('search')" data-i18n="tabSearch">일반검색</button>
+    <button class="tab" onclick="switchTab('photo')" data-i18n="tabPhoto">사진에서 검색</button>
+    <button class="tab" onclick="switchTab('wordbook')" data-i18n="tabWordbook">단어장</button>
+    <button class="tab" onclick="switchTab('quiz')" data-i18n="tabQuiz">Quiz</button>
   </div>
 
   <!-- 오른쪽 컨텐츠 -->
@@ -819,14 +821,13 @@
     <!-- 탭1: 일반검색 -->
     <div class="tab-content active" id="tabSearch">
       <div class="search-box">
-        <input type="text" id="wordInput" placeholder="단어, 숙어, 문장을 입력하세요" autofocus>
-        <button onclick="lookup()">검색</button>
+        <input type="text" id="wordInput" data-i18n="searchPlaceholder" placeholder="단어, 숙어, 문장을 입력하세요" autofocus>
+        <button onclick="lookup()" data-i18n="search">검색</button>
       </div>
       <!-- 가이드 -->
       <div class="guide" id="guideSearch">
-        <strong>일반 검색</strong><br><br>
-        단어, 숙어, 문장을 직접 입력하고 검색 버튼을 누르세요.<br>
-        여러 단어를 쉼표(,)로 구분하면 한꺼번에 검색할 수 있어요.
+        <strong data-i18n="searchGuideTitle">일반 검색</strong><br><br>
+        <span data-i18n="searchGuideBody">단어, 숙어, 문장을 직접 입력하고 검색 버튼을 누르세요.<br>여러 단어를 쉼표(,)로 구분하면 한꺼번에 검색할 수 있어요.</span>
       </div>
       <div class="result-area" id="resultSearch"></div>
     </div>
@@ -834,12 +835,12 @@
     <!-- 탭2: 사진에서 검색 -->
     <div class="tab-content" id="tabPhoto">
       <div class="photo-upload-area">
-        <button class="upload-btn" onclick="document.getElementById('photoInput').click()">&#128194; 사진 올리기</button>
+        <button class="upload-btn" onclick="document.getElementById('photoInput').click()" data-i18n="uploadPhoto">📂 사진 올리기</button>
         <input type="file" id="photoInput" accept="image/*" multiple style="display:none" onchange="handlePhoto(this)">
       </div>
       <!-- 가이드 -->
       <div class="guide" id="guidePhoto">
-        <strong>사진에서 검색</strong><br><br>
+        <strong data-i18n="photoGuideTitle">사진에서 검색</strong><br><br>
         <!-- 가이드 일러스트: 책 페이지에 표시된 단어 예시 -->
         <svg width="320" height="160" viewBox="0 0 320 160" style="display:block; margin:0 auto 16px;">
           <!-- 책 페이지 배경 -->
@@ -875,16 +876,13 @@
           <rect x="180" y="126" width="60" height="4" rx="2" fill="#444"/>
           <!-- 범례 -->
           <ellipse cx="186" cy="58" rx="6" ry="6" fill="none" stroke="#7ab36a" stroke-width="1"/>
-          <text x="196" y="61" font-size="8" fill="#7ab36a" font-family="sans-serif">동그라미</text>
+          <text x="196" y="61" font-size="8" fill="#7ab36a" font-family="sans-serif" data-i18n="photoGuideCircle">동그라미</text>
           <line x1="180" y1="74" x2="192" y2="74" stroke="#d4a04a" stroke-width="1.5"/>
-          <text x="196" y="77" font-size="8" fill="#d4a04a" font-family="sans-serif">밑줄</text>
+          <text x="196" y="77" font-size="8" fill="#d4a04a" font-family="sans-serif" data-i18n="photoGuideUnderline">밑줄</text>
           <text x="180" y="93" font-size="10" fill="#cc6666" font-family="monospace">#</text>
-          <text x="196" y="93" font-size="8" fill="#cc6666" font-family="sans-serif">#표시</text>
+          <text x="196" y="93" font-size="8" fill="#cc6666" font-family="sans-serif" data-i18n="photoGuideHash">#표시</text>
         </svg>
-        책을 읽다가 모르는 단어나 표현에 동그라미(○), 밑줄(_), 또는 #표시를 해두세요.<br>
-        표시한 페이지의 사진을 찍어 &#128194; 버튼을 눌러서 올리세요.<br>
-        표시된 단어를 자동으로 찾아서 검색합니다.<br><br>
-        사진은 여러 장을 한꺼번에 올릴 수 있어요.
+        <span data-i18n="photoGuideBody">책을 읽다가 모르는 단어나 표현에 동그라미(○), 밑줄(_), 또는 #표시를 해두세요.<br>표시한 페이지의 사진을 찍어 📂 버튼을 눌러서 올리세요.<br>표시된 단어를 자동으로 찾아서 검색합니다.<br><br>사진은 여러 장을 한꺼번에 올릴 수 있어요.</span>
       </div>
       <!-- 추출된 단어 리스트 -->
       <div class="word-list" id="wordList"></div>
@@ -895,18 +893,18 @@
     <div class="tab-content" id="tabWordbook">
       <!-- 검색/정렬/전체삭제 툴바 -->
       <div class="wordbook-toolbar">
-        <input type="text" id="wordbookFilter" placeholder="단어 검색..." oninput="renderWordbook()">
+        <input type="text" id="wordbookFilter" data-i18n="wordbookFilterPlaceholder" placeholder="단어 검색..." oninput="renderWordbook()">
         <select id="wordbookSort" onchange="renderWordbook()">
-          <option value="recent">최근 추가순</option>
-          <option value="alpha">알파벳순</option>
+          <option value="recent" data-i18n="sortRecent">최근 추가순</option>
+          <option value="alpha" data-i18n="sortAlpha">알파벳순</option>
         </select>
-        <button class="toolbar-btn" onclick="enterSelectMode()">선택 삭제</button>
+        <button class="toolbar-btn" onclick="enterSelectMode()" data-i18n="selectDelete">선택 삭제</button>
       </div>
       <!-- 선택 삭제 확인/취소 바 -->
       <div class="select-actions" id="selectActions">
         <span class="sel-count" id="selCount">0개 선택</span>
-        <button class="sel-btn danger" onclick="deleteSelected()">삭제</button>
-        <button class="sel-btn" onclick="exitSelectMode()">취소</button>
+        <button class="sel-btn danger" onclick="deleteSelected()" data-i18n="delete">삭제</button>
+        <button class="sel-btn" onclick="exitSelectMode()" data-i18n="cancel">취소</button>
       </div>
       <!-- 단어 목록 -->
       <div class="wordbook-list" id="wordbookList"></div>
@@ -916,34 +914,34 @@
     <div class="tab-content" id="tabQuiz">
       <!-- 퀴즈 설정 화면 -->
       <div id="quizSetup">
-        <div class="quiz-setup-title">퀴즈 설정</div>
+        <div class="quiz-setup-title" data-i18n="quizSetup">퀴즈 ��정</div>
         <div class="quiz-option">
-          <label>유형</label>
+          <label data-i18n="quizType">유형</label>
           <select id="quizType">
-            <option value="feel">느낌 맞추기</option>
-            <option value="image">이미지 보고 맞추기</option>
+            <option value="feel" data-i18n="quizTypeFeel">느낌 맞추기</option>
+            <option value="image" data-i18n="quizTypeImage">이미지 보��� 맞추기</option>
           </select>
         </div>
         <div class="quiz-option">
-          <label>문제 수</label>
+          <label data-i18n="quizCount">문제 수</label>
           <select id="quizCount">
-            <option value="5">5문제</option>
-            <option value="10" selected>10문제</option>
-            <option value="20">20문제</option>
+            <option value="5">5</option>
+            <option value="10" selected>10</option>
+            <option value="20">20</option>
           </select>
         </div>
         <div class="quiz-option">
-          <label>출제 범위</label>
+          <label data-i18n="quizRange">출제 범위</label>
           <select id="quizRange">
-            <option value="all">전체</option>
-            <option value="recent">최근 추가</option>
+            <option value="all" data-i18n="quizRangeAll">전체</option>
+            <option value="recent" data-i18n="quizRangeRecent">최근 추가</option>
           </select>
         </div>
         <div class="quiz-option" id="quizDateOption" style="display:none;">
-          <label>기준 날짜</label>
+          <label data-i18n="quizRangeDate">기준 날짜</label>
           <input type="date" id="quizDate">
         </div>
-        <button class="quiz-start-btn" onclick="startQuiz()">퀴즈 시작</button>
+        <button class="quiz-start-btn" onclick="startQuiz()" data-i18n="quizStart">������ 시작</button>
         <div class="quiz-msg" id="quizMsg"></div>
       </div>
       <!-- 퀴즈 문제 화면 -->
@@ -952,14 +950,14 @@
         <div class="quiz-question" id="quizQuestion"></div>
         <div class="quiz-choices" id="quizChoices"></div>
         <div class="quiz-feedback" id="quizFeedback"></div>
-        <button class="quiz-next-btn" id="quizNextBtn" style="display:none;" onclick="nextQuestion()">다음</button>
+        <button class="quiz-next-btn" id="quizNextBtn" style="display:none;" onclick="nextQuestion()" data-i18n="quizNext">다음</button>
       </div>
       <!-- 퀴즈 결과 화면 -->
       <div id="quizResult" style="display:none;">
-        <div class="quiz-result-title">퀴즈 결과</div>
+        <div class="quiz-result-title" data-i18n="quizResult">퀴즈 결과</div>
         <div class="quiz-score" id="quizScore"></div>
         <div class="quiz-wrong-list" id="quizWrongList"></div>
-        <button class="quiz-start-btn" onclick="resetQuiz()">다시 하기</button>
+        <button class="quiz-start-btn" onclick="resetQuiz()" data-i18n="quizRetry">다시 하기</button>
       </div>
     </div>
 
@@ -1184,27 +1182,7 @@ input.addEventListener('keydown', e => {
   if (e.key === 'Enter') startLookup();
 });
 
-const PROMPT_TEMPLATE = `너는 한국어로만 대답하는 영어 단어 느낌 사전이야. 절대 영어로 사고하거나 영어 문장을 먼저 만들지 마. 처음부터 끝까지 한국어로 사고하고 한국어로 작성해.
-
-"{{WORD}}"
-
-위 영어 단어(또는 문장/표현)의 핵심 느낌을 설명해줘.
-
-형식:
-만약 입력에 문법 오류나 오타가 있다면, 첫 줄에 [CORRECTED: 올바른 표현] 형식으로 교정된 문장을 적어줘. 오류가 없으면 이 줄은 생략.
-입력이 단어나 숙어인 경우, [POS: 품사] 형식으로 품사를 적어줘. 품사는 영어 약어로 적을 것 (noun, verb, adj, adv, phrase 등). 여러 품사가 가능하면 쉼표로 구분. 입력이 문장이면 이 줄은 생략.
-입력이 단어나 숙어인 경우, [IPA: /발음기호/] 형식으로 IPA 발음기호를 적어줘. 입력이 문장이면 이 줄은 생략.
-1줄: 핵심 느낌을 큰따옴표로 감싸서 한 문장 요약. 예) "하나였던 것이 딱 갈라지는" 이미지예요.
-2줄: 그 느낌을 바로 이해할 수 있는 비유나 장면 1~2문장.
----
-3줄 이후: 자주 쓰이는 예시 2~3개. 영어 예문과 한국어 해석을 각각 한 줄씩 적되, "영어:", "한국어:" 같은 라벨 없이 바로 문장만 적을 것. 예문과 예문 사이에는 빈 줄 하나를 넣어서 구분할 것.
-
-규칙:
-- 반드시 한국어로만 설명할 것 ([CORRECTED: ...], [POS: ...] 안의 영어만 예외)
-- 번역투 금지. 자연스러운 한국어 구어체로 작성
-- 짧고 간결하게
-- 마크다운 서식 쓰지 말 것
-- 느낌 설명과 예시 사이에 반드시 --- 구분선을 넣을 것`;
+/* 프롬프트는 i18n.js의 PROMPT_TEMPLATES에서 언어별로 관리 */
 
 // --- API 호출 ---
 async function callGemini(apiKey, prompt) {
@@ -1308,14 +1286,14 @@ function buildHtmlFromDB(dbData, word) {
   const speakWord = (safeCorrected || safeWord).replace(/'/g, "\\'");
   let html = `<div class="word-header">`;
   html += `<div class="word-title">${safeCorrected || safeWord}</div>`;
-  html += `<button class="speak-btn" onclick="speak('${speakWord}')" title="발음 듣기">&#128264;</button>`;
-  html += `<button class="add-wordbook-btn" data-wb-word>+ 단어장에 추가</button>`;
+  html += `<button class="speak-btn" onclick="speak('${speakWord}')" title="${t('listenPronunciation')}">&#128264;</button>`;
+  html += `<button class="add-wordbook-btn" data-wb-word>${t('addToWordbook')}</button>`;
   html += `</div>`;
   if (dbData.pos || dbData.ipa) html += `<div class="word-pos">${escapeHtml(dbData.pos) || ''}${dbData.pos && dbData.ipa ? ' · ' : ''}${escapeHtml(dbData.ipa) || ''}</div>`;
   if (safeCorrected) html += `<div class="corrected">${safeWord} → <span>${safeCorrected}</span></div>`;
   html += `<div class="feel-desc">${escapeHtml(dbData.description)}</div>`;
   if (dbData.imageUrl) {
-    html += `<div class="feel-image-container"><img src="${escapeHtml(dbData.imageUrl)}" alt="${safeWord}의 느낌을 표현한 이미지"></div>`;
+    html += `<div class="feel-image-container"><img src="${escapeHtml(dbData.imageUrl)}" alt="${safeWord}${t('imageAlt')}"></div>`;
   }
   if (dbData.examples) html += `<div class="feel-examples">${escapeHtml(dbData.examples)}</div>`;
   window._lastWbData = { word, pos: dbData.pos, summary: dbData.description.split('\n')[0].substring(0, 60) };
@@ -1351,13 +1329,13 @@ async function fetchWordResult(word, targetEl) {
 
   /* ③ API 호출 — 데이터 부족 또는 없음 */
   if (!settings.apiKey) {
-    targetEl.innerHTML = '<div class="error">홈에서 설정 버튼을 눌러 API 키를 먼저 입력해주세요.</div>';
+    targetEl.innerHTML = `<div class="error">${t('errorNoApiKey')}</div>`;
     return null;
   }
 
-  targetEl.innerHTML = '<div class="loading">느낌을 찾는 중...</div>';
+  targetEl.innerHTML = `<div class="loading">${t('searching')}</div>`;
 
-  const prompt = PROMPT_TEMPLATE.replace('{{WORD}}', word);
+  const prompt = getPromptTemplate().replace('{{WORD}}', word);
 
   const textPromise = settings.provider === 'gemini'
     ? callGemini(settings.apiKey, prompt)
@@ -1375,14 +1353,14 @@ async function fetchWordResult(word, targetEl) {
     text = await textPromise;
   } catch (textErr) {
     if (textErr.status === 429) {
-      targetEl.innerHTML = '<div class="error">하루 무료 요청 한도를 초과했습니다. 내일 다시 시도해주세요.</div>';
+      targetEl.innerHTML = `<div class="error">${t('errorRateLimit')}</div>`;
     } else {
-      targetEl.innerHTML = '<div class="error">일시적인 오류가 발생했습니다. 다시 시도해주세요.</div>';
+      targetEl.innerHTML = `<div class="error">${t('errorGeneral')}</div>`;
     }
     return null;
   }
   if (!text) {
-    targetEl.innerHTML = '<div class="error">응답을 받지 못했습니다.</div>';
+    targetEl.innerHTML = `<div class="error">${t('errorNoResponse')}</div>`;
     return null;
   }
 
@@ -1414,19 +1392,19 @@ async function fetchWordResult(word, targetEl) {
   const speakWord = (safeCorrected || safeWord).replace(/'/g, "\\'");
   let html = `<div class="word-header">`;
   html += `<div class="word-title">${safeCorrected || safeWord}</div>`;
-  html += `<button class="speak-btn" onclick="speak('${speakWord}')" title="발음 듣기">&#128264;</button>`;
-  html += `<button class="add-wordbook-btn" data-wb-word>+ 단어장에 추가</button>`;
+  html += `<button class="speak-btn" onclick="speak('${speakWord}')" title="${t('listenPronunciation')}">&#128264;</button>`;
+  html += `<button class="add-wordbook-btn" data-wb-word>${t('addToWordbook')}</button>`;
   html += `</div>`;
   if (pos || ipa) html += `<div class="word-pos">${escapeHtml(pos)}${pos && ipa ? ' · ' : ''}${escapeHtml(ipa)}</div>`;
   if (corrected) html += `<div class="corrected">${safeWord} → <span>${safeCorrected}</span></div>`;
   html += `<div class="feel-desc">${escapeHtml(desc)}</div>`;
   if (imagePromise) {
-    html += `<div class="feel-image-container" id="imageContainer"><div class="feel-image-loading">이미지 생성 중...</div></div>`;
+    html += `<div class="feel-image-container" id="imageContainer"><div class="feel-image-loading">${t('imageLoading')}</div></div>`;
   } else {
     html += `<div class="image-billing-placeholder">
       <div class="placeholder-icon">🎨</div>
-      <div class="placeholder-msg">그림으로 보면 더 오래 기억돼요</div>
-      <button class="placeholder-btn" onclick="openBillingModal()">자세히 보기</button>
+      <div class="placeholder-msg">${t('imagePlaceholderMsg')}</div>
+      <button class="placeholder-btn" onclick="openBillingModal()">${t('imagePlaceholderBtn')}</button>
     </div>`;
   }
   if (examples) html += `<div class="feel-examples">${escapeHtml(examples)}</div>`;
@@ -1448,11 +1426,12 @@ async function fetchWordResult(word, targetEl) {
     const imageUrl = await imagePromise;
     const container = targetEl.querySelector('.feel-image-container');
     if (container) {
-      container.innerHTML = `<img src="${escapeHtml(imageUrl)}" alt="${safeWord}의 느낌을 표현한 이미지">`;
+      container.innerHTML = `<img src="${escapeHtml(imageUrl)}" alt="${safeWord}${t('imageAlt')}">`;
     }
+    const imgTag = `<img src="${escapeHtml(imageUrl)}" alt="${safeWord}${t('imageAlt')}">`;
     const imgHtml = html.replace(
-      '<div class="feel-image-loading">이미지 생성 중...</div>',
-      `<img src="${escapeHtml(imageUrl)}" alt="${safeWord}의 느낌을 표현한 이미지">`
+      /<div class="feel-image-loading">[^<]*<\/div>/,
+      imgTag
     );
     wordResults[word] = { html: imgHtml };
     saveCacheEntry(word, imgHtml);
@@ -1468,15 +1447,15 @@ async function fetchWordResult(word, targetEl) {
     localStorage.setItem('visibleVoca_settings', JSON.stringify(s));
     const placeholderHtml = `<div class="image-billing-placeholder">
       <div class="placeholder-icon">🎨</div>
-      <div class="placeholder-msg">그림으로 보면 더 오래 기억돼요</div>
-      <button class="placeholder-btn" onclick="openBillingModal()">자세히 보기</button>
+      <div class="placeholder-msg">${t('imagePlaceholderMsg')}</div>
+      <button class="placeholder-btn" onclick="openBillingModal()">${t('imagePlaceholderBtn')}</button>
     </div>`;
 
     if (container) {
       container.outerHTML = placeholderHtml;
     }
     const noImgHtml = html.replace(
-      '<div class="feel-image-container" id="imageContainer"><div class="feel-image-loading">이미지 생성 중...</div></div>',
+      /<div class="feel-image-container" id="imageContainer"><div class="feel-image-loading">[^<]*<\/div><\/div>/,
       placeholderHtml
     );
     wordResults[word] = { html: noImgHtml };
@@ -1546,9 +1525,9 @@ async function lookupWord(word) {
     }
   } catch (err) {
     if (err.status === 429) {
-      resultSearch.innerHTML = '<div class="error">하루 무료 요청 한도를 초과했습니다. 내일 다시 시도해주세요.</div>';
+      resultSearch.innerHTML = `<div class="error">${t('errorRateLimit')}</div>`;
     } else {
-      resultSearch.innerHTML = '<div class="error">일시적인 오류가 발생했습니다. 다시 시도해주세요.</div>';
+      resultSearch.innerHTML = `<div class="error">${t('errorGeneral')}</div>`;
     }
   }
 }
@@ -1585,10 +1564,7 @@ function fileToBase64(file) {
 
 async function extractWordsFromPhoto(apiKey, base64Data, mimeType) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-  const extractPrompt = `이 사진은 영어 소설(Novel)의 페이지를 찍은 것입니다.
-사진에서 #표시, #표시와 동그라미, 또는 #표시와 밑줄로 표시된 영어 단어, 숙어, 또는 문장을 모두 찾아주세요.
-결과는 쉼표로 구분하여 한 줄로 출력해주세요. 다른 설명 없이 추출된 단어/표현만 출력하세요.
-예시: split, break down, take off`;
+  const extractPrompt = t('extractPrompt');
 
   const res = await fetch(url, {
     method: 'POST',
@@ -1615,14 +1591,14 @@ async function handlePhoto(inputEl) {
 
   const settings = getSettings();
   if (!settings.apiKey) {
-    resultPhoto.innerHTML = '<div class="error">홈에서 설정 버튼을 눌러 API 키를 먼저 입력해주세요.</div>';
+    resultPhoto.innerHTML = `<div class="error">${t('errorNoApiKey')}</div>`;
     inputEl.value = '';
     return;
   }
 
   document.getElementById('guidePhoto').style.display = 'none';
   wordListEl.innerHTML = '';
-  resultPhoto.innerHTML = `<div class="loading">사진 ${files.length}장에서 단어를 추출하는 중...</div>`;
+  resultPhoto.innerHTML = `<div class="loading">${files.length}${t('extractingWords')}</div>`;
 
   try {
     const promises = files.map(async (file) => {
@@ -1633,7 +1609,7 @@ async function handlePhoto(inputEl) {
 
     const allWords = results.filter(r => r && r.trim()).join(', ');
     if (!allWords) {
-      resultPhoto.innerHTML = '<div class="error">#표시된 단어를 찾지 못했습니다.</div>';
+      resultPhoto.innerHTML = `<div class="error">${t('noWordsFound')}</div>`;
       inputEl.value = '';
       return;
     }
@@ -1650,7 +1626,7 @@ async function handlePhoto(inputEl) {
     inputEl.value = '';
   } catch (err) {
     console.error('사진 분석 실패:', err);
-    resultPhoto.innerHTML = '<div class="error">사진 분석에 실패했습니다. 다시 시도해주세요.</div>';
+    resultPhoto.innerHTML = `<div class="error">${t('photoAnalysisFailed')}</div>`;
     inputEl.value = '';
   }
 }
@@ -1680,9 +1656,9 @@ async function selectPhotoWord(index) {
     bindWbButton(resultPhoto, word);
   } catch (err) {
     if (err.status === 429) {
-      resultPhoto.innerHTML = '<div class="error">하루 무료 요청 한도를 초과했습니다. 내일 다시 시도해주세요.</div>';
+      resultPhoto.innerHTML = `<div class="error">${t('errorRateLimit')}</div>`;
     } else {
-      resultPhoto.innerHTML = '<div class="error">일시적인 오류가 발생했습니다. 다시 시도해주세요.</div>';
+      resultPhoto.innerHTML = `<div class="error">${t('errorGeneral')}</div>`;
     }
   }
 }
@@ -1705,7 +1681,7 @@ async function bindWbButton(container, wordOverride) {
     const req = tx.objectStore(WB_STORE).get(word);
     req.onsuccess = () => {
       if (req.result) {
-        btn.textContent = '단어장에 추가됨';
+        btn.textContent = t('addedToWordbook');
         btn.classList.add('added');
         return;
       }
@@ -1733,7 +1709,7 @@ async function addToWordbook(word, pos, summary, btnEl) {
     };
     tx.objectStore(WB_STORE).put(entry);
     if (btnEl) {
-      btnEl.textContent = '단어장에 추가됨';
+      btnEl.textContent = t('addedToWordbook');
       btnEl.classList.add('added');
       btnEl.onclick = null;
     }
@@ -1788,7 +1764,7 @@ function exitSelectMode() {
 
 function updateSelCount() {
   const count = document.querySelectorAll('.wordbook-item.selected').length;
-  document.getElementById('selCount').textContent = `${count}개 선택`;
+  document.getElementById('selCount').textContent = `${count}${t('selectedCount')}`;
 }
 
 /* 칩 클릭: 일반 모드면 상세보기, 선택 모드면 토글 */
@@ -1805,7 +1781,7 @@ function onWordbookItemClick(word, el) {
 async function deleteSelected() {
   const selected = document.querySelectorAll('.wordbook-item.selected');
   if (selected.length === 0) return;
-  if (!confirm(`${selected.length}개의 단어를 삭제하시겠습니까?`)) return;
+  if (!confirm(`${selected.length}${t('confirmDeleteWords')}`)) return;
   for (const el of selected) {
     await removeFromWordbook(el.dataset.word);
   }
@@ -1832,7 +1808,7 @@ async function renderWordbook() {
   }
 
   if (filtered.length === 0) {
-    listEl.innerHTML = '<div class="wordbook-empty">저장된 단어가 없습니다.</div>';
+    listEl.innerHTML = `<div class="wordbook-empty">${t('wordbookEmpty')}</div>`;
     return;
   }
 
@@ -1841,7 +1817,7 @@ async function renderWordbook() {
     return `<div class="wordbook-item" data-word="${item.word}" onclick="onWordbookItemClick('${safeWord}', this)">
       <span class="wordbook-item-check"></span>
       <span class="wordbook-item-word">${item.word}</span>
-      <button class="wordbook-item-speak" onclick="event.stopPropagation(); speak('${safeWord}')" title="발음">&#128264;</button>
+      <button class="wordbook-item-speak" onclick="event.stopPropagation(); speak('${safeWord}')" title="${t('pronunciation')}">&#128264;</button>
     </div>`;
   }).join('');
 }
@@ -1865,11 +1841,11 @@ async function showWordbookDetail(word, itemEl) {
   if (cached) {
     contentEl.innerHTML = cached;
   } else {
-    contentEl.innerHTML = `<div class="loading">${word}의 결과를 불러오는 중...</div>`;
+    contentEl.innerHTML = `<div class="loading">${word}${t('loadingResult')}</div>`;
     try {
       await fetchWordResult(word, contentEl);
     } catch {
-      contentEl.innerHTML = '<div class="error">결과를 불러올 수 없습니다.</div>';
+      contentEl.innerHTML = `<div class="error">${t('loadFailed')}</div>`;
     }
   }
   /* 모달에서는 "단어장에 추가" 버튼 숨기기 */
@@ -1980,7 +1956,7 @@ async function startQuiz() {
   if (range === 'recent') {
     const dateStr = document.getElementById('quizDate').value;
     if (!dateStr) {
-      msgEl.textContent = '기준 날짜를 선택해주세요.';
+      msgEl.textContent = t('quizNoDate');
       return;
     }
     const since = new Date(dateStr).getTime();
@@ -1988,7 +1964,7 @@ async function startQuiz() {
   }
 
   if (words.length === 0) {
-    msgEl.textContent = '단어장에 단어가 없습니다. 단어를 먼저 추가해주세요.';
+    msgEl.textContent = t('quizNoWords');
     return;
   }
 
@@ -2003,7 +1979,7 @@ async function startQuiz() {
     }
     words = wordsWithImage;
     if (words.length === 0) {
-      msgEl.textContent = '이미지가 있는 단어가 없습니다. 느낌 맞추기를 이용해주세요.';
+      msgEl.textContent = t('quizNoImages');
       return;
     }
   }
@@ -2059,9 +2035,9 @@ function getDecoys(answer, wordbookWords, count) {
 
 /* 캐시된 HTML에서 느낌 설명 텍스트 추출 */
 function extractFeelText(html) {
-  if (!html) return '(설명 없음)';
+  if (!html) return t('noDescription');
   const match = html.match(/<div class="feel-desc">([\s\S]*?)<\/div>/);
-  return match ? match[1].trim() : '(설명 없음)';
+  return match ? match[1].trim() : t('noDescription');
 }
 
 /* 캐시된 HTML에서 이미지 태그 추출 */
@@ -2108,12 +2084,12 @@ function selectAnswer(index) {
 
   if (isCorrect) {
     quizCorrect++;
-    document.getElementById('quizFeedback').textContent = '정답!';
+    document.getElementById('quizFeedback').textContent = t('quizCorrectFeedback');
     document.getElementById('quizFeedback').style.color = '#8abf6a';
   } else {
     buttons[index].classList.add('wrong');
     quizWrongs.push(q.word);
-    document.getElementById('quizFeedback').textContent = `오답! 정답은 "${q.word}" 입니다.`;
+    document.getElementById('quizFeedback').textContent = t('quizWrongFeedbackText').replace('{word}', q.word);
     document.getElementById('quizFeedback').style.color = '#c66';
   }
 
@@ -2136,15 +2112,15 @@ function showQuizResult() {
   document.getElementById('quizResult').style.display = 'block';
 
   const total = quizQuestions.length;
-  document.getElementById('quizScore').textContent = `${total}문제 중 ${quizCorrect}개 정답`;
+  document.getElementById('quizScore').textContent = t('quizScoreText').replace('{total}', total).replace('{correct}', quizCorrect);
 
   if (quizWrongs.length > 0) {
     document.getElementById('quizWrongList').innerHTML =
-      '<div style="font-size:0.9rem;color:#6B6660;margin-bottom:8px;">틀린 단어:</div>' +
+      `<div style="font-size:0.9rem;color:#6B6660;margin-bottom:8px;">${t('quizWrongLabel')}</div>` +
       quizWrongs.map(w => `<div class="quiz-wrong-item"><span>${w}</span></div>`).join('');
   } else {
     document.getElementById('quizWrongList').innerHTML =
-      '<div style="font-size:0.9rem;color:#5A8A42;">모두 맞았습니다!</div>';
+      `<div style="font-size:0.9rem;color:#5A8A42;">${t('quizAllCorrect')}</div>`;
   }
 }
 
@@ -2170,34 +2146,34 @@ function closeBillingModal() {
 <!-- 결제 연동 가이드 모달 -->
 <div class="billing-modal-overlay" id="billingModal">
   <div class="billing-modal">
-    <h3>그림으로 보면 더 오래 기억돼요</h3>
+    <h3 data-i18n="billingTitle">그림으로 보면 더 오래 기억돼요</h3>
 
     <div class="info-section">
-      <h4>결제 설정 방법</h4>
+      <h4 data-i18n="billingHow">결제 설정 방법</h4>
       <ol>
-        <li><a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio</a>에 접속합니다.</li>
-        <li>좌측 메뉴에서 <strong>Settings → Billing</strong>으로 이동합니다.</li>
-        <li>결제 수단(카드)을 등록합니다.</li>
+        <li><a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio</a> <span data-i18n="billingStep1">에 접속합니다.</span></li>
+        <li data-i18n="billingStep2">좌측 메뉴에서 Settings → Billing으로 이동합니다.</li>
+        <li data-i18n="billingStep3">결제 수단(카드)을 등록합니다.</li>
       </ol>
     </div>
 
     <div class="cost-note">
-      💰 <strong>예상 비용:</strong> 이미지 1장당 약 $0.039 (약 ₩50원) 수준입니다.<br>
-      * 단어 100개 검색 시 약 ₩5,000원
+      💰 <strong>예상 비용:</strong> <span data-i18n="billingCost">이미지 1장당 약 $0.039 (약 ₩50원) 수준입니다.</span><br>
+      <span data-i18n="billingCost100">* 단어 100개 검색 시 약 ₩5,000원</span>
     </div>
 
     <div style="margin-top:16px; padding-top:14px; border-top:1px solid #E5E2DE;">
-      <div style="font-size:13px; color:#5A5754; font-weight:500; margin-bottom:8px;">결제 설정을 완료하셨나요?</div>
+      <div style="font-size:13px; color:#5A5754; font-weight:500; margin-bottom:8px;" data-i18n="billingDone">결제 설정을 완료하셨나요?</div>
       <div style="display:flex; align-items:flex-start; gap:8px;">
         <input type="checkbox" id="billingImageCheck" style="margin-top:3px;" onchange="onBillingImageCheck()">
         <label for="billingImageCheck" style="font-size:13px; color:#5A5754; line-height:1.5; cursor:pointer;">
-          이미지 생성 사용<br>
-          <span style="font-size:11px; color:#8C8985;">API 결제 설정을 하지 않은 경우 체크를 해제해 주세요.</span>
+          <span data-i18n="billingCheckLabel">이미지 생성 사용</span><br>
+          <span style="font-size:11px; color:#8C8985;" data-i18n="billingCheckHint">API 결제 설정을 하지 않은 경우 체크를 해제해 주세요.</span>
         </label>
       </div>
     </div>
 
-    <button class="close-btn" onclick="closeBillingModal()">확인</button>
+    <button class="close-btn" onclick="closeBillingModal()" data-i18n="confirm">확인</button>
   </div>
 </div>
 
@@ -2212,11 +2188,11 @@ document.getElementById('billingModal').addEventListener('click', function(e) {
 <div id="consentBanner" style="display:none; position:fixed; bottom:0; left:0; right:0; background:#2D2B28; color:#F7F6F3; padding:16px 20px; z-index:9999; box-shadow:0 -2px 10px rgba(0,0,0,0.2);">
   <div style="max-width:600px; margin:0 auto;">
     <p style="font-size:13px; line-height:1.6; margin-bottom:12px;">
-      검색된 단어와 AI 생성 결과(텍스트, 이미지)는 서비스 품질 개선을 위해 서버에 저장됩니다. 개인을 식별할 수 있는 정보는 수집하지 않습니다.
+      <span data-i18n="consentMsg">검색된 단어와 AI 생성 결과(텍스트, 이미지)는 서비스 품질 개선을 위해 서버에 저장됩니다. 개인을 식별할 수 있는 정보는 수집하지 않습니다.</span>
     </p>
     <div style="display:flex; gap:8px; justify-content:flex-end;">
-      <button onclick="respondConsent(false)" style="padding:8px 16px; border:1px solid #8C8985; background:transparent; color:#F7F6F3; border-radius:6px; cursor:pointer; font-size:13px;">거부</button>
-      <button onclick="respondConsent(true)" style="padding:8px 16px; border:none; background:#E8A87C; color:#2D2B28; border-radius:6px; cursor:pointer; font-size:13px; font-weight:600;">동의합니다</button>
+      <button onclick="respondConsent(false)" style="padding:8px 16px; border:1px solid #8C8985; background:transparent; color:#F7F6F3; border-radius:6px; cursor:pointer; font-size:13px;" data-i18n="consentDecline">거부</button>
+      <button onclick="respondConsent(true)" style="padding:8px 16px; border:none; background:#E8A87C; color:#2D2B28; border-radius:6px; cursor:pointer; font-size:13px; font-weight:600;" data-i18n="consentAgree">동의합니다</button>
     </div>
   </div>
 </div>
@@ -2229,6 +2205,12 @@ function respondConsent(agreed) {
   localStorage.setItem('visibleVoca_dataConsent', agreed ? 'true' : 'false');
   document.getElementById('consentBanner').style.display = 'none';
 }
+</script>
+
+<!-- 다국어 적용 -->
+<script>
+document.documentElement.lang = getLang();
+applyI18n();
 </script>
 
 </body>

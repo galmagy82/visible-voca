@@ -12,6 +12,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Story Kongko</title>
+<!-- 다국어 지원 -->
+<script src="i18n.js"></script>
 <style>
   /* 공통 스타일 */
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -266,19 +268,19 @@
 <body>
 
 <!-- 설정 버튼 -->
-<button class="settings-btn" onclick="openSettings()" title="설정">&#9881;</button>
+<button class="settings-btn" onclick="openSettings()" data-i18n-title="settings" title="설정">&#9881;</button>
 
 <h1>STORY KONGKO</h1>
 
 <!-- 카테고리 메뉴 -->
 <div class="menu">
   <a class="menu-card" href="vocabulary.html">
-    <h2>Visual Voca</h2>
-    <p>단어의 느낌과 뉘앙스를 이미지와 함께 알아보세요</p>
+    <h2 data-i18n="menuVocaTitle">Visual Voca</h2>
+    <p data-i18n="menuVocaDesc">단어의 느낌과 뉘앙스를 이미지와 함께 알아보세요</p>
   </a>
   <a class="menu-card" href="writing.html">
-    <h2>Visual Essay</h2>
-    <p>에세이를 코칭받고, 나만의 그림책으로 만들어보세요</p>
+    <h2 data-i18n="menuWritingTitle">Visual Essay</h2>
+    <p data-i18n="menuWritingDesc">에세이를 ���칭받고, 나만의 그림책으로 만들어보세요</p>
   </a>
 </div>
 
@@ -286,47 +288,48 @@
 <div class="modal-overlay" id="settingsModal">
   <div class="modal">
     <div class="modal-tabs">
-      <button class="modal-tab active" onclick="switchTab('api')">API 설정</button>
-      <button class="modal-tab" onclick="switchTab('cache')">캐시 관리</button>
+      <button class="modal-tab active" onclick="switchTab('api')" data-i18n="apiSettings">API 설정</button>
+      <button class="modal-tab" onclick="switchTab('cache')" data-i18n="cacheManagement">캐시 관리</button>
+      <button class="modal-tab" onclick="switchTab('lang')" data-i18n="language">언어</button>
     </div>
 
     <!-- API 설정 탭 -->
     <div class="tab-content active" id="tabApi">
-      <label for="providerSelect">AI 서비스</label>
+      <label for="providerSelect" data-i18n="aiService">AI 서비스</label>
       <select id="providerSelect" onchange="onProviderChange()">
         <option value="gemini">Gemini</option>
         <!-- <option value="chatgpt">ChatGPT / OpenAI</option> -->
       </select>
 
-      <label for="apiKeyInput">API 키</label>
-      <input type="password" id="apiKeyInput" placeholder="API 키를 입력하세요">
+      <label for="apiKeyInput" data-i18n="apiKey">API 키</label>
+      <input type="password" id="apiKeyInput" data-i18n="apiKeyPlaceholder" placeholder="API 키를 입력하세요">
 
       <!-- 이미지 생성 체크박스 -->
       <div style="margin-top:12px; display:flex; align-items:flex-start; gap:8px;">
         <input type="checkbox" id="imageEnabledCheck" style="margin-top:3px;">
         <label for="imageEnabledCheck" style="font-size:13px; color:#5A5754; line-height:1.5; cursor:pointer;">
-          이미지 생성 사용<br>
-          <span style="font-size:11px; color:#8C8985;">API 결제 설정을 하지 않은 경우 체크를 해제해 주세요.</span>
+          <span data-i18n="imageToggle">이미지 생성 사용</span><br>
+          <span style="font-size:11px; color:#8C8985;" data-i18n="imageToggleHint">API 결제 설정을 하지 않은 경우 체크를 해제해 주세요.</span>
         </label>
       </div>
 
-      <span class="guide-toggle" onclick="toggleGuide()">&#9656; API 키 발급 가이드</span>
+      <span class="guide-toggle" onclick="toggleGuide()">&#9656; <span data-i18n="apiGuideToggle">API 키 발급 가이드</span></span>
       <div class="guide-content" id="guideContent">
         <div id="guideGemini">
-          <h3>Gemini API 키 발급 방법</h3>
+          <h3 data-i18n="geminiGuideTitle">Gemini API 키 발급 방법</h3>
           <ol>
-            <li><a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio</a>에 접속합니다.</li>
-            <li>Google 계정으로 로그인합니다.</li>
-            <li>"API 키 만들기" 버튼을 클릭합니다.</li>
-            <li>생성된 키를 복사하여 위에 붙여넣습니다.</li>
+            <li><a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio</a> <span data-i18n="geminiGuideStep1">에 접속합니다.</span></li>
+            <li data-i18n="geminiGuideStep2">Google 계정으로 로그인합니다.</li>
+            <li data-i18n="geminiGuideStep3">"API 키 만들기" 버튼을 클릭합니다.</li>
+            <li data-i18n="geminiGuideStep4">생성된 키를 복사하여 위에 붙여넣습니다.</li>
           </ol>
           <div class="guide-note">
-            <strong>Gemini API 키 결제 미설정 시</strong><br>
-            · 단어 검색: 하루 무료 제공량 안에서 사용 가능<br>
-            · 이미지 생성: 사용 불가<br><br>
-            <strong>Gemini API 키 결제 설정 시 (사용량에 따라 과금)</strong><br>
-            · 단어 검색: 제한 없음<br>
-            · 이미지 생성: 사용 가능
+            <strong data-i18n="geminiNoBilling">Gemini API 키 결제 미설정 시</strong><br>
+            <span data-i18n="geminiNoBillingSearch">· 단어 검색: 하루 무료 제공량 안에서 사용 가능</span><br>
+            <span data-i18n="geminiNoBillingImage">· 이미지 생성: 사용 불가</span><br><br>
+            <strong data-i18n="geminiBilling">Gemini API 키 결제 설정 시 (사용량에 따라 과금)</strong><br>
+            <span data-i18n="geminiBillingSearch">· 단어 검색: 제한 없음</span><br>
+            <span data-i18n="geminiBillingImage">· 이미지 생성: 사용 가능</span>
           </div>
         </div>
         <div id="guideChatGPT" style="display:none;">
@@ -341,9 +344,9 @@
         </div>
       </div>
 
-      <span class="guide-toggle" onclick="toggleSafetyGuide()">&#9656; API 키 안전 안내</span>
+      <span class="guide-toggle" onclick="toggleSafetyGuide()">&#9656; <span data-i18n="safetyGuideToggle">API 키 안전 안내</span></span>
       <div class="guide-content" id="safetyGuideContent">
-        <div class="guide-note" style="border-top:none; padding-top:0;">
+        <div class="guide-note" style="border-top:none; padding-top:0;" data-i18n="safetyGuideBody">
           입력하신 API 키는 이 기기의 브라우저(localStorage)에만 저장되며, 개발자의 서버로 전송되지 않습니다.<br>
           Google/OpenAI API 호출 시에만 해당 서비스로 직접 전송됩니다.<br>
           공용 PC에서는 사용 후 설정에서 키를 삭제해 주세요.
@@ -353,20 +356,34 @@
       <div id="statusMsg" class="status-msg"></div>
 
       <div class="modal-actions">
-        <button class="btn-reset" onclick="deleteApiKey()">키 삭제</button>
-        <button class="btn-cancel" onclick="closeSettings()">취소</button>
-        <button class="btn-save" onclick="saveSettings()">저장</button>
+        <button class="btn-reset" onclick="deleteApiKey()" data-i18n="deleteKey">키 삭제</button>
+        <button class="btn-cancel" onclick="closeSettings()" data-i18n="cancel">취소</button>
+        <button class="btn-save" onclick="saveSettings()" data-i18n="save">저장</button>
       </div>
     </div>
 
     <!-- 캐시 관리 탭 -->
     <div class="tab-content" id="tabCache">
-      <div class="cache-desc">
+      <div class="cache-desc" data-i18n="cacheDesc">
         이전에 검색한 단어는 캐시에 저장되어 다시 검색해도 비용이 발생하지 않습니다.<br>
         캐시를 초기화하면 같은 단어를 다시 검색할 때 새로운 이미지가 생성되며 비용이 발생합니다.
       </div>
-      <button class="btn-reset" onclick="resetCache()">캐시 초기화</button>
+      <button class="btn-reset" onclick="resetCache()" data-i18n="resetCache">캐시 초기화</button>
       <div id="cacheStatusMsg" class="status-msg"></div>
+    </div>
+
+    <!-- 언어 설정 탭 -->
+    <div class="tab-content" id="tabLang">
+      <label for="langSelect" data-i18n="language">언어</label>
+      <select id="langSelect" style="width:100%; padding:12px 16px; font-size:1rem; border:1px solid #D5D2CC; border-radius:10px; background:#F7F6F3; color:#2D2B28; outline:none; margin-bottom:20px; appearance:none; cursor:pointer;">
+        <option value="ko" data-i18n="langKo">한국어</option>
+        <option value="en" data-i18n="langEn">English</option>
+      </select>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeSettings()" data-i18n="cancel">취소</button>
+        <button class="btn-save" onclick="saveLang()" data-i18n="save">저장</button>
+      </div>
+      <div id="langStatusMsg" class="status-msg"></div>
     </div>
   </div>
 </div>
@@ -380,7 +397,23 @@ function getSettings() {
 }
 
 function saveSettingsToStorage(provider, apiKey, imageEnabled) {
-  localStorage.setItem('visibleVoca_settings', JSON.stringify({ provider, apiKey, imageEnabled }));
+  const existing = getSettings();
+  localStorage.setItem('visibleVoca_settings', JSON.stringify({
+    ...existing,
+    provider, apiKey, imageEnabled
+  }));
+}
+
+/* 언어 설정 저장 */
+function saveLang() {
+  const lang = document.getElementById('langSelect').value;
+  setLang(lang);
+  document.documentElement.lang = lang;
+  applyI18n();
+  const msg = document.getElementById('langStatusMsg');
+  msg.textContent = t('saved');
+  msg.className = 'status-msg ok';
+  setTimeout(closeSettings, 600);
 }
 
 function openSettings() {
@@ -389,12 +422,14 @@ function openSettings() {
   document.getElementById('apiKeyInput').value = s.apiKey;
   document.getElementById('imageEnabledCheck').checked = s.imageEnabled !== false;
   document.getElementById('apiKeyInput').placeholder = s.provider === 'gemini'
-    ? 'AIza... 형태의 Gemini API 키' : 'sk-... 형태의 OpenAI API 키';
+    ? t('geminiKeyPlaceholder') : t('openaiKeyPlaceholder');
   document.getElementById('statusMsg').textContent = '';
   document.getElementById('guideContent').classList.remove('active');
   updateGuideContent(s.provider);
   switchTab('api');
   document.getElementById('cacheStatusMsg').textContent = '';
+  document.getElementById('langSelect').value = getLang();
+  document.getElementById('langStatusMsg').textContent = '';
   document.getElementById('settingsModal').classList.add('active');
 }
 
@@ -402,13 +437,10 @@ function openSettings() {
 function switchTab(tab) {
   document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  if (tab === 'api') {
-    document.querySelector('.modal-tab:nth-child(1)').classList.add('active');
-    document.getElementById('tabApi').classList.add('active');
-  } else {
-    document.querySelector('.modal-tab:nth-child(2)').classList.add('active');
-    document.getElementById('tabCache').classList.add('active');
-  }
+  const tabMap = { api: 0, cache: 1, lang: 2 };
+  const idMap = { api: 'tabApi', cache: 'tabCache', lang: 'tabLang' };
+  document.querySelectorAll('.modal-tab')[tabMap[tab]].classList.add('active');
+  document.getElementById(idMap[tab]).classList.add('active');
 }
 
 function closeSettings() {
@@ -418,7 +450,7 @@ function closeSettings() {
 function onProviderChange() {
   const provider = document.getElementById('providerSelect').value;
   document.getElementById('apiKeyInput').placeholder = provider === 'gemini'
-    ? 'AIza... 형태의 Gemini API 키' : 'sk-... 형태의 OpenAI API 키';
+    ? t('geminiKeyPlaceholder') : t('openaiKeyPlaceholder');
   updateGuideContent(provider);
 }
 
@@ -427,7 +459,7 @@ function toggleGuide() {
   const content = document.getElementById('guideContent');
   const toggle = document.querySelector('.guide-toggle');
   content.classList.toggle('active');
-  toggle.innerHTML = content.classList.contains('active') ? '&#9662; API 키 발급 가이드' : '&#9656; API 키 발급 가이드';
+  toggle.innerHTML = (content.classList.contains('active') ? '&#9662; ' : '&#9656; ') + `<span data-i18n="apiGuideToggle">${t('apiGuideToggle')}</span>`;
 }
 
 function toggleSafetyGuide() {
@@ -435,7 +467,7 @@ function toggleSafetyGuide() {
   const toggles = document.querySelectorAll('.guide-toggle');
   const toggle = toggles[1];
   content.classList.toggle('active');
-  toggle.innerHTML = content.classList.contains('active') ? '&#9662; API 키 안전 안내' : '&#9656; API 키 안전 안내';
+  toggle.innerHTML = (content.classList.contains('active') ? '&#9662; ' : '&#9656; ') + `<span data-i18n="safetyGuideToggle">${t('safetyGuideToggle')}</span>`;
 }
 
 function updateGuideContent(provider) {
@@ -448,20 +480,20 @@ function saveSettings() {
   const apiKey = document.getElementById('apiKeyInput').value.trim();
   const msg = document.getElementById('statusMsg');
   if (!apiKey) {
-    msg.textContent = 'API 키를 입력해주세요.';
+    msg.textContent = t('enterApiKey');
     msg.className = 'status-msg warn';
     return;
   }
   const imageEnabled = document.getElementById('imageEnabledCheck').checked;
   saveSettingsToStorage(provider, apiKey, imageEnabled);
-  msg.textContent = '저장되었습니다.';
+  msg.textContent = t('saved');
   msg.className = 'status-msg ok';
   setTimeout(closeSettings, 600);
 }
 
 // --- 캐시 관리 (IndexedDB) ---
 async function resetCache() {
-  if (!confirm('캐시를 초기화하시겠습니까?\n같은 단어를 다시 검색하면 비용이 발생합니다.')) return;
+  if (!confirm(t('confirmResetCache'))) return;
   try {
     const req = indexedDB.open('visualVoca', 2);
     req.onupgradeneeded = () => {
@@ -478,7 +510,7 @@ async function resetCache() {
       const tx = db.transaction('resultCache', 'readwrite');
       tx.objectStore('resultCache').clear();
       const msg = document.getElementById('cacheStatusMsg');
-      msg.textContent = '캐시가 초기화되었습니다.';
+      msg.textContent = t('cacheResetDone');
       msg.className = 'status-msg ok';
     };
   } catch (e) {
@@ -488,7 +520,7 @@ async function resetCache() {
 
 // --- API 키 삭제 ---
 function deleteApiKey() {
-  if (!confirm('API 키를 삭제하시겠습니까?\n삭제 후 웰컴 화면으로 이동합니다.')) return;
+  if (!confirm(t('confirmDeleteKey'))) return;
   localStorage.removeItem('visibleVoca_settings');
   location.href = 'index.html';
 }
@@ -497,6 +529,10 @@ function deleteApiKey() {
 document.getElementById('settingsModal').addEventListener('click', e => {
   if (e.target === e.currentTarget) closeSettings();
 });
+
+/* 다국어 적용 */
+document.documentElement.lang = getLang();
+applyI18n();
 </script>
 
 </body>
