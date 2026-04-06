@@ -11,7 +11,7 @@
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Story Kongko - Visual Voca</title>
+<title>AI Mag 사전</title>
 <!-- 다국어 지원 -->
 <script src="i18n.js"></script>
 <!-- Supabase SDK -->
@@ -247,7 +247,7 @@
     border-color: #B0ACA6;
   }
 
-  /* 결제 연동 가이드 모달 */
+  /* 구독 안내 모달 */
   .billing-modal-overlay {
     display: none;
     position: fixed;
@@ -801,10 +801,7 @@
 </head>
 <body>
 
-<!-- 홈 버튼 -->
-<a class="top-btn home-btn" href="main.html" data-i18n-title="home" title="홈">&#8592;</a>
-
-<h1>VISUAL VOCA</h1>
+<h1><span style="color:#4A90D9;">AI</span> <span style="color:#E8A87C;">Mag</span> <span style="color:#2D2B28;">사전</span></h1>
 
 <div class="main-layout">
   <!-- 왼쪽 탭 사이드바 -->
@@ -1118,7 +1115,7 @@ function getUserId() {
 function getSettings() {
   const saved = localStorage.getItem('visibleVoca_settings');
   if (saved) return JSON.parse(saved);
-  return { imageEnabled: false };
+  return { imageEnabled: true };
 }
 
 // --- 일반검색 ---
@@ -1197,6 +1194,32 @@ input.addEventListener('keydown', e => {
 
 /* 프롬프트는 i18n.js의 PROMPT_TEMPLATES에서 언어별로 관리 */
 
+// --- 무료 체험 카운트 증가 (캐시/DB 히트 시 사용) ---
+async function incrementTrialCount() {
+  try {
+    const res = await fetch(EDGE_FUNCTION_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'count', userId: getUserId() })
+    });
+    if (res.ok) return await res.json();
+  } catch (e) {
+    console.warn('카운트 증가 실패:', e);
+  }
+  return null;
+}
+
+/* 캐시된 HTML에서 이미지를 구독 안내 플레이스홀더로 교체 */
+function stripImageFromHtml(html) {
+  const placeholder = `<div class="image-billing-placeholder">
+    <div class="placeholder-icon">🎨</div>
+    <div class="placeholder-msg">${t('billingTitle')}</div>
+    <button class="placeholder-btn" onclick="openBillingModal()">${t('imagePlaceholderBtn')}</button>
+  </div>`;
+  return html
+    .replace(/<div class="feel-image-container"[^>]*>[\s\S]*?<\/div>/g, placeholder);
+}
+
 // --- API 호출 (Edge Function 경유) ---
 async function callSearch(prompt) {
   const res = await fetch(EDGE_FUNCTION_URL, {
@@ -1268,14 +1291,24 @@ async function fetchWordResult(word, targetEl) {
     if (settings.imageEnabled && !cached.includes('<img ')) {
       /* 캐시 무시 — 아래로 계속 진행 */
     } else {
-      wordResults[word] = { html: cached };
-      return cached;
+      targetEl.innerHTML = `<div class="loading">${t('searching')}</div>`;
+      const countData = await incrementTrialCount();
+      await new Promise(r => setTimeout(r, 800));
+      const trialExceeded = countData && !countData.allowed && !countData.subscribed;
+      const html = trialExceeded ? stripImageFromHtml(cached) : cached;
+      wordResults[word] = { html };
+      return html;
     }
   }
 
   /* ② Supabase DB 조회 — 데이터 충분하면 API 호출 없이 반환 */
   const dbResult = await fetchFromSupabase(word);
   if (dbResult && dbResult.fromDB) {
+    targetEl.innerHTML = `<div class="loading">${t('searching')}</div>`;
+    const countData = await incrementTrialCount();
+    await new Promise(r => setTimeout(r, 800));
+    const trialExceeded = countData && !countData.allowed && !countData.subscribed;
+    if (trialExceeded) dbResult.imageUrl = null;
     const dbHtml = buildHtmlFromDB(dbResult, word);
     wordResults[word] = { html: dbHtml };
     targetEl.innerHTML = dbHtml;
@@ -1390,25 +1423,36 @@ async function fetchWordResult(word, targetEl) {
   } catch (imgErr) {
     console.error('이미지 생성 실패:', imgErr);
     const container = targetEl.querySelector('.feel-image-container');
+    const isFreeLimitError = imgErr.code === 'FREE_LIMIT_EXCEEDED';
 
-    /* HTTP 에러(403 등 결제 문제)일 때만 자동 비활성화 */
-    const isBillingError = imgErr.status && (imgErr.status === 403 || imgErr.status === 402);
-    if (isBillingError) {
-      const s = getSettings();
-      s.imageEnabled = false;
-      localStorage.setItem('visibleVoca_settings', JSON.stringify(s));
+    if (isFreeLimitError) {
+      /* 무료 체험 초과 — 플레이스홀더 표시, imageEnabled 유지 */
+      const placeholderHtml = `<div class="image-billing-placeholder">
+        <div class="placeholder-icon">🎨</div>
+        <div class="placeholder-msg">${t('billingTitle')}</div>
+        <button class="placeholder-btn" onclick="openBillingModal()">${t('imagePlaceholderBtn')}</button>
+      </div>`;
+      if (container) {
+        container.outerHTML = placeholderHtml;
+      }
+      const placeholderFullHtml = html.replace(
+        /<div class="feel-image-container" id="imageContainer"><div class="feel-image-loading">[^<]*<\/div><\/div>/,
+        placeholderHtml
+      );
+      wordResults[word] = { html: placeholderFullHtml };
+      saveCacheEntry(word, placeholderFullHtml);
+    } else {
+      /* 기타 에러 — 이미지 영역만 제거 */
+      if (container) {
+        container.remove();
+      }
+      const noImgHtml = html.replace(
+        /<div class="feel-image-container" id="imageContainer"><div class="feel-image-loading">[^<]*<\/div><\/div>/,
+        ''
+      );
+      wordResults[word] = { html: noImgHtml };
+      saveCacheEntry(word, noImgHtml);
     }
-
-    /* 이미지 영역 제거 — 이미지 없이 텍스트만 표시 */
-    if (container) {
-      container.remove();
-    }
-    const noImgHtml = html.replace(
-      /<div class="feel-image-container" id="imageContainer"><div class="feel-image-loading">[^<]*<\/div><\/div>/,
-      ''
-    );
-    wordResults[word] = { html: noImgHtml };
-    saveCacheEntry(word, noImgHtml);
     /* Supabase에 텍스트만 저장 (이미지 실패) */
     saveToSupabase(word, { corrected, pos, ipa, description: desc, examples }, null);
   }
@@ -1460,7 +1504,12 @@ async function lookupWord(word) {
   if (cached) {
     /* 이미지 생성 활성화 상태인데 캐시에 이미지가 없으면 캐시 무시하고 재검색 */
     if (!(settings.imageEnabled && !cached.includes('<img '))) {
-      wordResults[word] = { html: cached };
+      resultSearch.innerHTML = `<div class="loading">${t('searching')}</div>`;
+      const countData = await incrementTrialCount();
+      await new Promise(r => setTimeout(r, 800));
+      const trialExceeded = countData && !countData.allowed && !countData.subscribed;
+      const html = trialExceeded ? stripImageFromHtml(cached) : cached;
+      wordResults[word] = { html };
       showSearchResult(word);
       return;
     }
@@ -2065,39 +2114,20 @@ function showQuizResult() {
   }
 }
 
-/* 결제 연동 가이드 창 열기/닫기 */
+/* 구독 안내 모달 열기/닫기 */
 function openBillingModal() {
-  /* 현재 설정 상태를 체크박스에 반영 */
-  const s = getSettings();
-  document.getElementById('billingImageCheck').checked = s.imageEnabled !== false;
   document.getElementById('billingModal').classList.add('active');
-}
-
-/* 결제 안내 창에서 이미지 생성 체크 변경 시 설정에 반영 */
-function onBillingImageCheck() {
-  const s = getSettings();
-  s.imageEnabled = document.getElementById('billingImageCheck').checked;
-  localStorage.setItem('visibleVoca_settings', JSON.stringify(s));
 }
 function closeBillingModal() {
   document.getElementById('billingModal').classList.remove('active');
 }
 </script>
 
-<!-- 이미지 생성 설정 모달 -->
+<!-- 구독 안내 모달 -->
 <div class="billing-modal-overlay" id="billingModal">
   <div class="billing-modal">
     <h3 data-i18n="billingTitle">그림으로 보면 더 오래 기억돼요</h3>
-
-    <div style="margin-top:16px;">
-      <div style="display:flex; align-items:flex-start; gap:8px;">
-        <input type="checkbox" id="billingImageCheck" style="margin-top:3px;" onchange="onBillingImageCheck()">
-        <label for="billingImageCheck" style="font-size:13px; color:#5A5754; line-height:1.5; cursor:pointer;">
-          <span data-i18n="billingCheckLabel">이미지 생성 사용</span>
-        </label>
-      </div>
-    </div>
-
+    <p style="margin-top:12px; font-size:0.9rem; color:#5A5754; line-height:1.6;" data-i18n="errorFreeLimitExceeded">무료 체험 3회를 모두 사용했습니다. 계속 사용하려면 구독이 필요합니다.</p>
     <button class="close-btn" onclick="closeBillingModal()" data-i18n="confirm">확인</button>
   </div>
 </div>
@@ -2108,6 +2138,7 @@ document.getElementById('billingModal').addEventListener('click', function(e) {
   if (e.target === e.currentTarget) closeBillingModal();
 });
 </script>
+
 
 <!-- 데이터 수집 동의 배너 -->
 <div id="consentBanner" style="display:none; position:fixed; bottom:0; left:0; right:0; background:#2D2B28; color:#F7F6F3; padding:16px 20px; z-index:9999; box-shadow:0 -2px 10px rgba(0,0,0,0.2);">
