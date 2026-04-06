@@ -73,6 +73,7 @@ const I18N = {
 
     /* 에러 메시지 */
     errorNoApiKey: '홈에서 설정 버튼을 눌러 API 키를 먼저 입력해주세요.',
+    errorFreeLimitExceeded: '무료 체험 5회를 모두 사용했습니다. 계속 사용하려면 구독이 필요합니다.',
     errorRateLimit: '하루 무료 요청 한도를 초과했습니다. 내일 다시 시도해주세요.',
     errorGeneral: '일시적인 오류가 발생했습니다. 다시 시도해주세요.',
     errorNoResponse: '응답을 받지 못했습니다.',
@@ -170,7 +171,7 @@ const I18N = {
     s3Speech: '"뜻은 알겠는데... 느낌이 안 와..."',
     s3Copy1: '뜻으로 외운 단어는',
     s3Copy2: '오래 남지 않습니다',
-    s4Label: 'story kongko 방식',
+    s4Label: 'Story Kongko 방식',
     s4Desc: '👉 동물이 위험을 느끼고<br><span class="point">꼬리를 들고</span><br>빠르게 도망가는 느낌',
     s5ImgAlt: 'hightail – 달아나는 여우',
     s5Caption: '동물이 위험을 느끼고 꼬리를 들고 빠르게 도망가는 느낌',
@@ -263,6 +264,7 @@ const I18N = {
 
     /* 에러 메시지 */
     errorNoApiKey: 'Please enter your API key in Settings first.',
+    errorFreeLimitExceeded: 'You have used all 5 free trials. Subscribe to continue.',
     errorRateLimit: 'Daily free quota exceeded. Please try again tomorrow.',
     errorGeneral: 'A temporary error occurred. Please try again.',
     errorNoResponse: 'No response received.',
@@ -360,7 +362,7 @@ Example: split, break down, take off`,
     s3Speech: '"I get the meaning... but I can\'t feel it..."',
     s3Copy1: 'Words memorized by definition',
     s3Copy2: 'don\'t stick around',
-    s4Label: 'the story kongko way',
+    s4Label: 'the Story Kongko way',
     s4Desc: '👉 An animal senses danger,<br><span class="point">raises its tail</span><br>and runs away fast',
     s5ImgAlt: 'hightail – a fox running away',
     s5Caption: 'An animal senses danger, raises its tail and runs away fast',

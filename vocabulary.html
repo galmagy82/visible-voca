@@ -1101,11 +1101,24 @@ async function saveToSupabase(word, parsed, imageDataUrl) {
   }
 }
 
+// --- Edge Function 설정 ---
+const EDGE_FUNCTION_URL = 'https://grdtxvpebjtfhuqdngfn.supabase.co/functions/v1/gemini-proxy';
+
+// --- 익명 사용자 ID (localStorage) ---
+function getUserId() {
+  let id = localStorage.getItem('visibleVoca_userId');
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem('visibleVoca_userId', id);
+  }
+  return id;
+}
+
 // --- 설정 (localStorage 공유) ---
 function getSettings() {
   const saved = localStorage.getItem('visibleVoca_settings');
   if (saved) return JSON.parse(saved);
-  return { provider: 'gemini', apiKey: '', imageEnabled: false };
+  return { imageEnabled: false };
 }
 
 // --- 일반검색 ---
@@ -1184,99 +1197,43 @@ input.addEventListener('keydown', e => {
 
 /* 프롬프트는 i18n.js의 PROMPT_TEMPLATES에서 언어별로 관리 */
 
-// --- API 호출 ---
-async function callGemini(apiKey, prompt) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-  const res = await fetch(url, {
+// --- API 호출 (Edge Function 경유) ---
+async function callSearch(prompt) {
+  const res = await fetch(EDGE_FUNCTION_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
-    })
+    body: JSON.stringify({ action: 'search', userId: getUserId(), prompt })
   });
   if (!res.ok) {
-    const err = new Error('API 오류');
+    const data = await res.json().catch(() => ({}));
+    const err = new Error(data.error || 'API 오류');
     err.status = res.status;
+    if (data.error === 'FREE_LIMIT_EXCEEDED') err.code = 'FREE_LIMIT_EXCEEDED';
     throw err;
   }
   const data = await res.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text;
+  return data.text;
 }
 
-async function callChatGPT(apiKey, prompt) {
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.7,
-      max_tokens: 2048
-    })
-  });
-  if (!res.ok) {
-    const err = new Error('API 오류');
-    err.status = res.status;
-    throw err;
-  }
-  const data = await res.json();
-  return data.choices?.[0]?.message?.content;
-}
-
-// --- 이미지 생성 ---
-async function generateImageGemini(apiKey, word) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`;
-  const imagePrompt = `Generate an image: Create an illustration that captures the feeling and mood of the English word "${word}". Use a concrete, recognizable scene or situation rather than abstract shapes, but keep it stylish and sophisticated — not cartoonish or childish. Think editorial illustration style with warm, natural colors and clean composition. Minimize unnecessary objects — only include objects essential to explaining the word. No text in the image.`;
-  const res = await fetch(url, {
+// --- 이미지 생성 (Edge Function 경유) ---
+async function generateImage(word) {
+  const res = await fetch(EDGE_FUNCTION_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: imagePrompt }] }],
-      generationConfig: { responseModalities: ['IMAGE', 'TEXT'] }
-    })
+    body: JSON.stringify({ action: 'image', userId: getUserId(), word })
   });
   if (!res.ok) {
-    const err = new Error('이미지 생성 API 오류');
+    const data = await res.json().catch(() => ({}));
+    const err = new Error(data.error || '이미지 생성 API 오류');
     err.status = res.status;
+    if (data.error === 'FREE_LIMIT_EXCEEDED') err.code = 'FREE_LIMIT_EXCEEDED';
     throw err;
   }
   const data = await res.json();
-  const parts = data.candidates?.[0]?.content?.parts || [];
-  for (const part of parts) {
-    if (part.inlineData) {
-      return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
-    }
+  if (data.image) {
+    return `data:${data.image.mimeType};base64,${data.image.data}`;
   }
   throw new Error('이미지 데이터를 찾을 수 없습니다.');
-}
-
-async function generateImageDalle(apiKey, word) {
-  const imagePrompt = `Create an illustration that captures the feeling and mood of the English word "${word}". Use a concrete, recognizable scene or situation rather than abstract shapes, but keep it stylish and sophisticated — not cartoonish or childish. Think editorial illustration style with warm, natural colors and clean composition. No text in the image.`;
-  const res = await fetch('https://api.openai.com/v1/images/generations', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      model: 'dall-e-3',
-      prompt: imagePrompt,
-      n: 1,
-      size: '1024x1024',
-      quality: 'standard'
-    })
-  });
-  if (!res.ok) {
-    const err = new Error('이미지 생성 API 오류');
-    err.status = res.status;
-    throw err;
-  }
-  const data = await res.json();
-  return data.data?.[0]?.url;
 }
 
 /* DB 결과를 HTML로 변환 (Supabase에서 가져온 데이터용) */
@@ -1327,32 +1284,25 @@ async function fetchWordResult(word, targetEl) {
     return dbHtml;
   }
 
-  /* ③ API 호출 — 데이터 부족 또는 없음 */
-  if (!settings.apiKey) {
-    targetEl.innerHTML = `<div class="error">${t('errorNoApiKey')}</div>`;
-    return null;
-  }
-
+  /* ③ Edge Function 호출 — 데이터 부족 또는 없음 */
   targetEl.innerHTML = `<div class="loading">${t('searching')}</div>`;
 
   const prompt = getPromptTemplate().replace('{{WORD}}', word);
 
-  const textPromise = settings.provider === 'gemini'
-    ? callGemini(settings.apiKey, prompt)
-    : callChatGPT(settings.apiKey, prompt);
+  const textPromise = callSearch(prompt);
 
   /* 이미지 생성: 설정에서 활성화한 경우에만 호출 */
   const imagePromise = settings.imageEnabled
-    ? (settings.provider === 'gemini'
-        ? generateImageGemini(settings.apiKey, word)
-        : generateImageDalle(settings.apiKey, word))
+    ? generateImage(word)
     : null;
 
   let text;
   try {
     text = await textPromise;
   } catch (textErr) {
-    if (textErr.status === 429) {
+    if (textErr.code === 'FREE_LIMIT_EXCEEDED') {
+      targetEl.innerHTML = `<div class="error">${t('errorFreeLimitExceeded')}</div>`;
+    } else if (textErr.status === 429) {
       targetEl.innerHTML = `<div class="error">${t('errorRateLimit')}</div>`;
     } else {
       targetEl.innerHTML = `<div class="error">${t('errorGeneral')}</div>`;
@@ -1523,7 +1473,9 @@ async function lookupWord(word) {
       bindWbButton(resultSearch, word);
     }
   } catch (err) {
-    if (err.status === 429) {
+    if (err.code === 'FREE_LIMIT_EXCEEDED') {
+      resultSearch.innerHTML = `<div class="error">${t('errorFreeLimitExceeded')}</div>`;
+    } else if (err.status === 429) {
       resultSearch.innerHTML = `<div class="error">${t('errorRateLimit')}</div>`;
     } else {
       resultSearch.innerHTML = `<div class="error">${t('errorGeneral')}</div>`;
@@ -1561,39 +1513,29 @@ function fileToBase64(file) {
   });
 }
 
-async function extractWordsFromPhoto(apiKey, base64Data, mimeType) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+// --- 사진 단어 추출 (Edge Function 경유) ---
+async function extractWordsFromPhoto(base64Data, mimeType) {
   const extractPrompt = t('extractPrompt');
-
-  const res = await fetch(url, {
+  const res = await fetch(EDGE_FUNCTION_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{
-        parts: [
-          { text: extractPrompt },
-          { inlineData: { mimeType: mimeType, data: base64Data } }
-        ]
-      }],
-      generationConfig: { temperature: 0.2, maxOutputTokens: 1024 }
-    })
+    body: JSON.stringify({ action: 'extract', userId: getUserId(), base64Data, mimeType, extractPrompt })
   });
-  if (!res.ok) throw new Error('사진 분석 API 오류');
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    const err = new Error(data.error || '사진 분석 API 오류');
+    err.status = res.status;
+    if (data.error === 'FREE_LIMIT_EXCEEDED') err.code = 'FREE_LIMIT_EXCEEDED';
+    throw err;
+  }
   const data = await res.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text;
+  return data.text;
 }
 
 /* 사진 업로드 처리 → 단어 리스트 표시 */
 async function handlePhoto(inputEl) {
   const files = Array.from(inputEl.files);
   if (files.length === 0) return;
-
-  const settings = getSettings();
-  if (!settings.apiKey) {
-    resultPhoto.innerHTML = `<div class="error">${t('errorNoApiKey')}</div>`;
-    inputEl.value = '';
-    return;
-  }
 
   document.getElementById('guidePhoto').style.display = 'none';
   wordListEl.innerHTML = '';
@@ -1602,7 +1544,7 @@ async function handlePhoto(inputEl) {
   try {
     const promises = files.map(async (file) => {
       const base64Data = await fileToBase64(file);
-      return extractWordsFromPhoto(settings.apiKey, base64Data, file.type);
+      return extractWordsFromPhoto(base64Data, file.type);
     });
     const results = await Promise.all(promises);
 
@@ -2142,32 +2084,16 @@ function closeBillingModal() {
 }
 </script>
 
-<!-- 결제 연동 가이드 모달 -->
+<!-- 이미지 생성 설정 모달 -->
 <div class="billing-modal-overlay" id="billingModal">
   <div class="billing-modal">
     <h3 data-i18n="billingTitle">그림으로 보면 더 오래 기억돼요</h3>
 
-    <div class="info-section">
-      <h4 data-i18n="billingHow">결제 설정 방법</h4>
-      <ol>
-        <li><a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio</a> <span data-i18n="billingStep1">에 접속합니다.</span></li>
-        <li data-i18n="billingStep2">좌측 메뉴에서 Settings → Billing으로 이동합니다.</li>
-        <li data-i18n="billingStep3">결제 수단(카드)을 등록합니다.</li>
-      </ol>
-    </div>
-
-    <div class="cost-note">
-      💰 <strong>예상 비용:</strong> <span data-i18n="billingCost">이미지 1장당 약 $0.039 (약 ₩50원) 수준입니다.</span><br>
-      <span data-i18n="billingCost100">* 단어 100개 검색 시 약 ₩5,000원</span>
-    </div>
-
-    <div style="margin-top:16px; padding-top:14px; border-top:1px solid #E5E2DE;">
-      <div style="font-size:13px; color:#5A5754; font-weight:500; margin-bottom:8px;" data-i18n="billingDone">결제 설정을 완료하셨나요?</div>
+    <div style="margin-top:16px;">
       <div style="display:flex; align-items:flex-start; gap:8px;">
         <input type="checkbox" id="billingImageCheck" style="margin-top:3px;" onchange="onBillingImageCheck()">
         <label for="billingImageCheck" style="font-size:13px; color:#5A5754; line-height:1.5; cursor:pointer;">
-          <span data-i18n="billingCheckLabel">이미지 생성 사용</span><br>
-          <span style="font-size:11px; color:#8C8985;" data-i18n="billingCheckHint">API 결제 설정을 하지 않은 경우 체크를 해제해 주세요.</span>
+          <span data-i18n="billingCheckLabel">이미지 생성 사용</span>
         </label>
       </div>
     </div>
