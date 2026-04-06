@@ -1005,8 +1005,8 @@ const SUPABASE_ANON_KEY = 'sb_publishable_Ca5H8oz6gJ72mfgUW8zYvg_U6IVwooW';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /* 데이터 수집 충분 기준 */
-const TEXT_THRESHOLD = 10;
-const IMAGE_THRESHOLD = 50;
+const TEXT_THRESHOLD = 1;
+const IMAGE_THRESHOLD = 1;
 
 /* 사용자 데이터 수집 동의 여부 확인 */
 function hasDataConsent() {

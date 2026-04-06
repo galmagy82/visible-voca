@@ -73,7 +73,7 @@ const I18N = {
 
     /* 에러 메시지 */
     errorNoApiKey: '홈에서 설정 버튼을 눌러 API 키를 먼저 입력해주세요.',
-    errorFreeLimitExceeded: '무료 체험 5회를 모두 사용했습니다. 계속 사용하려면 구독이 필요합니다.',
+    errorFreeLimitExceeded: '무료 체험 3회를 모두 사용했습니다. 계속 사용하려면 구독이 필요합니다.',
     errorRateLimit: '하루 무료 요청 한도를 초과했습니다. 내일 다시 시도해주세요.',
     errorGeneral: '일시적인 오류가 발생했습니다. 다시 시도해주세요.',
     errorNoResponse: '응답을 받지 못했습니다.',
@@ -264,7 +264,7 @@ const I18N = {
 
     /* 에러 메시지 */
     errorNoApiKey: 'Please enter your API key in Settings first.',
-    errorFreeLimitExceeded: 'You have used all 5 free trials. Subscribe to continue.',
+    errorFreeLimitExceeded: 'You have used all 3 free trials. Subscribe to continue.',
     errorRateLimit: 'Daily free quota exceeded. Please try again tomorrow.',
     errorGeneral: 'A temporary error occurred. Please try again.',
     errorNoResponse: 'No response received.',
