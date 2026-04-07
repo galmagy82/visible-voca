@@ -11,7 +11,7 @@
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Story Kongko - AI 워드필 사전</title>
+<title>Story Kongko - Visual Voca</title>
 <!-- 다국어 지원 -->
 <script src="i18n.js"></script>
 <!-- Supabase SDK -->
@@ -32,11 +32,11 @@
     padding: 60px 20px 40px;
   }
   h1 {
-    font-size: 2.4rem;
-    font-weight: 700;
+    font-size: 1.4rem;
+    font-weight: 300;
+    color: #6B6660;
     margin-bottom: 24px;
-    letter-spacing: 0.05em;
-    text-align: center;
+    letter-spacing: 0.1em;
   }
 
   /* 메인 레이아웃: 왼쪽 탭 + 오른쪽 컨텐츠 */
@@ -804,7 +804,7 @@
 <!-- 홈 버튼 -->
 <a class="top-btn home-btn" href="main.html" data-i18n-title="home" title="홈">&#8592;</a>
 
-<h1 data-i18n="menuVocaTitle"><span style="color:#4A90D9;">AI 워드필</span> <span style="color:#E8A87C;">사전</span></h1>
+<h1>VISUAL VOCA</h1>
 
 <div class="main-layout">
   <!-- 왼쪽 탭 사이드바 -->
@@ -1117,17 +1117,8 @@ function getUserId() {
 // --- 설정 (localStorage 공유) ---
 function getSettings() {
   const saved = localStorage.getItem('visibleVoca_settings');
-  const settings = saved ? JSON.parse(saved) : { imageEnabled: true };
-
-  /* 일회성 마이그레이션: 기존 사용자도 imageEnabled를 한 번 true로 강제 */
-  /* (이전 자동 비활성화로 false가 된 사용자 복구. 이후엔 사용자가 다시 끌 수 있음) */
-  if (!localStorage.getItem('visibleVoca_imgDefault_v1')) {
-    settings.imageEnabled = true;
-    localStorage.setItem('visibleVoca_settings', JSON.stringify(settings));
-    localStorage.setItem('visibleVoca_imgDefault_v1', '1');
-  }
-
-  return settings;
+  if (saved) return JSON.parse(saved);
+  return { imageEnabled: false };
 }
 
 // --- 일반검색 ---
@@ -1400,7 +1391,13 @@ async function fetchWordResult(word, targetEl) {
     console.error('이미지 생성 실패:', imgErr);
     const container = targetEl.querySelector('.feel-image-container');
 
-    /* 이미지 생성 실패 시에도 사용자 설정은 유지 (자동 비활성화 안 함) */
+    /* HTTP 에러(403 등 결제 문제)일 때만 자동 비활성화 */
+    const isBillingError = imgErr.status && (imgErr.status === 403 || imgErr.status === 402);
+    if (isBillingError) {
+      const s = getSettings();
+      s.imageEnabled = false;
+      localStorage.setItem('visibleVoca_settings', JSON.stringify(s));
+    }
 
     /* 이미지 영역 제거 — 이미지 없이 텍스트만 표시 */
     if (container) {

@@ -154,7 +154,7 @@ const I18N = {
 
     /* Welcome 페이지 */
     quickStart: '바로 시작하기 →',
-    heroTagline: '머리에 남는 영어 사전',
+    heroTagline: '머리에 남는 영어',
     heroQuestion: '단어를 외워도<br><span class="em">금방 까먹는 이유,</span><br>알고 계신가요?',
     startBtn: '시작하기',
     feedback: '의견 보내기',
@@ -187,7 +187,7 @@ const I18N = {
     s8PeekDesc: '문틈 사이로 몰래 살짝 들여다보는 느낌',
 
     /* 메인 메뉴 */
-    menuVocaTitle: '<span style="color:#4A90D9;">AI 워드필</span> <span style="color:#E8A87C;">사전</span>',
+    menuVocaTitle: 'Visual Voca',
     menuVocaDesc: '단어의 느낌과 뉘앙스를 이미지와 함께 알아보세요',
     menuWritingTitle: 'Writing Coach',
     menuWritingDesc: '에세이를 코칭받고, 나만의 그림책으로 만들어보세요'
@@ -345,7 +345,7 @@ Example: split, break down, take off`,
 
     /* Welcome 페이지 */
     quickStart: 'Quick Start →',
-    heroTagline: 'English Dictionary that sticks',
+    heroTagline: 'English that sticks',
     heroQuestion: 'Ever wonder why<br><span class="em">you keep forgetting words</span><br>you just learned?',
     startBtn: 'Get Started',
     feedback: 'Feedback',
@@ -378,7 +378,7 @@ Example: split, break down, take off`,
     s8PeekDesc: 'Taking a sneaky glance through a gap',
 
     /* 메인 메뉴 */
-    menuVocaTitle: '<span style="color:#4A90D9;">AI WordFeel</span> <span style="color:#E8A87C;">Dictionary</span>',
+    menuVocaTitle: 'Visual Voca',
     menuVocaDesc: 'Explore the feel and nuance of words with images',
     menuWritingTitle: 'Writing Coach',
     menuWritingDesc: 'Get essay coaching and create your own picture book'
