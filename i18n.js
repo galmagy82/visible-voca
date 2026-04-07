@@ -5,8 +5,12 @@ const I18N = {
   ko: {
     /* 공통 */
     home: '홈',
+    settings: '설정',
+    save: '저장',
     cancel: '취소',
+    confirm: '확인',
     delete: '삭제',
+    close: '닫기',
     search: '검색',
 
     /* 탭 */
@@ -25,6 +29,8 @@ const I18N = {
     addedToWordbook: '단어장에 추가됨',
     listenPronunciation: '발음 듣기',
     imageAlt: '의 느낌을 표현한 이미지',
+    imagePlaceholderMsg: '그림으로 보면 더 오래 기억돼요',
+    imagePlaceholderBtn: '자세히 보기',
 
     /* 사진에서 검색 */
     uploadPhoto: '📂 사진 올리기',
@@ -66,10 +72,54 @@ const I18N = {
     quizRetry: '다시 하기',
 
     /* 에러 메시지 */
+    errorNoApiKey: '홈에서 설정 버튼을 눌러 API 키를 먼저 입력해주세요.',
     errorFreeLimitExceeded: '무료 체험 3회를 모두 사용했습니다. 계속 사용하려면 구독이 필요합니다.',
     errorRateLimit: '하루 무료 요청 한도를 초과했습니다. 내일 다시 시도해주세요.',
     errorGeneral: '일시적인 오류가 발생했습니다. 다시 시도해주세요.',
     errorNoResponse: '응답을 받지 못했습니다.',
+
+    /* 설정 모달 */
+    apiSettings: 'API 설정',
+    cacheManagement: '캐시 관리',
+    aiService: 'AI 서비스',
+    apiKey: 'API 키',
+    apiKeyPlaceholder: 'API 키를 입력하세요',
+    imageToggle: '이미지 생성 사용',
+    imageToggleHint: 'API 결제 설정을 하지 않은 경우 체크를 해제해 주세요.',
+    apiGuideToggle: 'API 키 발급 가이드',
+    safetyGuideToggle: 'API 키 안전 안내',
+    geminiGuideTitle: 'Gemini API 키 발급 방법',
+    geminiGuideStep1: 'Google AI Studio에 접속합니다.',
+    geminiGuideStep2: 'Google 계정으로 로그인합니다.',
+    geminiGuideStep3: '"API 키 만들기" 버튼을 클릭합니다.',
+    geminiGuideStep4: '생성된 키를 복사하여 위에 붙여넣습니다.',
+    geminiNoBilling: 'Gemini API 키 결제 미설정 시',
+    geminiNoBillingSearch: '· 단어 검색: 하루 무료 제공량 안에서 사용 가능',
+    geminiNoBillingImage: '· 이미지 생성: 사용 불가',
+    geminiBilling: 'Gemini API 키 결제 설정 시 (사용량에 따라 과금)',
+    geminiBillingSearch: '· 단어 검색: 제한 없음',
+    geminiBillingImage: '· 이미지 생성: 사용 가능',
+    safetyGuideBody: '입력하신 API 키는 이 기기의 브라우저(localStorage)에만 저장되며, 개발자의 서버로 전송되지 않습니다.<br>Google/OpenAI API 호출 시에만 해당 서비스로 직접 전송됩니다.<br>공용 PC에서는 사용 후 설정에서 키를 삭제해 주세요.',
+    deleteKey: '키 삭제',
+    enterApiKey: 'API 키를 입력해주세요.',
+    saved: '저장되었습니다.',
+    cacheDesc: '이전에 검색한 단어는 캐시에 저장되어 다시 검색해도 비용이 발생하지 않습니다.<br>캐시를 초기화하면 같은 단어를 다시 검색할 때 새로운 이미지가 생성되며 비용이 발생합니다.',
+    resetCache: '캐시 초기화',
+    confirmResetCache: '캐시를 초기화하시겠습니까?\n같은 단어를 다시 검색하면 비용이 발생합니다.',
+    cacheResetDone: '캐시가 초기화되었습니다.',
+    confirmDeleteKey: 'API 키를 삭제하시겠습니까?\n삭제 후 웰컴 화면으로 이동합니다.',
+
+    /* 결제 연동 가이드 모달 */
+    billingTitle: '그림으로 보면 더 오래 기억돼요',
+    billingHow: '결제 설정 방법',
+    billingStep1: 'Google AI Studio에 접속합니다.',
+    billingStep2: '좌측 메뉴에서 Settings → Billing으로 이동합니다.',
+    billingStep3: '결제 수단(카드)을 등록합니다.',
+    billingCost: '이미지 1장당 약 $0.039 (약 ₩50원) 수준입니다.',
+    billingCost100: '* 단어 100개 검색 시 약 ₩5,000원',
+    billingCheckLabel: '이미지 생성 사용',
+    billingCheckHint: 'API 결제 설정을 하지 않은 경우 체크를 해제해 주세요.',
+    billingDone: '결제 설정을 완료하셨나요?',
 
     /* 데이터 수집 동의 배너 */
     consentMsg: '검색된 단어와 AI 생성 결과(텍스트, 이미지)는 서비스 품질 개선을 위해 서버에 저장됩니다. 개인을 식별할 수 있는 정보는 수집하지 않습니다.',
@@ -87,11 +137,20 @@ const I18N = {
     quizWrongLabel: '틀린 단어:',
     quizAllCorrect: '모두 맞았습니다!',
 
+    /* 언어 설정 */
+    language: '언어',
+    langKo: '한국어',
+    langEn: 'English',
+
     /* 사진 분석 프롬프트 */
     extractPrompt: `이 사진은 영어 소설(Novel)의 페이지를 찍은 것입니다.
 사진에서 #표시, #표시와 동그라미, 또는 #표시와 밑줄로 표시된 영어 단어, 숙어, 또는 문장을 모두 찾아주세요.
 결과는 쉼표로 구분하여 한 줄로 출력해주세요. 다른 설명 없이 추출된 단어/표현만 출력하세요.
 예시: split, break down, take off`,
+
+    /* 플레이스홀더 */
+    geminiKeyPlaceholder: 'AIza... 형태의 Gemini API 키',
+    openaiKeyPlaceholder: 'sk-... 형태의 OpenAI API 키',
 
     /* Welcome 페이지 */
     quickStart: '바로 시작하기 →',
@@ -99,6 +158,8 @@ const I18N = {
     heroQuestion: '단어를 외워도<br><span class="em">금방 까먹는 이유,</span><br>알고 계신가요?',
     startBtn: '시작하기',
     feedback: '의견 보내기',
+    apiModalTitle: 'API 키 등록',
+    saveAndStart: '저장 후 시작',
 
     /* Welcome 스토리 섹션 */
     s1Speech: '"엄마, <strong>hightail</strong>이 뭐야?"',
@@ -135,8 +196,12 @@ const I18N = {
   en: {
     /* 공통 */
     home: 'Home',
+    settings: 'Settings',
+    save: 'Save',
     cancel: 'Cancel',
+    confirm: 'OK',
     delete: 'Delete',
+    close: 'Close',
     search: 'Search',
 
     /* 탭 */
@@ -155,6 +220,8 @@ const I18N = {
     addedToWordbook: 'Added to Wordbook',
     listenPronunciation: 'Listen',
     imageAlt: ' - image expressing the feel',
+    imagePlaceholderMsg: 'Images help you remember longer',
+    imagePlaceholderBtn: 'Learn more',
 
     /* 사진에서 검색 */
     uploadPhoto: '📂 Upload Photo',
@@ -196,10 +263,54 @@ const I18N = {
     quizRetry: 'Try Again',
 
     /* 에러 메시지 */
+    errorNoApiKey: 'Please enter your API key in Settings first.',
     errorFreeLimitExceeded: 'You have used all 3 free trials. Subscribe to continue.',
     errorRateLimit: 'Daily free quota exceeded. Please try again tomorrow.',
     errorGeneral: 'A temporary error occurred. Please try again.',
     errorNoResponse: 'No response received.',
+
+    /* 설정 모달 */
+    apiSettings: 'API Settings',
+    cacheManagement: 'Cache',
+    aiService: 'AI Service',
+    apiKey: 'API Key',
+    apiKeyPlaceholder: 'Enter your API key',
+    imageToggle: 'Enable image generation',
+    imageToggleHint: 'Uncheck if you have not set up API billing.',
+    apiGuideToggle: 'API Key Guide',
+    safetyGuideToggle: 'API Key Safety',
+    geminiGuideTitle: 'How to get a Gemini API key',
+    geminiGuideStep1: 'Go to Google AI Studio.',
+    geminiGuideStep2: 'Sign in with your Google account.',
+    geminiGuideStep3: 'Click "Create API key".',
+    geminiGuideStep4: 'Copy the key and paste it above.',
+    geminiNoBilling: 'Without billing setup',
+    geminiNoBillingSearch: '· Word search: Available within daily free quota',
+    geminiNoBillingImage: '· Image generation: Not available',
+    geminiBilling: 'With billing setup (pay per use)',
+    geminiBillingSearch: '· Word search: Unlimited',
+    geminiBillingImage: '· Image generation: Available',
+    safetyGuideBody: 'Your API key is stored only in this device\'s browser (localStorage) and is never sent to our server.<br>It is sent directly to Google/OpenAI only when making API calls.<br>Please delete your key after using a shared computer.',
+    deleteKey: 'Delete Key',
+    enterApiKey: 'Please enter your API key.',
+    saved: 'Saved.',
+    cacheDesc: 'Previously searched words are cached so re-searching them costs nothing.<br>Resetting the cache means new images will be generated (and charged) when you search the same word again.',
+    resetCache: 'Reset Cache',
+    confirmResetCache: 'Reset cache?\nRe-searching the same word will incur costs.',
+    cacheResetDone: 'Cache has been reset.',
+    confirmDeleteKey: 'Delete your API key?\nYou will be redirected to the welcome page.',
+
+    /* 결제 연동 가이드 모달 */
+    billingTitle: 'Images help you remember longer',
+    billingHow: 'How to set up billing',
+    billingStep1: 'Go to Google AI Studio.',
+    billingStep2: 'Navigate to Settings → Billing.',
+    billingStep3: 'Register a payment method (card).',
+    billingCost: 'About $0.039 per image.',
+    billingCost100: '* ~$3.90 for 100 word searches',
+    billingCheckLabel: 'Enable image generation',
+    billingCheckHint: 'Uncheck if you have not set up API billing.',
+    billingDone: 'Finished setting up billing?',
 
     /* 데이터 수집 동의 배너 */
     consentMsg: 'Search results (text and images) are stored on our server to improve service quality. No personally identifiable information is collected.',
@@ -217,11 +328,20 @@ const I18N = {
     quizWrongLabel: 'Incorrect words:',
     quizAllCorrect: 'All correct!',
 
+    /* 언어 설정 */
+    language: 'Language',
+    langKo: '한국어',
+    langEn: 'English',
+
     /* 사진 분석 프롬프트 */
     extractPrompt: `This is a photo of a page from an English novel.
 Find all English words, phrases, or sentences marked with #, # with circles, or # with underlines.
 Output them separated by commas in a single line. Only output the extracted words/expressions, nothing else.
 Example: split, break down, take off`,
+
+    /* 플레이스홀더 */
+    geminiKeyPlaceholder: 'Gemini API key (AIza...)',
+    openaiKeyPlaceholder: 'OpenAI API key (sk-...)',
 
     /* Welcome 페이지 */
     quickStart: 'Quick Start →',
@@ -229,6 +349,8 @@ Example: split, break down, take off`,
     heroQuestion: 'Ever wonder why<br><span class="em">you keep forgetting words</span><br>you just learned?',
     startBtn: 'Get Started',
     feedback: 'Feedback',
+    apiModalTitle: 'Register API Key',
+    saveAndStart: 'Save & Start',
 
     /* Welcome 스토리 섹션 */
     s1Speech: '"Mom, what does <strong>hightail</strong> mean?"',

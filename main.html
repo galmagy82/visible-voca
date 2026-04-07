@@ -80,9 +80,200 @@
     font-size: 0.9rem;
     color: #6B6660;
   }
+
+  /* 설정 버튼 */
+  .settings-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #FFFFFF;
+    border: 1px solid #D5D2CC;
+    color: #6B6660;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .settings-btn:hover { border-color: #B0ACA6; color: #2D2B28; }
+
+  /* 설정 모달 */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.3);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: #FFFFFF;
+    border: 1px solid #D5D2CC;
+    border-radius: 16px;
+    padding: 32px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+  }
+  .modal h2 {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #2D2B28;
+    margin-bottom: 24px;
+  }
+  .modal label {
+    display: block;
+    font-size: 0.9rem;
+    color: #4A4641;
+    margin-bottom: 8px;
+  }
+  .modal select {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 1rem;
+    border: 1px solid #D5D2CC;
+    border-radius: 10px;
+    background: #F7F6F3;
+    color: #2D2B28;
+    outline: none;
+    margin-bottom: 20px;
+    appearance: none;
+    cursor: pointer;
+  }
+  .modal select:focus { border-color: #B0ACA6; }
+  .modal input[type="password"] {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 1rem;
+    border: 1px solid #D5D2CC;
+    border-radius: 10px;
+    background: #F7F6F3;
+    color: #2D2B28;
+    outline: none;
+    margin-bottom: 24px;
+  }
+  .modal input[type="password"]:focus { border-color: #B0ACA6; }
+  .modal input[type="password"]::placeholder { color: #B0ACA6; }
+  .modal-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+  .modal-actions button {
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    border-radius: 10px;
+  }
+  .btn-save { background: #5A8A42; color: #fff; }
+  .btn-save:hover { background: #6B9E52; }
+  .btn-cancel { background: #EDECEA; color: #4A4641; }
+
+  /* 가이드 아코디언 */
+  .guide-toggle {
+    display: inline-block;
+    font-size: 0.85rem;
+    color: #5A8A42;
+    cursor: pointer;
+    margin-bottom: 16px;
+    transition: color 0.2s;
+  }
+  .guide-toggle:hover { color: #6B9E52; }
+  .guide-content {
+    display: none;
+    background: #F7F6F3;
+    border: 1px solid #D5D2CC;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 20px;
+    font-size: 0.85rem;
+    line-height: 1.8;
+    color: #4A4641;
+  }
+  .guide-content.active { display: block; }
+  .guide-content h3 {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #2D2B28;
+    margin-bottom: 8px;
+  }
+  .guide-content ol {
+    padding-left: 20px;
+    margin-bottom: 12px;
+  }
+  .guide-content a {
+    color: #5A8A42;
+    text-decoration: none;
+  }
+  .guide-content a:hover { text-decoration: underline; }
+  .guide-content .guide-note {
+    color: #6B6660;
+    font-size: 0.8rem;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #E5E2DE;
+  }
+  .status-msg {
+    font-size: 0.85rem;
+    color: #6B6660;
+    margin-bottom: 16px;
+  }
+  .status-msg.ok { color: #5A8A42; }
+  .status-msg.warn { color: #B8863A; }
+
+  /* 탭 메뉴 */
+  .modal-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 24px;
+    border-bottom: 1px solid #D5D2CC;
+  }
+  .modal-tab {
+    flex: 1;
+    padding: 10px 0;
+    font-size: 0.9rem;
+    color: #6B6660;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .modal-tab:hover { color: #4A4641; }
+  .modal-tab.active { color: #2D2B28; border-bottom-color: #4A4641; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* 캐시 관리 */
+  .cache-desc {
+    font-size: 0.8rem;
+    color: #6B6660;
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+  .btn-reset {
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    border-radius: 10px;
+    background: #FAEAEA;
+    color: #C45C5C;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-reset:hover { background: #F5D5D5; }
 </style>
 </head>
 <body>
+
+<!-- 설정 버튼 -->
+<button class="settings-btn" onclick="openSettings()" data-i18n-title="settings" title="설정">&#9881;</button>
 
 <h1>STORY KONGKO</h1>
 
@@ -94,12 +285,159 @@
   </a>
   <a class="menu-card" href="writing.html">
     <h2 data-i18n="menuWritingTitle">Visual Essay</h2>
-    <p data-i18n="menuWritingDesc">에세이를 코칭받고, 나만의 그림책으로 만들어보세요</p>
+    <p data-i18n="menuWritingDesc">에세이를 ���칭받고, 나만의 그림책으로 만들어보세요</p>
   </a>
 </div>
 
-<!-- 다국어 적용 -->
+<!-- 설정 모달 (API 설정 + 캐시 관리) -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <div class="modal-tabs">
+      <button class="modal-tab active" onclick="switchTab('api')" data-i18n="imageToggle">이미지 설정</button>
+      <button class="modal-tab" onclick="switchTab('cache')" data-i18n="cacheManagement">캐시 관리</button>
+      <button class="modal-tab" onclick="switchTab('lang')" data-i18n="language">언어</button>
+    </div>
+
+    <!-- 이미지 설정 탭 -->
+    <div class="tab-content active" id="tabApi">
+      <!-- 이미지 생성 체크박스 -->
+      <div style="margin-top:12px; display:flex; align-items:flex-start; gap:8px;">
+        <input type="checkbox" id="imageEnabledCheck" style="margin-top:3px;">
+        <label for="imageEnabledCheck" style="font-size:13px; color:#5A5754; line-height:1.5; cursor:pointer;">
+          <span data-i18n="imageToggle">이미지 생성 사용</span><br>
+          <span style="font-size:11px; color:#8C8985;" data-i18n="imageToggleHint">검색 시 단어 느낌을 표현한 이미지도 함께 생성합니다.</span>
+        </label>
+      </div>
+
+      <div id="statusMsg" class="status-msg"></div>
+
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeSettings()" data-i18n="cancel">취소</button>
+        <button class="btn-save" onclick="saveSettings()" data-i18n="save">저장</button>
+      </div>
+    </div>
+
+    <!-- 캐시 관리 탭 -->
+    <div class="tab-content" id="tabCache">
+      <div class="cache-desc" data-i18n="cacheDesc">
+        이전에 검색한 단어는 캐시에 저장되어 다시 검색해도 비용이 발생하지 않습니다.<br>
+        캐시를 초기화하면 같은 단어를 다시 검색할 때 새로운 이미지가 생성되며 비용이 발생합니다.
+      </div>
+      <button class="btn-reset" onclick="resetCache()" data-i18n="resetCache">캐시 초기화</button>
+      <div id="cacheStatusMsg" class="status-msg"></div>
+    </div>
+
+    <!-- 언어 설정 탭 -->
+    <div class="tab-content" id="tabLang">
+      <label for="langSelect" data-i18n="language">언어</label>
+      <select id="langSelect" style="width:100%; padding:12px 16px; font-size:1rem; border:1px solid #D5D2CC; border-radius:10px; background:#F7F6F3; color:#2D2B28; outline:none; margin-bottom:20px; appearance:none; cursor:pointer;">
+        <option value="ko" data-i18n="langKo">한국어</option>
+        <option value="en" data-i18n="langEn">English</option>
+      </select>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeSettings()" data-i18n="cancel">취소</button>
+        <button class="btn-save" onclick="saveLang()" data-i18n="save">저장</button>
+      </div>
+      <div id="langStatusMsg" class="status-msg"></div>
+    </div>
+  </div>
+</div>
+
 <script>
+// --- 설정 관리 ---
+function getSettings() {
+  const saved = localStorage.getItem('visibleVoca_settings');
+  if (saved) return JSON.parse(saved);
+  return { imageEnabled: false };
+}
+
+function saveSettingsToStorage(imageEnabled) {
+  const existing = getSettings();
+  localStorage.setItem('visibleVoca_settings', JSON.stringify({
+    ...existing,
+    imageEnabled
+  }));
+}
+
+/* 언어 설정 저장 */
+function saveLang() {
+  const lang = document.getElementById('langSelect').value;
+  setLang(lang);
+  document.documentElement.lang = lang;
+  applyI18n();
+  const msg = document.getElementById('langStatusMsg');
+  msg.textContent = t('saved');
+  msg.className = 'status-msg ok';
+  setTimeout(closeSettings, 600);
+}
+
+function openSettings() {
+  const s = getSettings();
+  document.getElementById('imageEnabledCheck').checked = s.imageEnabled !== false;
+  document.getElementById('statusMsg').textContent = '';
+  switchTab('api');
+  document.getElementById('cacheStatusMsg').textContent = '';
+  document.getElementById('langSelect').value = getLang();
+  document.getElementById('langStatusMsg').textContent = '';
+  document.getElementById('settingsModal').classList.add('active');
+}
+
+// --- 탭 전환 ---
+function switchTab(tab) {
+  document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  const tabMap = { api: 0, cache: 1, lang: 2 };
+  const idMap = { api: 'tabApi', cache: 'tabCache', lang: 'tabLang' };
+  document.querySelectorAll('.modal-tab')[tabMap[tab]].classList.add('active');
+  document.getElementById(idMap[tab]).classList.add('active');
+}
+
+function closeSettings() {
+  document.getElementById('settingsModal').classList.remove('active');
+}
+
+function saveSettings() {
+  const imageEnabled = document.getElementById('imageEnabledCheck').checked;
+  saveSettingsToStorage(imageEnabled);
+  const msg = document.getElementById('statusMsg');
+  msg.textContent = t('saved');
+  msg.className = 'status-msg ok';
+  setTimeout(closeSettings, 600);
+}
+
+// --- 캐시 관리 (IndexedDB) ---
+async function resetCache() {
+  if (!confirm(t('confirmResetCache'))) return;
+  try {
+    const req = indexedDB.open('visualVoca', 2);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains('resultCache')) {
+        db.createObjectStore('resultCache');
+      }
+      if (!db.objectStoreNames.contains('wordbook')) {
+        db.createObjectStore('wordbook', { keyPath: 'word' });
+      }
+    };
+    req.onsuccess = () => {
+      const db = req.result;
+      const tx = db.transaction('resultCache', 'readwrite');
+      tx.objectStore('resultCache').clear();
+      const msg = document.getElementById('cacheStatusMsg');
+      msg.textContent = t('cacheResetDone');
+      msg.className = 'status-msg ok';
+    };
+  } catch (e) {
+    console.warn('캐시 초기화 실패:', e);
+  }
+}
+
+// 모달 바깥 클릭 시 닫기
+document.getElementById('settingsModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeSettings();
+});
+
+/* 다국어 적용 */
 document.documentElement.lang = getLang();
 applyI18n();
 </script>
