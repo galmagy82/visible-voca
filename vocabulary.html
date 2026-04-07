@@ -212,125 +212,6 @@
     padding: 40px 0;
   }
 
-  /* 이미지 결제 연동 안내 플레이스홀더 */
-  .image-billing-placeholder {
-    margin: 24px 0;
-    padding: 32px 24px;
-    background: linear-gradient(135deg, #FFF8F0, #F5F1EA);
-    border: 1px dashed #D5D2CC;
-    border-radius: 14px;
-    text-align: center;
-  }
-  .image-billing-placeholder .placeholder-icon {
-    font-size: 2rem;
-    margin-bottom: 12px;
-    opacity: 0.6;
-  }
-  .image-billing-placeholder .placeholder-msg {
-    font-size: 0.95rem;
-    color: #4A4641;
-    line-height: 1.6;
-    margin-bottom: 16px;
-  }
-  .image-billing-placeholder .placeholder-btn {
-    padding: 10px 22px;
-    font-size: 0.88rem;
-    border: 1px solid #D5D2CC;
-    border-radius: 10px;
-    background: #FFFFFF;
-    color: #4A4641;
-    cursor: pointer;
-    transition: background 0.2s, border-color 0.2s;
-  }
-  .image-billing-placeholder .placeholder-btn:hover {
-    background: #F0EBE3;
-    border-color: #B0ACA6;
-  }
-
-  /* 결제 연동 가이드 모달 */
-  .billing-modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.3);
-    z-index: 1100;
-    align-items: center;
-    justify-content: center;
-  }
-  .billing-modal-overlay.active { display: flex; }
-  .billing-modal {
-    background: #FFFFFF;
-    border-radius: 16px;
-    padding: 32px;
-    width: 92%;
-    max-width: 540px;
-    max-height: 80vh;
-    overflow-y: auto;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.12);
-  }
-  .billing-modal h3 {
-    font-size: 1.15rem;
-    font-weight: 600;
-    color: #2D2B28;
-    margin-bottom: 20px;
-  }
-  .billing-modal .info-section {
-    margin-bottom: 20px;
-  }
-  .billing-modal .info-section h4 {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: #4A4641;
-    margin-bottom: 8px;
-  }
-  .billing-modal .info-section p,
-  .billing-modal .info-section li {
-    font-size: 0.88rem;
-    color: #6B6660;
-    line-height: 1.8;
-  }
-  .billing-modal .info-section ol {
-    padding-left: 20px;
-  }
-  .billing-modal .info-section a {
-    color: #5A8A42;
-    text-decoration: none;
-  }
-  .billing-modal .info-section a:hover {
-    text-decoration: underline;
-  }
-  .billing-modal .safe-note {
-    background: #F0F7EC;
-    border-radius: 10px;
-    padding: 14px 18px;
-    font-size: 0.85rem;
-    color: #4A7A38;
-    line-height: 1.7;
-    margin-bottom: 20px;
-  }
-  .billing-modal .cost-note {
-    background: #FFF8F0;
-    border-radius: 10px;
-    padding: 14px 18px;
-    font-size: 0.85rem;
-    color: #8A6A3A;
-    line-height: 1.7;
-    margin-bottom: 20px;
-  }
-  .billing-modal .close-btn {
-    display: block;
-    margin: 16px auto 0;
-    padding: 10px 32px;
-    font-size: 0.95rem;
-    border: none;
-    border-radius: 10px;
-    background: #EDECEA;
-    color: #4A4641;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-  .billing-modal .close-btn:hover { background: #E0DEDA; }
-
   /* 사진 첨부 버튼 */
   .photo-upload-area {
     margin-bottom: 24px;
@@ -1114,21 +995,8 @@ function getUserId() {
   return id;
 }
 
-// --- 설정 (localStorage 공유) ---
-function getSettings() {
-  const saved = localStorage.getItem('visibleVoca_settings');
-  const settings = saved ? JSON.parse(saved) : { imageEnabled: true };
-
-  /* 일회성 마이그레이션: 기존 사용자도 imageEnabled를 한 번 true로 강제 */
-  /* (이전 자동 비활성화로 false가 된 사용자 복구. 이후엔 사용자가 다시 끌 수 있음) */
-  if (!localStorage.getItem('visibleVoca_imgDefault_v1')) {
-    settings.imageEnabled = true;
-    localStorage.setItem('visibleVoca_settings', JSON.stringify(settings));
-    localStorage.setItem('visibleVoca_imgDefault_v1', '1');
-  }
-
-  return settings;
-}
+// --- 설정 ---
+/* 이미지 생성은 항상 활성화 (사용자가 끌 수 없음) */
 
 // --- 일반검색 ---
 const input = document.getElementById('wordInput');
@@ -1268,13 +1136,11 @@ function buildHtmlFromDB(dbData, word) {
 
 // --- 공통: 단어 검색 후 결과 HTML 생성 ---
 async function fetchWordResult(word, targetEl) {
-  const settings = getSettings();
-
   /* ① 브라우저 캐시 확인 (IndexedDB) */
   const cached = await getCacheEntry(word);
   if (cached) {
-    /* 이미지 생성 활성화 상태인데 캐시에 이미지가 없으면 캐시 무시하고 재검색 */
-    if (settings.imageEnabled && !cached.includes('<img ')) {
+    /* 캐시에 이미지가 없으면 캐시 무시하고 재검색 (이미지는 항상 켜져 있음) */
+    if (!cached.includes('<img ')) {
       /* 캐시 무시 — 아래로 계속 진행 */
     } else {
       wordResults[word] = { html: cached };
@@ -1300,10 +1166,8 @@ async function fetchWordResult(word, targetEl) {
 
   const textPromise = callSearch(prompt);
 
-  /* 이미지 생성: 설정에서 활성화한 경우에만 호출 */
-  const imagePromise = settings.imageEnabled
-    ? generateImage(word)
-    : null;
+  /* 이미지 생성: 항상 활성화 */
+  const imagePromise = generateImage(word);
 
   let text;
   try {
@@ -1357,15 +1221,7 @@ async function fetchWordResult(word, targetEl) {
   if (pos || ipa) html += `<div class="word-pos">${escapeHtml(pos)}${pos && ipa ? ' · ' : ''}${escapeHtml(ipa)}</div>`;
   if (corrected) html += `<div class="corrected">${safeWord} → <span>${safeCorrected}</span></div>`;
   html += `<div class="feel-desc">${escapeHtml(desc)}</div>`;
-  if (imagePromise) {
-    html += `<div class="feel-image-container" id="imageContainer"><div class="feel-image-loading">${t('imageLoading')}</div></div>`;
-  } else {
-    html += `<div class="image-billing-placeholder">
-      <div class="placeholder-icon">🎨</div>
-      <div class="placeholder-msg">${t('imagePlaceholderMsg')}</div>
-      <button class="placeholder-btn" onclick="openBillingModal()">${t('imagePlaceholderBtn')}</button>
-    </div>`;
-  }
+  html += `<div class="feel-image-container" id="imageContainer"><div class="feel-image-loading">${t('imageLoading')}</div></div>`;
   if (examples) html += `<div class="feel-examples">${escapeHtml(examples)}</div>`;
   /* 렌더링 후 이벤트 바인딩을 위해 데이터 보관 */
   window._lastWbData = { word, pos, summary: desc.split('\n')[0].substring(0, 60) };
@@ -1374,13 +1230,7 @@ async function fetchWordResult(word, targetEl) {
   targetEl.innerHTML = html;
   bindWbButton(targetEl);
 
-  /* 이미지 비동기 처리 — imagePromise가 있을 때만 */
-  if (!imagePromise) {
-    saveCacheEntry(word, html);
-    /* Supabase에 텍스트만 저장 */
-    saveToSupabase(word, { corrected, pos, ipa, description: desc, examples }, null);
-    return html;
-  }
+  /* 이미지 비동기 처리 */
   try {
     const imageUrl = await imagePromise;
     const container = targetEl.querySelector('.feel-image-container');
@@ -1458,11 +1308,10 @@ function showSearchResult(word) {
 }
 
 async function lookupWord(word) {
-  const settings = getSettings();
   const cached = await getCacheEntry(word);
   if (cached) {
-    /* 이미지 생성 활성화 상태인데 캐시에 이미지가 없으면 캐시 무시하고 재검색 */
-    if (!(settings.imageEnabled && !cached.includes('<img '))) {
+    /* 캐시에 이미지가 없으면 캐시 무시하고 재검색 (이미지는 항상 켜져 있음) */
+    if (cached.includes('<img ')) {
       wordResults[word] = { html: cached };
       showSearchResult(word);
       return;
@@ -2068,48 +1917,6 @@ function showQuizResult() {
   }
 }
 
-/* 결제 연동 가이드 창 열기/닫기 */
-function openBillingModal() {
-  /* 현재 설정 상태를 체크박스에 반영 */
-  const s = getSettings();
-  document.getElementById('billingImageCheck').checked = s.imageEnabled !== false;
-  document.getElementById('billingModal').classList.add('active');
-}
-
-/* 결제 안내 창에서 이미지 생성 체크 변경 시 설정에 반영 */
-function onBillingImageCheck() {
-  const s = getSettings();
-  s.imageEnabled = document.getElementById('billingImageCheck').checked;
-  localStorage.setItem('visibleVoca_settings', JSON.stringify(s));
-}
-function closeBillingModal() {
-  document.getElementById('billingModal').classList.remove('active');
-}
-</script>
-
-<!-- 이미지 생성 설정 모달 -->
-<div class="billing-modal-overlay" id="billingModal">
-  <div class="billing-modal">
-    <h3 data-i18n="billingTitle">그림으로 보면 더 오래 기억돼요</h3>
-
-    <div style="margin-top:16px;">
-      <div style="display:flex; align-items:flex-start; gap:8px;">
-        <input type="checkbox" id="billingImageCheck" style="margin-top:3px;" onchange="onBillingImageCheck()">
-        <label for="billingImageCheck" style="font-size:13px; color:#5A5754; line-height:1.5; cursor:pointer;">
-          <span data-i18n="billingCheckLabel">이미지 생성 사용</span>
-        </label>
-      </div>
-    </div>
-
-    <button class="close-btn" onclick="closeBillingModal()" data-i18n="confirm">확인</button>
-  </div>
-</div>
-
-<!-- 모달 바깥 클릭 시 닫기 -->
-<script>
-document.getElementById('billingModal').addEventListener('click', function(e) {
-  if (e.target === e.currentTarget) closeBillingModal();
-});
 </script>
 
 <!-- 데이터 수집 동의 배너 -->
