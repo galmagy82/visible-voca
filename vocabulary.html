@@ -1010,10 +1010,16 @@ function hasDataConsent() {
   return localStorage.getItem('visibleVoca_dataConsent') === 'true';
 }
 
-/* Supabase에서 단어 데이터 충분 여부 확인 후 랜덤 반환 */
+/* Supabase에서 단어 데이터 충분 여부 확인 후 랜덤 반환
+   언어 처리:
+   - 텍스트 row는 현재 사용자 언어(getLang())와 일치하는 것만 사용한다.
+     → 영어로 저장된 row가 한글 사용자에게 노출되는 버그 방지.
+   - 이미지 row는 언어와 무관하므로 lang 필터 없이 모든 row에서 선택.
+     (이미지 자체엔 텍스트가 없는 정책이라 언어 중립적임)
+   - lang 컬럼이 NULL인 기존 row는 텍스트 풀에서 자연 폐기된다. */
 async function fetchFromSupabase(word) {
   try {
-    /* 해당 단어의 텍스트 수, 이미지 수 조회 */
+    /* 해당 단어의 모든 row 조회 (텍스트는 언어 필터, 이미지는 전체에서 선택) */
     const { data, error } = await supabaseClient
       .from('word_results')
       .select('*')
@@ -1021,13 +1027,19 @@ async function fetchFromSupabase(word) {
 
     if (error || !data || data.length === 0) return null;
 
-    const textCount = data.filter(r => r.description).length;
-    const imageCount = data.filter(r => r.image_path).length;
+    const lang = getLang();
+
+    /* 텍스트 row: 현재 언어와 일치하고 description이 있는 것만 */
+    const textRows = data.filter(r => r.description && r.lang === lang);
+    /* 이미지 row: 언어 무관 — image_path가 있는 모든 row */
+    const imageRows = data.filter(r => r.image_path);
+
+    const textCount = textRows.length;
+    const imageCount = imageRows.length;
 
     /* 데이터가 충분하면 랜덤 선택 후 반환 */
     if (textCount >= TEXT_THRESHOLD && imageCount >= IMAGE_THRESHOLD) {
-      const textRow = data.filter(r => r.description)[Math.floor(Math.random() * textCount)];
-      const imageRows = data.filter(r => r.image_path);
+      const textRow = textRows[Math.floor(Math.random() * textCount)];
       const imageRow = imageRows[Math.floor(Math.random() * imageCount)];
 
       /* 이미지 공개 URL 생성 */
@@ -1079,11 +1091,14 @@ async function saveToSupabase(word, parsed, imageDataUrl) {
       }
     }
 
-    /* DB에 텍스트 결과 저장 */
+    /* DB에 텍스트 결과 저장
+       lang: 검색 시점의 사용자 언어 설정(ko/en)을 함께 저장.
+       fetchFromSupabase에서 같은 언어 row만 가져오게 하여 언어 불일치 방지. */
     const { error: insertErr } = await supabaseClient
       .from('word_results')
       .insert({
         word: word.toLowerCase(),
+        lang: getLang(),
         corrected: parsed.corrected || null,
         pos: parsed.pos || null,
         ipa: parsed.ipa || null,
@@ -1151,12 +1166,19 @@ function openDB() {
   });
 }
 
+/* IndexedDB 캐시 키 생성 — 언어별로 분리
+   같은 단어라도 ko/en 결과를 각각 저장해야 언어 전환 시 잘못된 캐시가 노출되지 않음.
+   기존 언어 prefix 없는 키(예: "hello")는 매칭되지 않아 자연 폐기됨. */
+function buildCacheKey(word) {
+  return `${getLang()}:${word}`;
+}
+
 /* 캐시 저장 */
 async function saveCacheEntry(word, html) {
   try {
     const db = await openDB();
     const tx = db.transaction(STORE_NAME, 'readwrite');
-    tx.objectStore(STORE_NAME).put(html, word);
+    tx.objectStore(STORE_NAME).put(html, buildCacheKey(word));
   } catch (e) {
     console.warn('캐시 저장 실패:', e);
   }
@@ -1168,7 +1190,7 @@ async function getCacheEntry(word) {
     const db = await openDB();
     return new Promise((resolve) => {
       const tx = db.transaction(STORE_NAME, 'readonly');
-      const req = tx.objectStore(STORE_NAME).get(word);
+      const req = tx.objectStore(STORE_NAME).get(buildCacheKey(word));
       req.onsuccess = () => resolve(req.result || null);
       req.onerror = () => resolve(null);
     });
