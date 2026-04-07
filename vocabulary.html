@@ -1066,15 +1066,54 @@ async function fetchFromSupabase(word) {
   }
 }
 
-/* Supabase에 단어 결과 저장 + 이미지 업로드 */
-async function saveToSupabase(word, parsed, imageDataUrl) {
+/* 이미 저장된 이미지가 있는지 조회 — 언어 무관, 아무 row나 1개
+   목적: 영어로 처음 검색해 이미지가 만들어진 단어를 한글로 다시 검색할 때
+         Gemini 이미지 API를 다시 부르지 않고 기존 이미지를 재사용하기 위함.
+   - word_results 에서 word 일치 + image_path NOT NULL 인 row 1건만 가져옴.
+   - 텍스트 / 언어는 보지 않음 (이미지엔 텍스트가 없는 정책이라 언어 중립적). */
+async function fetchExistingImage(word) {
+  try {
+    const { data, error } = await supabaseClient
+      .from('word_results')
+      .select('image_path')
+      .eq('word', word.toLowerCase())
+      .not('image_path', 'is', null)
+      .limit(1)
+      .maybeSingle();
+
+    if (error || !data || !data.image_path) return null;
+
+    /* Storage public URL 변환 */
+    const { data: urlData } = supabaseClient.storage
+      .from('word-images')
+      .getPublicUrl(data.image_path);
+
+    if (!urlData?.publicUrl) return null;
+
+    return {
+      image_path: data.image_path,
+      publicUrl: urlData.publicUrl
+    };
+  } catch (e) {
+    console.warn('기존 이미지 조회 실패:', e);
+    return null;
+  }
+}
+
+/* Supabase에 단어 결과 저장 + 이미지 업로드
+   파라미터:
+   - imageDataUrl: Gemini가 새로 생성한 data:URL (있으면 Storage 업로드)
+   - existingImagePath: 기존에 다른 언어 row가 만들어둔 image_path 재사용 시 전달.
+     이 값이 있으면 업로드는 건너뛰고 이 path를 새 row의 image_path로 그대로 저장. */
+async function saveToSupabase(word, parsed, imageDataUrl, existingImagePath) {
   if (!hasDataConsent()) return;
 
   try {
-    let imagePath = null;
+    /* 기존 image_path 재사용이 있으면 그 path를 그대로 사용, 업로드 스킵.
+       없을 때만 새 data:URL을 업로드. */
+    let imagePath = existingImagePath || null;
 
-    /* 이미지가 있으면 Storage에 업로드 */
-    if (imageDataUrl && imageDataUrl.startsWith('data:')) {
+    if (!imagePath && imageDataUrl && imageDataUrl.startsWith('data:')) {
       const res = await fetch(imageDataUrl);
       const blob = await res.blob();
       const ext = blob.type.split('/')[1] || 'png';
@@ -1346,10 +1385,22 @@ async function fetchWordResult(word, targetEl) {
 
   const textPromise = callSearch(prompt);
 
-  /* 이미지 생성: 설정에서 활성화한 경우에만 호출 */
-  const imagePromise = settings.imageEnabled
-    ? generateImage(word)
-    : null;
+  /* 이미지 처리: 설정에서 활성화한 경우에만
+     - 먼저 word_results 에 이미 만들어둔 이미지가 있는지 확인 (언어 무관)
+     - 있으면 Gemini 이미지 API 호출 생략하고 그 publicUrl 재사용
+     - 없으면 기존대로 generateImage 호출
+     reusedImagePath 는 saveToSupabase 에 넘겨 새 row 가 같은 image_path 를 공유하게 함. */
+  let reusedImagePath = null;
+  let imagePromise = null;
+  if (settings.imageEnabled) {
+    const existing = await fetchExistingImage(word);
+    if (existing) {
+      reusedImagePath = existing.image_path;
+      imagePromise = Promise.resolve(existing.publicUrl);
+    } else {
+      imagePromise = generateImage(word);
+    }
+  }
 
   let text;
   try {
@@ -1440,8 +1491,9 @@ async function fetchWordResult(word, targetEl) {
     );
     wordResults[word] = { html: imgHtml };
     saveCacheEntry(word, imgHtml);
-    /* Supabase에 텍스트 + 이미지 저장 */
-    saveToSupabase(word, { corrected, pos, ipa, description: desc, examples }, imageUrl);
+    /* Supabase에 텍스트 + 이미지 저장
+       reusedImagePath 가 있으면 saveToSupabase 가 업로드 스킵하고 그 path 를 공유. */
+    saveToSupabase(word, { corrected, pos, ipa, description: desc, examples }, imageUrl, reusedImagePath);
   } catch (imgErr) {
     console.error('이미지 생성 실패:', imgErr);
     const container = targetEl.querySelector('.feel-image-container');
