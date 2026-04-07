@@ -71,6 +71,11 @@
     color: #2D2B28;
     margin-bottom: 6px;
   }
+  /* main 페이지에서는 메뉴 제목 색상 분리 무시 (검은색 통일) */
+  /* 인라인 style 색상을 덮어써야 하므로 !important 필요 */
+  .menu-card h2 span {
+    color: inherit !important;
+  }
   .menu-card p {
     font-size: 0.9rem;
     color: #6B6660;
@@ -275,7 +280,7 @@
 <!-- 카테고리 메뉴 -->
 <div class="menu">
   <a class="menu-card" href="vocabulary.html">
-    <h2 data-i18n="menuVocaTitle">Visual Voca</h2>
+    <h2 data-i18n="menuVocaTitle"><span style="color:#4A90D9;">AI 워드필</span> <span style="color:#E8A87C;">사전</span></h2>
     <p data-i18n="menuVocaDesc">단어의 느낌과 뉘앙스를 이미지와 함께 알아보세요</p>
   </a>
   <a class="menu-card" href="writing.html">
