@@ -1117,8 +1117,17 @@ function getUserId() {
 // --- 설정 (localStorage 공유) ---
 function getSettings() {
   const saved = localStorage.getItem('visibleVoca_settings');
-  if (saved) return JSON.parse(saved);
-  return { imageEnabled: false };
+  const settings = saved ? JSON.parse(saved) : { imageEnabled: true };
+
+  /* 일회성 마이그레이션: 기존 사용자도 imageEnabled를 한 번 true로 강제 */
+  /* (이전 자동 비활성화로 false가 된 사용자 복구. 이후엔 사용자가 다시 끌 수 있음) */
+  if (!localStorage.getItem('visibleVoca_imgDefault_v1')) {
+    settings.imageEnabled = true;
+    localStorage.setItem('visibleVoca_settings', JSON.stringify(settings));
+    localStorage.setItem('visibleVoca_imgDefault_v1', '1');
+  }
+
+  return settings;
 }
 
 // --- 일반검색 ---
@@ -1391,13 +1400,7 @@ async function fetchWordResult(word, targetEl) {
     console.error('이미지 생성 실패:', imgErr);
     const container = targetEl.querySelector('.feel-image-container');
 
-    /* HTTP 에러(403 등 결제 문제)일 때만 자동 비활성화 */
-    const isBillingError = imgErr.status && (imgErr.status === 403 || imgErr.status === 402);
-    if (isBillingError) {
-      const s = getSettings();
-      s.imageEnabled = false;
-      localStorage.setItem('visibleVoca_settings', JSON.stringify(s));
-    }
+    /* 이미지 생성 실패 시에도 사용자 설정은 유지 (자동 비활성화 안 함) */
 
     /* 이미지 영역 제거 — 이미지 없이 텍스트만 표시 */
     if (container) {
