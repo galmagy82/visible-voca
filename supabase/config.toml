@@ -1,0 +1,11 @@
+# Supabase CLI 프로젝트 설정 파일
+# `supabase functions deploy` 등 CLI 명령이 이 파일을 읽어서 동작합니다.
+
+# 연결된 Supabase 프로젝트 ref
+project_id = "grdtxvpebjtfhuqdngfn"
+
+# Edge Function: gemini-proxy 설정
+# verify_jwt = false 로 두어야 클라이언트가 Authorization 헤더 없이 호출 가능
+# (vocabulary.html 등 정적 페이지에서 익명 사용자 ID만 보내고 호출하는 구조)
+[functions.gemini-proxy]
+verify_jwt = false
