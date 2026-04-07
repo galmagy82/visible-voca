@@ -211,6 +211,30 @@
     font-size: 0.9rem;
     padding: 40px 0;
   }
+  /* 무료 한도 초과 시 이미지 자리에 표시되는 안내 박스 */
+  .feel-image-placeholder {
+    margin: 24px 0;
+    padding: 28px 20px;
+    text-align: center;
+    background: #FAF9F7;
+    border: 1px dashed #D5D2CC;
+    border-radius: 12px;
+  }
+  .feel-image-placeholder svg {
+    display: block;
+    margin: 0 auto 14px;
+  }
+  .feel-image-placeholder .placeholder-msg {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #4A4641;
+    margin-bottom: 8px;
+  }
+  .feel-image-placeholder .placeholder-hint {
+    font-size: 0.85rem;
+    color: #7A7570;
+    line-height: 1.5;
+  }
 
   /* 사진 첨부 버튼 */
   .photo-upload-area {
@@ -1250,18 +1274,38 @@ async function fetchWordResult(word, targetEl) {
     console.error('이미지 생성 실패:', imgErr);
     const container = targetEl.querySelector('.feel-image-container');
 
-    /* 이미지 생성 실패 시에도 사용자 설정은 유지 (자동 비활성화 안 함) */
+    /* 무료 체험 초과 → "그림으로 보면 더 오래 기억돼요" 안내 표시 */
+    /* 일반 실패 → 이미지 영역 제거 (텍스트만 표시) */
+    const isLimit = imgErr.code === 'FREE_LIMIT_EXCEEDED';
+    /* 액자 안 풍경 — "그림으로 보면 더 오래 기억돼요" 컨셉 */
+    const placeholderSvg = `<svg width="120" height="90" viewBox="0 0 120 90" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">`
+      + `<rect x="4" y="4" width="112" height="82" rx="6" fill="#ffffff" stroke="#D5D2CC" stroke-width="2"/>`
+      + `<rect x="10" y="10" width="100" height="50" fill="#E8F1FB"/>`
+      + `<circle cx="92" cy="22" r="7" fill="#E8A87C"/>`
+      + `<polygon points="10,60 35,30 55,60" fill="#B8C9D9"/>`
+      + `<polygon points="40,60 70,25 100,60" fill="#A0B3C5"/>`
+      + `<rect x="10" y="60" width="100" height="20" fill="#DCE6D9"/>`
+      + `</svg>`;
+    const placeholderHtml = `<div class="feel-image-placeholder">`
+      + placeholderSvg
+      + `<div class="placeholder-msg">${t('imagePlaceholderMsg')}</div>`
+      + `<div class="placeholder-hint">${t('errorFreeLimitExceeded')}</div>`
+      + `</div>`;
 
-    /* 이미지 영역 제거 — 이미지 없이 텍스트만 표시 */
     if (container) {
-      container.remove();
+      if (isLimit) {
+        container.outerHTML = placeholderHtml;
+      } else {
+        container.remove();
+      }
     }
-    const noImgHtml = html.replace(
+    /* 캐시/결과 HTML 갱신: 한도 초과면 placeholder 포함, 아니면 이미지 영역 제거 */
+    const replacedHtml = html.replace(
       /<div class="feel-image-container" id="imageContainer"><div class="feel-image-loading">[^<]*<\/div><\/div>/,
-      ''
+      isLimit ? placeholderHtml : ''
     );
-    wordResults[word] = { html: noImgHtml };
-    saveCacheEntry(word, noImgHtml);
+    wordResults[word] = { html: replacedHtml };
+    saveCacheEntry(word, replacedHtml);
     /* Supabase에 텍스트만 저장 (이미지 실패) */
     saveToSupabase(word, { corrected, pos, ipa, description: desc, examples }, null);
   }

@@ -25,6 +25,7 @@ const I18N = {
     addedToWordbook: '단어장에 추가됨',
     listenPronunciation: '발음 듣기',
     imageAlt: '의 느낌을 표현한 이미지',
+    imagePlaceholderMsg: '그림으로 보면 더 오래 기억돼요',
 
     /* 사진에서 검색 */
     uploadPhoto: '📂 사진 올리기',
@@ -155,6 +156,7 @@ const I18N = {
     addedToWordbook: 'Added to Wordbook',
     listenPronunciation: 'Listen',
     imageAlt: ' - image expressing the feel',
+    imagePlaceholderMsg: 'Images help you remember longer',
 
     /* 사진에서 검색 */
     uploadPhoto: '📂 Upload Photo',
