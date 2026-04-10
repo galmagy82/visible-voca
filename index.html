@@ -1059,10 +1059,9 @@ body {
   </div>
   <button class="cta-btn" id="startBtn" data-i18n="startBtn">시작하기</button>
   <a href="https://open.kakao.com/o/pgDSZSoi" target="_blank" style="margin-top:24px; font-size:14px; color:var(--muted); text-decoration:none; border-bottom:1px solid var(--muted); padding-bottom:2px;" data-i18n="feedback">의견 보내기</a>
-  <div id="langToggle" style="margin-top:16px; font-size:13px; color:var(--muted); letter-spacing:0.02em;">
-    <span id="langKoBtn" style="cursor:pointer; padding:4px 2px;">한국어</span>
-    <span style="opacity:0.3; margin:0 4px;">|</span>
-    <span id="langEnBtn" style="cursor:pointer; padding:4px 2px;">English</span>
+  <!-- 언어 선택 드롭다운: i18n.js의 SUPPORTED_LANGS로 채워짐 -->
+  <div id="langToggle" style="margin-top:16px;">
+    <select id="langSelect" style="font-size:13px; color:var(--muted); background:transparent; border:1px solid var(--muted); border-radius:6px; padding:5px 10px; cursor:pointer; letter-spacing:0.02em; font-family:inherit;"></select>
   </div>
 </div>
 
@@ -1176,31 +1175,12 @@ document.getElementById('startBtn').addEventListener('click', async function(e) 
   }
 });
 
-/* 다국어 적용 */
+/* 다국어 적용 — 최초 방문 시 getLang()이 navigator.language로 자동 감지 */
 document.documentElement.lang = getLang();
 applyI18n();
 
-/* 언어 토글 */
-function updateLangToggle() {
-  var lang = getLang();
-  document.getElementById('langKoBtn').style.fontWeight = lang === 'ko' ? '700' : '400';
-  document.getElementById('langKoBtn').style.color = lang === 'ko' ? 'var(--text)' : 'var(--muted)';
-  document.getElementById('langEnBtn').style.fontWeight = lang === 'en' ? '700' : '400';
-  document.getElementById('langEnBtn').style.color = lang === 'en' ? 'var(--text)' : 'var(--muted)';
-}
-document.getElementById('langKoBtn').addEventListener('click', function() {
-  setLang('ko');
-  document.documentElement.lang = 'ko';
-  applyI18n();
-  updateLangToggle();
-});
-document.getElementById('langEnBtn').addEventListener('click', function() {
-  setLang('en');
-  document.documentElement.lang = 'en';
-  applyI18n();
-  updateLangToggle();
-});
-updateLangToggle();
+/* 언어 드롭다운 초기화 (i18n.js의 헬퍼 사용) */
+initLangSelect(document.getElementById('langSelect'));
 </script>
 
 </body>

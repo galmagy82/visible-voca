@@ -1,6 +1,19 @@
 /* ===== 다국어 지원 (i18n) ===== */
 
-/* 번역 사전: 한국어(ko), 영어(en) */
+/* 지원 언어 목록 — 드롭다운 및 브라우저 언어 감지에 사용
+   code: 내부 언어 코드 / name: 드롭다운에 표시될 네이티브 이름 */
+const SUPPORTED_LANGS = [
+  { code: 'ko', name: '한국어' },
+  { code: 'en', name: 'English' },
+  { code: 'ja', name: '日本語' },
+  { code: 'zh', name: '中文' },
+  { code: 'es', name: 'Español' },
+  { code: 'vi', name: 'Tiếng Việt' },
+  { code: 'th', name: 'ภาษาไทย' },
+  { code: 'pt', name: 'Português' }
+];
+
+/* 번역 사전: 지원 언어별 UI 문자열 */
 const I18N = {
   ko: {
     /* 공통 */
@@ -182,7 +195,7 @@ const I18N = {
   },
 
   en: {
-    /* 공통 */
+    /* Common */
     home: 'Home',
     settings: 'Settings',
     save: 'Save',
@@ -193,13 +206,13 @@ const I18N = {
     close: 'Close',
     search: 'Search',
 
-    /* 탭 */
+    /* Tabs */
     tabSearch: 'Search',
     tabPhoto: 'Photo Search',
     tabWordbook: 'Wordbook',
     tabQuiz: 'Quiz',
 
-    /* 일반검색 */
+    /* Search */
     searchPlaceholder: 'Enter a word, phrase, or sentence',
     searchGuideTitle: 'Your search becomes everyone\'s dictionary.',
     searchGuideBody: 'No more memorizing alone! Every word you look up is shared in real time, building a vast word map that we all create together.',
@@ -212,7 +225,7 @@ const I18N = {
     listenPronunciation: 'Listen',
     imageAlt: ' - image expressing the feel',
 
-    /* 사진에서 검색 */
+    /* Photo search */
     uploadPhoto: '📂 Upload Photo',
     photoGuideTitle: 'Photo Search',
     photoGuideBody: 'While reading, mark unknown words with circles (○), underlines (_), or # marks.<br>Take a photo of the page and tap 📂 to upload.<br>Marked words will be found and searched automatically.<br><br>You can upload multiple photos at once.',
@@ -223,7 +236,7 @@ const I18N = {
     noWordsFound: 'No marked words found.',
     photoAnalysisFailed: 'Photo analysis failed. Please try again.',
 
-    /* 단어장 */
+    /* Wordbook */
     wordbookFilterPlaceholder: 'Search words...',
     sortRecent: 'Recently added',
     sortAlpha: 'Alphabetical',
@@ -235,7 +248,7 @@ const I18N = {
     loadingResult: ' - loading result...',
     loadFailed: 'Failed to load result.',
 
-    /* 퀴즈 */
+    /* Quiz */
     quizSetup: 'Quiz Setup',
     quizType: 'Type',
     quizTypeFeel: 'Match the feel',
@@ -251,13 +264,13 @@ const I18N = {
     quizResult: 'Quiz Result',
     quizRetry: 'Try Again',
 
-    /* 에러 메시지 */
+    /* Errors */
     errorNoApiKey: 'Please enter your API key in Settings first.',
     errorRateLimit: 'Daily free quota exceeded. Please try again tomorrow.',
     errorGeneral: 'A temporary error occurred. Please try again.',
     errorNoResponse: 'No response received.',
 
-    /* 설정 모달 */
+    /* Settings modal */
     apiSettings: 'API Settings',
     cacheManagement: 'Cache',
     aiService: 'AI Service',
@@ -288,12 +301,12 @@ const I18N = {
     cacheResetDone: 'Cache has been reset.',
     confirmDeleteKey: 'Delete your API key?\nYou will be redirected to the welcome page.',
 
-    /* 데이터 수집 동의 배너 */
+    /* Consent banner */
     consentMsg: 'Search results (text and images) are stored on our server to improve service quality. No personally identifiable information is collected.',
     consentAgree: 'I agree',
     consentDecline: 'Decline',
 
-    /* 퀴즈 메시지 */
+    /* Quiz messages */
     quizNoDate: 'Please select a date.',
     quizNoWords: 'No words in wordbook. Please add words first.',
     quizNoImages: 'No words with images. Use "Match the feel" instead.',
@@ -304,22 +317,22 @@ const I18N = {
     quizWrongLabel: 'Incorrect words:',
     quizAllCorrect: 'All correct!',
 
-    /* 언어 설정 */
+    /* Language */
     language: 'Language',
     langKo: '한국어',
     langEn: 'English',
 
-    /* 사진 분석 프롬프트 */
+    /* Photo extraction prompt */
     extractPrompt: `This is a photo of a page from an English novel.
 Find all English words, phrases, or sentences marked with #, # with circles, or # with underlines.
 Output them separated by commas in a single line. Only output the extracted words/expressions, nothing else.
 Example: split, break down, take off`,
 
-    /* 플레이스홀더 */
+    /* Placeholders */
     geminiKeyPlaceholder: 'Gemini API key (AIza...)',
     openaiKeyPlaceholder: 'OpenAI API key (sk-...)',
 
-    /* Welcome 페이지 */
+    /* Welcome page */
     quickStart: 'Quick Start →',
     heroTagline: 'Meet the feel of words through illustrations',
     heroQuestion: 'Ever wonder why<br><span class="em">you keep forgetting words</span><br>you just learned?',
@@ -328,7 +341,7 @@ Example: split, break down, take off`,
     apiModalTitle: 'Register API Key',
     saveAndStart: 'Save & Start',
 
-    /* Welcome 스토리 섹션 */
+    /* Welcome story */
     s1Speech: '"Mom, what does <strong>hightail</strong> mean?"',
     s2DictLabel: 'Dictionary meaning',
     s2DictMeaning: 'to run away quickly',
@@ -353,15 +366,1090 @@ Example: split, break down, take off`,
     s8DashDesc: 'A quick burst of speed over a short distance',
     s8PeekDesc: 'Taking a sneaky glance through a gap',
 
-    /* 메인 메뉴 */
+    /* Main menu */
     menuVocaTitle: 'Visual Voca',
     menuVocaDesc: 'Explore the feel and nuance of words with images',
     menuWritingTitle: 'Writing Coach',
     menuWritingDesc: 'Get essay coaching and create your own picture book'
+  },
+
+  ja: {
+    /* 共通 */
+    home: 'ホーム',
+    settings: '設定',
+    save: '保存',
+    cancel: 'キャンセル',
+    logout: 'ログアウト',
+    confirm: 'OK',
+    delete: '削除',
+    close: '閉じる',
+    search: '検索',
+
+    /* タブ */
+    tabSearch: '検索',
+    tabPhoto: '写真から検索',
+    tabWordbook: '単語帳',
+    tabQuiz: 'クイズ',
+
+    /* 検索 */
+    searchPlaceholder: '単語・フレーズ・文を入力',
+    searchGuideTitle: 'あなたの検索がみんなの辞書になります。',
+    searchGuideBody: 'もう一人で暗記しなくてOK！<br>検索した単語がリアルタイムで共有され、<br>みんなで作る大きな単語マップが完成します。',
+    searching: '感覚を探しています...',
+    imageLoading: '画像を生成中...',
+    discoveryTitle: '✦ 新しい単語を発見しました！',
+    discoverySub: 'さんがこの単語の最初の探検者です ✦',
+    addToWordbook: '+ 単語帳に追加',
+    addedToWordbook: '単語帳に追加済み',
+    listenPronunciation: '発音を聞く',
+    imageAlt: 'の感覚を表現した画像',
+
+    /* 写真検索 */
+    uploadPhoto: '📂 写真をアップロード',
+    photoGuideTitle: '写真から検索',
+    photoGuideBody: '読書中に知らない単語や表現に丸（○）、下線（_）、または#マークを付けてください。<br>マークしたページの写真を撮って📂ボタンで送信してください。<br>マークされた単語を自動で見つけて検索します。<br><br>複数の写真を一度にアップロードできます。',
+    photoGuideCircle: '丸',
+    photoGuideUnderline: '下線',
+    photoGuideHash: '#マーク',
+    extractingWords: '枚から単語を抽出中...',
+    noWordsFound: '#マークされた単語が見つかりませんでした。',
+    photoAnalysisFailed: '写真の分析に失敗しました。もう一度お試しください。',
+
+    /* 単語帳 */
+    wordbookFilterPlaceholder: '単語を検索...',
+    sortRecent: '最近追加順',
+    sortAlpha: 'アルファベット順',
+    selectDelete: '選択して削除',
+    selectedCount: '件選択',
+    wordbookEmpty: '保存された単語がありません。',
+    pronunciation: '発音',
+    confirmDeleteWords: '件の単語を削除しますか？',
+    loadingResult: 'の結果を読み込み中...',
+    loadFailed: '結果を読み込めませんでした。',
+
+    /* クイズ */
+    quizSetup: 'クイズ設定',
+    quizType: 'タイプ',
+    quizTypeFeel: '感覚当て',
+    quizTypeImage: '画像当て',
+    quizCount: '問題数',
+    quizCountUnit: '問',
+    quizRange: '出題範囲',
+    quizRangeAll: '全体',
+    quizRangeRecent: '最近追加',
+    quizRangeDate: '基準日',
+    quizStart: 'クイズ開始',
+    quizNext: '次へ',
+    quizResult: 'クイズ結果',
+    quizRetry: 'もう一度',
+
+    /* エラー */
+    errorNoApiKey: 'ホームの設定ボタンからAPIキーを先に入力してください。',
+    errorRateLimit: '1日の無料リクエスト上限を超えました。明日もう一度お試しください。',
+    errorGeneral: '一時的なエラーが発生しました。もう一度お試しください。',
+    errorNoResponse: '応答がありませんでした。',
+
+    /* 設定モーダル */
+    apiSettings: 'API設定',
+    cacheManagement: 'キャッシュ管理',
+    aiService: 'AIサービス',
+    apiKey: 'APIキー',
+    apiKeyPlaceholder: 'APIキーを入力',
+    imageToggle: '画像生成を使用',
+    imageToggleHint: 'API課金設定をしていない場合はチェックを外してください。',
+    apiGuideToggle: 'APIキー発行ガイド',
+    safetyGuideToggle: 'APIキーの安全案内',
+    geminiGuideTitle: 'Gemini APIキーの取得方法',
+    geminiGuideStep1: 'Google AI Studioにアクセスします。',
+    geminiGuideStep2: 'Googleアカウントでログインします。',
+    geminiGuideStep3: '「APIキーを作成」ボタンをクリックします。',
+    geminiGuideStep4: '生成されたキーをコピーして上に貼り付けます。',
+    geminiNoBilling: 'Gemini APIキー課金未設定の場合',
+    geminiNoBillingSearch: '· 単語検索：1日の無料枠内で使用可能',
+    geminiNoBillingImage: '· 画像生成：使用不可',
+    geminiBilling: 'Gemini APIキー課金設定の場合（使用量に応じて課金）',
+    geminiBillingSearch: '· 単語検索：無制限',
+    geminiBillingImage: '· 画像生成：使用可能',
+    safetyGuideBody: '入力されたAPIキーはこのデバイスのブラウザ（localStorage）にのみ保存され、開発者のサーバーに送信されることはありません。<br>Google/OpenAI APIの呼び出し時にのみ、該当サービスに直接送信されます。<br>共用PCでは使用後に設定からキーを削除してください。',
+    deleteKey: 'キー削除',
+    enterApiKey: 'APIキーを入力してください。',
+    saved: '保存しました。',
+    cacheDesc: '以前検索した単語はキャッシュに保存され、再検索しても費用は発生しません。<br>キャッシュを初期化すると、同じ単語を再検索する際に新しい画像が生成され、費用が発生します。',
+    resetCache: 'キャッシュ初期化',
+    confirmResetCache: 'キャッシュを初期化しますか？\n同じ単語を再検索すると費用が発生します。',
+    cacheResetDone: 'キャッシュが初期化されました。',
+    confirmDeleteKey: 'APIキーを削除しますか？\n削除後、ウェルカム画面に移動します。',
+
+    /* 同意バナー */
+    consentMsg: '検索された単語とAI生成結果（テキスト・画像）はサービス品質向上のためサーバーに保存されます。個人を特定できる情報は収集しません。',
+    consentAgree: '同意します',
+    consentDecline: '拒否',
+
+    /* クイズメッセージ */
+    quizNoDate: '基準日を選択してください。',
+    quizNoWords: '単語帳に単語がありません。先に単語を追加してください。',
+    quizNoImages: '画像のある単語がありません。「感覚当て」をご利用ください。',
+    noDescription: '(説明なし)',
+    quizCorrectFeedback: '正解！',
+    quizWrongFeedbackText: '不正解！正解は「{word}」です。',
+    quizScoreText: '{total}問中{correct}問正解',
+    quizWrongLabel: '間違えた単語：',
+    quizAllCorrect: '全問正解！',
+
+    /* 言語 */
+    language: '言語',
+    langKo: '한국어',
+    langEn: 'English',
+
+    /* 写真解析プロンプト */
+    extractPrompt: `これは英語の小説のページを撮影した写真です。
+写真の中で#マーク、#マークと丸、または#マークと下線で印された英単語、熟語、または文を全て見つけてください。
+結果はカンマで区切って1行で出力してください。他の説明なしに抽出した単語/表現のみを出力してください。
+例：split, break down, take off`,
+
+    /* プレースホルダー */
+    geminiKeyPlaceholder: 'Gemini APIキー（AIza...）',
+    openaiKeyPlaceholder: 'OpenAI APIキー（sk-...）',
+
+    /* Welcomeページ */
+    quickStart: 'すぐに始める →',
+    heroTagline: '単語の感覚をイラストで体験',
+    heroQuestion: '単語を覚えても<br><span class="em">すぐ忘れてしまう理由、</span><br>知っていますか？',
+    startBtn: '始める',
+    feedback: 'フィードバック',
+    apiModalTitle: 'APIキー登録',
+    saveAndStart: '保存して開始',
+
+    /* Welcomeストーリー */
+    s1Speech: '「ママ、<strong>hightail</strong>ってどういう意味？」',
+    s2DictLabel: '辞書的意味',
+    s2DictMeaning: '急いで逃げる',
+    s2Speech: '「急いで逃げるという意味よ。」',
+    s3MindLabel: '🧒 子どもの頭の中',
+    s3FadeWord: 'hightail = 急いで逃げる',
+    s3Speech: '「意味はわかるけど…感覚がつかめない…」',
+    s3Copy1: '意味だけで覚えた単語は',
+    s3Copy2: '長く残りません',
+    s4Label: 'Geminary✦ のやり方',
+    s4Desc: '👉 動物が危険を感じて<br><span class="point">しっぽを上げて</span><br>素早く逃げる感覚',
+    s5ImgAlt: 'hightail – 逃げるキツネ',
+    s5Caption: '動物が危険を感じてしっぽを上げて素早く逃げる感覚',
+    s5Speech: '「あ！こうやってサッと逃げる感じなんだ！」',
+    s6Speech: '「あ…部屋から<strong>パッと逃げ出した</strong>ってことか！」',
+    s7Copy1: '単語は',
+    s7Copy2: '意味ではなく',
+    s7Copy3: '感覚と場面で',
+    s7Copy4: '記憶されます',
+    s8Title: 'こうやって学びます',
+    s8SneakDesc: '猫のようにそっと、足音を立てずに動く感覚',
+    s8DashDesc: '短い距離をパッと素早く移動する感覚',
+    s8PeekDesc: 'ドアの隙間からこっそり覗き見る感覚',
+
+    /* メインメニュー */
+    menuVocaTitle: 'Visual Voca',
+    menuVocaDesc: '単語の感覚とニュアンスを画像と一緒に学びましょう',
+    menuWritingTitle: 'Writing Coach',
+    menuWritingDesc: 'エッセイのコーチングを受けて、自分だけの絵本を作りましょう'
+  },
+
+  zh: {
+    /* 通用 */
+    home: '首页',
+    settings: '设置',
+    save: '保存',
+    cancel: '取消',
+    logout: '退出登录',
+    confirm: '确认',
+    delete: '删除',
+    close: '关闭',
+    search: '搜索',
+
+    /* 标签 */
+    tabSearch: '搜索',
+    tabPhoto: '拍照搜索',
+    tabWordbook: '单词本',
+    tabQuiz: '测验',
+
+    /* 搜索 */
+    searchPlaceholder: '输入单词、短语或句子',
+    searchGuideTitle: '你的搜索会成为大家的词典。',
+    searchGuideBody: '不用再一个人死背单词！<br>你搜索的单词会实时共享，<br>我们一起构建一张庞大的单词地图。',
+    searching: '正在寻找感觉...',
+    imageLoading: '正在生成图片...',
+    discoveryTitle: '✦ 发现了新单词！',
+    discoverySub: ' 是这个单词的第一位探索者 ✦',
+    addToWordbook: '+ 加入单词本',
+    addedToWordbook: '已加入单词本',
+    listenPronunciation: '听发音',
+    imageAlt: '的感觉图片',
+
+    /* 拍照搜索 */
+    uploadPhoto: '📂 上传照片',
+    photoGuideTitle: '拍照搜索',
+    photoGuideBody: '阅读时在不认识的单词或表达上画圈（○）、下划线（_）或#标记。<br>拍下标记页面的照片，点击📂按钮上传。<br>系统会自动找到标记的单词并搜索。<br><br>可以一次上传多张照片。',
+    photoGuideCircle: '画圈',
+    photoGuideUnderline: '下划线',
+    photoGuideHash: '#标记',
+    extractingWords: '张照片中提取单词...',
+    noWordsFound: '未找到#标记的单词。',
+    photoAnalysisFailed: '照片分析失败。请重试。',
+
+    /* 单词本 */
+    wordbookFilterPlaceholder: '搜索单词...',
+    sortRecent: '最近添加',
+    sortAlpha: '字母顺序',
+    selectDelete: '选择删除',
+    selectedCount: '个已选',
+    wordbookEmpty: '没有保存的单词。',
+    pronunciation: '发音',
+    confirmDeleteWords: '个单词，确定删除？',
+    loadingResult: '正在加载结果...',
+    loadFailed: '无法加载结果。',
+
+    /* 测验 */
+    quizSetup: '测验设置',
+    quizType: '类型',
+    quizTypeFeel: '猜感觉',
+    quizTypeImage: '看图猜词',
+    quizCount: '题数',
+    quizCountUnit: '题',
+    quizRange: '出题范围',
+    quizRangeAll: '全部',
+    quizRangeRecent: '最近添加',
+    quizRangeDate: '基准日期',
+    quizStart: '开始测验',
+    quizNext: '下一题',
+    quizResult: '测验结果',
+    quizRetry: '再试一次',
+
+    /* 错误 */
+    errorNoApiKey: '请先在首页设置中输入API密钥。',
+    errorRateLimit: '已超出每日免费额度。请明天再试。',
+    errorGeneral: '发生临时错误。请重试。',
+    errorNoResponse: '未收到响应。',
+
+    /* 设置模态框 */
+    apiSettings: 'API设置',
+    cacheManagement: '缓存管理',
+    aiService: 'AI服务',
+    apiKey: 'API密钥',
+    apiKeyPlaceholder: '输入API密钥',
+    imageToggle: '启用图片生成',
+    imageToggleHint: '如未设置API计费，请取消勾选。',
+    apiGuideToggle: 'API密钥获取指南',
+    safetyGuideToggle: 'API密钥安全说明',
+    geminiGuideTitle: '如何获取Gemini API密钥',
+    geminiGuideStep1: '访问Google AI Studio。',
+    geminiGuideStep2: '使用Google账号登录。',
+    geminiGuideStep3: '点击"创建API密钥"按钮。',
+    geminiGuideStep4: '复制生成的密钥并粘贴到上方。',
+    geminiNoBilling: 'Gemini API密钥未设置计费',
+    geminiNoBillingSearch: '· 单词搜索：在每日免费额度内可用',
+    geminiNoBillingImage: '· 图片生成：不可用',
+    geminiBilling: 'Gemini API密钥已设置计费（按用量收费）',
+    geminiBillingSearch: '· 单词搜索：无限制',
+    geminiBillingImage: '· 图片生成：可用',
+    safetyGuideBody: '您输入的API密钥仅保存在本设备的浏览器（localStorage）中，不会发送到开发者服务器。<br>仅在调用Google/OpenAI API时直接发送到对应服务。<br>在公共电脑上使用后请在设置中删除密钥。',
+    deleteKey: '删除密钥',
+    enterApiKey: '请输入API密钥。',
+    saved: '已保存。',
+    cacheDesc: '之前搜索的单词已缓存，重新搜索不会产生费用。<br>清除缓存后，搜索相同单词会生成新图片并产生费用。',
+    resetCache: '清除缓存',
+    confirmResetCache: '确定清除缓存？\n重新搜索相同单词将产生费用。',
+    cacheResetDone: '缓存已清除。',
+    confirmDeleteKey: '确定删除API密钥？\n删除后将跳转到欢迎页面。',
+
+    /* 同意横幅 */
+    consentMsg: '搜索的单词和AI生成结果（文字、图片）将存储在服务器上以提升服务质量。不会收集任何个人身份信息。',
+    consentAgree: '同意',
+    consentDecline: '拒绝',
+
+    /* 测验消息 */
+    quizNoDate: '请选择基准日期。',
+    quizNoWords: '单词本中没有单词。请先添加单词。',
+    quizNoImages: '没有带图片的单词。请使用"猜感觉"模式。',
+    noDescription: '(无描述)',
+    quizCorrectFeedback: '正确！',
+    quizWrongFeedbackText: '错误！正确答案是"{word}"。',
+    quizScoreText: '{total}题中答对{correct}题',
+    quizWrongLabel: '答错的单词：',
+    quizAllCorrect: '全部正确！',
+
+    /* 语言 */
+    language: '语言',
+    langKo: '한국어',
+    langEn: 'English',
+
+    /* 照片提取提示 */
+    extractPrompt: `这是一张英语小说页面的照片。
+请找出照片中用#标记、#标记加圈或#标记加下划线标注的所有英语单词、短语或句子。
+结果用逗号分隔，在一行中输出。只输出提取的单词/表达，不要其他说明。
+示例：split, break down, take off`,
+
+    /* 占位符 */
+    geminiKeyPlaceholder: 'Gemini API密钥（AIza...）',
+    openaiKeyPlaceholder: 'OpenAI API密钥（sk-...）',
+
+    /* 欢迎页面 */
+    quickStart: '立即开始 →',
+    heroTagline: '用插画感受单词的韵味',
+    heroQuestion: '背了单词<br><span class="em">却总是忘记的原因，</span><br>你知道吗？',
+    startBtn: '开始',
+    feedback: '意见反馈',
+    apiModalTitle: 'API密钥注册',
+    saveAndStart: '保存并开始',
+
+    /* 欢迎故事 */
+    s1Speech: '"妈妈，<strong>hightail</strong>是什么意思？"',
+    s2DictLabel: '字典含义',
+    s2DictMeaning: '急忙逃跑',
+    s2Speech: '"是急忙逃跑的意思。"',
+    s3MindLabel: '🧒 孩子的脑海',
+    s3FadeWord: 'hightail = 急忙逃跑',
+    s3Speech: '"意思我懂了…可就是没有感觉…"',
+    s3Copy1: '只靠意思记住的单词',
+    s3Copy2: '记不长久',
+    s4Label: 'Geminary✦ 的方式',
+    s4Desc: '👉 动物感到危险，<br><span class="point">竖起尾巴</span><br>飞快逃跑的感觉',
+    s5ImgAlt: 'hightail – 逃跑的狐狸',
+    s5Caption: '动物感到危险，竖起尾巴飞快逃跑的感觉',
+    s5Speech: '"啊！就是这样嗖地逃跑的感觉！"',
+    s6Speech: '"啊…就是从房间里<strong>一下子跑掉</strong>了啊！"',
+    s7Copy1: '单词是靠',
+    s7Copy2: '感觉和场景',
+    s7Copy3: '来记忆的',
+    s7Copy4: '而不是定义',
+    s8Title: '这样学习',
+    s8SneakDesc: '像猫一样悄悄地、无声地移动的感觉',
+    s8DashDesc: '短距离内突然快速移动的感觉',
+    s8PeekDesc: '从门缝里偷偷窥视的感觉',
+
+    /* 主菜单 */
+    menuVocaTitle: 'Visual Voca',
+    menuVocaDesc: '用图片探索单词的感觉和语感',
+    menuWritingTitle: 'Writing Coach',
+    menuWritingDesc: '获得作文辅导，制作属于你的绘本'
+  },
+
+  es: {
+    /* Común */
+    home: 'Inicio',
+    settings: 'Ajustes',
+    save: 'Guardar',
+    cancel: 'Cancelar',
+    logout: 'Cerrar sesión',
+    confirm: 'Aceptar',
+    delete: 'Eliminar',
+    close: 'Cerrar',
+    search: 'Buscar',
+
+    /* Pestañas */
+    tabSearch: 'Buscar',
+    tabPhoto: 'Buscar con foto',
+    tabWordbook: 'Vocabulario',
+    tabQuiz: 'Quiz',
+
+    /* Búsqueda */
+    searchPlaceholder: 'Introduce una palabra, frase u oración',
+    searchGuideTitle: 'Tu búsqueda se convierte en el diccionario de todos.',
+    searchGuideBody: '¡No más memorización en solitario!<br>Cada palabra que buscas se comparte en tiempo real,<br>construyendo entre todos un gran mapa de palabras.',
+    searching: 'Buscando la sensación...',
+    imageLoading: 'Generando imagen...',
+    discoveryTitle: '✦ ¡Nueva palabra descubierta!',
+    discoverySub: ' es el primer explorador de esta palabra ✦',
+    addToWordbook: '+ Añadir al vocabulario',
+    addedToWordbook: 'Añadido al vocabulario',
+    listenPronunciation: 'Escuchar',
+    imageAlt: ' - imagen que expresa la sensación',
+
+    /* Búsqueda con foto */
+    uploadPhoto: '📂 Subir foto',
+    photoGuideTitle: 'Buscar con foto',
+    photoGuideBody: 'Mientras lees, marca las palabras desconocidas con círculos (○), subrayado (_) o marcas #.<br>Toma una foto de la página marcada y pulsa 📂 para subirla.<br>Las palabras marcadas se encontrarán y buscarán automáticamente.<br><br>Puedes subir varias fotos a la vez.',
+    photoGuideCircle: 'Círculo',
+    photoGuideUnderline: 'Subrayado',
+    photoGuideHash: 'Marca #',
+    extractingWords: ' foto(s) - extrayendo palabras...',
+    noWordsFound: 'No se encontraron palabras marcadas.',
+    photoAnalysisFailed: 'Error al analizar la foto. Inténtalo de nuevo.',
+
+    /* Vocabulario */
+    wordbookFilterPlaceholder: 'Buscar palabras...',
+    sortRecent: 'Más recientes',
+    sortAlpha: 'Orden alfabético',
+    selectDelete: 'Seleccionar y eliminar',
+    selectedCount: ' seleccionadas',
+    wordbookEmpty: 'No hay palabras guardadas.',
+    pronunciation: 'Pronunciación',
+    confirmDeleteWords: ' palabra(s). ¿Eliminar?',
+    loadingResult: ' - cargando resultado...',
+    loadFailed: 'No se pudo cargar el resultado.',
+
+    /* Quiz */
+    quizSetup: 'Configuración del quiz',
+    quizType: 'Tipo',
+    quizTypeFeel: 'Adivina la sensación',
+    quizTypeImage: 'Adivina por imagen',
+    quizCount: 'Preguntas',
+    quizCountUnit: ' preguntas',
+    quizRange: 'Rango',
+    quizRangeAll: 'Todo',
+    quizRangeRecent: 'Recientes',
+    quizRangeDate: 'Desde fecha',
+    quizStart: 'Iniciar quiz',
+    quizNext: 'Siguiente',
+    quizResult: 'Resultado',
+    quizRetry: 'Reintentar',
+
+    /* Errores */
+    errorNoApiKey: 'Introduce tu clave API en Ajustes primero.',
+    errorRateLimit: 'Cuota diaria gratuita agotada. Inténtalo mañana.',
+    errorGeneral: 'Ocurrió un error temporal. Inténtalo de nuevo.',
+    errorNoResponse: 'No se recibió respuesta.',
+
+    /* Configuración */
+    apiSettings: 'Configuración API',
+    cacheManagement: 'Caché',
+    aiService: 'Servicio de IA',
+    apiKey: 'Clave API',
+    apiKeyPlaceholder: 'Introduce tu clave API',
+    imageToggle: 'Activar generación de imágenes',
+    imageToggleHint: 'Desactiva si no has configurado la facturación de la API.',
+    apiGuideToggle: 'Guía de clave API',
+    safetyGuideToggle: 'Seguridad de clave API',
+    geminiGuideTitle: 'Cómo obtener una clave API de Gemini',
+    geminiGuideStep1: 'Accede a Google AI Studio.',
+    geminiGuideStep2: 'Inicia sesión con tu cuenta de Google.',
+    geminiGuideStep3: 'Haz clic en "Crear clave API".',
+    geminiGuideStep4: 'Copia la clave y pégala arriba.',
+    geminiNoBilling: 'Sin configuración de facturación',
+    geminiNoBillingSearch: '· Búsqueda: Disponible dentro de la cuota diaria gratuita',
+    geminiNoBillingImage: '· Generación de imágenes: No disponible',
+    geminiBilling: 'Con facturación configurada (pago por uso)',
+    geminiBillingSearch: '· Búsqueda: Sin límite',
+    geminiBillingImage: '· Generación de imágenes: Disponible',
+    safetyGuideBody: 'Tu clave API se almacena solo en el navegador de este dispositivo (localStorage) y nunca se envía a nuestro servidor.<br>Se envía directamente a Google/OpenAI solo al realizar llamadas API.<br>Elimina tu clave después de usar un ordenador compartido.',
+    deleteKey: 'Eliminar clave',
+    enterApiKey: 'Introduce tu clave API.',
+    saved: 'Guardado.',
+    cacheDesc: 'Las palabras buscadas anteriormente están en caché, por lo que volver a buscarlas no tiene coste.<br>Restablecer la caché significa que se generarán nuevas imágenes (con coste) al buscar la misma palabra.',
+    resetCache: 'Restablecer caché',
+    confirmResetCache: '¿Restablecer caché?\nVolver a buscar la misma palabra tendrá coste.',
+    cacheResetDone: 'Caché restablecida.',
+    confirmDeleteKey: '¿Eliminar tu clave API?\nSerás redirigido a la página de bienvenida.',
+
+    /* Consentimiento */
+    consentMsg: 'Los resultados de búsqueda (texto e imágenes) se almacenan en nuestro servidor para mejorar el servicio. No se recopila información personal identificable.',
+    consentAgree: 'Acepto',
+    consentDecline: 'Rechazar',
+
+    /* Mensajes de quiz */
+    quizNoDate: 'Selecciona una fecha.',
+    quizNoWords: 'No hay palabras en el vocabulario. Añade palabras primero.',
+    quizNoImages: 'No hay palabras con imágenes. Usa "Adivina la sensación".',
+    noDescription: '(Sin descripción)',
+    quizCorrectFeedback: '¡Correcto!',
+    quizWrongFeedbackText: '¡Incorrecto! La respuesta es "{word}".',
+    quizScoreText: '{correct} de {total} correctas',
+    quizWrongLabel: 'Palabras incorrectas:',
+    quizAllCorrect: '¡Todo correcto!',
+
+    /* Idioma */
+    language: 'Idioma',
+    langKo: '한국어',
+    langEn: 'English',
+
+    /* Prompt de extracción */
+    extractPrompt: `Esta es una foto de una página de una novela en inglés.
+Encuentra todas las palabras, frases u oraciones en inglés marcadas con #, # con círculos, o # con subrayado.
+Muestra los resultados separados por comas en una sola línea. Solo muestra las palabras/expresiones extraídas, nada más.
+Ejemplo: split, break down, take off`,
+
+    /* Placeholders */
+    geminiKeyPlaceholder: 'Clave API de Gemini (AIza...)',
+    openaiKeyPlaceholder: 'Clave API de OpenAI (sk-...)',
+
+    /* Página de bienvenida */
+    quickStart: 'Empezar ahora →',
+    heroTagline: 'Siente las palabras a través de ilustraciones',
+    heroQuestion: '¿Te preguntas por qué<br><span class="em">siempre olvidas las palabras</span><br>que acabas de aprender?',
+    startBtn: 'Empezar',
+    feedback: 'Comentarios',
+    apiModalTitle: 'Registrar clave API',
+    saveAndStart: 'Guardar e iniciar',
+
+    /* Historia de bienvenida */
+    s1Speech: '"Mamá, ¿qué significa <strong>hightail</strong>?"',
+    s2DictLabel: 'Significado del diccionario',
+    s2DictMeaning: 'huir rápidamente',
+    s2Speech: '"Significa huir rápidamente."',
+    s3MindLabel: '🧒 En la mente del niño',
+    s3FadeWord: 'hightail = huir rápidamente',
+    s3Speech: '"Entiendo el significado... pero no lo siento..."',
+    s3Copy1: 'Las palabras memorizadas por definición',
+    s3Copy2: 'no se quedan',
+    s4Label: 'El método Geminary✦',
+    s4Desc: '👉 Un animal siente peligro,<br><span class="point">levanta la cola</span><br>y huye rápidamente',
+    s5ImgAlt: 'hightail – un zorro huyendo',
+    s5Caption: 'Un animal siente peligro, levanta la cola y huye rápidamente',
+    s5Speech: '"¡Ah! ¡Es como salir corriendo así de rápido!"',
+    s6Speech: '"Ah… ¡<strong>salió disparado</strong> de su habitación!"',
+    s7Copy1: 'Las palabras se recuerdan',
+    s7Copy2: 'no por definiciones,',
+    s7Copy3: 'sino por sensaciones',
+    s7Copy4: 'y escenas',
+    s8Title: 'Aprende así',
+    s8SneakDesc: 'Moverse en silencio como un gato, sin hacer ruido',
+    s8DashDesc: 'Un arranque rápido de velocidad en corta distancia',
+    s8PeekDesc: 'Echar un vistazo furtivo por una rendija',
+
+    /* Menú principal */
+    menuVocaTitle: 'Visual Voca',
+    menuVocaDesc: 'Explora la sensación y el matiz de las palabras con imágenes',
+    menuWritingTitle: 'Writing Coach',
+    menuWritingDesc: 'Recibe coaching de escritura y crea tu propio libro ilustrado'
+  },
+
+  vi: {
+    /* Chung */
+    home: 'Trang chủ',
+    settings: 'Cài đặt',
+    save: 'Lưu',
+    cancel: 'Hủy',
+    logout: 'Đăng xuất',
+    confirm: 'Xác nhận',
+    delete: 'Xóa',
+    close: 'Đóng',
+    search: 'Tìm kiếm',
+
+    /* Tab */
+    tabSearch: 'Tìm kiếm',
+    tabPhoto: 'Tìm từ ảnh',
+    tabWordbook: 'Sổ từ vựng',
+    tabQuiz: 'Trắc nghiệm',
+
+    /* Tìm kiếm */
+    searchPlaceholder: 'Nhập từ, cụm từ hoặc câu',
+    searchGuideTitle: 'Tìm kiếm của bạn trở thành từ điển chung.',
+    searchGuideBody: 'Không cần học thuộc một mình nữa!<br>Mỗi từ bạn tìm được chia sẻ theo thời gian thực,<br>cùng nhau xây dựng một bản đồ từ vựng lớn.',
+    searching: 'Đang tìm cảm giác...',
+    imageLoading: 'Đang tạo hình ảnh...',
+    discoveryTitle: '✦ Phát hiện từ mới!',
+    discoverySub: ' là người khám phá đầu tiên của từ này ✦',
+    addToWordbook: '+ Thêm vào sổ từ',
+    addedToWordbook: 'Đã thêm vào sổ từ',
+    listenPronunciation: 'Nghe phát âm',
+    imageAlt: ' - hình ảnh thể hiện cảm giác',
+
+    /* Tìm từ ảnh */
+    uploadPhoto: '📂 Tải ảnh lên',
+    photoGuideTitle: 'Tìm từ ảnh',
+    photoGuideBody: 'Khi đọc sách, đánh dấu các từ chưa biết bằng khoanh tròn (○), gạch chân (_) hoặc dấu #.<br>Chụp ảnh trang đã đánh dấu và nhấn 📂 để tải lên.<br>Các từ được đánh dấu sẽ tự động được tìm kiếm.<br><br>Bạn có thể tải nhiều ảnh cùng lúc.',
+    photoGuideCircle: 'Khoanh tròn',
+    photoGuideUnderline: 'Gạch chân',
+    photoGuideHash: 'Dấu #',
+    extractingWords: ' ảnh - đang trích xuất từ...',
+    noWordsFound: 'Không tìm thấy từ được đánh dấu.',
+    photoAnalysisFailed: 'Phân tích ảnh thất bại. Vui lòng thử lại.',
+
+    /* Sổ từ vựng */
+    wordbookFilterPlaceholder: 'Tìm từ...',
+    sortRecent: 'Mới thêm',
+    sortAlpha: 'Theo bảng chữ cái',
+    selectDelete: 'Chọn & xóa',
+    selectedCount: ' đã chọn',
+    wordbookEmpty: 'Chưa có từ nào được lưu.',
+    pronunciation: 'Phát âm',
+    confirmDeleteWords: ' từ. Xóa?',
+    loadingResult: ' - đang tải kết quả...',
+    loadFailed: 'Không thể tải kết quả.',
+
+    /* Trắc nghiệm */
+    quizSetup: 'Cài đặt trắc nghiệm',
+    quizType: 'Loại',
+    quizTypeFeel: 'Đoán cảm giác',
+    quizTypeImage: 'Đoán theo hình',
+    quizCount: 'Số câu hỏi',
+    quizCountUnit: ' câu',
+    quizRange: 'Phạm vi',
+    quizRangeAll: 'Tất cả',
+    quizRangeRecent: 'Mới thêm gần đây',
+    quizRangeDate: 'Từ ngày',
+    quizStart: 'Bắt đầu',
+    quizNext: 'Tiếp',
+    quizResult: 'Kết quả',
+    quizRetry: 'Thử lại',
+
+    /* Lỗi */
+    errorNoApiKey: 'Vui lòng nhập khóa API trong Cài đặt trước.',
+    errorRateLimit: 'Đã vượt hạn mức miễn phí hàng ngày. Vui lòng thử lại vào ngày mai.',
+    errorGeneral: 'Đã xảy ra lỗi tạm thời. Vui lòng thử lại.',
+    errorNoResponse: 'Không nhận được phản hồi.',
+
+    /* Cài đặt */
+    apiSettings: 'Cài đặt API',
+    cacheManagement: 'Bộ nhớ đệm',
+    aiService: 'Dịch vụ AI',
+    apiKey: 'Khóa API',
+    apiKeyPlaceholder: 'Nhập khóa API',
+    imageToggle: 'Bật tạo hình ảnh',
+    imageToggleHint: 'Bỏ chọn nếu bạn chưa cài đặt thanh toán API.',
+    apiGuideToggle: 'Hướng dẫn lấy khóa API',
+    safetyGuideToggle: 'An toàn khóa API',
+    geminiGuideTitle: 'Cách lấy khóa API Gemini',
+    geminiGuideStep1: 'Truy cập Google AI Studio.',
+    geminiGuideStep2: 'Đăng nhập bằng tài khoản Google.',
+    geminiGuideStep3: 'Nhấn nút "Tạo khóa API".',
+    geminiGuideStep4: 'Sao chép khóa và dán vào ô phía trên.',
+    geminiNoBilling: 'Chưa cài đặt thanh toán',
+    geminiNoBillingSearch: '· Tìm từ: Dùng được trong hạn mức miễn phí',
+    geminiNoBillingImage: '· Tạo hình: Không khả dụng',
+    geminiBilling: 'Đã cài đặt thanh toán (trả theo dùng)',
+    geminiBillingSearch: '· Tìm từ: Không giới hạn',
+    geminiBillingImage: '· Tạo hình: Khả dụng',
+    safetyGuideBody: 'Khóa API được lưu chỉ trong trình duyệt thiết bị này (localStorage), không gửi đến máy chủ của chúng tôi.<br>Chỉ gửi trực tiếp đến Google/OpenAI khi gọi API.<br>Hãy xóa khóa sau khi dùng máy tính công cộng.',
+    deleteKey: 'Xóa khóa',
+    enterApiKey: 'Vui lòng nhập khóa API.',
+    saved: 'Đã lưu.',
+    cacheDesc: 'Các từ đã tìm trước đó được lưu trong bộ nhớ đệm, tìm lại không mất phí.<br>Xóa bộ nhớ đệm sẽ tạo hình ảnh mới (có phí) khi tìm lại từ cũ.',
+    resetCache: 'Xóa bộ nhớ đệm',
+    confirmResetCache: 'Xóa bộ nhớ đệm?\nTìm lại từ cũ sẽ mất phí.',
+    cacheResetDone: 'Đã xóa bộ nhớ đệm.',
+    confirmDeleteKey: 'Xóa khóa API?\nBạn sẽ được chuyển về trang chào mừng.',
+
+    /* Đồng ý */
+    consentMsg: 'Kết quả tìm kiếm (văn bản và hình ảnh) được lưu trên máy chủ để cải thiện dịch vụ. Không thu thập thông tin nhận dạng cá nhân.',
+    consentAgree: 'Đồng ý',
+    consentDecline: 'Từ chối',
+
+    /* Thông báo trắc nghiệm */
+    quizNoDate: 'Vui lòng chọn ngày.',
+    quizNoWords: 'Sổ từ trống. Vui lòng thêm từ trước.',
+    quizNoImages: 'Không có từ nào có hình. Hãy dùng "Đoán cảm giác".',
+    noDescription: '(Không có mô tả)',
+    quizCorrectFeedback: 'Đúng rồi!',
+    quizWrongFeedbackText: 'Sai! Đáp án đúng là "{word}".',
+    quizScoreText: 'Đúng {correct}/{total} câu',
+    quizWrongLabel: 'Từ sai:',
+    quizAllCorrect: 'Đúng hết!',
+
+    /* Ngôn ngữ */
+    language: 'Ngôn ngữ',
+    langKo: '한국어',
+    langEn: 'English',
+
+    /* Prompt trích xuất */
+    extractPrompt: `Đây là ảnh chụp trang sách tiểu thuyết tiếng Anh.
+Tìm tất cả từ, cụm từ hoặc câu tiếng Anh được đánh dấu bằng #, # với khoanh tròn, hoặc # với gạch chân.
+Xuất kết quả phân cách bằng dấu phẩy trên một dòng. Chỉ xuất từ/cụm từ, không giải thích thêm.
+Ví dụ: split, break down, take off`,
+
+    /* Placeholder */
+    geminiKeyPlaceholder: 'Khóa API Gemini (AIza...)',
+    openaiKeyPlaceholder: 'Khóa API OpenAI (sk-...)',
+
+    /* Trang chào mừng */
+    quickStart: 'Bắt đầu ngay →',
+    heroTagline: 'Cảm nhận từ vựng qua hình minh họa',
+    heroQuestion: 'Bạn có thắc mắc<br><span class="em">tại sao cứ quên từ</span><br>vừa mới học không?',
+    startBtn: 'Bắt đầu',
+    feedback: 'Góp ý',
+    apiModalTitle: 'Đăng ký khóa API',
+    saveAndStart: 'Lưu & bắt đầu',
+
+    /* Câu chuyện chào mừng */
+    s1Speech: '"Mẹ ơi, <strong>hightail</strong> nghĩa là gì?"',
+    s2DictLabel: 'Nghĩa từ điển',
+    s2DictMeaning: 'chạy trốn nhanh',
+    s2Speech: '"Nghĩa là chạy trốn thật nhanh."',
+    s3MindLabel: '🧒 Trong đầu đứa trẻ',
+    s3FadeWord: 'hightail = chạy trốn nhanh',
+    s3Speech: '"Con hiểu nghĩa rồi... nhưng không có cảm giác gì..."',
+    s3Copy1: 'Từ chỉ học thuộc nghĩa',
+    s3Copy2: 'không nhớ lâu được',
+    s4Label: 'Cách của Geminary✦',
+    s4Desc: '👉 Con vật cảm nhận nguy hiểm,<br><span class="point">vểnh đuôi lên</span><br>và chạy thật nhanh',
+    s5ImgAlt: 'hightail – con cáo đang bỏ chạy',
+    s5Caption: 'Con vật cảm nhận nguy hiểm, vểnh đuôi lên và chạy thật nhanh',
+    s5Speech: '"À! Là kiểu chạy vội vàng như vậy đó!"',
+    s6Speech: '"À… nó <strong>chạy vụt ra</strong> khỏi phòng!"',
+    s7Copy1: 'Từ vựng được ghi nhớ',
+    s7Copy2: 'không phải bằng định nghĩa,',
+    s7Copy3: 'mà bằng cảm giác',
+    s7Copy4: 'và hình ảnh',
+    s8Title: 'Học như thế này',
+    s8SneakDesc: 'Di chuyển nhẹ nhàng như mèo, không gây tiếng động',
+    s8DashDesc: 'Lao nhanh trong khoảng cách ngắn',
+    s8PeekDesc: 'Lén nhìn qua khe cửa',
+
+    /* Menu chính */
+    menuVocaTitle: 'Visual Voca',
+    menuVocaDesc: 'Khám phá cảm giác và sắc thái từ vựng qua hình ảnh',
+    menuWritingTitle: 'Writing Coach',
+    menuWritingDesc: 'Nhận hướng dẫn viết luận và tạo sách tranh của riêng bạn'
+  },
+
+  th: {
+    /* ทั่วไป */
+    home: 'หน้าแรก',
+    settings: 'ตั้งค่า',
+    save: 'บันทึก',
+    cancel: 'ยกเลิก',
+    logout: 'ออกจากระบบ',
+    confirm: 'ตกลง',
+    delete: 'ลบ',
+    close: 'ปิด',
+    search: 'ค้นหา',
+
+    /* แท็บ */
+    tabSearch: 'ค้นหา',
+    tabPhoto: 'ค้นจากรูป',
+    tabWordbook: 'สมุดคำศัพท์',
+    tabQuiz: 'แบบทดสอบ',
+
+    /* ค้นหา */
+    searchPlaceholder: 'พิมพ์คำ วลี หรือประโยค',
+    searchGuideTitle: 'การค้นหาของคุณจะกลายเป็นพจนานุกรมของทุกคน',
+    searchGuideBody: 'ไม่ต้องท่องจำคนเดียวอีกต่อไป!<br>ทุกคำที่คุณค้นหาจะถูกแชร์แบบเรียลไทม์<br>เพื่อสร้างแผนที่คำศัพท์ใหญ่ร่วมกัน',
+    searching: 'กำลังค้นหาความรู้สึก...',
+    imageLoading: 'กำลังสร้างภาพ...',
+    discoveryTitle: '✦ ค้นพบคำใหม่!',
+    discoverySub: ' เป็นนักสำรวจคนแรกของคำนี้ ✦',
+    addToWordbook: '+ เพิ่มในสมุดคำศัพท์',
+    addedToWordbook: 'เพิ่มในสมุดคำศัพท์แล้ว',
+    listenPronunciation: 'ฟังการออกเสียง',
+    imageAlt: ' - ภาพแสดงความรู้สึก',
+
+    /* ค้นจากรูป */
+    uploadPhoto: '📂 อัปโหลดรูป',
+    photoGuideTitle: 'ค้นจากรูป',
+    photoGuideBody: 'ขณะอ่านหนังสือ ให้ทำเครื่องหมายคำที่ไม่รู้ด้วยวงกลม (○) ขีดเส้นใต้ (_) หรือเครื่องหมาย #<br>ถ่ายรูปหน้าที่ทำเครื่องหมาย แล้วกด 📂 เพื่ออัปโหลด<br>ระบบจะค้นหาคำที่ทำเครื่องหมายไว้อัตโนมัติ<br><br>สามารถอัปโหลดหลายรูปพร้อมกันได้',
+    photoGuideCircle: 'วงกลม',
+    photoGuideUnderline: 'ขีดเส้นใต้',
+    photoGuideHash: 'เครื่องหมาย #',
+    extractingWords: ' รูป - กำลังดึงคำ...',
+    noWordsFound: 'ไม่พบคำที่ทำเครื่องหมายไว้',
+    photoAnalysisFailed: 'วิเคราะห์รูปล้มเหลว กรุณาลองใหม่',
+
+    /* สมุดคำศัพท์ */
+    wordbookFilterPlaceholder: 'ค้นหาคำ...',
+    sortRecent: 'เพิ่มล่าสุด',
+    sortAlpha: 'เรียงตามตัวอักษร',
+    selectDelete: 'เลือกและลบ',
+    selectedCount: ' ที่เลือก',
+    wordbookEmpty: 'ยังไม่มีคำที่บันทึกไว้',
+    pronunciation: 'การออกเสียง',
+    confirmDeleteWords: ' คำ ลบหรือไม่?',
+    loadingResult: ' - กำลังโหลด...',
+    loadFailed: 'ไม่สามารถโหลดผลลัพธ์ได้',
+
+    /* แบบทดสอบ */
+    quizSetup: 'ตั้งค่าแบบทดสอบ',
+    quizType: 'ประเภท',
+    quizTypeFeel: 'ทายความรู้สึก',
+    quizTypeImage: 'ทายจากภาพ',
+    quizCount: 'จำนวนข้อ',
+    quizCountUnit: ' ข้อ',
+    quizRange: 'ขอบเขต',
+    quizRangeAll: 'ทั้งหมด',
+    quizRangeRecent: 'เพิ่มล่าสุด',
+    quizRangeDate: 'ตั้งแต่วันที่',
+    quizStart: 'เริ่มทดสอบ',
+    quizNext: 'ถัดไป',
+    quizResult: 'ผลลัพธ์',
+    quizRetry: 'ลองอีกครั้ง',
+
+    /* ข้อผิดพลาด */
+    errorNoApiKey: 'กรุณาใส่คีย์ API ในตั้งค่าก่อน',
+    errorRateLimit: 'เกินโควตาฟรีรายวัน กรุณาลองใหม่พรุ่งนี้',
+    errorGeneral: 'เกิดข้อผิดพลาดชั่วคราว กรุณาลองใหม่',
+    errorNoResponse: 'ไม่ได้รับการตอบกลับ',
+
+    /* ตั้งค่า */
+    apiSettings: 'ตั้งค่า API',
+    cacheManagement: 'แคช',
+    aiService: 'บริการ AI',
+    apiKey: 'คีย์ API',
+    apiKeyPlaceholder: 'ใส่คีย์ API',
+    imageToggle: 'เปิดการสร้างภาพ',
+    imageToggleHint: 'ปิดหากยังไม่ได้ตั้งค่าการชำระเงิน API',
+    apiGuideToggle: 'วิธีรับคีย์ API',
+    safetyGuideToggle: 'ความปลอดภัยของคีย์ API',
+    geminiGuideTitle: 'วิธีรับคีย์ API Gemini',
+    geminiGuideStep1: 'เข้า Google AI Studio',
+    geminiGuideStep2: 'ล็อกอินด้วยบัญชี Google',
+    geminiGuideStep3: 'กดปุ่ม "สร้างคีย์ API"',
+    geminiGuideStep4: 'คัดลอกคีย์แล้ววางด้านบน',
+    geminiNoBilling: 'ยังไม่ได้ตั้งค่าการชำระเงิน',
+    geminiNoBillingSearch: '· ค้นหาคำ: ใช้ได้ในโควตาฟรีรายวัน',
+    geminiNoBillingImage: '· สร้างภาพ: ไม่สามารถใช้ได้',
+    geminiBilling: 'ตั้งค่าการชำระเงินแล้ว (จ่ายตามใช้)',
+    geminiBillingSearch: '· ค้นหาคำ: ไม่จำกัด',
+    geminiBillingImage: '· สร้างภาพ: ใช้ได้',
+    safetyGuideBody: 'คีย์ API ของคุณจะถูกเก็บไว้ในเบราว์เซอร์ของอุปกรณ์นี้เท่านั้น (localStorage) ไม่ถูกส่งไปยังเซิร์ฟเวอร์ของเรา<br>จะถูกส่งไปยัง Google/OpenAI โดยตรงเฉพาะเมื่อเรียก API เท่านั้น<br>กรุณาลบคีย์หลังใช้คอมพิวเตอร์สาธารณะ',
+    deleteKey: 'ลบคีย์',
+    enterApiKey: 'กรุณาใส่คีย์ API',
+    saved: 'บันทึกแล้ว',
+    cacheDesc: 'คำที่ค้นหาก่อนหน้าจะถูกแคชไว้ ค้นซ้ำไม่เสียค่าใช้จ่าย<br>การล้างแคชจะทำให้ต้องสร้างภาพใหม่ (มีค่าใช้จ่าย) เมื่อค้นคำเดิม',
+    resetCache: 'ล้างแคช',
+    confirmResetCache: 'ล้างแคช?\nค้นคำเดิมซ้ำจะมีค่าใช้จ่าย',
+    cacheResetDone: 'ล้างแคชแล้ว',
+    confirmDeleteKey: 'ลบคีย์ API?\nจะถูกนำกลับไปยังหน้าต้อนรับ',
+
+    /* ยินยอม */
+    consentMsg: 'ผลการค้นหา (ข้อความและภาพ) จะถูกเก็บบนเซิร์ฟเวอร์เพื่อปรับปรุงบริการ ไม่มีการเก็บข้อมูลส่วนบุคคล',
+    consentAgree: 'ยอมรับ',
+    consentDecline: 'ปฏิเสธ',
+
+    /* ข้อความแบบทดสอบ */
+    quizNoDate: 'กรุณาเลือกวันที่',
+    quizNoWords: 'ไม่มีคำในสมุดคำศัพท์ กรุณาเพิ่มคำก่อน',
+    quizNoImages: 'ไม่มีคำที่มีภาพ ใช้ "ทายความรู้สึก" แทน',
+    noDescription: '(ไม่มีคำอธิบาย)',
+    quizCorrectFeedback: 'ถูกต้อง!',
+    quizWrongFeedbackText: 'ผิด! คำตอบคือ "{word}"',
+    quizScoreText: 'ถูก {correct} จาก {total} ข้อ',
+    quizWrongLabel: 'คำที่ตอบผิด:',
+    quizAllCorrect: 'ถูกทุกข้อ!',
+
+    /* ภาษา */
+    language: 'ภาษา',
+    langKo: '한국어',
+    langEn: 'English',
+
+    /* Prompt การแยกคำ */
+    extractPrompt: `นี่คือรูปถ่ายหน้าหนังสือนิยายภาษาอังกฤษ
+ค้นหาคำ วลี หรือประโยคภาษาอังกฤษทั้งหมดที่ถูกทำเครื่องหมายด้วย # เครื่องหมาย # พร้อมวงกลม หรือ # พร้อมขีดเส้นใต้
+แสดงผลคั่นด้วยเครื่องหมายจุลภาคในบรรทัดเดียว แสดงเฉพาะคำ/สำนวนที่ดึงออกมาเท่านั้น
+ตัวอย่าง: split, break down, take off`,
+
+    /* Placeholder */
+    geminiKeyPlaceholder: 'คีย์ API Gemini (AIza...)',
+    openaiKeyPlaceholder: 'คีย์ API OpenAI (sk-...)',
+
+    /* หน้าต้อนรับ */
+    quickStart: 'เริ่มเลย →',
+    heroTagline: 'สัมผัสความรู้สึกของคำศัพท์ผ่านภาพวาด',
+    heroQuestion: 'เคยสงสัยไหมว่าทำไม<br><span class="em">คำที่เพิ่งท่องจำ</span><br>ถึงลืมเร็วนัก?',
+    startBtn: 'เริ่มต้น',
+    feedback: 'ส่งความคิดเห็น',
+    apiModalTitle: 'ลงทะเบียนคีย์ API',
+    saveAndStart: 'บันทึกและเริ่ม',
+
+    /* เรื่องต้อนรับ */
+    s1Speech: '"แม่คะ <strong>hightail</strong> แปลว่าอะไร?"',
+    s2DictLabel: 'ความหมายในพจนานุกรม',
+    s2DictMeaning: 'วิ่งหนีอย่างรวดเร็ว',
+    s2Speech: '"แปลว่าวิ่งหนีอย่างรวดเร็ว"',
+    s3MindLabel: '🧒 ในหัวของเด็ก',
+    s3FadeWord: 'hightail = วิ่งหนีอย่างรวดเร็ว',
+    s3Speech: '"รู้ความหมายแล้ว... แต่ไม่รู้สึกอะไรเลย..."',
+    s3Copy1: 'คำที่จำแค่ความหมาย',
+    s3Copy2: 'จำได้ไม่นาน',
+    s4Label: 'วิธีของ Geminary✦',
+    s4Desc: '👉 สัตว์รู้สึกถึงอันตราย<br><span class="point">ยกหางขึ้น</span><br>แล้ววิ่งหนีอย่างรวดเร็ว',
+    s5ImgAlt: 'hightail – สุนัขจิ้งจอกวิ่งหนี',
+    s5Caption: 'สัตว์รู้สึกถึงอันตราย ยกหางขึ้นแล้ววิ่งหนีอย่างรวดเร็ว',
+    s5Speech: '"อ๋อ! คือแบบวิ่งหนีฉับไวแบบนี้เอง!"',
+    s6Speech: '"อ๋อ… เขา<strong>วิ่งออกจากห้อง</strong>ไปเลย!"',
+    s7Copy1: 'คำศัพท์ถูกจดจำ',
+    s7Copy2: 'ไม่ใช่ด้วยความหมาย',
+    s7Copy3: 'แต่ด้วยความรู้สึก',
+    s7Copy4: 'และภาพจำ',
+    s8Title: 'เรียนรู้แบบนี้',
+    s8SneakDesc: 'เคลื่อนไหวเงียบเชียบเหมือนแมว ไม่มีเสียงเท้า',
+    s8DashDesc: 'พุ่งไปอย่างรวดเร็วในระยะสั้น',
+    s8PeekDesc: 'แอบมองผ่านช่องประตูอย่างลับๆ',
+
+    /* เมนูหลัก */
+    menuVocaTitle: 'Visual Voca',
+    menuVocaDesc: 'สำรวจความรู้สึกและนัยยะของคำศัพท์พร้อมภาพ',
+    menuWritingTitle: 'Writing Coach',
+    menuWritingDesc: 'รับการฝึกเขียนเรียงความและสร้างหนังสือภาพของคุณเอง'
+  },
+
+  pt: {
+    /* Comum */
+    home: 'Início',
+    settings: 'Configurações',
+    save: 'Salvar',
+    cancel: 'Cancelar',
+    logout: 'Sair',
+    confirm: 'OK',
+    delete: 'Excluir',
+    close: 'Fechar',
+    search: 'Buscar',
+
+    /* Abas */
+    tabSearch: 'Buscar',
+    tabPhoto: 'Buscar por foto',
+    tabWordbook: 'Caderno',
+    tabQuiz: 'Quiz',
+
+    /* Busca */
+    searchPlaceholder: 'Digite uma palavra, frase ou sentença',
+    searchGuideTitle: 'Sua busca se torna o dicionário de todos.',
+    searchGuideBody: 'Chega de decorar sozinho!<br>Cada palavra que você busca é compartilhada em tempo real,<br>construindo juntos um grande mapa de palavras.',
+    searching: 'Buscando a sensação...',
+    imageLoading: 'Gerando imagem...',
+    discoveryTitle: '✦ Nova palavra descoberta!',
+    discoverySub: ' é o primeiro explorador desta palavra ✦',
+    addToWordbook: '+ Adicionar ao caderno',
+    addedToWordbook: 'Adicionado ao caderno',
+    listenPronunciation: 'Ouvir pronúncia',
+    imageAlt: ' - imagem que expressa a sensação',
+
+    /* Busca por foto */
+    uploadPhoto: '📂 Enviar foto',
+    photoGuideTitle: 'Buscar por foto',
+    photoGuideBody: 'Ao ler, marque palavras desconhecidas com círculos (○), sublinhados (_) ou marcas #.<br>Tire uma foto da página marcada e toque em 📂 para enviar.<br>As palavras marcadas serão encontradas e pesquisadas automaticamente.<br><br>Você pode enviar várias fotos de uma vez.',
+    photoGuideCircle: 'Círculo',
+    photoGuideUnderline: 'Sublinhado',
+    photoGuideHash: 'Marca #',
+    extractingWords: ' foto(s) - extraindo palavras...',
+    noWordsFound: 'Nenhuma palavra marcada encontrada.',
+    photoAnalysisFailed: 'Falha na análise da foto. Tente novamente.',
+
+    /* Caderno */
+    wordbookFilterPlaceholder: 'Buscar palavras...',
+    sortRecent: 'Mais recentes',
+    sortAlpha: 'Ordem alfabética',
+    selectDelete: 'Selecionar e excluir',
+    selectedCount: ' selecionadas',
+    wordbookEmpty: 'Nenhuma palavra salva.',
+    pronunciation: 'Pronúncia',
+    confirmDeleteWords: ' palavra(s). Excluir?',
+    loadingResult: ' - carregando resultado...',
+    loadFailed: 'Não foi possível carregar o resultado.',
+
+    /* Quiz */
+    quizSetup: 'Configuração do quiz',
+    quizType: 'Tipo',
+    quizTypeFeel: 'Adivinhe a sensação',
+    quizTypeImage: 'Adivinhe pela imagem',
+    quizCount: 'Perguntas',
+    quizCountUnit: ' perguntas',
+    quizRange: 'Alcance',
+    quizRangeAll: 'Tudo',
+    quizRangeRecent: 'Recentes',
+    quizRangeDate: 'Desde a data',
+    quizStart: 'Iniciar quiz',
+    quizNext: 'Próximo',
+    quizResult: 'Resultado',
+    quizRetry: 'Tentar novamente',
+
+    /* Erros */
+    errorNoApiKey: 'Insira sua chave API em Configurações primeiro.',
+    errorRateLimit: 'Cota diária gratuita esgotada. Tente novamente amanhã.',
+    errorGeneral: 'Ocorreu um erro temporário. Tente novamente.',
+    errorNoResponse: 'Nenhuma resposta recebida.',
+
+    /* Configurações */
+    apiSettings: 'Configurações de API',
+    cacheManagement: 'Cache',
+    aiService: 'Serviço de IA',
+    apiKey: 'Chave API',
+    apiKeyPlaceholder: 'Insira sua chave API',
+    imageToggle: 'Ativar geração de imagens',
+    imageToggleHint: 'Desative se não configurou o faturamento da API.',
+    apiGuideToggle: 'Guia de chave API',
+    safetyGuideToggle: 'Segurança da chave API',
+    geminiGuideTitle: 'Como obter uma chave API Gemini',
+    geminiGuideStep1: 'Acesse o Google AI Studio.',
+    geminiGuideStep2: 'Faça login com sua conta Google.',
+    geminiGuideStep3: 'Clique em "Criar chave API".',
+    geminiGuideStep4: 'Copie a chave e cole acima.',
+    geminiNoBilling: 'Sem configuração de faturamento',
+    geminiNoBillingSearch: '· Busca de palavras: Disponível dentro da cota diária gratuita',
+    geminiNoBillingImage: '· Geração de imagens: Não disponível',
+    geminiBilling: 'Com faturamento configurado (pagamento por uso)',
+    geminiBillingSearch: '· Busca de palavras: Ilimitada',
+    geminiBillingImage: '· Geração de imagens: Disponível',
+    safetyGuideBody: 'Sua chave API é armazenada apenas no navegador deste dispositivo (localStorage) e nunca é enviada ao nosso servidor.<br>É enviada diretamente ao Google/OpenAI apenas ao fazer chamadas de API.<br>Exclua sua chave após usar um computador compartilhado.',
+    deleteKey: 'Excluir chave',
+    enterApiKey: 'Insira sua chave API.',
+    saved: 'Salvo.',
+    cacheDesc: 'Palavras pesquisadas anteriormente estão em cache, pesquisar novamente não tem custo.<br>Redefinir o cache significa que novas imagens serão geradas (com custo) ao pesquisar a mesma palavra.',
+    resetCache: 'Redefinir cache',
+    confirmResetCache: 'Redefinir cache?\nPesquisar a mesma palavra novamente terá custo.',
+    cacheResetDone: 'Cache redefinido.',
+    confirmDeleteKey: 'Excluir sua chave API?\nVocê será redirecionado para a página de boas-vindas.',
+
+    /* Consentimento */
+    consentMsg: 'Os resultados de busca (texto e imagens) são armazenados em nosso servidor para melhorar o serviço. Nenhuma informação pessoal identificável é coletada.',
+    consentAgree: 'Concordo',
+    consentDecline: 'Recusar',
+
+    /* Mensagens de quiz */
+    quizNoDate: 'Selecione uma data.',
+    quizNoWords: 'Sem palavras no caderno. Adicione palavras primeiro.',
+    quizNoImages: 'Sem palavras com imagens. Use "Adivinhe a sensação".',
+    noDescription: '(Sem descrição)',
+    quizCorrectFeedback: 'Correto!',
+    quizWrongFeedbackText: 'Errado! A resposta é "{word}".',
+    quizScoreText: '{correct} de {total} corretas',
+    quizWrongLabel: 'Palavras erradas:',
+    quizAllCorrect: 'Tudo correto!',
+
+    /* Idioma */
+    language: 'Idioma',
+    langKo: '한국어',
+    langEn: 'English',
+
+    /* Prompt de extração */
+    extractPrompt: `Esta é uma foto de uma página de um romance em inglês.
+Encontre todas as palavras, frases ou sentenças em inglês marcadas com #, # com círculos ou # com sublinhados.
+Apresente os resultados separados por vírgulas em uma linha. Apenas exiba as palavras/expressões extraídas, nada mais.
+Exemplo: split, break down, take off`,
+
+    /* Placeholders */
+    geminiKeyPlaceholder: 'Chave API Gemini (AIza...)',
+    openaiKeyPlaceholder: 'Chave API OpenAI (sk-...)',
+
+    /* Página de boas-vindas */
+    quickStart: 'Começar agora →',
+    heroTagline: 'Sinta as palavras através de ilustrações',
+    heroQuestion: 'Já se perguntou por que<br><span class="em">sempre esquece as palavras</span><br>que acabou de aprender?',
+    startBtn: 'Começar',
+    feedback: 'Feedback',
+    apiModalTitle: 'Registrar chave API',
+    saveAndStart: 'Salvar e iniciar',
+
+    /* História de boas-vindas */
+    s1Speech: '"Mamãe, o que significa <strong>hightail</strong>?"',
+    s2DictLabel: 'Significado no dicionário',
+    s2DictMeaning: 'fugir rapidamente',
+    s2Speech: '"Significa fugir rapidamente."',
+    s3MindLabel: '🧒 Na mente da criança',
+    s3FadeWord: 'hightail = fugir rapidamente',
+    s3Speech: '"Entendo o significado... mas não consigo sentir..."',
+    s3Copy1: 'Palavras decoradas pela definição',
+    s3Copy2: 'não ficam na memória',
+    s4Label: 'O jeito Geminary✦',
+    s4Desc: '👉 Um animal sente perigo,<br><span class="point">levanta o rabo</span><br>e foge rapidamente',
+    s5ImgAlt: 'hightail – uma raposa fugindo',
+    s5Caption: 'Um animal sente perigo, levanta o rabo e foge rapidamente',
+    s5Speech: '"Ah! É como sair correndo assim!"',
+    s6Speech: '"Ah… ele <strong>saiu correndo</strong> do quarto!"',
+    s7Copy1: 'Palavras são lembradas',
+    s7Copy2: 'não por definições,',
+    s7Copy3: 'mas por sensações',
+    s7Copy4: 'e cenas',
+    s8Title: 'Aprenda assim',
+    s8SneakDesc: 'Mover-se silenciosamente como um gato, sem fazer barulho',
+    s8DashDesc: 'Um arranque rápido em curta distância',
+    s8PeekDesc: 'Espiar por uma fresta de forma sorrateira',
+
+    /* Menu principal */
+    menuVocaTitle: 'Visual Voca',
+    menuVocaDesc: 'Explore a sensação e nuance das palavras com imagens',
+    menuWritingTitle: 'Writing Coach',
+    menuWritingDesc: 'Receba coaching de redação e crie seu próprio livro ilustrado'
   }
 };
 
-/* 단어 검색 프롬프트 — 언어별 */
+/* 단어 검색 프롬프트 — 언어별
+   각 언어 프롬프트는 Gemini가 해당 언어로 응답하도록 지시한다. */
 const PROMPT_TEMPLATES = {
   ko: `너는 한국어로만 대답하는 영어 단어 느낌 사전이야. 절대 영어로 사고하거나 영어 문장을 먼저 만들지 마. 처음부터 끝까지 한국어로 사고하고 한국어로 작성해.
 
@@ -408,20 +1496,167 @@ Rules:
 - Write in clear, natural English
 - Keep it short and concise
 - No markdown formatting
-- Always put a --- separator between the feel description and examples`
+- Always put a --- separator between the feel description and examples`,
+
+  ja: `あなたは日本語のみで回答する英単語フィーリング辞典です。最初から最後まで日本語で考え、日本語で書いてください。
+
+"{{WORD}}"
+
+上記の英語の単語（またはフレーズ/文）の核心的な感覚を説明してください。
+
+形式：
+入力に文法ミスやタイプミスがあれば、最初の行に [CORRECTED: 正しい表現] の形式で修正文を記載してください。エラーがなければこの行は省略。
+入力が単語や熟語の場合、[POS: 品詞(意味)] の形式で品詞と核心的な意味を記載してください。品詞は英語略語で記載。複数の品詞がある場合はカンマ区切り。例）[POS: noun(信頼), verb(信頼する)]。文の場合はこの行は省略。
+入力が単語や熟語の場合、[IPA: /発音記号/] の形式でIPA発音記号を記載。文の場合は省略。
+入力が単語や熟語の場合、[CEFR: A1~C2] の形式でCEFR難易度を記載。文の場合は省略。
+1行目：核心的な感覚を二重引用符で囲んで一文で要約。例）"一つだったものがパキッと分かれる" イメージです。
+2行目：その感覚をすぐに理解できる比喩やシーンを1文だけ。必ず2行（核心1文＋補足1文）以内で終わること。絶対に3行以上書かないこと。
+---
+3行目以降：品詞が2つ以上なら [noun]、[verb] のように品詞の小見出しをつけ、その下に例を記載。品詞が1つなら小見出しなしで直接例を記載。
+各品詞ごとに例1～2個。英語例文を1行、すぐ次の行に日本語訳を1行記載。絶対に「英語：」「日本語：」のようなラベルをつけないこと。ラベルなしで文だけ記載。例文と例文の間には空行1つを入れて区切ること。
+
+ルール：
+- 必ず日本語のみで説明すること（[CORRECTED: ...], [POS: ...] 内の英語のみ例外）
+- 翻訳調禁止。自然な日本語の口語体で記述
+- 短く簡潔に
+- マークダウン書式を使わないこと
+- 感覚の説明と例の間に必ず --- 区切り線を入れること`,
+
+  zh: `你是一个只用中文回答的英语单词感觉词典。请始终用中文思考和写作。
+
+"{{WORD}}"
+
+请解释上述英语单词（或短语/句子）的核心感觉。
+
+格式：
+如果输入有语法错误或拼写错误，在第一行写 [CORRECTED: 正确的表达]。没有错误则省略此行。
+如果输入是单词或习语，写 [POS: 词性(含义)]，附上每个词性的核心含义。多个词性用逗号分隔。例）[POS: noun(信任), verb(信任)]。如果是句子则省略此行。
+如果输入是单词或习语，写 [IPA: /发音/]，附上IPA音标。如果是句子则省略。
+如果输入是单词或习语，写 [CEFR: A1~C2]，标注CEFR难度等级。如果是句子则省略。
+第1行：用双引号概括核心感觉，一句话总结。例）"原本一体的东西啪地分开"的感觉。
+第2行：用一个生动的比喻或场景帮助理解。必须控制在2行以内（核心1句+补充1句）。绝对不要超过3行。
+---
+第3行起：如果有2个以上词性，用 [noun]、[verb] 等小标题分组，下面写例句。如果只有1个词性，不写小标题，直接写例句。
+每个词性1~2个例句。英文例句一行，紧接着下一行中文释义。绝对不要加"英文："、"中文："等标签。只写句子。例句之间用一个空行隔开。
+
+规则：
+- 必须全部用中文解释（[CORRECTED: ...], [POS: ...] 中的英文除外）
+- 禁止翻译腔，用自然口语化的中文书写
+- 简短精炼
+- 不要使用markdown格式
+- 感觉描述和例句之间必须加 --- 分隔线`,
+
+  es: `Eres un diccionario de sensaciones de palabras en inglés que responde solo en español. Explica la sensación y el matiz central de las palabras de manera vívida y memorable.
+
+"{{WORD}}"
+
+Explica la sensación central de esta palabra (o frase/oración) en inglés.
+
+Formato:
+Si hay un error gramatical o de ortografía, escribe [CORRECTED: expresión corregida] en la primera línea. Omite esta línea si no hay error.
+Si la entrada es una palabra o modismo, escribe [POS: categoría_gramatical(significado)] con el significado central por categoría. Separa múltiples categorías con comas. Ej. [POS: noun(confianza), verb(confiar)]. Omite esta línea para oraciones.
+Si la entrada es una palabra o modismo, escribe [IPA: /pronunciación/] con notación IPA. Omite para oraciones.
+Si la entrada es una palabra o modismo, escribe [CEFR: A1~C2] para el nivel de dificultad CEFR. Omite para oraciones.
+Línea 1: Resumen de una oración de la sensación central entre comillas dobles. Ej. "La sensación de algo que se parte limpiamente."
+Línea 2: Una analogía o escena vívida en exactamente 1 oración. Máximo 2 líneas (1 central + 1 analogía). Nunca excedas 3 líneas.
+---
+Línea 3+: Si la palabra tiene 2+ categorías gramaticales, agrupa ejemplos bajo subtítulos como [noun], [verb]. Si solo tiene 1, omite el subtítulo.
+1~2 ejemplos por categoría. Escribe la oración en inglés en una línea y la traducción/contexto en español en la siguiente. Separa los ejemplos con una línea en blanco.
+
+Reglas:
+- Escribe en español claro y natural
+- Sé breve y conciso
+- Sin formato markdown
+- Siempre pon un separador --- entre la descripción de la sensación y los ejemplos`,
+
+  vi: `Bạn là từ điển cảm nhận từ vựng tiếng Anh, chỉ trả lời bằng tiếng Việt. Giải thích cảm giác và sắc thái cốt lõi của từ một cách sinh động và dễ nhớ.
+
+"{{WORD}}"
+
+Giải thích cảm giác cốt lõi của từ (hoặc cụm từ/câu) tiếng Anh này.
+
+Định dạng:
+Nếu có lỗi ngữ pháp hoặc chính tả, viết [CORRECTED: biểu thức đã sửa] ở dòng đầu tiên. Bỏ qua dòng này nếu không có lỗi.
+Nếu đầu vào là từ hoặc thành ngữ, viết [POS: từ_loại(nghĩa)] với nghĩa cốt lõi theo từng loại từ. Phân cách nhiều loại từ bằng dấu phẩy. Ví dụ [POS: noun(sự tin tưởng), verb(tin tưởng)]. Bỏ qua dòng này cho câu.
+Nếu đầu vào là từ hoặc thành ngữ, viết [IPA: /phiên âm/] với ký hiệu IPA. Bỏ qua cho câu.
+Nếu đầu vào là từ hoặc thành ngữ, viết [CEFR: A1~C2] cho mức độ khó CEFR. Bỏ qua cho câu.
+Dòng 1: Tóm tắt cảm giác cốt lõi trong dấu ngoặc kép, một câu. Ví dụ "Cảm giác thứ gì đó tách ra gọn lẹ."
+Dòng 2: Một phép so sánh hoặc cảnh vật sinh động trong đúng 1 câu. Tối đa 2 dòng (1 cốt lõi + 1 so sánh). Không bao giờ vượt quá 3 dòng.
+---
+Dòng 3+: Nếu từ có 2+ loại từ, nhóm ví dụ dưới tiêu đề phụ như [noun], [verb]. Nếu chỉ 1 loại từ, bỏ tiêu đề phụ.
+1~2 ví dụ mỗi loại từ. Viết câu tiếng Anh một dòng và nghĩa/ngữ cảnh tiếng Việt ở dòng tiếp theo. Phân cách các ví dụ bằng một dòng trống.
+
+Quy tắc:
+- Viết bằng tiếng Việt rõ ràng, tự nhiên
+- Ngắn gọn, súc tích
+- Không dùng định dạng markdown
+- Luôn đặt dấu phân cách --- giữa phần mô tả cảm giác và ví dụ`,
+
+  th: `คุณคือพจนานุกรมความรู้สึกของคำศัพท์ภาษาอังกฤษที่ตอบเป็นภาษาไทยเท่านั้น อธิบายความรู้สึกและนัยยะของคำอย่างมีชีวิตชีวาและน่าจดจำ
+
+"{{WORD}}"
+
+อธิบายความรู้สึกหลักของคำ (หรือวลี/ประโยค) ภาษาอังกฤษนี้
+
+รูปแบบ:
+หากมีข้อผิดพลาดทางไวยากรณ์หรือการสะกด เขียน [CORRECTED: สำนวนที่ถูกต้อง] ในบรรทัดแรก ข้ามบรรทัดนี้หากไม่มีข้อผิดพลาด
+หากข้อมูลเป็นคำหรือสำนวน เขียน [POS: ชนิดของคำ(ความหมาย)] พร้อมความหมายหลักของแต่ละชนิด คั่นหลายชนิดด้วยเครื่องหมายจุลภาค เช่น [POS: noun(ความไว้วางใจ), verb(ไว้วางใจ)] ข้ามบรรทัดนี้สำหรับประโยค
+หากข้อมูลเป็นคำหรือสำนวน เขียน [IPA: /การออกเสียง/] ด้วยสัทอักษรสากล ข้ามสำหรับประโยค
+หากข้อมูลเป็นคำหรือสำนวน เขียน [CEFR: A1~C2] สำหรับระดับความยาก CEFR ข้ามสำหรับประโยค
+บรรทัด 1: สรุปความรู้สึกหลักในเครื่องหมายคำพูดคู่ 1 ประโยค เช่น "ความรู้สึกของสิ่งที่แยกออกจากกันอย่างเฉียบขาด"
+บรรทัด 2: อุปมาหรือฉากที่ช่วยให้เข้าใจทันที 1 ประโยค ต้องไม่เกิน 2 บรรทัด (หลัก 1 + เสริม 1) ห้ามเกิน 3 บรรทัด
+---
+บรรทัด 3+: หากมี 2+ ชนิดของคำ จัดกลุ่มตัวอย่างภายใต้หัวข้อย่อย เช่น [noun], [verb] หากมีชนิดเดียว ข้ามหัวข้อย่อย
+1~2 ตัวอย่างต่อชนิด เขียนประโยคภาษาอังกฤษ 1 บรรทัด แล้วคำแปล/บริบทภาษาไทยในบรรทัดถัดไป คั่นตัวอย่างด้วยบรรทัดว่าง
+
+กฎ:
+- เขียนเป็นภาษาไทยที่ชัดเจนและเป็นธรรมชาติเท่านั้น
+- กระชับ สั้น ได้ใจความ
+- ไม่ใช้รูปแบบ markdown
+- ต้องใส่เส้นคั่น --- ระหว่างคำอธิบายความรู้สึกและตัวอย่างเสมอ`,
+
+  pt: `Você é um dicionário de sensações de palavras em inglês que responde apenas em português. Explique a sensação e a nuance central das palavras de forma vívida e memorável.
+
+"{{WORD}}"
+
+Explique a sensação central desta palavra (ou frase/sentença) em inglês.
+
+Formato:
+Se houver erro gramatical ou de digitação, escreva [CORRECTED: expressão corrigida] na primeira linha. Omita esta linha se não houver erro.
+Se a entrada for uma palavra ou expressão idiomática, escreva [POS: classe_gramatical(significado)] com o significado central por classe. Separe múltiplas classes com vírgulas. Ex. [POS: noun(confiança), verb(confiar)]. Omita esta linha para frases.
+Se a entrada for uma palavra ou expressão, escreva [IPA: /pronúncia/] com notação IPA. Omita para frases.
+Se a entrada for uma palavra ou expressão, escreva [CEFR: A1~C2] para o nível de dificuldade CEFR. Omita para frases.
+Linha 1: Resumo de uma frase da sensação central entre aspas duplas. Ex. "A sensação de algo se partindo de forma limpa."
+Linha 2: Uma analogia ou cena vívida em exatamente 1 frase. Máximo 2 linhas (1 central + 1 analogia). Nunca exceda 3 linhas.
+---
+Linha 3+: Se a palavra tiver 2+ classes gramaticais, agrupe exemplos sob subtítulos como [noun], [verb]. Se apenas 1, omita o subtítulo.
+1~2 exemplos por classe. Escreva a frase em inglês em uma linha e a tradução/contexto em português na próxima. Separe os exemplos com uma linha em branco.
+
+Regras:
+- Escreva em português claro e natural
+- Seja breve e conciso
+- Sem formatação markdown
+- Sempre coloque um separador --- entre a descrição da sensação e os exemplos`
 };
 
-/* 현재 언어 가져오기 */
+/* 현재 언어 가져오기
+   1) localStorage에 저장된 설정이 있으면 그것 사용
+   2) 없으면 navigator.language 로 브라우저 언어 자동 감지
+   3) 지원하지 않는 언어면 'en' 으로 폴백 */
 function getLang() {
   const settings = localStorage.getItem('visibleVoca_settings');
   if (settings) {
     const parsed = JSON.parse(settings);
     if (parsed.lang) return parsed.lang;
   }
-  return 'ko';
+  /* navigator.language 기반 자동 감지 (예: "ko-KR" → "ko") */
+  const browserLang = (navigator.language || '').split('-')[0].toLowerCase();
+  const supported = SUPPORTED_LANGS.map(l => l.code);
+  if (supported.includes(browserLang)) return browserLang;
+  return 'en';
 }
 
-/* 현재 언어 저장하기 */
+/* 현재 언어 저장하기 — 기존 설정을 유지하면서 lang 필드만 업데이트 */
 function setLang(lang) {
   const settings = localStorage.getItem('visibleVoca_settings');
   const parsed = settings ? JSON.parse(settings) : {};
@@ -429,15 +1664,15 @@ function setLang(lang) {
   localStorage.setItem('visibleVoca_settings', JSON.stringify(parsed));
 }
 
-/* 번역 키로 텍스트 가져오기 */
+/* 번역 키로 텍스트 가져오기 — 키가 없으면 영어로 폴백 */
 function t(key) {
   const lang = getLang();
-  return I18N[lang]?.[key] || I18N['ko']?.[key] || key;
+  return I18N[lang]?.[key] || I18N['en']?.[key] || key;
 }
 
 /* 현재 언어에 맞는 프롬프트 가져오기 */
 function getPromptTemplate() {
-  return PROMPT_TEMPLATES[getLang()] || PROMPT_TEMPLATES['ko'];
+  return PROMPT_TEMPLATES[getLang()] || PROMPT_TEMPLATES['en'];
 }
 
 /* data-i18n 속성이 있는 모든 요소에 번역 적용 */
@@ -460,5 +1695,30 @@ function applyI18n() {
   /* alt 속성 번역 */
   document.querySelectorAll('[data-i18n-alt]').forEach(el => {
     el.alt = t(el.getAttribute('data-i18n-alt'));
+  });
+}
+
+/* 언어 드롭다운 초기화 헬퍼 — 지원 언어 목록으로 select를 채우고 change 이벤트 연결
+   파라미터:
+   - selectEl: 채울 <select> DOM 요소
+   - onChange: (선택적) 언어 변경 후 추가로 호출할 콜백 */
+function initLangSelect(selectEl, onChange) {
+  if (!selectEl) return;
+  /* 기존 옵션 제거 후 지원 언어로 다시 채움 */
+  selectEl.innerHTML = '';
+  const currentLang = getLang();
+  SUPPORTED_LANGS.forEach(l => {
+    const opt = document.createElement('option');
+    opt.value = l.code;
+    opt.textContent = l.name;
+    if (l.code === currentLang) opt.selected = true;
+    selectEl.appendChild(opt);
+  });
+  /* 언어 변경 시: 설정 저장 → html lang 속성 업데이트 → applyI18n → 콜백 */
+  selectEl.addEventListener('change', function() {
+    setLang(this.value);
+    document.documentElement.lang = this.value;
+    applyI18n();
+    if (typeof onChange === 'function') onChange(this.value);
   });
 }
