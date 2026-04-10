@@ -2,11 +2,18 @@
 /* 프론트엔드 대신 Gemini API를 호출한다. */
 
 import "@supabase/functions-js/edge-runtime.d.ts"
+import { createClient } from "@supabase/supabase-js"
 
 /* 환경변수에서 키 로드 */
 /* 모든 Gemini 호출은 결제 설정된 단일 유료 키(GEMINI_API_KEY)를 사용한다.
    사용량 제한 없이 텍스트·이미지 모두 이 키로 처리한다. */
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY")!
+
+/* Supabase 서비스 클라이언트 (RLS 우회하여 user_usage 테이블 접근) */
+const supabase = createClient(
+  Deno.env.get("SUPABASE_URL")!,
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+)
 
 /* CORS 헤더 */
 const corsHeaders = {
@@ -85,6 +92,29 @@ async function callGeminiExtract(base64Data: string, mimeType: string, extractPr
   return data.candidates?.[0]?.content?.parts?.[0]?.text || null
 }
 
+/* 사용량 증가: 최초 검색 시 row 생성, 이후 검색 시 trial_count +1 */
+async function incrementTrialCount(userId: string): Promise<number> {
+  const { data } = await supabase
+    .from('user_usage')
+    .select('trial_count')
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  if (data) {
+    const newCount = (data.trial_count || 0) + 1
+    await supabase
+      .from('user_usage')
+      .update({ trial_count: newCount })
+      .eq('user_id', userId)
+    return newCount
+  } else {
+    await supabase
+      .from('user_usage')
+      .insert({ user_id: userId, trial_count: 1, subscribed: false })
+    return 1
+  }
+}
+
 /* 메인 핸들러 */
 Deno.serve(async (req) => {
   /* CORS preflight */
@@ -108,14 +138,18 @@ Deno.serve(async (req) => {
 
     switch (action) {
       case "search": {
-        /* 텍스트 검색 */
+        /* 텍스트 검색 + 사용량 카운트 */
         if (!prompt) {
           return new Response(
             JSON.stringify({ error: "prompt is required" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           )
         }
-        const text = await callGeminiText(prompt, apiKey)
+        /* 텍스트 생성과 사용량 카운트를 병렬 실행 */
+        const [text] = await Promise.all([
+          callGeminiText(prompt, apiKey),
+          incrementTrialCount(userId)
+        ])
         result = { text }
         break
       }
