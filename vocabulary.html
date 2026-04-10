@@ -255,12 +255,46 @@
   .feel-image-container {
     margin: 24px 0;
     text-align: center;
+    position: relative;
   }
   .feel-image-container img {
     max-width: 100%;
     max-height: 400px;
     border-radius: 12px;
     border: 1px solid #D5D2CC;
+  }
+  /* 새 단어 발견 오버레이 뱃지 */
+  .discovery-badge {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    background: rgba(0, 0, 0, 0.75);
+    color: #fff;
+    padding: 20px 28px;
+    border-radius: 14px;
+    text-align: center;
+    pointer-events: none;
+    animation: badgeAppear 0.4s ease-out forwards, badgeFade 0.6s ease-in 2.5s forwards;
+    z-index: 10;
+  }
+  .discovery-badge .badge-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #4A90D9;
+  }
+  .discovery-badge .badge-sub {
+    font-size: 0.8rem;
+    color: #ccc;
+  }
+  @keyframes badgeAppear {
+    0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+    50% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  }
+  @keyframes badgeFade {
+    to { opacity: 0; }
   }
   .feel-image-loading {
     color: #7A7570;
@@ -1235,6 +1269,47 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
 
 initAuth();
 
+// --- 새 단어 발견 효과 (오버레이 뱃지 + 효과음) ---
+/* 에픽 드롭 효과음 */
+function playDiscoverySound() {
+  const ctx = new AudioContext();
+  const t = ctx.currentTime;
+  /* 저음 임팩트 */
+  const kick = ctx.createOscillator();
+  const kickGain = ctx.createGain();
+  kick.type = 'sine';
+  kick.frequency.setValueAtTime(200, t);
+  kick.frequency.exponentialRampToValueAtTime(40, t + 0.2);
+  kickGain.gain.setValueAtTime(0.5, t);
+  kickGain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+  kick.connect(kickGain).connect(ctx.destination);
+  kick.start(t); kick.stop(t + 0.3);
+  /* 고음 반짝 화음 */
+  [1047, 1319, 1568].forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, t + 0.1);
+    gain.gain.linearRampToValueAtTime(0.2, t + 0.15);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 1.0);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t + 0.1); osc.stop(t + 1.0);
+  });
+}
+
+/* 이미지 위에 발견 뱃지 표시 */
+function showDiscoveryBadge(container) {
+  const username = _authUser?.email?.split('@')[0] || '';
+  const badge = document.createElement('div');
+  badge.className = 'discovery-badge';
+  badge.innerHTML = `<div class="badge-title">${t('discoveryTitle')}</div><div class="badge-sub">${escapeHtml(username)}${t('discoverySub')}</div>`;
+  container.appendChild(badge);
+  playDiscoverySound();
+  /* 애니메이션 종료 후 뱃지 제거 */
+  setTimeout(() => badge.remove(), 3200);
+}
+
 // --- 설정 (localStorage 공유) ---
 function getSettings() {
   const defaults = { imageEnabled: true };
@@ -1560,6 +1635,8 @@ async function fetchWordResult(word, targetEl) {
     const container = targetEl.querySelector('.feel-image-container');
     if (container) {
       container.innerHTML = `<img src="${escapeHtml(imageUrl)}" alt="${safeWord}${t('imageAlt')}">`;
+      /* 새 이미지 생성 시 발견 뱃지 + 효과음 */
+      if (!reusedImagePath) showDiscoveryBadge(container);
     }
     const imgTag = `<img src="${escapeHtml(imageUrl)}" alt="${safeWord}${t('imageAlt')}">`;
     const imgHtml = html.replace(
