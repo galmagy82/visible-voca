@@ -21,8 +21,8 @@ const I18N = {
 
     /* 일반검색 */
     searchPlaceholder: '단어, 숙어, 문장을 입력하세요',
-    searchGuideTitle: '일반 검색',
-    searchGuideBody: '단어, 숙어, 문장을 직접 입력하고 검색 버튼을 누르세요.<br>여러 단어를 쉼표(,)로 구분하면 한꺼번에 검색할 수 있어요.',
+    searchGuideTitle: '나의 검색이 모두의 사전이 됩니다.',
+    searchGuideBody: '혼자 외우는 단어장은 이제 그만!<br>내가 찾은 단어가 실시간으로 공유되어, 모두가 함께 완성해가는<br>커다란 단어 지도를 만들어갑니다.',
     searching: '느낌을 찾는 중...',
     imageLoading: '이미지 생성 중...',
     addToWordbook: '+ 단어장에 추가',
@@ -197,8 +197,8 @@ const I18N = {
 
     /* 일반검색 */
     searchPlaceholder: 'Enter a word, phrase, or sentence',
-    searchGuideTitle: 'Search',
-    searchGuideBody: 'Type a word, phrase, or sentence and press Search.<br>Separate multiple words with commas (,) to search at once.',
+    searchGuideTitle: 'Your search becomes everyone\'s dictionary.',
+    searchGuideBody: 'No more memorizing alone! Every word you look up is shared in real time, building a vast word map that we all create together.',
     searching: 'Finding the feel...',
     imageLoading: 'Generating image...',
     addToWordbook: '+ Add to Wordbook',

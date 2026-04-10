@@ -136,6 +136,12 @@
     color: #4A4641;
     font-size: 0.95rem;
   }
+  .guide-illustration {
+    display: block;
+    width: 100%;
+    max-width: 320px;
+    margin: 16px auto 0;
+  }
 
   /* 결과 영역 */
   .result-area {
@@ -726,8 +732,37 @@
       </div>
       <!-- 가이드 -->
       <div class="guide" id="guideSearch">
-        <strong data-i18n="searchGuideTitle">일반 검색</strong><br><br>
-        <span data-i18n="searchGuideBody">단어, 숙어, 문장을 직접 입력하고 검색 버튼을 누르세요.<br>여러 단어를 쉼표(,)로 구분하면 한꺼번에 검색할 수 있어요.</span>
+        <strong data-i18n="searchGuideTitle">나의 검색이 모두의 사전이 됩니다.</strong><br><br>
+        <span data-i18n="searchGuideBody">혼자 외우는 단어장은 이제 그만!<br>내가 찾은 단어가 실시간으로 공유되어, 모두가 함께 완성해가는<br>커다란 단어 지도를 만들어갑니다.</span>
+        <!-- 단어 지도 일러스트 -->
+        <svg class="guide-illustration" viewBox="0 0 280 140" xmlns="http://www.w3.org/2000/svg">
+          <!-- 연결선 (단어 네트워크) -->
+          <line x1="90" y1="50" x2="140" y2="70" stroke="#D5D2CC" stroke-width="1.5"/>
+          <line x1="140" y1="70" x2="200" y2="45" stroke="#D5D2CC" stroke-width="1.5"/>
+          <line x1="140" y1="70" x2="190" y2="100" stroke="#D5D2CC" stroke-width="1.5"/>
+          <line x1="55" y1="90" x2="90" y2="50" stroke="#D5D2CC" stroke-width="1.5"/>
+          <line x1="55" y1="90" x2="140" y2="70" stroke="#D5D2CC" stroke-width="1.5"/>
+          <line x1="200" y1="45" x2="240" y2="75" stroke="#D5D2CC" stroke-width="1.5"/>
+          <line x1="190" y1="100" x2="240" y2="75" stroke="#D5D2CC" stroke-width="1.5"/>
+          <!-- 단어 노드들 -->
+          <circle cx="90" cy="50" r="22" fill="#EAF2FB" stroke="#4A90D9" stroke-width="1.5"/>
+          <text x="90" y="54" text-anchor="middle" font-size="9" fill="#3B6FA0" font-weight="600">trust</text>
+          <circle cx="140" cy="70" r="26" fill="#4A90D9" stroke="none"/>
+          <text x="140" y="67" text-anchor="middle" font-size="8" fill="white">나의 검색</text>
+          <text x="140" y="78" text-anchor="middle" font-size="9" fill="#F5D76E" font-weight="700">✦</text>
+          <circle cx="200" cy="45" r="20" fill="#EAF2FB" stroke="#4A90D9" stroke-width="1.5"/>
+          <text x="200" y="49" text-anchor="middle" font-size="9" fill="#3B6FA0" font-weight="600">dream</text>
+          <circle cx="55" cy="90" r="18" fill="#EAF2FB" stroke="#4A90D9" stroke-width="1.5"/>
+          <text x="55" y="94" text-anchor="middle" font-size="8" fill="#3B6FA0" font-weight="600">brave</text>
+          <circle cx="190" cy="100" r="19" fill="#EAF2FB" stroke="#4A90D9" stroke-width="1.5"/>
+          <text x="190" y="104" text-anchor="middle" font-size="8.5" fill="#3B6FA0" font-weight="600">gentle</text>
+          <circle cx="240" cy="75" r="17" fill="#EAF2FB" stroke="#4A90D9" stroke-width="1.5"/>
+          <text x="240" y="79" text-anchor="middle" font-size="8" fill="#3B6FA0" font-weight="600">joy</text>
+          <!-- 퍼져나가는 점선 (확장되는 지도) -->
+          <circle cx="30" cy="55" r="8" fill="none" stroke="#D5D2CC" stroke-width="1" stroke-dasharray="2,2"/>
+          <circle cx="260" cy="110" r="8" fill="none" stroke="#D5D2CC" stroke-width="1" stroke-dasharray="2,2"/>
+          <circle cx="250" cy="25" r="6" fill="none" stroke="#D5D2CC" stroke-width="1" stroke-dasharray="2,2"/>
+        </svg>
       </div>
       <div class="result-area" id="resultSearch"></div>
     </div>
