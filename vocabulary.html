@@ -1562,7 +1562,7 @@ async function fetchWordResult(word, targetEl) {
     }
     const imgTag = `<img src="${escapeHtml(imageUrl)}" alt="${safeWord}${t('imageAlt')}">`;
     const imgHtml = html.replace(
-      /<div class="feel-image-loading">[^<]*<\/div>/,
+      /<div class="feel-image-loading">[\s\S]*?<\/div><\/div>/,
       imgTag
     );
     wordResults[word] = { html: imgHtml };
@@ -1578,7 +1578,7 @@ async function fetchWordResult(word, targetEl) {
       container.remove();
     }
     const noImgHtml = html.replace(
-      /<div class="feel-image-container" id="imageContainer"><div class="feel-image-loading">[^<]*<\/div><\/div>/,
+      /<div class="feel-image-container" id="imageContainer"><div class="feel-image-loading">[\s\S]*?<\/div><\/div><\/div>/,
       ''
     );
     wordResults[word] = { html: noImgHtml };
