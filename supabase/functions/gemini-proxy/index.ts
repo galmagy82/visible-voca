@@ -1,61 +1,18 @@
 /* ===== Gemini API 프록시 Edge Function ===== */
-/* 프론트엔드 대신 Gemini API를 호출하고, 사용량을 추적합니다. */
+/* 프론트엔드 대신 Gemini API를 호출한다. */
 
 import "@supabase/functions-js/edge-runtime.d.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
 /* 환경변수에서 키 로드 */
 /* 모든 Gemini 호출은 결제 설정된 단일 유료 키(GEMINI_API_KEY)를 사용한다.
-   무료 체험 한도(FREE_LIMIT) 초과 시에도 텍스트 검색은 같은 유료 키로 계속 처리하고,
-   이미지 생성만 차단한다. (과거에는 결제 미설정 무료 키 풀로 폴백했으나
-   하드코딩 노출 위험과 운영 복잡도로 인해 제거함) */
+   사용량 제한 없이 텍스트·이미지 모두 이 키로 처리한다. */
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY")!
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-
-/* 무료 사용 횟수 제한 */
-const FREE_LIMIT = 3
 
 /* CORS 헤더 */
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-user-id",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-}
-
-/* Supabase 서비스 클라이언트 (RLS 우회) */
-function getSupabase() {
-  return createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
-}
-
-/* 사용량 확인 및 증가 */
-async function checkAndIncrementUsage(userId: string): Promise<{ allowed: boolean; count: number; subscribed: boolean }> {
-  const supabase = getSupabase()
-
-  /* 사용자 조회 */
-  const { data, error } = await supabase
-    .from("user_usage")
-    .select("free_trial_count, subscribed")
-    .eq("user_id", userId)
-    .single()
-
-  if (error || !data) {
-    /* 신규 사용자 — 레코드 생성 */
-    await supabase.from("user_usage").insert({ user_id: userId, free_trial_count: 1, subscribed: false })
-    return { allowed: true, count: 1, subscribed: false }
-  }
-
-  /* 구독자는 무제한 */
-  if (data.subscribed) {
-    await supabase.from("user_usage").update({ free_trial_count: data.free_trial_count + 1 }).eq("user_id", userId)
-    return { allowed: true, count: data.free_trial_count + 1, subscribed: true }
-  }
-
-  /* 사용량 증가 */
-  await supabase.from("user_usage").update({ free_trial_count: data.free_trial_count + 1 }).eq("user_id", userId)
-  const newCount = data.free_trial_count + 1
-  const exceeded = newCount > FREE_LIMIT
-  return { allowed: !exceeded, count: newCount, subscribed: false }
 }
 
 /* Gemini 텍스트 생성 호출 */
@@ -146,34 +103,7 @@ Deno.serve(async (req) => {
       )
     }
 
-    /* count 액션: 카운트만 증가하고 상태 반환 (캐시/DB 히트 시 사용) */
-    if (action === "count") {
-      const usage = await checkAndIncrementUsage(userId)
-      return new Response(
-        JSON.stringify({ allowed: usage.allowed, count: usage.count, subscribed: usage.subscribed }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      )
-    }
-
-    /* 사용량 확인 (extract는 카운트 대상 아님 — 검색·이미지 액션에서만 카운트) */
-    /* 모든 액션은 동일한 유료 키(GEMINI_API_KEY)를 사용한다.
-       한도 초과 시 분기는 "이미지는 차단 / 텍스트는 그대로 호출"만 처리한다. */
     const apiKey = GEMINI_API_KEY
-    if (action === "search" || action === "image") {
-      const usage = await checkAndIncrementUsage(userId)
-      if (!usage.allowed && !usage.subscribed) {
-        /* 이미지는 무료 체험 초과 시 차단 — 클라이언트가 빌링 안내 placeholder를 표시 */
-        if (action === "image") {
-          return new Response(
-            JSON.stringify({ error: "FREE_LIMIT_EXCEEDED", count: usage.count, limit: FREE_LIMIT }),
-            { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          )
-        }
-        /* 텍스트 검색은 한도 초과 후에도 계속 동작 — 키 변경 없이 GEMINI_API_KEY 그대로 사용 */
-      }
-    }
-    /* extract 액션은 한도와 무관하게 항상 GEMINI_API_KEY 사용 (위에서 이미 할당됨) */
-
     let result: unknown
 
     switch (action) {
@@ -190,7 +120,7 @@ Deno.serve(async (req) => {
         break
       }
       case "image": {
-        /* 이미지 생성 (무료 체험 초과 시 위에서 이미 차단됨) */
+        /* 이미지 생성 */
         if (!word) {
           return new Response(
             JSON.stringify({ error: "word is required" }),

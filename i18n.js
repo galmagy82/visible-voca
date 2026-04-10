@@ -29,8 +29,6 @@ const I18N = {
     addedToWordbook: '단어장에 추가됨',
     listenPronunciation: '발음 듣기',
     imageAlt: '의 느낌을 표현한 이미지',
-    imagePlaceholderMsg: '그림으로 보면 더 오래 기억돼요',
-    imagePlaceholderBtn: '자세히 보기',
 
     /* 사진에서 검색 */
     uploadPhoto: '📂 사진 올리기',
@@ -73,7 +71,6 @@ const I18N = {
 
     /* 에러 메시지 */
     errorNoApiKey: '홈에서 설정 버튼을 눌러 API 키를 먼저 입력해주세요.',
-    errorFreeLimitExceeded: '무료 체험 3회를 모두 사용했습니다. 계속 사용하려면 구독이 필요합니다.',
     errorRateLimit: '하루 무료 요청 한도를 초과했습니다. 내일 다시 시도해주세요.',
     errorGeneral: '일시적인 오류가 발생했습니다. 다시 시도해주세요.',
     errorNoResponse: '응답을 받지 못했습니다.',
@@ -108,18 +105,6 @@ const I18N = {
     confirmResetCache: '캐시를 초기화하시겠습니까?\n같은 단어를 다시 검색하면 비용이 발생합니다.',
     cacheResetDone: '캐시가 초기화되었습니다.',
     confirmDeleteKey: 'API 키를 삭제하시겠습니까?\n삭제 후 웰컴 화면으로 이동합니다.',
-
-    /* 결제 연동 가이드 모달 */
-    billingTitle: '그림으로 보면 더 오래 기억돼요',
-    billingHow: '결제 설정 방법',
-    billingStep1: 'Google AI Studio에 접속합니다.',
-    billingStep2: '좌측 메뉴에서 Settings → Billing으로 이동합니다.',
-    billingStep3: '결제 수단(카드)을 등록합니다.',
-    billingCost: '이미지 1장당 약 $0.039 (약 ₩50원) 수준입니다.',
-    billingCost100: '* 단어 100개 검색 시 약 ₩5,000원',
-    billingCheckLabel: '이미지 생성 사용',
-    billingCheckHint: 'API 결제 설정을 하지 않은 경우 체크를 해제해 주세요.',
-    billingDone: '결제 설정을 완료하셨나요?',
 
     /* 데이터 수집 동의 배너 */
     consentMsg: '검색된 단어와 AI 생성 결과(텍스트, 이미지)는 서비스 품질 개선을 위해 서버에 저장됩니다. 개인을 식별할 수 있는 정보는 수집하지 않습니다.',
@@ -220,8 +205,6 @@ const I18N = {
     addedToWordbook: 'Added to Wordbook',
     listenPronunciation: 'Listen',
     imageAlt: ' - image expressing the feel',
-    imagePlaceholderMsg: 'Images help you remember longer',
-    imagePlaceholderBtn: 'Learn more',
 
     /* 사진에서 검색 */
     uploadPhoto: '📂 Upload Photo',
@@ -264,7 +247,6 @@ const I18N = {
 
     /* 에러 메시지 */
     errorNoApiKey: 'Please enter your API key in Settings first.',
-    errorFreeLimitExceeded: 'You have used all 3 free trials. Subscribe to continue.',
     errorRateLimit: 'Daily free quota exceeded. Please try again tomorrow.',
     errorGeneral: 'A temporary error occurred. Please try again.',
     errorNoResponse: 'No response received.',
@@ -299,18 +281,6 @@ const I18N = {
     confirmResetCache: 'Reset cache?\nRe-searching the same word will incur costs.',
     cacheResetDone: 'Cache has been reset.',
     confirmDeleteKey: 'Delete your API key?\nYou will be redirected to the welcome page.',
-
-    /* 결제 연동 가이드 모달 */
-    billingTitle: 'Images help you remember longer',
-    billingHow: 'How to set up billing',
-    billingStep1: 'Go to Google AI Studio.',
-    billingStep2: 'Navigate to Settings → Billing.',
-    billingStep3: 'Register a payment method (card).',
-    billingCost: 'About $0.039 per image.',
-    billingCost100: '* ~$3.90 for 100 word searches',
-    billingCheckLabel: 'Enable image generation',
-    billingCheckHint: 'Uncheck if you have not set up API billing.',
-    billingDone: 'Finished setting up billing?',
 
     /* 데이터 수집 동의 배너 */
     consentMsg: 'Search results (text and images) are stored on our server to improve service quality. No personally identifiable information is collected.',
