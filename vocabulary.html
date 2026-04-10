@@ -31,10 +31,10 @@
     align-items: center;
     padding: 60px 20px 40px;
   }
-  /* 상단 헤더: 로고 + 사용자 정보 */
+  /* 상단 헤더: 로고 중앙 */
   .top-header {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     width: 100%;
     max-width: 900px;
@@ -50,30 +50,20 @@
   h1 .symbol {
     color: #4A90D9;
   }
-  .user-bar {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
+  /* 로그아웃 버튼: 사이드바 맨 아래 */
+  .sidebar-logout {
+    margin-top: auto;
+    padding: 8px 16px;
+    font-size: 0.8rem;
     color: #7A7570;
-  }
-  .user-bar .user-email {
-    max-width: 160px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .user-bar .logout-btn {
-    padding: 4px 10px;
-    border: 1px solid #D5D2CC;
-    border-radius: 6px;
-    background: white;
-    font-size: 11px;
-    color: #7A7570;
+    background: transparent;
+    border: none;
     cursor: pointer;
+    text-align: left;
   }
-  .user-bar .logout-btn:hover {
-    background: #F5F3F0;
+  .sidebar-logout:hover {
+    color: #4A4641;
+    white-space: nowrap;
   }
 
   /* 메인 레이아웃: 왼쪽 탭 + 오른쪽 컨텐츠 */
@@ -722,6 +712,11 @@
       font-size: 0.8rem;
       white-space: nowrap;
     }
+    .sidebar-logout {
+      padding: 10px 14px;
+      font-size: 0.75rem;
+      white-space: nowrap;
+    }
     .content {
       padding-left: 0;
       border-left: none;
@@ -747,10 +742,6 @@
 
 <div class="top-header">
   <h1>Geminary<span class="symbol">✦</span></h1>
-  <div class="user-bar" id="userBar" style="display:none;">
-    <span class="user-email" id="vocabUserEmail"></span>
-    <button class="logout-btn" id="vocabLogoutBtn">로그아웃</button>
-  </div>
 </div>
 
 <div class="main-layout">
@@ -760,6 +751,7 @@
     <button class="tab" onclick="switchTab('photo')" data-i18n="tabPhoto" style="display:none;">사진에서 검색</button>
     <button class="tab" onclick="switchTab('wordbook')" data-i18n="tabWordbook">단어장</button>
     <button class="tab" onclick="switchTab('quiz')" data-i18n="tabQuiz">Quiz</button>
+    <button class="sidebar-logout" id="vocabLogoutBtn" data-i18n="logout">로그아웃</button>
   </div>
 
   <!-- 오른쪽 컨텐츠 -->
@@ -1185,7 +1177,6 @@ async function initAuth() {
   }
   /* 인증 확인 후 본문 표시 */
   document.body.style.display = '';
-  updateVocabAuthUI();
 }
 
 function getUserId() {
@@ -1196,18 +1187,6 @@ function getUserId() {
     localStorage.setItem('visibleVoca_userId', id);
   }
   return id;
-}
-
-/* Vocabulary 페이지 상단 로그인 상태 표시 */
-function updateVocabAuthUI() {
-  const userBar = document.getElementById('userBar');
-  const emailEl = document.getElementById('vocabUserEmail');
-  if (_authUser) {
-    emailEl.textContent = _authUser.email;
-    userBar.style.display = 'flex';
-  } else {
-    userBar.style.display = 'none';
-  }
 }
 
 /* 로그아웃 → Welcome 페이지로 이동 */
@@ -1224,7 +1203,6 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
     return;
   }
   document.body.style.display = '';
-  updateVocabAuthUI();
 });
 
 initAuth();
