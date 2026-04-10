@@ -1179,7 +1179,8 @@ async function saveToSupabase(word, parsed, imageDataUrl, existingImagePath) {
         cefr: parsed.cefr || null,
         description: parsed.description || null,
         examples: parsed.examples || null,
-        image_path: imagePath
+        image_path: imagePath,
+        discovered_by: _authUser?.email?.split('@')[0] || null
       });
 
     if (insertErr) console.warn('DB 저장 실패:', insertErr);
