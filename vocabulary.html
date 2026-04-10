@@ -152,6 +152,13 @@
     font-weight: 600;
     color: #2D2B28;
   }
+  /* IPA 발음기호 — 발음 버튼 옆 */
+  .word-ipa {
+    font-size: 0.95rem;
+    color: #6B6660;
+    font-style: italic;
+    margin-right: 2px;
+  }
   .speak-btn {
     padding: 6px 10px;
     font-size: 1.2rem;
@@ -1342,13 +1349,14 @@ function buildHtmlFromDB(dbData, word) {
   let html = `<div class="word-header">`;
   html += `<div class="word-title">${safeCorrected || safeWord}</div>`;
   html += `<button class="speak-btn" onclick="speak('${speakWord}')" title="${t('listenPronunciation')}">&#128264;</button>`;
+  /* IPA 발음기호를 발음 버튼 오른쪽에 표시 */
+  if (dbData.ipa) html += `<span class="word-ipa">${escapeHtml(dbData.ipa)}</span>`;
   html += `<button class="add-wordbook-btn" data-wb-word>${t('addToWordbook')}</button>`;
   html += `</div>`;
-  /* 품사 · 발음 · CEFR 난이도 표시 */
-  if (dbData.pos || dbData.ipa || dbData.cefr) {
+  /* 품사 · CEFR 난이도 표시 */
+  if (dbData.pos || dbData.cefr) {
     let posLine = '';
     if (dbData.pos) posLine += escapeHtml(dbData.pos);
-    if (dbData.ipa) posLine += (posLine ? ' · ' : '') + escapeHtml(dbData.ipa);
     if (dbData.cefr) posLine += (posLine ? ' · ' : '') + `<span class="cefr-badge">${escapeHtml(dbData.cefr)}</span>`;
     html += `<div class="word-pos">${posLine}</div>`;
   }
@@ -1477,13 +1485,14 @@ async function fetchWordResult(word, targetEl) {
   let html = `<div class="word-header">`;
   html += `<div class="word-title">${safeCorrected || safeWord}</div>`;
   html += `<button class="speak-btn" onclick="speak('${speakWord}')" title="${t('listenPronunciation')}">&#128264;</button>`;
+  /* IPA 발음기호를 발음 버튼 오른쪽에 표시 */
+  if (ipa) html += `<span class="word-ipa">${escapeHtml(ipa)}</span>`;
   html += `<button class="add-wordbook-btn" data-wb-word>${t('addToWordbook')}</button>`;
   html += `</div>`;
-  /* 품사 · 발음 · CEFR 난이도 표시 */
-  if (pos || ipa || cefr) {
+  /* 품사 · CEFR 난이도 표시 */
+  if (pos || cefr) {
     let posLine = '';
     if (pos) posLine += escapeHtml(pos);
-    if (ipa) posLine += (posLine ? ' · ' : '') + escapeHtml(ipa);
     if (cefr) posLine += (posLine ? ' · ' : '') + `<span class="cefr-badge">${escapeHtml(cefr)}</span>`;
     html += `<div class="word-pos">${posLine}</div>`;
   }
