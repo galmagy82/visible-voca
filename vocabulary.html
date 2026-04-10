@@ -268,14 +268,15 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%) scale(0);
+    transform: translate(-50%, -50%);
     background: rgba(0, 0, 0, 0.75);
     color: #fff;
     padding: 20px 28px;
     border-radius: 14px;
     text-align: center;
     pointer-events: none;
-    animation: badgeAppear 0.4s ease-out forwards, badgeFade 0.6s ease-in 2.5s forwards;
+    opacity: 0;
+    animation: badgeShow 3.2s ease-out forwards;
     z-index: 10;
   }
   .discovery-badge .badge-title {
@@ -288,13 +289,12 @@
     font-size: 0.8rem;
     color: #ccc;
   }
-  @keyframes badgeAppear {
-    0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
-    50% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
-    100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-  }
-  @keyframes badgeFade {
-    to { opacity: 0; }
+  @keyframes badgeShow {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+    8% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+    12% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    75% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
   }
   .feel-image-loading {
     color: #7A7570;
