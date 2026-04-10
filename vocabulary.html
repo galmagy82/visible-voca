@@ -967,6 +967,41 @@ async function fetchFromSupabase(word) {
   }
 }
 
+/* word_aliases 테이블에서 오타→정답 매핑 조회
+   오타가 등록되어 있으면 corrected word를 반환, 없으면 null */
+async function fetchAlias(word) {
+  try {
+    const { data, error } = await supabaseClient
+      .from('word_aliases')
+      .select('corrected')
+      .eq('typo', word.toLowerCase())
+      .maybeSingle();
+
+    if (error || !data) return null;
+    return data.corrected;
+  } catch (e) {
+    console.warn('별칭 조회 실패:', e);
+    return null;
+  }
+}
+
+/* word_aliases 테이블에 오타→정답 매핑 저장
+   이미 등록된 오타는 무시 (PRIMARY KEY 충돌 시 스킵) */
+async function saveAlias(typo, correctedWord) {
+  try {
+    const lower_typo = typo.toLowerCase();
+    const lower_corrected = correctedWord.toLowerCase();
+    /* 오타와 정답이 같으면 저장 불필요 */
+    if (lower_typo === lower_corrected) return;
+
+    await supabaseClient
+      .from('word_aliases')
+      .upsert({ typo: lower_typo, corrected: lower_corrected }, { onConflict: 'typo' });
+  } catch (e) {
+    console.warn('별칭 저장 실패:', e);
+  }
+}
+
 /* 이미 저장된 이미지가 있는지 조회 — 언어 무관, 아무 row나 1개
    목적: 영어로 처음 검색해 이미지가 만들어진 단어를 한글로 다시 검색할 때
          Gemini 이미지 API를 다시 부르지 않고 기존 이미지를 재사용하기 위함.
@@ -1241,8 +1276,12 @@ async function fetchWordResult(word, targetEl) {
     }
   }
 
+  /* ②-a 별칭 테이블 조회 — 이전에 교정된 오타면 정답 단어로 변환 */
+  const aliasWord = await fetchAlias(word);
+  const lookupKey = aliasWord || word;
+
   /* ② Supabase DB 조회 — 데이터 충분하면 API 호출 없이 반환 */
-  const dbResult = await fetchFromSupabase(word);
+  const dbResult = await fetchFromSupabase(lookupKey);
   if (dbResult && dbResult.fromDB) {
     targetEl.innerHTML = `<div class="loading">${t('searching')}</div>`;
     await new Promise(r => setTimeout(r, 800));
@@ -1259,28 +1298,10 @@ async function fetchWordResult(word, targetEl) {
 
   const prompt = getPromptTemplate().replace('{{WORD}}', word);
 
-  const textPromise = callSearch(prompt);
-
-  /* 이미지 처리: 설정에서 활성화한 경우에만
-     - 먼저 word_results 에 이미 만들어둔 이미지가 있는지 확인 (언어 무관)
-     - 있으면 Gemini 이미지 API 호출 생략하고 그 publicUrl 재사용
-     - 없으면 기존대로 generateImage 호출
-     reusedImagePath 는 saveToSupabase 에 넘겨 새 row 가 같은 image_path 를 공유하게 함. */
-  let reusedImagePath = null;
-  let imagePromise = null;
-  if (settings.imageEnabled) {
-    const existing = await fetchExistingImage(word);
-    if (existing) {
-      reusedImagePath = existing.image_path;
-      imagePromise = Promise.resolve(existing.publicUrl);
-    } else {
-      imagePromise = generateImage(word);
-    }
-  }
-
+  /* 텍스트 API 먼저 호출 (이미지는 corrected word 확인 후 결정) */
   let text;
   try {
-    text = await textPromise;
+    text = await callSearch(prompt);
   } catch (textErr) {
     if (textErr.status === 429) {
       targetEl.innerHTML = `<div class="error">${t('errorRateLimit')}</div>`;
@@ -1321,12 +1342,51 @@ async function fetchWordResult(word, targetEl) {
     body = body.replace(/\[CEFR:\s*.+?\]\n?/i, '');
   }
 
+  /* ③-a corrected word가 있으면 별칭 저장 + 정답 단어로 DB 2차 조회
+     목적: 오타로 검색했더라도, 정답 단어가 이미 DB에 있으면
+     이미지 API 호출 없이 캐시된 결과를 재사용한다. */
+  const saveWord = corrected ? corrected.toLowerCase() : word;
+  if (corrected && corrected.toLowerCase() !== word.toLowerCase()) {
+    /* 오타 → 정답 매핑 저장 (비동기, 완료 안 기다림) */
+    saveAlias(word, corrected);
+
+    /* 정답 단어로 DB 2차 조회 */
+    const correctedDbResult = await fetchFromSupabase(corrected.toLowerCase());
+    if (correctedDbResult && correctedDbResult.fromDB) {
+      const dbHtml = buildHtmlFromDB(correctedDbResult, word);
+      wordResults[word] = { html: dbHtml };
+      targetEl.innerHTML = dbHtml;
+      bindWbButton(targetEl);
+      saveCacheEntry(word, dbHtml);
+      return dbHtml;
+    }
+  }
+
   const parts = body.split(/\n---\n?/);
   const desc = parts[0].trim();
   const examples = parts.length > 1 ? parts[1].trim() : '';
   const safeWord = escapeHtml(word);
   const safeCorrected = escapeHtml(corrected);
   const speakWord = (safeCorrected || safeWord).replace(/'/g, "\\'");
+
+  /* 이미지 처리: 설정에서 활성화한 경우에만
+     - 먼저 word_results 에 이미 만들어둔 이미지가 있는지 확인 (언어 무관)
+     - 있으면 Gemini 이미지 API 호출 생략하고 그 publicUrl 재사용
+     - 없으면 기존대로 generateImage 호출
+     reusedImagePath 는 saveToSupabase 에 넘겨 새 row 가 같은 image_path 를 공유하게 함.
+     이미지 조회/생성 시에는 정답 단어(saveWord)를 사용하여 캐시 히트율을 높임. */
+  let reusedImagePath = null;
+  let imagePromise = null;
+  if (settings.imageEnabled) {
+    const existing = await fetchExistingImage(saveWord);
+    if (existing) {
+      reusedImagePath = existing.image_path;
+      imagePromise = Promise.resolve(existing.publicUrl);
+    } else {
+      imagePromise = generateImage(saveWord);
+    }
+  }
+
   let html = `<div class="word-header">`;
   html += `<div class="word-title">${safeCorrected || safeWord}</div>`;
   html += `<button class="speak-btn" onclick="speak('${speakWord}')" title="${t('listenPronunciation')}">&#128264;</button>`;
@@ -1357,8 +1417,8 @@ async function fetchWordResult(word, targetEl) {
   /* 이미지 비동기 처리 — imagePromise가 있을 때만 */
   if (!imagePromise) {
     saveCacheEntry(word, html);
-    /* Supabase에 텍스트만 저장 */
-    saveToSupabase(word, { corrected, pos, ipa, cefr, description: desc, examples }, null);
+    /* Supabase에 텍스트만 저장 (정답 단어를 키로 저장) */
+    saveToSupabase(saveWord, { corrected, pos, ipa, cefr, description: desc, examples }, null);
     return html;
   }
   try {
@@ -1374,9 +1434,9 @@ async function fetchWordResult(word, targetEl) {
     );
     wordResults[word] = { html: imgHtml };
     saveCacheEntry(word, imgHtml);
-    /* Supabase에 텍스트 + 이미지 저장
+    /* Supabase에 텍스트 + 이미지 저장 (정답 단어를 키로 저장)
        reusedImagePath 가 있으면 saveToSupabase 가 업로드 스킵하고 그 path 를 공유. */
-    saveToSupabase(word, { corrected, pos, ipa, cefr, description: desc, examples }, imageUrl, reusedImagePath);
+    saveToSupabase(saveWord, { corrected, pos, ipa, cefr, description: desc, examples }, imageUrl, reusedImagePath);
   } catch (imgErr) {
     console.error('이미지 생성 실패:', imgErr);
     /* 이미지 영역 제거 */
@@ -1390,8 +1450,8 @@ async function fetchWordResult(word, targetEl) {
     );
     wordResults[word] = { html: noImgHtml };
     saveCacheEntry(word, noImgHtml);
-    /* Supabase에 텍스트만 저장 (이미지 실패) */
-    saveToSupabase(word, { corrected, pos, ipa, cefr, description: desc, examples }, null);
+    /* Supabase에 텍스트만 저장 (이미지 실패, 정답 단어를 키로 저장) */
+    saveToSupabase(saveWord, { corrected, pos, ipa, cefr, description: desc, examples }, null);
   }
 
   return wordResults[word].html;
