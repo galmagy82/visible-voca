@@ -1064,6 +1064,7 @@ async function fetchFromSupabase(word) {
         corrected: textRow.corrected,
         pos: textRow.pos,
         ipa: textRow.ipa,
+        cefr: textRow.cefr,
         description: textRow.description,
         examples: textRow.examples,
         imageUrl: urlData?.publicUrl || null,
@@ -1153,6 +1154,7 @@ async function saveToSupabase(word, parsed, imageDataUrl, existingImagePath) {
         corrected: parsed.corrected || null,
         pos: parsed.pos || null,
         ipa: parsed.ipa || null,
+        cefr: parsed.cefr || null,
         description: parsed.description || null,
         examples: parsed.examples || null,
         image_path: imagePath
@@ -1342,7 +1344,14 @@ function buildHtmlFromDB(dbData, word) {
   html += `<button class="speak-btn" onclick="speak('${speakWord}')" title="${t('listenPronunciation')}">&#128264;</button>`;
   html += `<button class="add-wordbook-btn" data-wb-word>${t('addToWordbook')}</button>`;
   html += `</div>`;
-  if (dbData.pos || dbData.ipa) html += `<div class="word-pos">${escapeHtml(dbData.pos) || ''}${dbData.pos && dbData.ipa ? ' · ' : ''}${escapeHtml(dbData.ipa) || ''}</div>`;
+  /* 품사 · 발음 · CEFR 난이도 표시 */
+  if (dbData.pos || dbData.ipa || dbData.cefr) {
+    let posLine = '';
+    if (dbData.pos) posLine += escapeHtml(dbData.pos);
+    if (dbData.ipa) posLine += (posLine ? ' · ' : '') + escapeHtml(dbData.ipa);
+    if (dbData.cefr) posLine += (posLine ? ' · ' : '') + `<span class="cefr-badge">${escapeHtml(dbData.cefr)}</span>`;
+    html += `<div class="word-pos">${posLine}</div>`;
+  }
   if (safeCorrected) html += `<div class="corrected">${safeWord} → <span>${safeCorrected}</span></div>`;
   html += `<div class="feel-desc">${escapeHtml(dbData.description)}</div>`;
   if (dbData.imageUrl) {
@@ -1501,7 +1510,7 @@ async function fetchWordResult(word, targetEl) {
   if (!imagePromise) {
     saveCacheEntry(word, html);
     /* Supabase에 텍스트만 저장 */
-    saveToSupabase(word, { corrected, pos, ipa, description: desc, examples }, null);
+    saveToSupabase(word, { corrected, pos, ipa, cefr, description: desc, examples }, null);
     return html;
   }
   try {
@@ -1519,7 +1528,7 @@ async function fetchWordResult(word, targetEl) {
     saveCacheEntry(word, imgHtml);
     /* Supabase에 텍스트 + 이미지 저장
        reusedImagePath 가 있으면 saveToSupabase 가 업로드 스킵하고 그 path 를 공유. */
-    saveToSupabase(word, { corrected, pos, ipa, description: desc, examples }, imageUrl, reusedImagePath);
+    saveToSupabase(word, { corrected, pos, ipa, cefr, description: desc, examples }, imageUrl, reusedImagePath);
   } catch (imgErr) {
     console.error('이미지 생성 실패:', imgErr);
     const container = targetEl.querySelector('.feel-image-container');
@@ -1554,7 +1563,7 @@ async function fetchWordResult(word, targetEl) {
       saveCacheEntry(word, noImgHtml);
     }
     /* Supabase에 텍스트만 저장 (이미지 실패) */
-    saveToSupabase(word, { corrected, pos, ipa, description: desc, examples }, null);
+    saveToSupabase(word, { corrected, pos, ipa, cefr, description: desc, examples }, null);
   }
 
   return wordResults[word].html;
