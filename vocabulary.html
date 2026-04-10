@@ -263,30 +263,30 @@
     border-radius: 12px;
     border: 1px solid #D5D2CC;
   }
-  /* 새 단어 발견 오버레이 뱃지 */
+  /* 새 단어 발견 뱃지 (화면 중앙 고정) */
   .discovery-badge {
-    position: absolute;
+    position: fixed;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(0, 0, 0, 0.75);
+    transform: translate(-50%, -50%) scale(0.5);
+    background: rgba(0, 0, 0, 0.8);
     color: #fff;
-    padding: 20px 28px;
+    padding: 24px 32px;
     border-radius: 14px;
     text-align: center;
     pointer-events: none;
     opacity: 0;
+    z-index: 9999;
     animation: badgeShow 3.2s ease-out forwards;
-    z-index: 10;
   }
   .discovery-badge .badge-title {
-    font-size: 1.05rem;
+    font-size: 1.1rem;
     font-weight: 600;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
     color: #4A90D9;
   }
   .discovery-badge .badge-sub {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     color: #ccc;
   }
   @keyframes badgeShow {
@@ -1298,13 +1298,13 @@ function playDiscoverySound() {
   });
 }
 
-/* 이미지 위에 발견 뱃지 표시 */
-function showDiscoveryBadge(container) {
+/* 화면 중앙에 발견 뱃지 표시 */
+function showDiscoveryBadge() {
   const username = _authUser?.email?.split('@')[0] || '';
   const badge = document.createElement('div');
   badge.className = 'discovery-badge';
   badge.innerHTML = `<div class="badge-title">${t('discoveryTitle')}</div><div class="badge-sub">${escapeHtml(username)}${t('discoverySub')}</div>`;
-  container.appendChild(badge);
+  document.body.appendChild(badge);
   playDiscoverySound();
   /* 애니메이션 종료 후 뱃지 제거 */
   setTimeout(() => badge.remove(), 3200);
@@ -1636,7 +1636,7 @@ async function fetchWordResult(word, targetEl) {
     if (container) {
       container.innerHTML = `<img src="${escapeHtml(imageUrl)}" alt="${safeWord}${t('imageAlt')}">`;
       /* 새 이미지 생성 시 발견 뱃지 + 효과음 */
-      if (!reusedImagePath) showDiscoveryBadge(container);
+      if (!reusedImagePath) showDiscoveryBadge();
     }
     const imgTag = `<img src="${escapeHtml(imageUrl)}" alt="${safeWord}${t('imageAlt')}">`;
     const imgHtml = html.replace(
