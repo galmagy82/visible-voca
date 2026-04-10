@@ -742,7 +742,8 @@
   }
 </style>
 </head>
-<body>
+<!-- 인증 확인 전까지 본문 숨김 (깜빡임 방지) -->
+<body style="display:none">
 
 <div class="top-header">
   <h1>Geminary<span class="symbol">✦</span></h1>
@@ -1177,6 +1178,13 @@ let _authUser = null;
 async function initAuth() {
   const { data: { session } } = await supabaseClient.auth.getSession();
   _authUser = session?.user || null;
+  /* 미인증 사용자는 Welcome 페이지로 리다이렉트 */
+  if (!_authUser) {
+    location.href = 'index.html';
+    return;
+  }
+  /* 인증 확인 후 본문 표시 */
+  document.body.style.display = '';
   updateVocabAuthUI();
 }
 
@@ -1202,16 +1210,20 @@ function updateVocabAuthUI() {
   }
 }
 
-/* 로그아웃 */
+/* 로그아웃 → Welcome 페이지로 이동 */
 document.getElementById('vocabLogoutBtn').addEventListener('click', async () => {
   await supabaseClient.auth.signOut();
-  _authUser = null;
-  updateVocabAuthUI();
+  location.href = 'index.html';
 });
 
 /* 인증 상태 변경 감지 */
 supabaseClient.auth.onAuthStateChange((event, session) => {
   _authUser = session?.user || null;
+  if (!_authUser) {
+    location.href = 'index.html';
+    return;
+  }
+  document.body.style.display = '';
   updateVocabAuthUI();
 });
 
