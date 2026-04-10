@@ -1213,9 +1213,10 @@ initAuth();
 
 // --- 설정 (localStorage 공유) ---
 function getSettings() {
+  const defaults = { imageEnabled: true };
   const saved = localStorage.getItem('visibleVoca_settings');
-  if (saved) return JSON.parse(saved);
-  return { imageEnabled: true };
+  if (saved) return { ...defaults, ...JSON.parse(saved) };
+  return defaults;
 }
 
 // --- 일반검색 ---
