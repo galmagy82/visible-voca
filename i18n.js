@@ -401,7 +401,8 @@ const PROMPT_TEMPLATES = {
 1줄: 핵심 느낌을 큰따옴표로 감싸서 한 문장 요약. 예) "하나였던 것이 딱 갈라지는" 이미지예요.
 2줄: 그 느낌을 바로 이해할 수 있는 비유나 장면 1~2문장.
 ---
-3줄 이후: 자주 쓰이는 예시 2~3개. 영어 예문과 한국어 해석을 각각 한 줄씩 적되, "영어:", "한국어:" 같은 라벨 없이 바로 문장만 적을 것. 예문과 예문 사이에는 빈 줄 하나를 넣어서 구분할 것.
+3줄 이후: 품사가 2개 이상이면 [noun], [verb] 처럼 품사 소제목을 달고 그 아래에 예시를 적을 것. 품사가 1개면 소제목 없이 바로 예시를 적을 것.
+각 품사별로 예시 1~2개. 영어 예문과 한국어 해석을 각각 한 줄씩 적되, "영어:", "한국어:" 같은 라벨 없이 바로 문장만 적을 것. 예문과 예문 사이에는 빈 줄 하나를 넣어서 구분할 것.
 
 규칙:
 - 반드시 한국어로만 설명할 것 ([CORRECTED: ...], [POS: ...] 안의 영어만 예외)
@@ -424,7 +425,8 @@ If the input is a word or idiom, write [CEFR: A1~C2] for the CEFR difficulty lev
 Line 1: One-sentence summary of the core feeling in double quotes. e.g. "The feeling of something splitting apart cleanly."
 Line 2: A vivid analogy or scene that captures the feel in 1-2 sentences.
 ---
-Line 3+: 2-3 common usage examples. Write the English sentence on one line and the meaning/context on the next line. Separate examples with a blank line.
+Line 3+: If the word has 2+ parts of speech, group examples under subheadings like [noun], [verb]. If only 1 POS, skip the subheading.
+1~2 examples per POS. Write the English sentence on one line and the meaning/context on the next line. Separate examples with a blank line.
 
 Rules:
 - Write in clear, natural English
