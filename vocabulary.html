@@ -170,6 +170,18 @@
     margin-bottom: 12px;
     font-style: italic;
   }
+  /* CEFR 난이도 배지 */
+  .cefr-badge {
+    display: inline-block;
+    background: #4A90D9;
+    color: #fff;
+    font-size: 0.75rem;
+    font-style: normal;
+    font-weight: 600;
+    padding: 1px 7px;
+    border-radius: 4px;
+    vertical-align: middle;
+  }
   .corrected {
     font-size: 0.95rem;
     color: #5A8A42;
@@ -1439,6 +1451,13 @@ async function fetchWordResult(word, targetEl) {
     ipa = ipaMatch[1].trim();
     body = body.replace(/\[IPA:\s*.+?\]\n?/i, '');
   }
+  /* CEFR 난이도 파싱 (A1~C2) */
+  let cefr = '';
+  const cefrMatch = body.match(/\[CEFR:\s*(.+?)\]/i);
+  if (cefrMatch) {
+    cefr = cefrMatch[1].trim();
+    body = body.replace(/\[CEFR:\s*.+?\]\n?/i, '');
+  }
 
   const parts = body.split(/\n---\n?/);
   const desc = parts[0].trim();
@@ -1451,7 +1470,14 @@ async function fetchWordResult(word, targetEl) {
   html += `<button class="speak-btn" onclick="speak('${speakWord}')" title="${t('listenPronunciation')}">&#128264;</button>`;
   html += `<button class="add-wordbook-btn" data-wb-word>${t('addToWordbook')}</button>`;
   html += `</div>`;
-  if (pos || ipa) html += `<div class="word-pos">${escapeHtml(pos)}${pos && ipa ? ' · ' : ''}${escapeHtml(ipa)}</div>`;
+  /* 품사 · 발음 · CEFR 난이도 표시 */
+  if (pos || ipa || cefr) {
+    let posLine = '';
+    if (pos) posLine += escapeHtml(pos);
+    if (ipa) posLine += (posLine ? ' · ' : '') + escapeHtml(ipa);
+    if (cefr) posLine += (posLine ? ' · ' : '') + `<span class="cefr-badge">${escapeHtml(cefr)}</span>`;
+    html += `<div class="word-pos">${posLine}</div>`;
+  }
   if (corrected) html += `<div class="corrected">${safeWord} → <span>${safeCorrected}</span></div>`;
   html += `<div class="feel-desc">${escapeHtml(desc)}</div>`;
   if (imagePromise) {

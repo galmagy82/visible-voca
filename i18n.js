@@ -397,6 +397,7 @@ const PROMPT_TEMPLATES = {
 만약 입력에 문법 오류나 오타가 있다면, 첫 줄에 [CORRECTED: 올바른 표현] 형식으로 교정된 문장을 적어줘. 오류가 없으면 이 줄은 생략.
 입력이 단어나 숙어인 경우, [POS: 품사] 형식으로 품사를 적어줘. 품사는 영어 약어로 적을 것 (noun, verb, adj, adv, phrase 등). 여러 품사가 가능하면 쉼표로 구분. 입력이 문장이면 이 줄은 생략.
 입력이 단어나 숙어인 경우, [IPA: /발음기호/] 형식으로 IPA 발음기호를 적어줘. 입력이 문장이면 이 줄은 생략.
+입력이 단어나 숙어인 경우, [CEFR: A1~C2] 형식으로 CEFR 난이도를 적어줘. 입력이 문장이면 이 줄은 생략.
 1줄: 핵심 느낌을 큰따옴표로 감싸서 한 문장 요약. 예) "하나였던 것이 딱 갈라지는" 이미지예요.
 2줄: 그 느낌을 바로 이해할 수 있는 비유나 장면 1~2문장.
 ---
@@ -419,6 +420,7 @@ Format:
 If there is a grammar error or typo, write [CORRECTED: corrected expression] on the first line. Skip this line if there is no error.
 If the input is a word or idiom, write [POS: part of speech] (noun, verb, adj, adv, phrase, etc.). Separate multiple POS with commas. Skip this line for sentences.
 If the input is a word or idiom, write [IPA: /pronunciation/] with IPA notation. Skip this line for sentences.
+If the input is a word or idiom, write [CEFR: A1~C2] for the CEFR difficulty level. Skip this line for sentences.
 Line 1: One-sentence summary of the core feeling in double quotes. e.g. "The feeling of something splitting apart cleanly."
 Line 2: A vivid analogy or scene that captures the feel in 1-2 sentences.
 ---
