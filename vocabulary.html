@@ -929,8 +929,9 @@ async function fetchFromSupabase(word) {
 
     const lang = getLang();
 
-    /* 텍스트 row: 현재 언어와 일치하고 description이 있는 것만 */
-    const textRows = data.filter(r => r.description && r.lang === lang);
+    /* 텍스트 row: 현재 언어와 일치하고, description·cefr이 모두 있는 것만
+       cefr이 없는 예전 데이터는 miss 처리하여 새 프롬프트로 재생성한다. */
+    const textRows = data.filter(r => r.description && r.lang === lang && r.cefr);
     /* 이미지 row: 언어 무관 — image_path가 있는 모든 row */
     const imageRows = data.filter(r => r.image_path);
 
