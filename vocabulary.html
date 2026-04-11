@@ -50,11 +50,13 @@
   h1 .symbol {
     color: #4A90D9;
   }
-  /* 로그아웃 버튼: 사이드바 맨 아래 */
-  .sidebar-logout {
-    margin-top: auto;
-    margin-left: 8px;
-    margin-right: 8px;
+  /* 로그아웃 버튼: 화면 우상단에 고정
+     대부분의 웹앱 관습대로 계정 액션은 오른쪽 상단에 배치.
+     position: fixed 라서 스크롤해도 항상 보임. */
+  .top-logout {
+    position: fixed;
+    top: 16px;
+    right: 20px;
     padding: 6px 14px;
     font-size: 0.75rem;
     color: #7A7570;
@@ -62,10 +64,10 @@
     border: 1px solid #D5D2CC;
     border-radius: 6px;
     cursor: pointer;
-    text-align: center;
     white-space: nowrap;
+    z-index: 100;
   }
-  .sidebar-logout:hover {
+  .top-logout:hover {
     background: #F5F3F0;
     color: #4A4641;
   }
@@ -773,10 +775,11 @@
       font-size: 0.8rem;
       white-space: nowrap;
     }
-    .sidebar-logout {
-      padding: 10px 14px;
-      font-size: 0.75rem;
-      white-space: nowrap;
+    /* 모바일에서도 우상단 고정 위치 유지, 기존 상단 패딩(60px) 안에 들어감 */
+    .top-logout {
+      top: 12px;
+      right: 12px;
+      padding: 5px 12px;
     }
     .content {
       padding-left: 0;
@@ -801,6 +804,9 @@
 <!-- 인증 확인 전까지 본문 숨김 (깜빡임 방지) -->
 <body style="display:none">
 
+<!-- 우상단 고정 로그아웃 버튼 — 사이드바에서 분리해 화면 우상단에 고정 -->
+<button class="top-logout" id="vocabLogoutBtn" data-i18n="logout">로그아웃</button>
+
 <div class="top-header">
   <h1>Geminary<span class="symbol">✦</span></h1>
 </div>
@@ -812,7 +818,6 @@
     <button class="tab" onclick="switchTab('photo')" data-i18n="tabPhoto" style="display:none;">사진에서 검색</button>
     <button class="tab" onclick="switchTab('wordbook')" data-i18n="tabWordbook">단어장</button>
     <button class="tab" onclick="switchTab('quiz')" data-i18n="tabQuiz">Quiz</button>
-    <button class="sidebar-logout" id="vocabLogoutBtn" data-i18n="logout">로그아웃</button>
   </div>
 
   <!-- 오른쪽 컨텐츠 -->
