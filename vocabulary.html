@@ -402,43 +402,28 @@
 
   .error { color: #6B6660; font-size: 1rem; }
 
-  /* 로딩 영역 — fade in + Shimmer Glow 효과
-     텍스트 자체에 파란 하이라이트가 좌→우로 반복해서 스치며 흐름.
-     이미지 생성 단계(.feel-image-loading)의 ✦ 댄스와 시각적으로 차별화해서
-     "검색 중"과 "이미지 생성 중"을 사용자가 명확히 구분할 수 있도록 한다. */
+  /* 로딩 영역 — slide in + 호흡(Breathing) 효과
+     텍스트 전체 opacity 가 천천히 1 ↔ 0.55 를 오가며 조용히 맥동.
+     방향성이 없어 이미지 생성 단계(.feel-image-loading 의 별 3개 순차 펄스, L→R)
+     와 명확히 구분되며, "주문을 외는" 정갈한 느낌을 준다. */
   .loading {
-    position: relative;
     font-size: 1rem;
     padding: 30px 20px;
     text-align: center;
-    /* Shimmer 그라디언트: 기본 회색 텍스트 + 중앙에 파란 하이라이트 */
-    background: linear-gradient(
-      90deg,
-      #7A7570 0%,
-      #7A7570 35%,
-      #4A90D9 50%,
-      #7A7570 65%,
-      #7A7570 100%
-    );
-    background-size: 200% 100%;
-    /* 그라디언트를 글자 모양에만 클리핑 — 글자 자체가 색을 띰 */
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
-    -webkit-text-fill-color: transparent;
+    color: #7A7570;
     animation:
-      loadingFadeIn 0.5s ease-out,
-      shimmerFlow 2s linear infinite;
+      loadingSlideIn 0.5s ease-out,
+      breathe 2.4s ease-in-out infinite;
   }
-  @keyframes loadingFadeIn {
-    from { opacity: 0; transform: translateY(6px); }
-    to   { opacity: 1; transform: translateY(0); }
+  /* 등장 슬라이드: transform 만 사용 — breathe 의 opacity 와 충돌 안 함. */
+  @keyframes loadingSlideIn {
+    from { transform: translateY(6px); }
+    to   { transform: translateY(0); }
   }
-  /* Shimmer: background-position 을 100%→0% 로 이동하면
-     그라디언트의 "밝은 부분"이 좌측에서 우측으로 지나가는 것처럼 보인다. */
-  @keyframes shimmerFlow {
-    0%   { background-position: 100% 0; }
-    100% { background-position: 0% 0; }
+  /* 호흡: opacity 만 1 ↔ 0.55 반복. 방향성 없음, 완전 정적인 맥동. */
+  @keyframes breathe {
+    0%, 100% { opacity: 0.55; }
+    50%      { opacity: 1; }
   }
 
   /* 단어장에 추가 버튼 */
