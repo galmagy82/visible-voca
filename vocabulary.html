@@ -370,8 +370,8 @@
     pointer-events: none;
     opacity: 0;
     z-index: 9999;
-    /* 3줄(타이틀/서브/노트)로 늘어나서 읽는 시간 확보를 위해 3.2s → 4.5s */
-    animation: badgeShow 4.5s ease-out forwards;
+    /* 3줄(타이틀/서브/노트)로 늘어나서 읽는 시간 확보를 위해 3.2s → 5.5s */
+    animation: badgeShow 5.5s ease-out forwards;
   }
   .discovery-badge .badge-title {
     font-size: 1.1rem;
@@ -1499,8 +1499,8 @@ function showDiscoveryBadge() {
   badge.innerHTML = `<div class="badge-title">${t('discoveryTitle')}</div><div class="badge-sub">${escapeHtml(username)}${t('discoverySub')}</div><div class="badge-note">${t('discoveryNote')}</div>`;
   document.body.appendChild(badge);
   playDiscoverySound();
-  /* 애니메이션(4.5s) 종료 후 뱃지 제거 — CSS animation 값과 일치해야 함 */
-  setTimeout(() => badge.remove(), 4500);
+  /* 애니메이션(5.5s) 종료 후 뱃지 제거 — CSS animation 값과 일치해야 함 */
+  setTimeout(() => badge.remove(), 5500);
 }
 
 // --- 설정 (localStorage 공유) ---
