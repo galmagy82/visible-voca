@@ -1,6 +1,25 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+<!-- 인앱 브라우저 감지 → 외부 브라우저(Chrome/Safari)로 자동 전환
+     카톡/라인/페북/인스타 등 내장 브라우저에서는 Google OAuth 가 차단되므로
+     (Google "Use secure browsers" 정책) 감지 즉시 외부 브라우저로 넘어간다.
+     Android: intent:// 스킴으로 Chrome 강제 실행.
+     iOS: openExternalBrowser 플래그 후 재로드 (카톡 iOS 가 인식함).
+     반드시 다른 <script> 로드 전에 실행되어야 하므로 <head> 최상단 인라인. -->
+<script>
+(function() {
+  var ua = navigator.userAgent;
+  var isInApp = /KAKAOTALK|Line|FBAN|FBAV|Instagram|NAVER|wv/i.test(ua);
+  if (!isInApp) return;
+  if (/Android/i.test(ua)) {
+    location.href = 'intent://' + location.host + location.pathname + location.search +
+      '#Intent;scheme=https;package=com.android.chrome;end';
+  } else if (!location.search.includes('openExternalBrowser=1')) {
+    location.href = location.href + (location.search ? '&' : '?') + 'openExternalBrowser=1';
+  }
+})();
+</script>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-0S350GM68M"></script>
 <script>
