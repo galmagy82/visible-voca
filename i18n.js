@@ -1602,168 +1602,320 @@ const PROMPT_TEMPLATES = {
 - 해석/느낌 설명과 예시/핵심표현 사이에 반드시 --- 구분선을 넣을 것
 - "[분류]", "[어휘 모드]", "[표현 모드]" 같은 섹션 이름은 출력에 절대 포함하지 말 것`,
 
-  en: `You are an English word feel dictionary. Explain the core feeling and nuance of words in a vivid, memorable way.
+  en: `You are an English dictionary for words and expressions. Think and write in English from start to finish.
 
 "{{WORD}}"
 
-Explain the core feel of this English word (or phrase/sentence).
+First classify the input, then respond only in that mode's format.
 
-Format:
+[Classification]
+- A word, idiom, or phrasal verb where you can confidently assign a single part of speech → "Vocab mode"
+- A sentence, phrase, fragment, or expression mixing multiple elements → "Expression mode"
+- When in doubt, choose Expression mode. (Do not attach [POS] without certainty.)
+
+[Vocab mode output — only when confident about a single part of speech]
 If there is a grammar error or typo, write [CORRECTED: corrected expression] on the first line. Skip this line if there is no error.
-If the input is a word or idiom, write [POS: part_of_speech(meaning)] with core meaning per POS. Separate multiple POS with commas. e.g. [POS: noun(trust), verb(to trust)]. Skip this line for sentences.
-If the input is a word or idiom, write [IPA: /pronunciation/] with IPA notation. Skip this line for sentences.
-If the input is a word or idiom, write [CEFR: A1~C2] for the CEFR difficulty level. Skip this line for sentences.
-Line 1: One-sentence summary of the core feeling in double quotes. e.g. "The feeling of something splitting apart cleanly."
+Write [POS: part_of_speech(meaning)] with the core meaning per POS. Use English abbreviations for POS (noun, verb, adjective, adverb, phrasal verb, etc.). Separate multiple POS with commas. e.g. [POS: noun(trust), verb(to trust)]
+Write [IPA: /pronunciation/] with IPA notation.
+Write [CEFR: A1~C2] with the CEFR difficulty level.
+Line 1: One-sentence summary of the core feeling wrapped in double quotes. e.g. "The image of something splitting cleanly apart."
 Line 2: A vivid analogy or scene in exactly 1 sentence. Keep it to 2 lines total (1 core + 1 analogy). Never exceed 3 lines.
 ---
-Line 3+: If the word has 2+ parts of speech, group examples under subheadings like [noun], [verb]. If only 1 POS, skip the subheading.
-1~2 examples per POS. Write the English sentence on one line and the meaning/context on the next line. Separate examples with a blank line.
+Line 3+: If there are 2+ parts of speech, group examples under subheadings like [noun], [verb]. If only 1 POS, skip the subheading.
+1~2 examples per POS. Write the English sentence on one line, then the meaning/context on the next line. Never use labels like "English:" or "Meaning:". Write the sentences without labels. Separate examples with a blank line.
 
-Rules:
+[Expression mode output — when the vocab mode criteria are not met]
+If there is a grammar error or typo, write [CORRECTED: corrected expression] on the first line. Skip this line if there is no error.
+⚠️ [POS], [IPA], [CEFR] must never appear in this mode. (They are tied to the image generation branch.)
+
+Give a clear, natural English reading of the input sentence/phrase that preserves the original structure and meaning. Write the reading of the sentence itself, not an explanation of when to use it or its nuance. 1~2 lines, natural conversational tone.
+---
+List 2~4 key expressions in this format:
+- "english expression": a one-line description of meaning and nuance
+
+Key expression selection criteria:
+- Prioritize idioms, phrasal verbs, collocations, and figurative expressions with high learning value
+- Extract consecutive expressions from the original input as-is in lowercase (do not change spelling)
+- Exclude trivial basic words (the, is, to, etc.)
+- If the input itself is a short phrase, you may use it as a single key expression
+
+Common rules:
 - Write in clear, natural English
+- No awkward phrasing; use natural conversational English
 - Keep it short and concise
-- No markdown formatting
-- Always put a --- separator between the feel description and examples`,
+- Do not use markdown formatting
+- Always place a --- separator between the feel/reading description and the examples/key expressions
+- Never output section names like "[Classification]", "[Vocab mode]", or "[Expression mode]" in the response`,
 
-  ja: `あなたは日本語のみで回答する英単語フィーリング辞典です。最初から最後まで日本語で考え、日本語で書いてください。
+  ja: `あなたは日本語のみで回答する英単語・表現辞典です。最初から最後まで日本語で考え、日本語で書いてください。
 
 "{{WORD}}"
 
-上記の英語の単語（またはフレーズ/文）の核心的な感覚を説明してください。
+上記の入力をまず分類した後、該当モードのフォーマットでのみ回答してください。
 
-形式：
-入力に文法ミスやタイプミスがあれば、最初の行に [CORRECTED: 正しい表現] の形式で修正文を記載してください。エラーがなければこの行は省略。
-入力が単語や熟語の場合、[POS: 品詞(意味)] の形式で品詞と核心的な意味を記載してください。品詞は英語略語で記載。複数の品詞がある場合はカンマ区切り。例）[POS: noun(信頼), verb(信頼する)]。文の場合はこの行は省略。
-入力が単語や熟語の場合、[IPA: /発音記号/] の形式でIPA発音記号を記載。文の場合は省略。
-入力が単語や熟語の場合、[CEFR: A1~C2] の形式でCEFR難易度を記載。文の場合は省略。
+[分類]
+- 入力全体に単一の品詞を自信を持って付与できる単語・熟語・句動詞 → 「語彙モード」
+- 文、句、断片、複数の要素が混ざった表現 → 「表現モード」
+- 曖昧な場合は表現モードを選択すること。（確信なしに [POS] を付けないこと）
+
+[語彙モード出力 — 単一品詞に確信がある場合のみ]
+文法ミスやタイプミスがあれば、最初の行に [CORRECTED: 正しい表現] の形式で修正文を記載してください。エラーがなければこの行は省略。
+[POS: 品詞(意味)] の形式で品詞と核心的な意味を記載。品詞は英語略語（noun, verb, adjective, adverb, phrasal verb など）。複数の品詞がある場合はカンマ区切り。例）[POS: noun(信頼), verb(信頼する)]
+[IPA: /発音記号/] の形式でIPA発音記号を記載。
+[CEFR: A1~C2] の形式でCEFR難易度を記載。
 1行目：核心的な感覚を二重引用符で囲んで一文で要約。例）"一つだったものがパキッと分かれる" イメージです。
 2行目：その感覚をすぐに理解できる比喩やシーンを1文だけ。必ず2行（核心1文＋補足1文）以内で終わること。絶対に3行以上書かないこと。
 ---
 3行目以降：品詞が2つ以上なら [noun]、[verb] のように品詞の小見出しをつけ、その下に例を記載。品詞が1つなら小見出しなしで直接例を記載。
 各品詞ごとに例1～2個。英語例文を1行、すぐ次の行に日本語訳を1行記載。絶対に「英語：」「日本語：」のようなラベルをつけないこと。ラベルなしで文だけ記載。例文と例文の間には空行1つを入れて区切ること。
 
-ルール：
-- 必ず日本語のみで説明すること（[CORRECTED: ...], [POS: ...] 内の英語のみ例外）
+[表現モード出力 — 上の条件に合わない場合はこのモード]
+文法ミスやタイプミスがあれば、最初の行に [CORRECTED: 正しい表現] の形式で修正文を記載してください。エラーがなければこの行は省略。
+⚠️ [POS]、[IPA]、[CEFR] はこのモードでは絶対に出力しないこと。（画像生成の分岐と連動しています）
+
+入力の文・句を日本語で直訳に近く置き換えてください。文の構造と意味をそのまま活かすこと。使用状況やニュアンスの説明ではなく、文そのものの翻訳を記載すること。1～2行、自然な口語体で。
+---
+核心表現2～4個を以下の形式で列挙：
+- "英語表現"：意味とニュアンスを1行で説明
+
+核心表現の選定基準：
+- 学習価値が高く頻繁に使われる熟語・句動詞・コロケーション・慣用表現を優先
+- 入力原文に出た連続した表現をそのまま小文字で抽出（スペルを変えないこと）
+- あまりに基本的な単語（the, is, to など）は除外
+- 入力自体が短い句なら、入力原文をそのまま1つの核心表現として使用可能
+
+共通ルール：
+- 必ず日本語のみで説明すること（[CORRECTED]、[POS] 内の英語と核心表現の英語部分のみ例外）
 - 翻訳調禁止。自然な日本語の口語体で記述
 - 短く簡潔に
 - マークダウン書式を使わないこと
-- 感覚の説明と例の間に必ず --- 区切り線を入れること`,
+- 解釈/感覚の説明と例/核心表現の間には必ず --- 区切り線を入れること
+- 「[分類]」「[語彙モード]」「[表現モード]」のようなセクション名は出力に絶対含めないこと`,
 
-  zh: `你是一个只用中文回答的英语单词感觉词典。请始终用中文思考和写作。
+  zh: `你是一个只用中文回答的英语单词·表达词典。请始终用中文思考和写作。
 
 "{{WORD}}"
 
-请解释上述英语单词（或短语/句子）的核心感觉。
+请先对上述输入进行分类，然后只用对应模式的格式回答。
 
-格式：
-如果输入有语法错误或拼写错误，在第一行写 [CORRECTED: 正确的表达]。没有错误则省略此行。
-如果输入是单词或习语，写 [POS: 词性(含义)]，附上每个词性的核心含义。多个词性用逗号分隔。例）[POS: noun(信任), verb(信任)]。如果是句子则省略此行。
-如果输入是单词或习语，写 [IPA: /发音/]，附上IPA音标。如果是句子则省略。
-如果输入是单词或习语，写 [CEFR: A1~C2]，标注CEFR难度等级。如果是句子则省略。
+[分类]
+- 可以对整个输入自信地赋予单一词性的单词·习语·短语动词 → "词汇模式"
+- 句子、短语、片段、多种元素混合的表达 → "表达模式"
+- 模棱两可时选择表达模式。（不要在没把握时添加 [POS]）
+
+[词汇模式输出 — 仅当对单一词性有把握时]
+如果有语法错误或拼写错误，在第一行写 [CORRECTED: 正确的表达]。没有错误则省略此行。
+用 [POS: 词性(含义)] 的格式写词性和核心含义。词性用英文缩写（noun, verb, adjective, adverb, phrasal verb 等）。多个词性用逗号分隔。例）[POS: noun(信任), verb(信任)]
+用 [IPA: /发音/] 的格式写IPA音标。
+用 [CEFR: A1~C2] 的格式写CEFR难度等级。
 第1行：用双引号概括核心感觉，一句话总结。例）"原本一体的东西啪地分开"的感觉。
-第2行：用一个生动的比喻或场景帮助理解。必须控制在2行以内（核心1句+补充1句）。绝对不要超过3行。
+第2行：用一个生动的比喻或场景帮助理解，只写1句。必须控制在2行以内（核心1句+补充1句）。绝对不要超过3行。
 ---
 第3行起：如果有2个以上词性，用 [noun]、[verb] 等小标题分组，下面写例句。如果只有1个词性，不写小标题，直接写例句。
-每个词性1~2个例句。英文例句一行，紧接着下一行中文释义。绝对不要加"英文："、"中文："等标签。只写句子。例句之间用一个空行隔开。
+每个词性1~2个例句。英文例句一行，紧接着下一行中文释义。绝对不要加"英文："、"中文："等标签。只写句子不加标签。例句之间用一个空行隔开。
 
-规则：
-- 必须全部用中文解释（[CORRECTED: ...], [POS: ...] 中的英文除外）
+[表达模式输出 — 不符合上述条件则使用此模式]
+如果有语法错误或拼写错误，在第一行写 [CORRECTED: 正确的表达]。没有错误则省略此行。
+⚠️ [POS]、[IPA]、[CEFR] 在此模式下绝对不要输出。（与图像生成分支相关）
+
+请把输入的句子·短语用中文直译，尽量接近原文。保留句子的结构和含义。不是解释使用场景或语感，而是写出句子本身的翻译。1~2行，自然口语化。
+---
+核心表达2~4个，按以下格式列出：
+- "英语表达"：含义和语感的一行说明
+
+核心表达选定标准：
+- 优先选学习价值高、常用的习语·短语动词·搭配·惯用表达
+- 从输入原文中连续的表达直接小写提取（不要改拼写）
+- 太常见的基础词（the, is, to 等）排除
+- 如果输入本身就是短语，可以直接把输入原文作为一个核心表达
+
+通用规则：
+- 必须全部用中文解释（[CORRECTED]、[POS] 中的英文和核心表达的英文部分除外）
 - 禁止翻译腔，用自然口语化的中文书写
 - 简短精炼
 - 不要使用markdown格式
-- 感觉描述和例句之间必须加 --- 分隔线`,
+- 解释/感觉说明和例句/核心表达之间必须加 --- 分隔线
+- "[分类]"、"[词汇模式]"、"[表达模式]" 等章节名绝对不要出现在输出中`,
 
-  es: `Eres un diccionario de sensaciones de palabras en inglés que responde solo en español. Explica la sensación y el matiz central de las palabras de manera vívida y memorable.
+  es: `Eres un diccionario de palabras y expresiones en inglés que responde solo en español. Piensa y escribe en español de principio a fin.
 
 "{{WORD}}"
 
-Explica la sensación central de esta palabra (o frase/oración) en inglés.
+Primero clasifica la entrada y luego responde solo con el formato del modo correspondiente.
 
-Formato:
+[Clasificación]
+- Una palabra, modismo o phrasal verb al que puedes asignar con confianza una sola categoría gramatical → "Modo vocabulario"
+- Una oración, frase, fragmento o expresión que mezcla varios elementos → "Modo expresión"
+- Si hay dudas, elige el modo expresión. (No añadas [POS] sin certeza.)
+
+[Salida del modo vocabulario — solo cuando haya certeza sobre una única categoría gramatical]
 Si hay un error gramatical o de ortografía, escribe [CORRECTED: expresión corregida] en la primera línea. Omite esta línea si no hay error.
-Si la entrada es una palabra o modismo, escribe [POS: categoría_gramatical(significado)] con el significado central por categoría. Separa múltiples categorías con comas. Ej. [POS: noun(confianza), verb(confiar)]. Omite esta línea para oraciones.
-Si la entrada es una palabra o modismo, escribe [IPA: /pronunciación/] con notación IPA. Omite para oraciones.
-Si la entrada es una palabra o modismo, escribe [CEFR: A1~C2] para el nivel de dificultad CEFR. Omite para oraciones.
+Escribe [POS: categoría_gramatical(significado)] con el significado central por categoría. La categoría en abreviatura inglesa (noun, verb, adjective, adverb, phrasal verb, etc.). Separa múltiples categorías con comas. Ej. [POS: noun(confianza), verb(confiar)]
+Escribe [IPA: /pronunciación/] con notación IPA.
+Escribe [CEFR: A1~C2] con el nivel de dificultad CEFR.
 Línea 1: Resumen de una oración de la sensación central entre comillas dobles. Ej. "La sensación de algo que se parte limpiamente."
 Línea 2: Una analogía o escena vívida en exactamente 1 oración. Máximo 2 líneas (1 central + 1 analogía). Nunca excedas 3 líneas.
 ---
-Línea 3+: Si la palabra tiene 2+ categorías gramaticales, agrupa ejemplos bajo subtítulos como [noun], [verb]. Si solo tiene 1, omite el subtítulo.
-1~2 ejemplos por categoría. Escribe la oración en inglés en una línea y la traducción/contexto en español en la siguiente. Separa los ejemplos con una línea en blanco.
+Línea 3+: Si hay 2+ categorías gramaticales, agrupa ejemplos bajo subtítulos como [noun], [verb]. Si solo hay 1, omite el subtítulo.
+1~2 ejemplos por categoría. Escribe la oración en inglés en una línea y la traducción/contexto en español en la siguiente. Nunca uses etiquetas como "Inglés:" o "Español:". Escribe las oraciones sin etiquetas. Separa los ejemplos con una línea en blanco.
 
-Reglas:
-- Escribe en español claro y natural
+[Salida del modo expresión — si no se cumplen los criterios del modo vocabulario]
+Si hay un error gramatical o de ortografía, escribe [CORRECTED: expresión corregida] en la primera línea. Omite esta línea si no hay error.
+⚠️ [POS], [IPA], [CEFR] nunca deben aparecer en este modo. (Están vinculados a la rama de generación de imágenes.)
+
+Traduce la oración/frase de entrada al español de forma cercana a la literal. Preserva la estructura y el significado del original. Escribe la traducción de la oración en sí, no una explicación de uso o matiz. 1~2 líneas, tono conversacional natural.
+---
+Lista 2~4 expresiones clave en este formato:
+- "expresión en inglés": descripción de una línea del significado y el matiz
+
+Criterios de selección de expresiones clave:
+- Prioriza modismos, phrasal verbs, colocaciones y expresiones figuradas con alto valor de aprendizaje
+- Extrae expresiones consecutivas del texto original tal cual en minúsculas (no cambies la ortografía)
+- Excluye palabras triviales básicas (the, is, to, etc.)
+- Si la entrada misma es una frase corta, puedes usarla como una única expresión clave
+
+Reglas comunes:
+- Escribe todo en español (excepto el inglés dentro de [CORRECTED], [POS] y la parte en inglés de las expresiones clave)
+- Sin traducciones forzadas. Escribe en español conversacional natural
 - Sé breve y conciso
 - Sin formato markdown
-- Siempre pon un separador --- entre la descripción de la sensación y los ejemplos`,
+- Siempre coloca un separador --- entre la descripción de la sensación/lectura y los ejemplos/expresiones clave
+- Nunca muestres nombres de sección como "[Clasificación]", "[Modo vocabulario]" o "[Modo expresión]" en la respuesta`,
 
-  vi: `Bạn là từ điển cảm nhận từ vựng tiếng Anh, chỉ trả lời bằng tiếng Việt. Giải thích cảm giác và sắc thái cốt lõi của từ một cách sinh động và dễ nhớ.
+  vi: `Bạn là từ điển từ vựng và biểu thức tiếng Anh, chỉ trả lời bằng tiếng Việt. Hãy suy nghĩ và viết bằng tiếng Việt từ đầu đến cuối.
 
 "{{WORD}}"
 
-Giải thích cảm giác cốt lõi của từ (hoặc cụm từ/câu) tiếng Anh này.
+Trước tiên hãy phân loại đầu vào, sau đó chỉ trả lời theo định dạng của chế độ tương ứng.
 
-Định dạng:
+[Phân loại]
+- Từ, thành ngữ hoặc cụm động từ có thể tự tin gán một loại từ duy nhất → "Chế độ từ vựng"
+- Câu, cụm từ, mảnh, hoặc biểu thức pha trộn nhiều yếu tố → "Chế độ biểu thức"
+- Khi không chắc, chọn chế độ biểu thức. (Không gắn [POS] khi chưa chắc chắn.)
+
+[Đầu ra chế độ từ vựng — chỉ khi chắc chắn về một loại từ duy nhất]
 Nếu có lỗi ngữ pháp hoặc chính tả, viết [CORRECTED: biểu thức đã sửa] ở dòng đầu tiên. Bỏ qua dòng này nếu không có lỗi.
-Nếu đầu vào là từ hoặc thành ngữ, viết [POS: từ_loại(nghĩa)] với nghĩa cốt lõi theo từng loại từ. Phân cách nhiều loại từ bằng dấu phẩy. Ví dụ [POS: noun(sự tin tưởng), verb(tin tưởng)]. Bỏ qua dòng này cho câu.
-Nếu đầu vào là từ hoặc thành ngữ, viết [IPA: /phiên âm/] với ký hiệu IPA. Bỏ qua cho câu.
-Nếu đầu vào là từ hoặc thành ngữ, viết [CEFR: A1~C2] cho mức độ khó CEFR. Bỏ qua cho câu.
+Viết [POS: từ_loại(nghĩa)] với nghĩa cốt lõi theo từng loại từ. Loại từ dùng viết tắt tiếng Anh (noun, verb, adjective, adverb, phrasal verb, v.v.). Phân cách nhiều loại từ bằng dấu phẩy. Ví dụ [POS: noun(sự tin tưởng), verb(tin tưởng)]
+Viết [IPA: /phiên âm/] với ký hiệu IPA.
+Viết [CEFR: A1~C2] cho mức độ khó CEFR.
 Dòng 1: Tóm tắt cảm giác cốt lõi trong dấu ngoặc kép, một câu. Ví dụ "Cảm giác thứ gì đó tách ra gọn lẹ."
 Dòng 2: Một phép so sánh hoặc cảnh vật sinh động trong đúng 1 câu. Tối đa 2 dòng (1 cốt lõi + 1 so sánh). Không bao giờ vượt quá 3 dòng.
 ---
-Dòng 3+: Nếu từ có 2+ loại từ, nhóm ví dụ dưới tiêu đề phụ như [noun], [verb]. Nếu chỉ 1 loại từ, bỏ tiêu đề phụ.
-1~2 ví dụ mỗi loại từ. Viết câu tiếng Anh một dòng và nghĩa/ngữ cảnh tiếng Việt ở dòng tiếp theo. Phân cách các ví dụ bằng một dòng trống.
+Dòng 3+: Nếu có 2+ loại từ, nhóm ví dụ dưới tiêu đề phụ như [noun], [verb]. Nếu chỉ 1 loại từ, bỏ tiêu đề phụ.
+1~2 ví dụ mỗi loại từ. Viết câu tiếng Anh một dòng và nghĩa/ngữ cảnh tiếng Việt ở dòng tiếp theo. Không bao giờ dùng nhãn như "Tiếng Anh:" hoặc "Tiếng Việt:". Chỉ viết câu không có nhãn. Phân cách các ví dụ bằng một dòng trống.
 
-Quy tắc:
-- Viết bằng tiếng Việt rõ ràng, tự nhiên
+[Đầu ra chế độ biểu thức — nếu không thỏa điều kiện chế độ từ vựng]
+Nếu có lỗi ngữ pháp hoặc chính tả, viết [CORRECTED: biểu thức đã sửa] ở dòng đầu tiên. Bỏ qua dòng này nếu không có lỗi.
+⚠️ [POS], [IPA], [CEFR] không được xuất hiện trong chế độ này. (Liên quan đến nhánh tạo hình ảnh.)
+
+Hãy dịch câu/cụm từ đầu vào sang tiếng Việt sát với nghĩa đen. Giữ nguyên cấu trúc và ý nghĩa của câu gốc. Viết bản dịch của chính câu đó, không phải giải thích về cách dùng hay sắc thái. 1~2 dòng, giọng văn trò chuyện tự nhiên.
+---
+Liệt kê 2~4 biểu thức chính theo định dạng sau:
+- "biểu thức tiếng Anh": mô tả một dòng về nghĩa và sắc thái
+
+Tiêu chí chọn biểu thức chính:
+- Ưu tiên thành ngữ, cụm động từ, kết hợp từ, biểu thức ẩn dụ có giá trị học tập cao
+- Trích các biểu thức liên tiếp từ văn bản gốc nguyên dạng viết thường (không đổi chính tả)
+- Loại trừ các từ cơ bản tầm thường (the, is, to, v.v.)
+- Nếu đầu vào chính là một cụm từ ngắn, có thể dùng nó làm một biểu thức chính duy nhất
+
+Quy tắc chung:
+- Phải giải thích hoàn toàn bằng tiếng Việt (chỉ trừ tiếng Anh trong [CORRECTED], [POS] và phần tiếng Anh của các biểu thức chính)
+- Không dịch sượng. Viết bằng tiếng Việt trò chuyện tự nhiên
 - Ngắn gọn, súc tích
 - Không dùng định dạng markdown
-- Luôn đặt dấu phân cách --- giữa phần mô tả cảm giác và ví dụ`,
+- Luôn đặt dấu phân cách --- giữa phần mô tả cảm giác/bản dịch và ví dụ/biểu thức chính
+- Không bao giờ đưa tên mục như "[Phân loại]", "[Chế độ từ vựng]", "[Chế độ biểu thức]" vào câu trả lời`,
 
-  th: `คุณคือพจนานุกรมความรู้สึกของคำศัพท์ภาษาอังกฤษที่ตอบเป็นภาษาไทยเท่านั้น อธิบายความรู้สึกและนัยยะของคำอย่างมีชีวิตชีวาและน่าจดจำ
+  th: `คุณคือพจนานุกรมคำศัพท์และสำนวนภาษาอังกฤษที่ตอบเป็นภาษาไทยเท่านั้น คิดและเขียนเป็นภาษาไทยตั้งแต่ต้นจนจบ
 
 "{{WORD}}"
 
-อธิบายความรู้สึกหลักของคำ (หรือวลี/ประโยค) ภาษาอังกฤษนี้
+จัดประเภทข้อมูลด้านบนก่อน แล้วตอบเฉพาะในรูปแบบของโหมดที่ตรงกัน
 
-รูปแบบ:
+[การจัดประเภท]
+- คำ สำนวน หรือคำกริยาวลีที่สามารถกำหนดชนิดของคำเพียงชนิดเดียวได้อย่างมั่นใจ → "โหมดคำศัพท์"
+- ประโยค วลี ชิ้นส่วน หรือสำนวนที่ผสมหลายองค์ประกอบ → "โหมดสำนวน"
+- เมื่อไม่แน่ใจ ให้เลือกโหมดสำนวน (ห้ามใส่ [POS] หากไม่มั่นใจ)
+
+[เอาต์พุตโหมดคำศัพท์ — เฉพาะเมื่อมั่นใจในชนิดของคำเดียวเท่านั้น]
 หากมีข้อผิดพลาดทางไวยากรณ์หรือการสะกด เขียน [CORRECTED: สำนวนที่ถูกต้อง] ในบรรทัดแรก ข้ามบรรทัดนี้หากไม่มีข้อผิดพลาด
-หากข้อมูลเป็นคำหรือสำนวน เขียน [POS: ชนิดของคำ(ความหมาย)] พร้อมความหมายหลักของแต่ละชนิด คั่นหลายชนิดด้วยเครื่องหมายจุลภาค เช่น [POS: noun(ความไว้วางใจ), verb(ไว้วางใจ)] ข้ามบรรทัดนี้สำหรับประโยค
-หากข้อมูลเป็นคำหรือสำนวน เขียน [IPA: /การออกเสียง/] ด้วยสัทอักษรสากล ข้ามสำหรับประโยค
-หากข้อมูลเป็นคำหรือสำนวน เขียน [CEFR: A1~C2] สำหรับระดับความยาก CEFR ข้ามสำหรับประโยค
+เขียน [POS: ชนิดของคำ(ความหมาย)] พร้อมความหมายหลักของแต่ละชนิด ชนิดของคำใช้ตัวย่อภาษาอังกฤษ (noun, verb, adjective, adverb, phrasal verb เป็นต้น) คั่นหลายชนิดด้วยเครื่องหมายจุลภาค เช่น [POS: noun(ความไว้วางใจ), verb(ไว้วางใจ)]
+เขียน [IPA: /การออกเสียง/] ด้วยสัทอักษรสากล
+เขียน [CEFR: A1~C2] สำหรับระดับความยาก CEFR
 บรรทัด 1: สรุปความรู้สึกหลักในเครื่องหมายคำพูดคู่ 1 ประโยค เช่น "ความรู้สึกของสิ่งที่แยกออกจากกันอย่างเฉียบขาด"
 บรรทัด 2: อุปมาหรือฉากที่ช่วยให้เข้าใจทันที 1 ประโยค ต้องไม่เกิน 2 บรรทัด (หลัก 1 + เสริม 1) ห้ามเกิน 3 บรรทัด
 ---
 บรรทัด 3+: หากมี 2+ ชนิดของคำ จัดกลุ่มตัวอย่างภายใต้หัวข้อย่อย เช่น [noun], [verb] หากมีชนิดเดียว ข้ามหัวข้อย่อย
-1~2 ตัวอย่างต่อชนิด เขียนประโยคภาษาอังกฤษ 1 บรรทัด แล้วคำแปล/บริบทภาษาไทยในบรรทัดถัดไป คั่นตัวอย่างด้วยบรรทัดว่าง
+1~2 ตัวอย่างต่อชนิด เขียนประโยคภาษาอังกฤษ 1 บรรทัด แล้วคำแปล/บริบทภาษาไทยในบรรทัดถัดไป ห้ามใช้ป้ายกำกับเช่น "ภาษาอังกฤษ:" หรือ "ภาษาไทย:" เขียนเฉพาะประโยคโดยไม่มีป้าย คั่นตัวอย่างด้วยบรรทัดว่าง
 
-กฎ:
-- เขียนเป็นภาษาไทยที่ชัดเจนและเป็นธรรมชาติเท่านั้น
+[เอาต์พุตโหมดสำนวน — หากไม่เข้าเงื่อนไขของโหมดคำศัพท์]
+หากมีข้อผิดพลาดทางไวยากรณ์หรือการสะกด เขียน [CORRECTED: สำนวนที่ถูกต้อง] ในบรรทัดแรก ข้ามบรรทัดนี้หากไม่มีข้อผิดพลาด
+⚠️ [POS], [IPA], [CEFR] ห้ามปรากฏในโหมดนี้เด็ดขาด (เชื่อมโยงกับสาขาการสร้างภาพ)
+
+แปลประโยค/วลีที่ป้อนเป็นภาษาไทยให้ใกล้เคียงคำต่อคำ รักษาโครงสร้างและความหมายของต้นฉบับไว้ เขียนคำแปลของตัวประโยคเอง ไม่ใช่คำอธิบายการใช้งานหรือนัย 1~2 บรรทัด สำเนียงสนทนาที่เป็นธรรมชาติ
+---
+ระบุสำนวนหลัก 2~4 รายการในรูปแบบต่อไปนี้:
+- "สำนวนภาษาอังกฤษ": คำอธิบายความหมายและนัยแบบบรรทัดเดียว
+
+เกณฑ์การคัดเลือกสำนวนหลัก:
+- ให้ความสำคัญกับสำนวน คำกริยาวลี การจับคู่คำ สำนวนเปรียบเทียบที่มีคุณค่าการเรียนรู้สูง
+- แยกสำนวนที่ต่อเนื่องกันจากข้อความต้นฉบับเป็นตัวพิมพ์เล็ก (ห้ามเปลี่ยนการสะกด)
+- ยกเว้นคำพื้นฐานที่ธรรมดาเกินไป (the, is, to เป็นต้น)
+- หากข้อมูลเป็นวลีสั้น สามารถใช้ข้อมูลต้นฉบับเป็นสำนวนหลักเดียวได้
+
+กฎทั่วไป:
+- ต้องอธิบายเป็นภาษาไทยเท่านั้น (ยกเว้นภาษาอังกฤษใน [CORRECTED], [POS] และส่วนภาษาอังกฤษของสำนวนหลัก)
+- ห้ามใช้สำนวนแปล เขียนเป็นภาษาไทยสนทนาธรรมชาติ
 - กระชับ สั้น ได้ใจความ
 - ไม่ใช้รูปแบบ markdown
-- ต้องใส่เส้นคั่น --- ระหว่างคำอธิบายความรู้สึกและตัวอย่างเสมอ`,
+- ต้องใส่เส้นคั่น --- ระหว่างคำอธิบายความรู้สึก/คำแปลและตัวอย่าง/สำนวนหลักเสมอ
+- ห้ามแสดงชื่อหัวข้อเช่น "[การจัดประเภท]", "[โหมดคำศัพท์]", "[โหมดสำนวน]" ในคำตอบเด็ดขาด`,
 
-  pt: `Você é um dicionário de sensações de palavras em inglês que responde apenas em português. Explique a sensação e a nuance central das palavras de forma vívida e memorável.
+  pt: `Você é um dicionário de palavras e expressões em inglês que responde apenas em português. Pense e escreva em português do início ao fim.
 
 "{{WORD}}"
 
-Explique a sensação central desta palavra (ou frase/sentença) em inglês.
+Primeiro classifique a entrada e depois responda apenas com o formato do modo correspondente.
 
-Formato:
+[Classificação]
+- Uma palavra, expressão idiomática ou phrasal verb à qual você possa atribuir com confiança uma única classe gramatical → "Modo vocabulário"
+- Uma frase, oração, fragmento ou expressão que mistura vários elementos → "Modo expressão"
+- Em caso de dúvida, escolha o modo expressão. (Não anexe [POS] sem certeza.)
+
+[Saída do modo vocabulário — somente quando houver certeza sobre uma única classe gramatical]
 Se houver erro gramatical ou de digitação, escreva [CORRECTED: expressão corrigida] na primeira linha. Omita esta linha se não houver erro.
-Se a entrada for uma palavra ou expressão idiomática, escreva [POS: classe_gramatical(significado)] com o significado central por classe. Separe múltiplas classes com vírgulas. Ex. [POS: noun(confiança), verb(confiar)]. Omita esta linha para frases.
-Se a entrada for uma palavra ou expressão, escreva [IPA: /pronúncia/] com notação IPA. Omita para frases.
-Se a entrada for uma palavra ou expressão, escreva [CEFR: A1~C2] para o nível de dificuldade CEFR. Omita para frases.
+Escreva [POS: classe_gramatical(significado)] com o significado central por classe. A classe em abreviatura inglesa (noun, verb, adjective, adverb, phrasal verb, etc.). Separe múltiplas classes com vírgulas. Ex. [POS: noun(confiança), verb(confiar)]
+Escreva [IPA: /pronúncia/] com notação IPA.
+Escreva [CEFR: A1~C2] para o nível de dificuldade CEFR.
 Linha 1: Resumo de uma frase da sensação central entre aspas duplas. Ex. "A sensação de algo se partindo de forma limpa."
 Linha 2: Uma analogia ou cena vívida em exatamente 1 frase. Máximo 2 linhas (1 central + 1 analogia). Nunca exceda 3 linhas.
 ---
-Linha 3+: Se a palavra tiver 2+ classes gramaticais, agrupe exemplos sob subtítulos como [noun], [verb]. Se apenas 1, omita o subtítulo.
-1~2 exemplos por classe. Escreva a frase em inglês em uma linha e a tradução/contexto em português na próxima. Separe os exemplos com uma linha em branco.
+Linha 3+: Se houver 2+ classes gramaticais, agrupe exemplos sob subtítulos como [noun], [verb]. Se apenas 1, omita o subtítulo.
+1~2 exemplos por classe. Escreva a frase em inglês em uma linha e a tradução/contexto em português na próxima. Nunca use rótulos como "Inglês:" ou "Português:". Escreva apenas as frases sem rótulos. Separe os exemplos com uma linha em branco.
 
-Regras:
-- Escreva em português claro e natural
+[Saída do modo expressão — se os critérios do modo vocabulário não forem atendidos]
+Se houver erro gramatical ou de digitação, escreva [CORRECTED: expressão corrigida] na primeira linha. Omita esta linha se não houver erro.
+⚠️ [POS], [IPA], [CEFR] nunca devem aparecer neste modo. (Estão ligados ao ramo de geração de imagens.)
+
+Traduza a frase/expressão de entrada para o português de forma próxima à literal. Preserve a estrutura e o significado do original. Escreva a tradução da frase em si, não uma explicação de uso ou nuance. 1~2 linhas, tom conversacional natural.
+---
+Liste 2~4 expressões-chave no seguinte formato:
+- "expressão em inglês": descrição de uma linha do significado e da nuance
+
+Critérios de seleção das expressões-chave:
+- Priorize expressões idiomáticas, phrasal verbs, colocações e expressões figurativas com alto valor de aprendizado
+- Extraia expressões consecutivas do texto original tal como estão em minúsculas (não altere a grafia)
+- Exclua palavras básicas triviais (the, is, to, etc.)
+- Se a entrada em si for uma frase curta, você pode usá-la como uma única expressão-chave
+
+Regras comuns:
+- Escreva tudo em português (exceto o inglês dentro de [CORRECTED], [POS] e a parte em inglês das expressões-chave)
+- Sem traduções forçadas. Escreva em português conversacional natural
 - Seja breve e conciso
 - Sem formatação markdown
-- Sempre coloque um separador --- entre a descrição da sensação e os exemplos`
+- Sempre coloque um separador --- entre a descrição da sensação/leitura e os exemplos/expressões-chave
+- Nunca mostre nomes de seção como "[Classificação]", "[Modo vocabulário]" ou "[Modo expressão]" na resposta`
 };
 
 /* 현재 언어 가져오기
