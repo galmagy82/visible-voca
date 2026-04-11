@@ -402,61 +402,43 @@
 
   .error { color: #6B6660; font-size: 1rem; }
 
-  /* 로딩 영역 — fade in + 양쪽 ✦ 맥동 + 뒤로 별밭(starfield) 배경
-     ./loading 전체가 처음 나타날 때 부드럽게 등장하고, 파란 ✦ 두 개가
-     엇갈려 맥동하며, 배경엔 작은 별들이 천천히 위로 흐른다. */
+  /* 로딩 영역 — fade in + Shimmer Glow 효과
+     텍스트 자체에 파란 하이라이트가 좌→우로 반복해서 스치며 흐름.
+     이미지 생성 단계(.feel-image-loading)의 ✦ 댄스와 시각적으로 차별화해서
+     "검색 중"과 "이미지 생성 중"을 사용자가 명확히 구분할 수 있도록 한다. */
   .loading {
     position: relative;
-    color: #7A7570;
     font-size: 1rem;
-    padding: 40px 30px;
+    padding: 30px 20px;
     text-align: center;
-    overflow: hidden;
-    /* 별밭: radial-gradient 여러 개로 무작위 위치의 작은 점들을 만들고
-       background-position 애니메이션으로 위로 흐르게 함 */
-    background-image:
-      radial-gradient(1.5px 1.5px at 15% 20%, rgba(74,144,217,0.55), transparent),
-      radial-gradient(1px 1px at 30% 60%, rgba(74,144,217,0.35), transparent),
-      radial-gradient(1.5px 1.5px at 50% 35%, rgba(74,144,217,0.5), transparent),
-      radial-gradient(1px 1px at 70% 75%, rgba(74,144,217,0.4), transparent),
-      radial-gradient(1.5px 1.5px at 85% 25%, rgba(74,144,217,0.55), transparent),
-      radial-gradient(1px 1px at 90% 50%, rgba(74,144,217,0.35), transparent),
-      radial-gradient(1.5px 1.5px at 10% 80%, rgba(74,144,217,0.5), transparent),
-      radial-gradient(1px 1px at 60% 15%, rgba(74,144,217,0.4), transparent),
-      radial-gradient(1px 1px at 40% 90%, rgba(74,144,217,0.45), transparent),
-      radial-gradient(1.5px 1.5px at 75% 55%, rgba(74,144,217,0.4), transparent);
-    background-size: 100% 200%;
+    /* Shimmer 그라디언트: 기본 회색 텍스트 + 중앙에 파란 하이라이트 */
+    background: linear-gradient(
+      90deg,
+      #7A7570 0%,
+      #7A7570 35%,
+      #4A90D9 50%,
+      #7A7570 65%,
+      #7A7570 100%
+    );
+    background-size: 200% 100%;
+    /* 그라디언트를 글자 모양에만 클리핑 — 글자 자체가 색을 띰 */
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
     animation:
       loadingFadeIn 0.5s ease-out,
-      starfieldDrift 8s linear infinite;
-  }
-  /* 양옆의 큰 ✦ — 서로 엇갈려 맥동(pulse) */
-  .loading::before,
-  .loading::after {
-    content: '✦';
-    color: #4A90D9;
-    font-size: 1.15rem;
-    margin: 0 14px;
-    display: inline-block;
-    vertical-align: middle;
-    animation: loadingStarPulse 1.8s ease-in-out infinite;
-  }
-  .loading::after {
-    animation-delay: 0.9s;  /* 반대쪽 ✦는 반박자 뒤에 맥동 */
+      shimmerFlow 2s linear infinite;
   }
   @keyframes loadingFadeIn {
     from { opacity: 0; transform: translateY(6px); }
     to   { opacity: 1; transform: translateY(0); }
   }
-  @keyframes loadingStarPulse {
-    0%, 100% { opacity: 0.3; transform: scale(0.9); }
-    50%      { opacity: 1;   transform: scale(1.25); }
-  }
-  /* 별밭이 천천히 위로 흐르는 느낌 — 배경 위치만 이동
-     0%→100% 로 진행하면 이미지 콘텐츠(별들)가 위쪽으로 이동한다 */
-  @keyframes starfieldDrift {
-    0%   { background-position: 0% 0%; }
-    100% { background-position: 0% 100%; }
+  /* Shimmer: background-position 을 100%→0% 로 이동하면
+     그라디언트의 "밝은 부분"이 좌측에서 우측으로 지나가는 것처럼 보인다. */
+  @keyframes shimmerFlow {
+    0%   { background-position: 100% 0; }
+    100% { background-position: 0% 0; }
   }
 
   /* 단어장에 추가 버튼 */
