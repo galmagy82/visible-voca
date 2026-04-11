@@ -70,11 +70,11 @@
   h1 .symbol {
     color: #4A90D9;
   }
-  /* 로그아웃 버튼: 화면 우상단에 고정
+  /* 로그아웃 버튼: 페이지 우상단에 배치
      대부분의 웹앱 관습대로 계정 액션은 오른쪽 상단에 배치.
-     position: fixed 라서 스크롤해도 항상 보임. */
+     position: absolute 라서 페이지 흐름과 함께 스크롤되어 올라감(상단 영역 벗어나면 보이지 않음). */
   .top-logout {
-    position: fixed;
+    position: absolute;
     top: 16px;
     right: 20px;
     padding: 6px 14px;
@@ -916,7 +916,7 @@
       font-size: 0.8rem;
       white-space: nowrap;
     }
-    /* 모바일에서도 우상단 고정 위치 유지, 기존 상단 패딩(60px) 안에 들어감 */
+    /* 모바일에서도 동일하게 페이지 우상단에 absolute 배치 (기존 상단 패딩 60px 안에 들어감) */
     .top-logout {
       top: 12px;
       right: 12px;
