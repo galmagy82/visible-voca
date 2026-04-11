@@ -25,7 +25,7 @@ const I18N = {
     googleLogin: 'Google로 계속하기',
     privacyPolicy: '개인정보처리방침',
     loginConsentNotice: '로그인 시 ',
-    loginConsentNoticeEnd: '에 동의한 것으로 간주됩니다.',
+    loginConsentNoticeEnd: ' 동의',
     exploreStory: 'Geminary는 왜 다를까요?',
     confirm: '확인',
     delete: '삭제',

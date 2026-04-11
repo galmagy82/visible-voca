@@ -853,6 +853,11 @@ body {
 
 <!-- ===== ⑨ ENDING ===== -->
 <div class="section s9" data-section="9">
+  <!-- 언어 선택 드롭다운: s9 우상단 고정 배치 (s9는 position:relative)
+       i18n.js의 SUPPORTED_LANGS로 채워짐. s9 섹션 내부에만 존재하므로 스크롤 시 자동으로 사라짐. -->
+  <div id="langToggle" style="position:absolute; top:20px; right:20px;">
+    <select id="langSelect" style="font-size:13px; color:var(--muted); background:transparent; border:1px solid var(--muted); border-radius:6px; padding:5px 10px; cursor:pointer; letter-spacing:0.02em; font-family:inherit;"></select>
+  </div>
   <div class="brand-icon-wrap">
     <svg viewBox="0 0 60 60" width="52" height="52" xmlns="http://www.w3.org/2000/svg">
       <!-- 펼쳐진 책 (Dictionary) -->
@@ -882,11 +887,6 @@ body {
       <!-- 텍스트만 span으로 감싸서 번역 적용 (버튼에 직접 data-i18n을 붙이면 innerHTML 교체로 SVG가 사라짐) -->
       <span data-i18n="googleLogin">Google로 계속하기</span>
     </button>
-    <!-- 개인정보처리방침 안내: 로그인 = 정책 동의로 간주되는 법적 근거 문구
-         id="consentNotice" — 로그인 상태에서는 숨김 (이미 동의한 상태이므로) -->
-    <div id="consentNotice" style="margin-top:12px; font-size:12px; color:var(--muted); line-height:1.5;">
-      <span data-i18n="loginConsentNotice">로그인 시 </span><a href="privacy.html" style="color:var(--muted); text-decoration:underline;" data-i18n="privacyPolicy">개인정보처리방침</a><span data-i18n="loginConsentNoticeEnd">에 동의한 것으로 간주됩니다.</span>
-    </div>
     <div class="auth-status" id="authStatus" style="display:none;">
       <span class="user-email" id="userEmail"></span>
       <span class="logout-link" id="logoutBtn" data-i18n="logout">로그아웃</span>
@@ -899,10 +899,13 @@ body {
   <a href="#s0" id="exploreBtn" style="margin-top:56px; font-size:14px; color:var(--muted); text-decoration:none; letter-spacing:0.02em; border-bottom:1px dashed var(--muted); padding-bottom:2px;">
     <span data-i18n="exploreStory">Geminary는 왜 다를까요?</span> ↓
   </a>
-  <a href="https://open.kakao.com/o/pgDSZSoi" target="_blank" style="margin-top:24px; font-size:14px; color:var(--muted); text-decoration:none; border-bottom:1px solid var(--muted); padding-bottom:2px;" data-i18n="feedback">의견 보내기</a>
-  <!-- 언어 선택 드롭다운: i18n.js의 SUPPORTED_LANGS로 채워짐 -->
-  <div id="langToggle" style="margin-top:16px;">
-    <select id="langSelect" style="font-size:13px; color:var(--muted); background:transparent; border:1px solid var(--muted); border-radius:6px; padding:5px 10px; cursor:pointer; letter-spacing:0.02em; font-family:inherit;"></select>
+  <!-- 하단 유틸 row: 개인정보처리방침 안내 + 의견 보내기 수평 배치
+       consentNotice 는 로그인 상태에서는 숨김(updateAuthUI 토글) — 로그인 후 의견보내기만 단독으로 중앙 정렬되도록 justify-content:center + gap 사용. -->
+  <div style="margin-top:56px; display:flex; justify-content:center; align-items:center; gap:20px; flex-wrap:wrap;">
+    <div id="consentNotice" style="font-size:12px; color:var(--muted); line-height:1.5;">
+      <span data-i18n="loginConsentNotice">로그인 시 </span><a href="privacy.html" style="color:var(--muted); text-decoration:underline;" data-i18n="privacyPolicy">개인정보처리방침</a><span data-i18n="loginConsentNoticeEnd"> 동의</span>
+    </div>
+    <a href="https://open.kakao.com/o/pgDSZSoi" target="_blank" style="font-size:12px; color:var(--muted); text-decoration:none; border-bottom:1px solid var(--muted); padding-bottom:2px;" data-i18n="feedback">의견 보내기</a>
   </div>
 </div>
 
