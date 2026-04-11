@@ -50,27 +50,9 @@
   h1 .symbol {
     color: #4A90D9;
   }
-  /* 사이드바 하단 영역: 언어 드롭다운 + 로그아웃 버튼 */
-  .sidebar-lang {
-    margin-top: auto;
-    margin-left: 8px;
-    margin-right: 8px;
-    margin-bottom: 4px;
-    padding: 5px 8px;
-    font-size: 0.75rem;
-    color: #7A7570;
-    background: white;
-    border: 1px solid #D5D2CC;
-    border-radius: 6px;
-    cursor: pointer;
-    font-family: inherit;
-    outline: none;
-  }
-  .sidebar-lang:hover {
-    background: #F5F3F0;
-  }
-  /* 로그아웃 버튼: 언어 드롭다운 바로 아래 */
+  /* 로그아웃 버튼: 사이드바 맨 아래 */
   .sidebar-logout {
+    margin-top: auto;
     margin-left: 8px;
     margin-right: 8px;
     padding: 6px 14px;
@@ -791,14 +773,6 @@
       font-size: 0.8rem;
       white-space: nowrap;
     }
-    /* 모바일에서는 가로 레이아웃이 되므로 언어 드롭다운을 오른쪽으로 밀고,
-       로그아웃 버튼이 그 뒤에 나란히 오도록 한다. */
-    .sidebar-lang {
-      margin-top: 0;
-      margin-left: auto;
-      padding: 8px 10px;
-      font-size: 0.75rem;
-    }
     .sidebar-logout {
       padding: 10px 14px;
       font-size: 0.75rem;
@@ -838,8 +812,6 @@
     <button class="tab" onclick="switchTab('photo')" data-i18n="tabPhoto" style="display:none;">사진에서 검색</button>
     <button class="tab" onclick="switchTab('wordbook')" data-i18n="tabWordbook">단어장</button>
     <button class="tab" onclick="switchTab('quiz')" data-i18n="tabQuiz">Quiz</button>
-    <!-- 언어 선택 드롭다운: i18n.js의 SUPPORTED_LANGS로 채워짐 -->
-    <select class="sidebar-lang" id="vocabLangSelect"></select>
     <button class="sidebar-logout" id="vocabLogoutBtn" data-i18n="logout">로그아웃</button>
   </div>
 
@@ -2373,12 +2345,6 @@ function respondConsent(agreed) {
 <script>
 document.documentElement.lang = getLang();
 applyI18n();
-/* 사이드바 언어 드롭다운 초기화 — 언어 변경 시 페이지 전체 새로고침
-   (이미 검색된 결과는 현재 언어로 캐시되어 있어서, 언어를 바꾸면
-    캐시 키/프롬프트가 달라지므로 새로고침해서 깨끗한 상태로 다시 로드) */
-initLangSelect(document.getElementById('vocabLangSelect'), function() {
-  location.reload();
-});
 </script>
 
 </body>
