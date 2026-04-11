@@ -1235,7 +1235,8 @@ async function fetchExistingImage(word) {
    - existingImagePath: 기존에 다른 언어 row가 만들어둔 image_path 재사용 시 전달.
      이 값이 있으면 업로드는 건너뛰고 이 path를 새 row의 image_path로 그대로 저장. */
 async function saveToSupabase(word, parsed, imageDataUrl, existingImagePath) {
-  if (!hasDataConsent()) return;
+  /* 동의 여부와 무관하게 DB 저장 (2026-04-11 정책 변경: 자체 API 키 사용) */
+  // if (!hasDataConsent()) return;
 
   try {
     /* 기존 image_path 재사용이 있으면 그 path를 그대로 사용, 업로드 스킵.
@@ -2391,10 +2392,11 @@ function showQuizResult() {
   </div>
 </div>
 <script>
-/* 동의 배너: 아직 응답하지 않은 경우에만 표시 */
-if (localStorage.getItem('visibleVoca_dataConsent') === null) {
-  document.getElementById('consentBanner').style.display = 'block';
-}
+/* 동의 배너 비활성화 (2026-04-11 정책 변경: 자체 API 키 사용으로 동의 불필요)
+   HTML/함수는 유지하여 추후 복구가 쉽도록 함. */
+// if (localStorage.getItem('visibleVoca_dataConsent') === null) {
+//   document.getElementById('consentBanner').style.display = 'block';
+// }
 function respondConsent(agreed) {
   localStorage.setItem('visibleVoca_dataConsent', agreed ? 'true' : 'false');
   document.getElementById('consentBanner').style.display = 'none';
