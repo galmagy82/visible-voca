@@ -1599,7 +1599,8 @@ const PROMPT_TEMPLATES = {
 - 번역투 금지. 자연스러운 한국어 구어체로 작성
 - 짧고 간결하게
 - 마크다운 서식 쓰지 말 것
-- 해석/느낌 설명과 예시/핵심표현 사이에 반드시 --- 구분선을 넣을 것`,
+- 해석/느낌 설명과 예시/핵심표현 사이에 반드시 --- 구분선을 넣을 것
+- "[분류]", "[어휘 모드]", "[표현 모드]" 같은 섹션 이름은 출력에 절대 포함하지 말 것`,
 
   en: `You are an English word feel dictionary. Explain the core feeling and nuance of words in a vivid, memorable way.
 
