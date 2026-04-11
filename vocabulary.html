@@ -192,6 +192,71 @@
     margin: 16px auto 0;
   }
 
+  /* ===== 기능 소개 4카드 그리드 =====
+     vocabulary 페이지 검색창 아래 empty state에 노출.
+     검색 시작 시 기존 #guideSearch 숨김 로직(line ~1740)에 의해 같이 사라짐. */
+  .feature-guide {
+    width: 100%;
+    max-width: 680px;
+    margin-bottom: 32px;
+  }
+  .feature-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .feature-card {
+    background: #FFFFFF;
+    border: 1px solid #E5E2DE;
+    border-radius: 14px;
+    padding: 22px 22px 20px;
+    text-align: left;
+  }
+  .feature-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+  .feature-icon svg { width: 22px; height: 22px; }
+  .feature-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #2D2B28;
+    margin-bottom: 8px;
+    letter-spacing: -0.2px;
+  }
+  .feature-desc {
+    font-size: 0.875rem;
+    color: #6B6660;
+    line-height: 1.55;
+    margin-bottom: 14px;
+    word-break: keep-all;
+  }
+  .feature-badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+  /* 카드별 컬러 팔레트: 아이콘 배경·라인·뱃지 통일 */
+  .feature-card.blue   .feature-icon  { background: #EAF2FB; color: #4A90D9; }
+  .feature-card.blue   .feature-badge { background: #EAF2FB; color: #3B6FA0; }
+  .feature-card.green  .feature-icon  { background: #ECF4E6; color: #5A8A42; }
+  .feature-card.green  .feature-badge { background: #ECF4E6; color: #456931; }
+  .feature-card.purple .feature-icon  { background: #F0EBF8; color: #8A5AB8; }
+  .feature-card.purple .feature-badge { background: #F0EBF8; color: #6B4394; }
+  .feature-card.orange .feature-icon  { background: #FCEDE0; color: #D97A3B; }
+  .feature-card.orange .feature-badge { background: #FCEDE0; color: #A65A28; }
+  /* 모바일: 1열 스택 */
+  @media (max-width: 560px) {
+    .feature-grid { grid-template-columns: 1fr; }
+  }
+
   /* 결과 영역 */
   .result-area {
     width: 100%;
@@ -883,13 +948,15 @@
         <input type="text" id="wordInput" data-i18n="searchPlaceholder" placeholder="단어, 숙어, 문장을 입력하세요" autofocus>
         <button onclick="lookup()" data-i18n="search">검색</button>
       </div>
-      <!-- 가이드 -->
+      <!-- 가이드: 기능 소개 4카드
+           기존 "나의 검색이 모두의 사전이 됩니다" 안내문은 아래 주석으로 보존(추후 복구 시 사용).
+           #guideSearch 는 첫 검색 시 기존 JS 로직에 의해 숨김 처리됨. -->
+      <!--
+      [LEGACY] 2026-04-11 커뮤니티 어필 문구 → 기능 소개 4카드로 교체. 복구 시 아래 블록을 되살리면 됨.
       <div class="guide" id="guideSearch">
         <strong data-i18n="searchGuideTitle">나의 검색이 모두의 사전이 됩니다.</strong><br><br>
         <span data-i18n="searchGuideBody">혼자 외우는 단어장은 이제 그만!<br>내가 찾은 단어가 실시간으로 공유되어, 모두가 함께 완성해가는<br>커다란 단어 지도를 만들어갑니다.</span>
-        <!-- 단어 지도 일러스트 -->
         <svg class="guide-illustration" viewBox="0 0 280 140" xmlns="http://www.w3.org/2000/svg">
-          <!-- 연결선 (단어 네트워크) -->
           <line x1="90" y1="50" x2="140" y2="70" stroke="#D5D2CC" stroke-width="1.5"/>
           <line x1="140" y1="70" x2="200" y2="45" stroke="#D5D2CC" stroke-width="1.5"/>
           <line x1="140" y1="70" x2="190" y2="100" stroke="#D5D2CC" stroke-width="1.5"/>
@@ -897,11 +964,9 @@
           <line x1="55" y1="90" x2="140" y2="70" stroke="#D5D2CC" stroke-width="1.5"/>
           <line x1="200" y1="45" x2="240" y2="75" stroke="#D5D2CC" stroke-width="1.5"/>
           <line x1="190" y1="100" x2="240" y2="75" stroke="#D5D2CC" stroke-width="1.5"/>
-          <!-- 단어 노드들 -->
           <circle cx="90" cy="50" r="22" fill="#EAF2FB" stroke="#4A90D9" stroke-width="1.5"/>
           <text x="90" y="54" text-anchor="middle" font-size="9" fill="#3B6FA0" font-weight="600">trust</text>
           <circle cx="140" cy="70" r="26" fill="#4A90D9" stroke="none"/>
-          <!-- 중심 노드 레이블: 주변 단어 노드(trust/dream/brave 등)가 모두 영어라 일관성 유지 + 언어별 공간 문제 회피 -->
           <text x="140" y="67" text-anchor="middle" font-size="8" fill="white">My Search</text>
           <text x="140" y="78" text-anchor="middle" font-size="9" fill="#F5D76E" font-weight="700">✦</text>
           <circle cx="200" cy="45" r="20" fill="#EAF2FB" stroke="#4A90D9" stroke-width="1.5"/>
@@ -912,11 +977,71 @@
           <text x="190" y="104" text-anchor="middle" font-size="8.5" fill="#3B6FA0" font-weight="600">gentle</text>
           <circle cx="240" cy="75" r="17" fill="#EAF2FB" stroke="#4A90D9" stroke-width="1.5"/>
           <text x="240" y="79" text-anchor="middle" font-size="8" fill="#3B6FA0" font-weight="600">joy</text>
-          <!-- 퍼져나가는 점선 (확장되는 지도) -->
           <circle cx="30" cy="55" r="8" fill="none" stroke="#D5D2CC" stroke-width="1" stroke-dasharray="2,2"/>
           <circle cx="260" cy="110" r="8" fill="none" stroke="#D5D2CC" stroke-width="1" stroke-dasharray="2,2"/>
           <circle cx="250" cy="25" r="6" fill="none" stroke="#D5D2CC" stroke-width="1" stroke-dasharray="2,2"/>
         </svg>
+      </div>
+      -->
+      <div class="feature-guide" id="guideSearch">
+        <div class="feature-grid">
+          <!-- 카드 1: 이미지 기억 (블루) -->
+          <div class="feature-card blue">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7" rx="1"/>
+                <rect x="14" y="3" width="7" height="7" rx="1"/>
+                <rect x="3" y="14" width="7" height="7" rx="1"/>
+                <rect x="14" y="14" width="7" height="7" rx="1"/>
+              </svg>
+            </div>
+            <div class="feature-title" data-i18n="featureTitle1">그림으로 기억되는 단어</div>
+            <div class="feature-desc" data-i18n="featureDesc1">단어의 느낌을 AI가 이미지로 표현해드려요. 한번 보면 잊히지 않아요.</div>
+            <span class="feature-badge" data-i18n="featureBadge1">핵심 기능</span>
+          </div>
+          <!-- 카드 2: 단어~문장 확장 (그린) -->
+          <div class="feature-card green">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="4" y1="7" x2="20" y2="7"/>
+                <line x1="4" y1="12" x2="20" y2="12"/>
+                <line x1="4" y1="17" x2="14" y2="17"/>
+              </svg>
+            </div>
+            <div class="feature-title" data-i18n="featureTitle2">단어부터 문장까지</div>
+            <div class="feature-desc" data-i18n="featureDesc2">단어는 물론 숙어, 표현, 문장도 AI가 쉽고 자연스럽게 설명해드려요.</div>
+            <span class="feature-badge" data-i18n="featureBadge2">표현 무제한</span>
+          </div>
+          <!-- 카드 3: 다국어 통합 검색 (퍼플) -->
+          <div class="feature-card purple">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="9"/>
+                <line x1="3" y1="12" x2="21" y2="12"/>
+                <ellipse cx="12" cy="12" rx="4.5" ry="9"/>
+              </svg>
+            </div>
+            <div class="feature-title" data-i18n="featureTitle3">모든 언어 통합 검색</div>
+            <div class="feature-desc" data-i18n="featureDesc3">언어를 선택할 필요 없어요. 어떤 언어든 바로 검색하면 됩니다.</div>
+            <span class="feature-badge" data-i18n="featureBadge3">멀티 언어</span>
+          </div>
+          <!-- 카드 4: AI 실시간 무한 표현 (오렌지) -->
+          <div class="feature-card orange">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="8"/>
+                <circle cx="12" cy="12" r="3"/>
+                <line x1="12" y1="2" x2="12" y2="5"/>
+                <line x1="12" y1="19" x2="12" y2="22"/>
+                <line x1="2" y1="12" x2="5" y2="12"/>
+                <line x1="19" y1="12" x2="22" y2="12"/>
+              </svg>
+            </div>
+            <div class="feature-title" data-i18n="featureTitle4">검색할 수 있는 표현이 무한해요</div>
+            <div class="feature-desc" data-i18n="featureDesc4">AI가 실시간으로 설명하기 때문에 사전에 없는 표현도 바로 이해할 수 있어요.</div>
+            <span class="feature-badge" data-i18n="featureBadge4">AI 실시간</span>
+          </div>
+        </div>
       </div>
       <div class="result-area" id="resultSearch"></div>
     </div>
