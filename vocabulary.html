@@ -401,7 +401,62 @@
   .nav-bar .nav-btn:hover { background: #E0DEDA; border-color: #B0ACA6; }
 
   .error { color: #6B6660; font-size: 1rem; }
-  .loading { color: #7A7570; font-size: 1rem; }
+
+  /* 로딩 영역 — fade in + 양쪽 ✦ 맥동 + 뒤로 별밭(starfield) 배경
+     ./loading 전체가 처음 나타날 때 부드럽게 등장하고, 파란 ✦ 두 개가
+     엇갈려 맥동하며, 배경엔 작은 별들이 천천히 위로 흐른다. */
+  .loading {
+    position: relative;
+    color: #7A7570;
+    font-size: 1rem;
+    padding: 40px 30px;
+    text-align: center;
+    overflow: hidden;
+    /* 별밭: radial-gradient 여러 개로 무작위 위치의 작은 점들을 만들고
+       background-position 애니메이션으로 위로 흐르게 함 */
+    background-image:
+      radial-gradient(1.5px 1.5px at 15% 20%, rgba(74,144,217,0.55), transparent),
+      radial-gradient(1px 1px at 30% 60%, rgba(74,144,217,0.35), transparent),
+      radial-gradient(1.5px 1.5px at 50% 35%, rgba(74,144,217,0.5), transparent),
+      radial-gradient(1px 1px at 70% 75%, rgba(74,144,217,0.4), transparent),
+      radial-gradient(1.5px 1.5px at 85% 25%, rgba(74,144,217,0.55), transparent),
+      radial-gradient(1px 1px at 90% 50%, rgba(74,144,217,0.35), transparent),
+      radial-gradient(1.5px 1.5px at 10% 80%, rgba(74,144,217,0.5), transparent),
+      radial-gradient(1px 1px at 60% 15%, rgba(74,144,217,0.4), transparent),
+      radial-gradient(1px 1px at 40% 90%, rgba(74,144,217,0.45), transparent),
+      radial-gradient(1.5px 1.5px at 75% 55%, rgba(74,144,217,0.4), transparent);
+    background-size: 100% 200%;
+    animation:
+      loadingFadeIn 0.5s ease-out,
+      starfieldDrift 24s linear infinite;
+  }
+  /* 양옆의 큰 ✦ — 서로 엇갈려 맥동(pulse) */
+  .loading::before,
+  .loading::after {
+    content: '✦';
+    color: #4A90D9;
+    font-size: 1.15rem;
+    margin: 0 14px;
+    display: inline-block;
+    vertical-align: middle;
+    animation: loadingStarPulse 1.8s ease-in-out infinite;
+  }
+  .loading::after {
+    animation-delay: 0.9s;  /* 반대쪽 ✦는 반박자 뒤에 맥동 */
+  }
+  @keyframes loadingFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes loadingStarPulse {
+    0%, 100% { opacity: 0.3; transform: scale(0.9); }
+    50%      { opacity: 1;   transform: scale(1.25); }
+  }
+  /* 별밭이 천천히 위로 흐르는 느낌 — 배경 위치만 이동 */
+  @keyframes starfieldDrift {
+    0%   { background-position: 0% 100%; }
+    100% { background-position: 0% 0%; }
+  }
 
   /* 단어장에 추가 버튼 */
   .add-wordbook-btn {
