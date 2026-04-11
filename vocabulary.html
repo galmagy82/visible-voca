@@ -1633,7 +1633,7 @@ function buildHtmlFromDB(dbData, word) {
     if (dbData.cefr) posLine += (posLine ? ' · ' : '') + `<span class="cefr-badge">${escapeHtml(dbData.cefr)}</span>`;
     html += `<div class="word-pos">${posLine}</div>`;
   }
-  if (safeCorrected) html += `<div class="corrected">${safeWord} → <span>${safeCorrected}</span></div>`;
+  if (safeCorrected && dbData.pos) html += `<div class="corrected">${safeWord} → <span>${safeCorrected}</span></div>`;
   html += `<div class="feel-desc">${escapeHtml(dbData.description)}</div>`;
   if (dbData.imageUrl) {
     html += `<div class="feel-image-container"><img src="${escapeHtml(dbData.imageUrl)}" alt="${safeWord}${t('imageAlt')}"></div>`;
@@ -1790,7 +1790,7 @@ async function fetchWordResult(word, targetEl) {
     if (cefr) posLine += (posLine ? ' · ' : '') + `<span class="cefr-badge">${escapeHtml(cefr)}</span>`;
     html += `<div class="word-pos">${posLine}</div>`;
   }
-  if (corrected) html += `<div class="corrected">${safeWord} → <span>${safeCorrected}</span></div>`;
+  if (corrected && pos) html += `<div class="corrected">${safeWord} → <span>${safeCorrected}</span></div>`;
   html += `<div class="feel-desc">${escapeHtml(desc)}</div>`;
   if (imagePromise) {
     html += `<div class="feel-image-container" id="imageContainer"><div class="feel-image-loading"><div class="stars"><span>✦</span><span>✦</span><span>✦</span></div>${t('imageLoading')}</div></div>`;
