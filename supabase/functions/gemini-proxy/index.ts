@@ -41,17 +41,38 @@ async function callGeminiText(prompt: string, apiKey: string) {
   return data.candidates?.[0]?.content?.parts?.[0]?.text || null
 }
 
-/* Gemini 이미지 생성 호출 */
+/* Gemini 이미지 생성 호출
+   ---------------------------------------------------------------
+   프롬프트 롤백 안내:
+   현재 프롬프트로 오히려 결과가 나빠지면 아래 PREV_IMAGE_PROMPT 로 교체하세요.
+   (imagePrompt 변수에 PREV_IMAGE_PROMPT 를 할당하면 즉시 이전 버전으로 복구됨.)
+   롤백 시에도 `supabase functions deploy gemini-proxy` 재배포 필요. */
+
+/* 이전(v1) 프롬프트 — 롤백용으로 보관. 가장자리 여백 이슈가 있었음. */
+const PREV_IMAGE_PROMPT = (word: string) => `Generate an image: Create an illustration that captures the feeling and mood of the English word "${word}". Use a concrete, recognizable scene or situation rather than abstract shapes, but keep it stylish and sophisticated — not cartoonish or childish. Think editorial illustration style with warm, natural colors and clean composition. Minimize unnecessary objects — only include objects essential to explaining the word. No text in the image. The illustration must fill the entire canvas edge to edge with no white borders, margins, or padding.`
+
 async function callGeminiImage(word: string, apiKey: string) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`
-  const imagePrompt = `Generate an image: Create an illustration that captures the feeling and mood of the English word "${word}". Use a concrete, recognizable scene or situation rather than abstract shapes, but keep it stylish and sophisticated — not cartoonish or childish. Think editorial illustration style with warm, natural colors and clean composition. Minimize unnecessary objects — only include objects essential to explaining the word. No text in the image. The illustration must fill the entire canvas edge to edge with no white borders, margins, or padding.`
+  /* v2 프롬프트(full bleed 시도)는 오히려 결과가 나빠져서 v1 으로 롤백됨.
+     v2 프롬프트 원문은 아래 주석으로 보관 — 추후 재시도/비교용. */
+  // const imagePrompt = `Generate an image: Create a full bleed editorial illustration that captures the feeling and mood of the English word "${word}". Use a concrete, recognizable scene or situation rather than abstract shapes, but keep it stylish and sophisticated — not cartoonish or childish. The artwork must be edge-to-edge, filling the entire canvas like a full-page magazine spread with warm, natural colors and clean composition. Minimize unnecessary objects — only include objects essential to explaining the word. No text in the image.`
+  /* 현재 활성: v1 (기존 안정 버전) */
+  const imagePrompt = PREV_IMAGE_PROMPT(word)
 
+  /* aspectRatio 실험:
+     모델이 자유롭게 캔버스 비율을 고르면 내부에 여백을 채우는 경향이 있어,
+     명시적으로 "4:3" 고정 → 모델이 그 프레임 안에서 꽉 채우도록 유도.
+     결과가 나빠지면 아래 generationConfig 를 이전 버전(responseModalities 만 있는 것)으로 되돌릴 것.
+     롤백용 이전 버전(주석): generationConfig: { responseModalities: ["IMAGE", "TEXT"] }, */
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       contents: [{ parts: [{ text: imagePrompt }] }],
-      generationConfig: { responseModalities: ["IMAGE", "TEXT"] },
+      generationConfig: {
+        responseModalities: ["IMAGE", "TEXT"],
+        imageConfig: { aspectRatio: "4:3" },
+      },
     }),
   })
   if (!res.ok) {
