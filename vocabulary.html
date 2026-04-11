@@ -972,11 +972,8 @@
       </div>
       <!-- 영어 전용 입력 에러 메시지: 비영어 입력 감지 시 노출 (updateSearchValidity) -->
       <div class="search-error" id="searchError" style="display:none;" data-i18n="englishOnlyError">영어로만 입력해 주세요</div>
-      <!-- 가이드: 기능 소개 4카드
-           기존 "나의 검색이 모두의 사전이 됩니다" 안내문은 아래 주석으로 보존(추후 복구 시 사용).
+      <!-- 가이드: "나의 검색이 모두의 사전이 됩니다" 커뮤니티 어필 + 단어 네트워크 SVG
            #guideSearch 는 첫 검색 시 기존 JS 로직에 의해 숨김 처리됨. -->
-      <!--
-      [LEGACY] 2026-04-11 커뮤니티 어필 문구 → 기능 소개 4카드로 교체. 복구 시 아래 블록을 되살리면 됨.
       <div class="guide" id="guideSearch">
         <strong data-i18n="searchGuideTitle">나의 검색이 모두의 사전이 됩니다.</strong><br><br>
         <span data-i18n="searchGuideBody">혼자 외우는 단어장은 이제 그만!<br>내가 찾은 단어가 실시간으로 공유되어, 모두가 함께 완성해가는<br>커다란 단어 지도를 만들어갑니다.</span>
@@ -1005,38 +1002,6 @@
           <circle cx="260" cy="110" r="8" fill="none" stroke="#D5D2CC" stroke-width="1" stroke-dasharray="2,2"/>
           <circle cx="250" cy="25" r="6" fill="none" stroke="#D5D2CC" stroke-width="1" stroke-dasharray="2,2"/>
         </svg>
-      </div>
-      -->
-      <div class="feature-guide" id="guideSearch">
-        <div class="feature-grid">
-          <!-- 카드 1: 이미지 기억 (블루) -->
-          <div class="feature-card blue">
-            <div class="feature-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="3" width="7" height="7" rx="1"/>
-                <rect x="14" y="3" width="7" height="7" rx="1"/>
-                <rect x="3" y="14" width="7" height="7" rx="1"/>
-                <rect x="14" y="14" width="7" height="7" rx="1"/>
-              </svg>
-            </div>
-            <div class="feature-title" data-i18n="featureTitle1">그림으로 기억되는 단어</div>
-            <div class="feature-desc" data-i18n="featureDesc1">단어의 느낌을 AI가 이미지로 표현해드려요. 한번 보면 잊히지 않아요.</div>
-            <span class="feature-badge" data-i18n="featureBadge1">핵심 기능</span>
-          </div>
-          <!-- 카드 2: 단어~문장 확장 (그린) -->
-          <div class="feature-card green">
-            <div class="feature-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="4" y1="7" x2="20" y2="7"/>
-                <line x1="4" y1="12" x2="20" y2="12"/>
-                <line x1="4" y1="17" x2="14" y2="17"/>
-              </svg>
-            </div>
-            <div class="feature-title" data-i18n="featureTitle2">단어부터 문장까지</div>
-            <div class="feature-desc" data-i18n="featureDesc2">단어는 물론 숙어, 표현, 문장도 AI가 쉽고 자연스럽게 설명해드려요.</div>
-            <span class="feature-badge" data-i18n="featureBadge2">표현 무제한</span>
-          </div>
-        </div>
       </div>
       <div class="result-area" id="resultSearch"></div>
     </div>
