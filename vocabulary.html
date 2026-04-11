@@ -279,7 +279,8 @@
     pointer-events: none;
     opacity: 0;
     z-index: 9999;
-    animation: badgeShow 3.2s ease-out forwards;
+    /* 3줄(타이틀/서브/노트)로 늘어나서 읽는 시간 확보를 위해 3.2s → 4.5s */
+    animation: badgeShow 4.5s ease-out forwards;
   }
   .discovery-badge .badge-title {
     font-size: 1.1rem;
@@ -291,11 +292,17 @@
     font-size: 0.85rem;
     color: #ccc;
   }
+  /* 3번째 줄 — 기능 안내(캐싱/빠른 재검색). sub보다 한 톤 더 작고 흐리게 */
+  .discovery-badge .badge-note {
+    font-size: 0.78rem;
+    color: #999;
+    margin-top: 6px;
+  }
   @keyframes badgeShow {
     0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
-    8% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
-    12% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-    75% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    6% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+    9% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    82% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
     100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
   }
   .feel-image-loading {
@@ -1309,11 +1316,11 @@ function showDiscoveryBadge() {
   const username = _authUser?.email?.split('@')[0] || '';
   const badge = document.createElement('div');
   badge.className = 'discovery-badge';
-  badge.innerHTML = `<div class="badge-title">${t('discoveryTitle')}</div><div class="badge-sub">${escapeHtml(username)}${t('discoverySub')}</div>`;
+  badge.innerHTML = `<div class="badge-title">${t('discoveryTitle')}</div><div class="badge-sub">${escapeHtml(username)}${t('discoverySub')}</div><div class="badge-note">${t('discoveryNote')}</div>`;
   document.body.appendChild(badge);
   playDiscoverySound();
-  /* 애니메이션 종료 후 뱃지 제거 */
-  setTimeout(() => badge.remove(), 3200);
+  /* 애니메이션(4.5s) 종료 후 뱃지 제거 — CSS animation 값과 일치해야 함 */
+  setTimeout(() => badge.remove(), 4500);
 }
 
 // --- 설정 (localStorage 공유) ---
