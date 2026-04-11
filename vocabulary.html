@@ -31,6 +31,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Geminary✦</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
 <!-- 다국어 지원 -->
 <script src="i18n.js"></script>
 <!-- Supabase SDK -->
@@ -1865,8 +1866,10 @@ async function fetchWordResult(word, targetEl) {
     if (container) {
       container.remove();
     }
+    /* 로딩 컨테이너 제거 — 정규식은 성공 케이스(line 1853)와 동일한 2개 닫기 태그 패턴.
+       이전에는 </div>가 3개였는데 실제 HTML 구조와 맞지 않아 매치 실패 → 로딩이 재렌더링되는 버그가 있었음. */
     const noImgHtml = html.replace(
-      /<div class="feel-image-container" id="imageContainer"><div class="feel-image-loading">[\s\S]*?<\/div><\/div><\/div>/,
+      /<div class="feel-image-container" id="imageContainer"><div class="feel-image-loading">[\s\S]*?<\/div><\/div>/,
       ''
     );
     wordResults[word] = { html: noImgHtml };
