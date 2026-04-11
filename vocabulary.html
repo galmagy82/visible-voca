@@ -1841,8 +1841,13 @@ async function fetchWordResult(word, targetEl) {
   /* 이미지 비동기 처리 — imagePromise가 있을 때만 */
   if (!imagePromise) {
     saveCacheEntry(word, html);
-    /* Supabase에 텍스트만 저장 (정답 단어를 키로 저장) */
-    saveToSupabase(saveWord, { corrected, pos, ipa, cefr, description: desc, examples }, null);
+    /* Supabase 저장은 POS 가 있을 때만(= 단어/숙어/구동사)
+       POS 가 없는 문장·구절·단편은 word_results 캐시 구조(언어별 텍스트 + 이미지) 와 맞지 않고,
+       fetchFromSupabase 필터(cefr 필수)·hit 조건(이미지 필수)에 의해 항상 miss 되어
+       매 검색마다 중복 row 가 쌓이므로 저장 자체를 스킵한다. */
+    if (pos) {
+      saveToSupabase(saveWord, { corrected, pos, ipa, cefr, description: desc, examples }, null);
+    }
     return html;
   }
   try {
