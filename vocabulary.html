@@ -1491,7 +1491,7 @@ async function fetchWordResult(word, targetEl) {
     if (settings.imageEnabled && !cached.includes('<img ')) {
       /* 캐시 무시 — 아래로 계속 진행 */
     } else {
-      targetEl.innerHTML = `<div class="loading">${t('searching')}</div>`;
+      targetEl.innerHTML = `<div class="loading">${getRandomSearching()}</div>`;
       await new Promise(r => setTimeout(r, 800));
       wordResults[word] = { html: cached };
       return cached;
@@ -1505,7 +1505,7 @@ async function fetchWordResult(word, targetEl) {
   /* ② Supabase DB 조회 — 데이터 충분하면 API 호출 없이 반환 */
   const dbResult = await fetchFromSupabase(lookupKey);
   if (dbResult && dbResult.fromDB) {
-    targetEl.innerHTML = `<div class="loading">${t('searching')}</div>`;
+    targetEl.innerHTML = `<div class="loading">${getRandomSearching()}</div>`;
     await new Promise(r => setTimeout(r, 800));
     const dbHtml = buildHtmlFromDB(dbResult, word);
     wordResults[word] = { html: dbHtml };
@@ -1516,7 +1516,7 @@ async function fetchWordResult(word, targetEl) {
   }
 
   /* ③ Edge Function 호출 — 데이터 부족 또는 없음 */
-  targetEl.innerHTML = `<div class="loading">${t('searching')}</div>`;
+  targetEl.innerHTML = `<div class="loading">${getRandomSearching()}</div>`;
 
   const prompt = getPromptTemplate().replace('{{WORD}}', word);
 
@@ -1725,7 +1725,7 @@ async function lookupWord(word) {
   if (cached) {
     /* 이미지 생성 활성화 상태인데 캐시에 이미지가 없으면 캐시 무시하고 재검색 */
     if (!(settings.imageEnabled && !cached.includes('<img '))) {
-      resultSearch.innerHTML = `<div class="loading">${t('searching')}</div>`;
+      resultSearch.innerHTML = `<div class="loading">${getRandomSearching()}</div>`;
       await new Promise(r => setTimeout(r, 800));
       wordResults[word] = { html: cached };
       showSearchResult(word);
