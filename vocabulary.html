@@ -405,11 +405,16 @@
   /* 로딩 영역 — slide in + 호흡(Breathing) 효과
      텍스트 전체 opacity 가 천천히 1 ↔ 0.55 를 오가며 조용히 맥동.
      방향성이 없어 이미지 생성 단계(.feel-image-loading 의 별 3개 순차 펄스, L→R)
-     와 명확히 구분되며, "주문을 외는" 정갈한 느낌을 준다. */
+     와 명확히 구분되며, "주문을 외는" 정갈한 느낌을 준다.
+
+     정렬: 왼쪽 정렬 — 페이지 전체가 왼쪽 기둥 구조(검색창·가이드·단어 카드 모두
+     content-left 앵커)이므로, 로딩 텍스트도 동일 위치에 두면 결과가 도착해도
+     시각적 점프가 없고 리듬이 유지된다. 가로 padding 은 거의 0 으로 두어
+     단어 카드의 시작 위치와 맞춤. */
   .loading {
     font-size: 1rem;
-    padding: 30px 20px;
-    text-align: center;
+    padding: 30px 4px;
+    text-align: left;
     color: #7A7570;
     animation:
       loadingSlideIn 0.5s ease-out,
