@@ -428,7 +428,7 @@
     background-size: 100% 200%;
     animation:
       loadingFadeIn 0.5s ease-out,
-      starfieldDrift 24s linear infinite;
+      starfieldDrift 8s linear infinite;
   }
   /* 양옆의 큰 ✦ — 서로 엇갈려 맥동(pulse) */
   .loading::before,
@@ -452,10 +452,11 @@
     0%, 100% { opacity: 0.3; transform: scale(0.9); }
     50%      { opacity: 1;   transform: scale(1.25); }
   }
-  /* 별밭이 천천히 위로 흐르는 느낌 — 배경 위치만 이동 */
+  /* 별밭이 천천히 위로 흐르는 느낌 — 배경 위치만 이동
+     0%→100% 로 진행하면 이미지 콘텐츠(별들)가 위쪽으로 이동한다 */
   @keyframes starfieldDrift {
-    0%   { background-position: 0% 100%; }
-    100% { background-position: 0% 0%; }
+    0%   { background-position: 0% 0%; }
+    100% { background-position: 0% 100%; }
   }
 
   /* 단어장에 추가 버튼 */
