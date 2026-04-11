@@ -1789,15 +1789,19 @@ async function fetchWordResult(word, targetEl) {
   const safeCorrected = escapeHtml(corrected);
   const speakWord = (safeCorrected || safeWord).replace(/'/g, "\\'");
 
-  /* 이미지 처리: 설정에서 활성화한 경우에만
-     - 먼저 word_results 에 이미 만들어둔 이미지가 있는지 확인 (언어 무관)
-     - 있으면 Gemini 이미지 API 호출 생략하고 그 publicUrl 재사용
-     - 없으면 기존대로 generateImage 호출
+  /* 이미지 처리: 설정에서 활성화 + POS 가 존재할 때만
+     - pos 가 비어 있으면(= 문장/구절/단편 입력) 이미지가 의미 없으므로
+       fetchExistingImage 조회와 generateImage 호출을 통째로 스킵해
+       Gemini 이미지 API 비용을 아낀다.
+     - 단어·숙어·구동사(POS 존재) 일 때만 아래 흐름으로 진입:
+       · 먼저 word_results 에 이미 만들어둔 이미지가 있는지 확인 (언어 무관)
+       · 있으면 Gemini 이미지 API 호출 생략하고 그 publicUrl 재사용
+       · 없으면 기존대로 generateImage 호출
      reusedImagePath 는 saveToSupabase 에 넘겨 새 row 가 같은 image_path 를 공유하게 함.
      이미지 조회/생성 시에는 정답 단어(saveWord)를 사용하여 캐시 히트율을 높임. */
   let reusedImagePath = null;
   let imagePromise = null;
-  if (settings.imageEnabled) {
+  if (settings.imageEnabled && pos) {
     const existing = await fetchExistingImage(saveWord);
     if (existing) {
       reusedImagePath = existing.image_path;
