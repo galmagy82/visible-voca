@@ -358,6 +358,14 @@
     border-top: 1px solid #E5E2DE;
     padding-top: 20px;
   }
+  /* 예문 내 품사 소제목 ([noun], [verb] 등) */
+  .pos-label {
+    display: inline-block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #5A8A42;
+    margin-top: 8px;
+  }
 
   /* 이미지 표시 영역 */
   .feel-image-container {
@@ -1172,6 +1180,11 @@ function escapeHtml(str) {
   if (!str) return '';
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+/* 예문 내 품사 소제목 [noun], [verb] 등을 스타일 태그로 변환 */
+function stylePosLabels(html) {
+  return html.replace(/\[(noun|verb|adjective|adverb|phrasal verb|preposition|conjunction|interjection|pronoun|determiner)\]/gi,
+    '<span class="pos-label">[$1]</span>');
+}
 
 // --- Supabase 초기화 ---
 const SUPABASE_URL = 'https://grdtxvpebjtfhuqdngfn.supabase.co';
@@ -1643,7 +1656,7 @@ function buildHtmlFromDB(dbData, word, correctedOverride) {
   if (dbData.imageUrl) {
     html += `<div class="feel-image-container"><img src="${escapeHtml(dbData.imageUrl)}" alt="${safeWord}${t('imageAlt')}"></div>`;
   }
-  if (dbData.examples) html += `<div class="feel-examples">${escapeHtml(dbData.examples)}</div>`;
+  if (dbData.examples) html += `<div class="feel-examples">${stylePosLabels(escapeHtml(dbData.examples))}</div>`;
   window._lastWbData = { word, pos: dbData.pos, summary: dbData.description.split('\n')[0].substring(0, 60) };
   return html;
 }
@@ -1800,7 +1813,7 @@ async function fetchWordResult(word, targetEl) {
   if (imagePromise) {
     html += `<div class="feel-image-container" id="imageContainer"><div class="feel-image-loading"><div class="stars"><span>✦</span><span>✦</span><span>✦</span></div>${t('imageLoading')}</div></div>`;
   }
-  if (examples) html += `<div class="feel-examples">${escapeHtml(examples)}</div>`;
+  if (examples) html += `<div class="feel-examples">${stylePosLabels(escapeHtml(examples))}</div>`;
   /* 렌더링 후 이벤트 바인딩을 위해 데이터 보관 */
   window._lastWbData = { word, pos, summary: desc.split('\n')[0].substring(0, 60) };
 
