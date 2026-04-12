@@ -1375,11 +1375,16 @@ const EDGE_FUNCTION_URL = 'https://grdtxvpebjtfhuqdngfn.supabase.co/functions/v1
 // --- 사용자 ID: 로그인 시 auth ID, 비로그인 시 익명 UUID ---
 let _authUser = null;
 
+/* 로컬 개발 환경 감지 — localhost/127.0.0.1/file:// 에서는 미인증 리다이렉트 스킵.
+   프로덕션 도메인에서는 항상 false 라서 보안에 영향 없음. */
+const isLocalDev = ['localhost', '127.0.0.1', ''].includes(location.hostname)
+                || location.protocol === 'file:';
+
 async function initAuth() {
   const { data: { session } } = await supabaseClient.auth.getSession();
   _authUser = session?.user || null;
-  /* 미인증 사용자는 Welcome 페이지로 리다이렉트 */
-  if (!_authUser) {
+  /* 미인증 사용자는 Welcome 페이지로 리다이렉트 (로컬 개발 제외) */
+  if (!_authUser && !isLocalDev) {
     location.href = 'index.html';
     return;
   }
@@ -1406,7 +1411,7 @@ document.getElementById('vocabLogoutBtn').addEventListener('click', async () => 
 /* 인증 상태 변경 감지 */
 supabaseClient.auth.onAuthStateChange((event, session) => {
   _authUser = session?.user || null;
-  if (!_authUser) {
+  if (!_authUser && !isLocalDev) {
     location.href = 'index.html';
     return;
   }
@@ -1615,9 +1620,9 @@ async function generateImage(word) {
 }
 
 /* DB 결과를 HTML로 변환 (Supabase에서 가져온 데이터용) */
-function buildHtmlFromDB(dbData, word) {
+function buildHtmlFromDB(dbData, word, correctedOverride) {
   const safeWord = escapeHtml(word);
-  const safeCorrected = escapeHtml(dbData.corrected);
+  const safeCorrected = escapeHtml(correctedOverride || dbData.corrected);
   const speakWord = (safeCorrected || safeWord).replace(/'/g, "\\'");
   let html = `<div class="word-header">`;
   html += `<div class="word-title">${safeCorrected || safeWord}</div>`;
@@ -1633,7 +1638,7 @@ function buildHtmlFromDB(dbData, word) {
     if (dbData.cefr) posLine += (posLine ? ' · ' : '') + `<span class="cefr-badge">${escapeHtml(dbData.cefr)}</span>`;
     html += `<div class="word-pos">${posLine}</div>`;
   }
-  if (safeCorrected && dbData.pos) html += `<div class="corrected">${safeWord} → <span>${safeCorrected}</span></div>`;
+  if (safeCorrected && safeCorrected.toLowerCase() !== safeWord.toLowerCase()) html += `<div class="corrected">${safeWord} → <span>${safeCorrected}</span></div>`;
   html += `<div class="feel-desc">${escapeHtml(dbData.description)}</div>`;
   if (dbData.imageUrl) {
     html += `<div class="feel-image-container"><img src="${escapeHtml(dbData.imageUrl)}" alt="${safeWord}${t('imageAlt')}"></div>`;
@@ -1738,7 +1743,7 @@ async function fetchWordResult(word, targetEl) {
     /* 정답 단어로 DB 2차 조회 */
     const correctedDbResult = await fetchFromSupabase(corrected.toLowerCase());
     if (correctedDbResult && correctedDbResult.fromDB) {
-      const dbHtml = buildHtmlFromDB(correctedDbResult, word);
+      const dbHtml = buildHtmlFromDB(correctedDbResult, word, corrected);
       wordResults[word] = { html: dbHtml };
       targetEl.innerHTML = dbHtml;
       bindWbButton(targetEl);
@@ -1790,7 +1795,7 @@ async function fetchWordResult(word, targetEl) {
     if (cefr) posLine += (posLine ? ' · ' : '') + `<span class="cefr-badge">${escapeHtml(cefr)}</span>`;
     html += `<div class="word-pos">${posLine}</div>`;
   }
-  if (corrected && pos) html += `<div class="corrected">${safeWord} → <span>${safeCorrected}</span></div>`;
+  if (corrected && corrected.toLowerCase() !== word.toLowerCase()) html += `<div class="corrected">${safeWord} → <span>${safeCorrected}</span></div>`;
   html += `<div class="feel-desc">${escapeHtml(desc)}</div>`;
   if (imagePromise) {
     html += `<div class="feel-image-container" id="imageContainer"><div class="feel-image-loading"><div class="stars"><span>✦</span><span>✦</span><span>✦</span></div>${t('imageLoading')}</div></div>`;
