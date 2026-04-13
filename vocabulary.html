@@ -1698,6 +1698,8 @@ async function fetchWordResult(word, targetEl) {
   let pos = '';
   let ipa = '';
   let body = text;
+  /* Gemini가 가끔 프롬프트의 섹션 헤더를 그대로 출력하는 문제 방지 (8개 UI 언어 대응) */
+  body = body.replace(/^\[?(분류|어휘 모드|표현 모드|Classification|Vocab mode|Expression mode|語彙モード|表現モード|词汇模式|表达模式|Modo de vocabulario|Modo de expresión|Chế độ từ vựng|Chế độ biểu đạt|โหมดคำศัพท์|โหมดสำนวน|Modo vocabulário|Modo expressão)[^\]]*\]?\s*\n?/gmi, '');
   const corrMatch = text.match(/\[CORRECTED:\s*(.+?)\]/i);
   if (corrMatch) {
     corrected = corrMatch[1].trim();
