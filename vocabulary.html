@@ -30,7 +30,7 @@
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Geminary✦</title>
+<title>Geminary</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <!-- 다국어 지원 -->
 <script src="i18n.js"></script>
@@ -67,8 +67,11 @@
     margin: 0;
     letter-spacing: 0.05em;
   }
-  h1 .symbol {
-    color: #4A90D9;
+  /* 단어지도 노드 아이콘 — 브랜드명 옆 장식 */
+  .word-map-icon {
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 4px;
   }
   /* 로그아웃 버튼: 페이지 우상단에 배치
      대부분의 웹앱 관습대로 계정 액션은 오른쪽 상단에 배치.
@@ -957,7 +960,13 @@
 <button class="top-logout" id="vocabLogoutBtn" data-i18n="logout">로그아웃</button>
 
 <div class="top-header">
-  <h1>Geminary<span class="symbol">✦</span></h1>
+  <h1>Geminary<svg class="word-map-icon" width="22" height="18" viewBox="0 0 28 24" xmlns="http://www.w3.org/2000/svg">
+    <line x1="6" y1="6" x2="18" y2="6" stroke="#4A90D9" stroke-width="1.5" opacity="0.5"/>
+    <line x1="6" y1="6" x2="10" y2="18" stroke="#4A90D9" stroke-width="1.5" opacity="0.5"/>
+    <circle cx="6" cy="6" r="3" fill="#4A90D9"/>
+    <circle cx="18" cy="6" r="3" fill="#5B9BD5"/>
+    <circle cx="10" cy="18" r="3" fill="#7BB3E0"/>
+  </svg></h1>
 </div>
 
 <div class="main-layout">
@@ -997,7 +1006,7 @@
           <text x="90" y="54" text-anchor="middle" font-size="9" fill="#3B6FA0" font-weight="600">trust</text>
           <circle cx="140" cy="70" r="26" fill="#4A90D9" stroke="none"/>
           <text x="140" y="67" text-anchor="middle" font-size="8" fill="white">My Search</text>
-          <text x="140" y="78" text-anchor="middle" font-size="9" fill="#F5D76E" font-weight="700">✦</text>
+          <text x="140" y="78" text-anchor="middle" font-size="9" fill="#F5D76E" font-weight="700">◆</text>
           <circle cx="200" cy="45" r="20" fill="#EAF2FB" stroke="#4A90D9" stroke-width="1.5"/>
           <text x="200" y="49" text-anchor="middle" font-size="9" fill="#3B6FA0" font-weight="600">dream</text>
           <circle cx="55" cy="90" r="18" fill="#EAF2FB" stroke="#4A90D9" stroke-width="1.5"/>
