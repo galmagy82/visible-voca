@@ -550,7 +550,7 @@
 
   /* 단어장에 추가 버튼 */
   .add-wordbook-btn {
-    margin-left: auto;
+    margin-left: 0;
     padding: 6px 14px;
     font-size: 0.85rem;
     border: 1px solid #D5D2CC;
@@ -1315,6 +1315,49 @@ async function saveAlias(typo, correctedWord) {
   }
 }
 
+/* word_translations 테이블에서 비영어 입력 → 영어 매핑 조회
+   - word_aliases 와 분리된 이유: 번역과 오타 교정은 성격이 다르며,
+     향후 target language 기능 도입 시 lang 정보가 필요하기 때문.
+   - 등록되어 있으면 english_word 반환, 없으면 null */
+async function fetchTranslation(word) {
+  try {
+    const { data, error } = await supabaseClient
+      .from('word_translations')
+      .select('english_word')
+      .eq('source_word', word.toLowerCase())
+      .maybeSingle();
+
+    if (error || !data) return null;
+    return data.english_word;
+  } catch (e) {
+    console.warn('번역 조회 실패:', e);
+    return null;
+  }
+}
+
+/* word_translations 테이블에 비영어 입력 → 영어 매핑 저장
+   - sourceWord: 사용자가 입력한 원본 (예: "사과")
+   - lang      : ISO 639-1 언어 코드 (예: "ko") — Gemini [SOURCE_LANG] 태그에서 획득
+   - englishWord: Gemini 가 반환한 영어 번역 (예: "apple")
+   - 같은 sourceWord 에 대한 중복 요청은 upsert 로 무시됨 */
+async function saveTranslation(sourceWord, lang, englishWord) {
+  try {
+    const lower_src = sourceWord.toLowerCase();
+    const lower_eng = englishWord.toLowerCase();
+    /* 소스와 번역이 동일하면 저장 불필요 (이론상 영어 입력엔 발생 안 하지만 방어적으로 체크) */
+    if (lower_src === lower_eng) return;
+
+    await supabaseClient
+      .from('word_translations')
+      .upsert(
+        { source_word: lower_src, lang: lang.toLowerCase(), english_word: lower_eng },
+        { onConflict: 'source_word' }
+      );
+  } catch (e) {
+    console.warn('번역 저장 실패:', e);
+  }
+}
+
 /* 이미 저장된 이미지가 있는지 조회 — 언어 무관, 아무 row나 1개
    목적: 영어로 처음 검색해 이미지가 만들어진 단어를 한글로 다시 검색할 때
          Gemini 이미지 API를 다시 부르지 않고 기존 이미지를 재사용하기 위함.
@@ -1677,9 +1720,16 @@ async function fetchWordResult(word, targetEl) {
     }
   }
 
-  /* ②-a 별칭 테이블 조회 — 이전에 교정된 오타면 정답 단어로 변환 */
-  const aliasWord = await fetchAlias(word);
-  const lookupKey = aliasWord || word;
+  /* ②-a 매핑 테이블 조회 — 이전에 저장된 번역/오타면 영어 단어로 변환
+     - word_translations: 비영어 입력(예: "사과" → "apple")
+     - word_aliases     : 오타 교정(예: "aple" → "apple")
+     둘 다 있을 확률은 낮지만, translation 이 우선이라 먼저 조회.
+     병렬 조회하여 지연 최소화. */
+  const [translationWord, aliasWord] = await Promise.all([
+    fetchTranslation(word),
+    fetchAlias(word),
+  ]);
+  const lookupKey = translationWord || aliasWord || word;
 
   /* ② Supabase DB 조회 — 데이터 충분하면 API 호출 없이 반환 */
   const dbResult = await fetchFromSupabase(lookupKey);
@@ -1727,6 +1777,16 @@ async function fetchWordResult(word, targetEl) {
     corrected = corrMatch[1].trim();
     body = text.replace(/\[CORRECTED:\s*.+?\]\n?/i, '');
   }
+  /* SOURCE_LANG 태그 파싱 — 비영어 입력의 언어 코드(ISO 639-1) 획득
+     - 있음: 번역 케이스 (예: "사과" → [CORRECTED: apple] + [SOURCE_LANG: ko])
+     - 없음: 오타 교정 케이스 (예: "aple" → [CORRECTED: apple])
+     존재 여부에 따라 word_translations / word_aliases 중 어디에 저장할지 분기 */
+  let sourceLang = '';
+  const langMatch = body.match(/\[SOURCE_LANG:\s*(.+?)\]/i);
+  if (langMatch) {
+    sourceLang = langMatch[1].trim();
+    body = body.replace(/\[SOURCE_LANG:\s*.+?\]\n?/i, '');
+  }
   const posMatch = body.match(/\[POS:\s*(.+?)\]/i);
   if (posMatch) {
     pos = posMatch[1].trim();
@@ -1745,13 +1805,20 @@ async function fetchWordResult(word, targetEl) {
     body = body.replace(/\[CEFR:\s*.+?\]\n?/i, '');
   }
 
-  /* ③-a corrected word가 있으면 별칭 저장 + 정답 단어로 DB 2차 조회
-     목적: 오타로 검색했더라도, 정답 단어가 이미 DB에 있으면
-     이미지 API 호출 없이 캐시된 결과를 재사용한다. */
+  /* ③-a corrected word가 있으면 매핑 저장 + 정답 단어로 DB 2차 조회
+     목적: 오타/비영어로 검색했더라도, 정답 영어 단어가 이미 DB에 있으면
+     이미지 API 호출 없이 캐시된 결과를 재사용한다.
+     저장 분기:
+       - SOURCE_LANG 있음 → 비영어 번역 → word_translations
+       - SOURCE_LANG 없음 → 오타 교정   → word_aliases */
   const saveWord = corrected ? corrected.toLowerCase() : word;
   if (corrected && corrected.toLowerCase() !== word.toLowerCase()) {
-    /* 오타 → 정답 매핑 저장 (비동기, 완료 안 기다림) */
-    saveAlias(word, corrected);
+    /* 매핑 저장 (비동기, 완료 안 기다림) */
+    if (sourceLang) {
+      saveTranslation(word, sourceLang, corrected);
+    } else {
+      saveAlias(word, corrected);
+    }
 
     /* 정답 단어로 DB 2차 조회 */
     const correctedDbResult = await fetchFromSupabase(corrected.toLowerCase());
