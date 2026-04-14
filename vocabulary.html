@@ -1560,7 +1560,9 @@ let wordResults = {};
 const DB_NAME = 'visualVoca';
 const DB_VERSION = 2;
 const STORE_NAME = 'resultCache';
-const WB_STORE = 'wordbook';
+/* 주의: 'wordbook' store 는 과거 단어장 로컬 저장에 사용됐으나
+   2026-04-14 부터 계정 기반(Supabase user_wordbook) 으로 이전됐다.
+   기존 브라우저에 남아 있는 구 store 는 그대로 두되 앱에서는 접근하지 않는다. */
 
 /* IndexedDB 열기 */
 function openDB() {
@@ -1570,9 +1572,6 @@ function openDB() {
       const db = req.result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         db.createObjectStore(STORE_NAME);
-      }
-      if (!db.objectStoreNames.contains(WB_STORE)) {
-        db.createObjectStore(WB_STORE, { keyPath: 'word' });
       }
     };
     req.onsuccess = () => resolve(req.result);
@@ -1698,7 +1697,16 @@ function buildHtmlFromDB(dbData, word, correctedOverride) {
     html += `<div class="feel-image-container"><img src="${escapeHtml(dbData.imageUrl)}" alt="${safeWord}${t('imageAlt')}"></div>`;
   }
   if (dbData.examples) html += `<div class="feel-examples">${stylePosLabels(escapeHtml(dbData.examples))}</div>`;
-  window._lastWbData = { word, pos: dbData.pos, summary: dbData.description.split('\n')[0].substring(0, 60) };
+  /* 단어장 추가 시 사용할 스냅샷 — POS 유무와 무관하게 모든 필드 보관 */
+  window._lastWbData = {
+    word,
+    pos: dbData.pos || '',
+    ipa: dbData.ipa || '',
+    cefr: dbData.cefr || '',
+    corrected: dbData.corrected || '',
+    description: dbData.description || '',
+    examples: dbData.examples || '',
+  };
   return html;
 }
 
@@ -1881,8 +1889,16 @@ async function fetchWordResult(word, targetEl) {
     html += `<div class="feel-image-container" id="imageContainer"><div class="feel-image-loading"><div class="stars"><span>✦</span><span>✦</span><span>✦</span></div>${t('imageLoading')}</div></div>`;
   }
   if (examples) html += `<div class="feel-examples">${stylePosLabels(escapeHtml(examples))}</div>`;
-  /* 렌더링 후 이벤트 바인딩을 위해 데이터 보관 */
-  window._lastWbData = { word, pos, summary: desc.split('\n')[0].substring(0, 60) };
+  /* 렌더링 후 단어장 추가에 사용할 스냅샷 보관 — POS 유무와 무관하게 모든 필드 저장 */
+  window._lastWbData = {
+    word,
+    pos: pos || '',
+    ipa: ipa || '',
+    cefr: cefr || '',
+    corrected: corrected || '',
+    description: desc || '',
+    examples: examples || '',
+  };
 
   wordResults[word] = { html };
   targetEl.innerHTML = html;
@@ -2128,84 +2144,127 @@ async function selectPhotoWord(index) {
   }
 }
 
-// --- 단어장 ---
+// --- 단어장 (계정 기반, Supabase user_wordbook 테이블) ---
+/* 인메모리 캐시: 사용자의 단어장을 Map<word_lower, row> 로 보관.
+   - null = 아직 로드 전
+   - 최초 접근 시(loadWordbookIfNeeded) 전체를 한 번 Supabase 에서 로드.
+   - 추가/삭제 시 이 Map 도 함께 갱신(낙관적 UI) 하여 네트워크 왕복 없이 즉시 반영.
+   - 이미지(image_path) 는 이 캐시에 저장하지 않음 — word_results 에 공용 저장되어
+     있으므로 상세 표시 시 fetchExistingImage() 로 그때그때 조회해 재사용한다. */
+let _wordbookMap = null;
+
+async function loadWordbookIfNeeded(force = false) {
+  if (_wordbookMap && !force) return _wordbookMap;
+  try {
+    const { data, error } = await supabaseClient
+      .from('user_wordbook')
+      .select('*')
+      .order('added_at', { ascending: false });
+    if (error) throw error;
+    _wordbookMap = new Map();
+    (data || []).forEach(row => _wordbookMap.set(row.word.toLowerCase(), row));
+    return _wordbookMap;
+  } catch (e) {
+    console.warn('단어장 로드 실패:', e);
+    _wordbookMap = new Map();
+    return _wordbookMap;
+  }
+}
+
+/* 특정 단어가 단어장에 있으면 해당 row, 없으면 null */
+async function getWordbookEntry(word) {
+  const map = await loadWordbookIfNeeded();
+  return map.get(word.toLowerCase()) || null;
+}
+
 /* 단어장 추가 버튼 이벤트 바인딩 */
 async function bindWbButton(container, wordOverride) {
   const btn = container.querySelector('[data-wb-word]');
   if (!btn || btn._bound) return;
   btn._bound = true;
-  /* wordOverride가 있으면 캐시에서 로드한 경우 — 최소 정보로 바인딩 */
-  const data = wordOverride ? { word: wordOverride, pos: '', summary: '' } : window._lastWbData;
+  /* wordOverride 가 있으면 캐시/모달에서 재렌더된 경우 — 최소 정보로 바인딩.
+     단어장 모달에서는 어차피 add 버튼을 숨기므로 상세 정보 필요 없음. */
+  const data = wordOverride
+    ? { word: wordOverride, pos: '', ipa: '', cefr: '', corrected: '', description: '', examples: '' }
+    : window._lastWbData;
   if (!data) return;
-  const { word, pos, summary } = data;
 
-  /* 이미 단어장에 추가된 단어인지 확인 */
-  try {
-    const db = await openDB();
-    const tx = db.transaction(WB_STORE, 'readonly');
-    const req = tx.objectStore(WB_STORE).get(word);
-    req.onsuccess = () => {
-      if (req.result) {
-        btn.textContent = t('addedToWordbook');
-        btn.classList.add('added');
-        return;
-      }
-      btn.addEventListener('click', () => {
-        addToWordbook(word, pos, summary, btn);
-      });
-    };
-  } catch (e) {
-    btn.addEventListener('click', () => {
-      addToWordbook(word, pos, summary, btn);
-    });
+  const entry = await getWordbookEntry(data.word);
+  if (entry) {
+    btn.textContent = t('addedToWordbook');
+    btn.classList.add('added');
+    return;
   }
+  btn.addEventListener('click', () => {
+    addToWordbook(data, btn);
+  });
 }
 
-/* 단어장에 추가 */
-async function addToWordbook(word, pos, summary, btnEl) {
+/* 단어장에 추가 — 전체 스냅샷을 Supabase user_wordbook 에 저장 */
+async function addToWordbook(data, btnEl) {
+  const userId = _authUser?.id;
+  if (!userId) {
+    console.warn('미인증 사용자 — 단어장 추가 불가');
+    return;
+  }
+  const row = {
+    user_id: userId,
+    word: data.word.toLowerCase(),
+    pos: data.pos || '',
+    ipa: data.ipa || '',
+    cefr: data.cefr || '',
+    corrected: data.corrected || '',
+    description: data.description || '',
+    examples: data.examples || '',
+  };
+  /* 낙관적 UI: 메모리 캐시 먼저 갱신하고 버튼 상태 바꿈 */
+  const map = await loadWordbookIfNeeded();
+  map.set(row.word, { ...row, added_at: new Date().toISOString() });
+  if (btnEl) {
+    btnEl.textContent = t('addedToWordbook');
+    btnEl.classList.add('added');
+    btnEl.onclick = null;
+  }
   try {
-    const db = await openDB();
-    const tx = db.transaction(WB_STORE, 'readwrite');
-    const entry = {
-      word: word,
-      pos: pos || '',
-      summary: summary || '',
-      addedAt: Date.now()
-    };
-    tx.objectStore(WB_STORE).put(entry);
-    if (btnEl) {
-      btnEl.textContent = t('addedToWordbook');
-      btnEl.classList.add('added');
-      btnEl.onclick = null;
-    }
+    const { error } = await supabaseClient
+      .from('user_wordbook')
+      .upsert(row, { onConflict: 'user_id,word' });
+    if (error) throw error;
   } catch (e) {
     console.warn('단어장 추가 실패:', e);
+    /* 롤백 */
+    map.delete(row.word);
+    if (btnEl) {
+      btnEl.textContent = t('addToWordbook');
+      btnEl.classList.remove('added');
+    }
   }
 }
 
-/* 단어장 전체 목록 조회 */
+/* 단어장 전체 목록 조회 — 메모리 캐시 기반, 배열로 반환 */
 async function getWordbookAll() {
-  try {
-    const db = await openDB();
-    return new Promise((resolve) => {
-      const tx = db.transaction(WB_STORE, 'readonly');
-      const req = tx.objectStore(WB_STORE).getAll();
-      req.onsuccess = () => resolve(req.result || []);
-      req.onerror = () => resolve([]);
-    });
-  } catch {
-    return [];
-  }
+  const map = await loadWordbookIfNeeded();
+  return Array.from(map.values());
 }
 
 /* 단어장에서 삭제 */
 async function removeFromWordbook(word) {
+  const userId = _authUser?.id;
+  if (!userId) return;
+  const lower = word.toLowerCase();
+  const map = await loadWordbookIfNeeded();
+  const prev = map.get(lower);
+  map.delete(lower);  /* 낙관적 UI */
   try {
-    const db = await openDB();
-    const tx = db.transaction(WB_STORE, 'readwrite');
-    tx.objectStore(WB_STORE).delete(word);
+    const { error } = await supabaseClient
+      .from('user_wordbook')
+      .delete()
+      .eq('user_id', userId)
+      .eq('word', lower);
+    if (error) throw error;
   } catch (e) {
     console.warn('단어장 삭제 실패:', e);
+    if (prev) map.set(lower, prev);  /* 롤백 */
   }
 }
 
@@ -2265,11 +2324,11 @@ async function renderWordbook() {
   /* 필터 */
   let filtered = list.filter(item => item.word.toLowerCase().includes(filter));
 
-  /* 정렬 */
+  /* 정렬 — added_at 은 Supabase timestamptz(ISO 문자열), Date 변환 후 비교 */
   if (sort === 'alpha') {
     filtered.sort((a, b) => a.word.localeCompare(b.word));
   } else {
-    filtered.sort((a, b) => b.addedAt - a.addedAt);
+    filtered.sort((a, b) => new Date(b.added_at) - new Date(a.added_at));
   }
 
   if (filtered.length === 0) {
@@ -2287,7 +2346,7 @@ async function renderWordbook() {
   }).join('');
 }
 
-/* 단어장 상세 모달 열기 */
+/* 단어장 상세 모달 열기 — 저장된 스냅샷으로 HTML 조립 (Edge Function 재호출 없음) */
 async function showWordbookDetail(word, itemEl) {
   /* 활성 표시 */
   document.querySelectorAll('.wordbook-item').forEach(el => el.classList.remove('active'));
@@ -2301,19 +2360,31 @@ async function showWordbookDetail(word, itemEl) {
   /* 스크롤 최상단 초기화 */
   modal.querySelector('.wb-modal').scrollTop = 0;
 
-  /* 캐시에서 결과 가져오기 */
-  const cached = await getCacheEntry(word);
-  if (cached) {
-    contentEl.innerHTML = cached;
-  } else {
-    contentEl.innerHTML = `<div class="loading">${word}${t('loadingResult')}</div>`;
-    try {
-      await fetchWordResult(word, contentEl);
-    } catch {
-      contentEl.innerHTML = `<div class="error">${t('loadFailed')}</div>`;
-    }
+  contentEl.innerHTML = `<div class="loading">${word}${t('loadingResult')}</div>`;
+
+  /* 단어장 row + 이미지(word_results 공용 캐시) 를 병렬 조회
+     - 텍스트 필드: user_wordbook 에 저장된 스냅샷
+     - 이미지     : word_results 에 있는 공용 이미지(언어 무관). 없으면 생략. */
+  const [entry, existingImage] = await Promise.all([
+    getWordbookEntry(word),
+    fetchExistingImage(word),
+  ]);
+  if (!entry) {
+    contentEl.innerHTML = `<div class="error">${t('loadFailed')}</div>`;
+    return;
   }
-  /* 모달에서는 "단어장에 추가" 버튼 숨기기 */
+  const dbLike = {
+    word: entry.word,
+    corrected: entry.corrected,
+    pos: entry.pos,
+    ipa: entry.ipa,
+    cefr: entry.cefr,
+    description: entry.description,
+    examples: entry.examples,
+    imageUrl: existingImage ? existingImage.publicUrl : null,
+  };
+  contentEl.innerHTML = buildHtmlFromDB(dbLike, word);
+  /* 모달에서는 "단어장에 추가" 버튼 숨기기 (이미 추가된 상태) */
   const addBtn = contentEl.querySelector('.add-wordbook-btn');
   if (addBtn) addBtn.style.display = 'none';
 }
@@ -2425,7 +2496,8 @@ async function startQuiz() {
       return;
     }
     const since = new Date(dateStr).getTime();
-    words = words.filter(w => w.addedAt >= since);
+    /* added_at 은 Supabase timestamptz(ISO 문자열) — Date 변환 후 ms 비교 */
+    words = words.filter(w => new Date(w.added_at).getTime() >= since);
   }
 
   if (words.length === 0) {
