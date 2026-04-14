@@ -1,0 +1,19 @@
+# Geminary robots.txt
+# 모든 검색엔진 허용. 네이버(Yeti) 명시적 허용으로 크롤 우선순위 확보.
+
+User-agent: *
+Allow: /
+
+User-agent: Yeti
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Daumoa
+Allow: /
+
+Sitemap: https://geminary.app/sitemap.xml
