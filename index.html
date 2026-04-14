@@ -1305,9 +1305,9 @@ body {
 
   </div>
 
-  <!-- 최종 CTA: 상단(s9 로그인 섹션, id="top")으로 스무스 스크롤.
-       html { scroll-behavior: smooth } 덕분에 anchor 이동 시 부드럽게 올라감. -->
-  <a href="#top" class="cta-btn" style="display:inline-block; text-decoration:none; text-align:center; margin-top:48px;" data-i18n="featuresCta">
+  <!-- 최종 CTA: 로그인 상태면 vocabulary.html 로 바로 진입, 아니면 상단 로그인 섹션으로 스무스 스크롤.
+       href="#top" 은 기본 폴백(스크롤). 실제 분기는 아래 스크립트의 click 핸들러에서 처리. -->
+  <a href="#top" id="featuresCtaBtn" class="cta-btn" style="display:inline-block; text-decoration:none; text-align:center; margin-top:48px;" data-i18n="featuresCta">
     지금 시작하기
   </a>
 </div>
@@ -1409,6 +1409,18 @@ setTimeout(() => {
 document.getElementById('startBtn').addEventListener('click', function(e) {
   e.preventDefault();
   location.href = 'vocabulary.html';
+});
+
+/* ===== 페이지 최하단 CTA(featuresCta) — 세션 확인 후 분기 =====
+   - 로그인 상태: vocabulary.html 로 바로 진입
+   - 비로그인: 기본 앵커 동작(#top)으로 상단 로그인 섹션까지 스무스 스크롤 */
+document.getElementById('featuresCtaBtn').addEventListener('click', async function(e) {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session && session.user) {
+    e.preventDefault();
+    location.href = 'vocabulary.html';
+  }
+  /* 비로그인 시에는 preventDefault 하지 않음 → <a href="#top"> 기본 동작으로 상단 이동 */
 });
 
 /* 다국어 적용 — 최초 방문 시 getLang()이 navigator.language로 자동 감지 */
