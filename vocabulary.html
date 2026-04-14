@@ -752,6 +752,12 @@
     color: #2D2B28;
     margin-bottom: 24px;
   }
+  /* 옵션 행 래퍼: fit-content 너비로 블록 레벨 중앙 배치(내부는 앞정렬) */
+  .quiz-options-wrap {
+    width: fit-content;
+    margin: 0 auto;
+    text-align: left;
+  }
   .quiz-option {
     display: flex;
     align-items: center;
@@ -1119,20 +1125,22 @@
       <!-- 퀴즈 설정 화면 -->
       <div id="quizSetup">
         <div class="quiz-setup-title" data-i18n="quizSetup">퀴즈 ��정</div>
-        <div class="quiz-option">
-          <label data-i18n="quizType">유형</label>
-          <select id="quizType">
-            <option value="feel" data-i18n="quizTypeFeel">느낌 맞추기</option>
-            <option value="image" data-i18n="quizTypeImage">이미지 보��� 맞추기</option>
-          </select>
-        </div>
-        <div class="quiz-option">
-          <label data-i18n="quizCount">문제 수</label>
-          <select id="quizCount">
-            <option value="5">5</option>
-            <option value="10" selected>10</option>
-            <option value="20">20</option>
-          </select>
+        <div class="quiz-options-wrap">
+          <div class="quiz-option">
+            <label data-i18n="quizType">유형</label>
+            <select id="quizType">
+              <option value="feel" data-i18n="quizTypeFeel">느낌 맞추기</option>
+              <option value="image" data-i18n="quizTypeImage">이미지 보��� 맞추기</option>
+            </select>
+          </div>
+          <div class="quiz-option">
+            <label data-i18n="quizCount">문제 수</label>
+            <select id="quizCount">
+              <option value="10" selected>10</option>
+              <option value="20">20</option>
+              <option value="50">50</option>
+            </select>
+          </div>
         </div>
         <button class="quiz-start-btn" onclick="startQuiz()" data-i18n="quizStart">������ 시작</button>
         <div class="quiz-msg" id="quizMsg"></div>
