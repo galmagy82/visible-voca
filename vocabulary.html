@@ -746,12 +746,6 @@
   }
 
   /* 퀴즈 설정 화면 */
-  .quiz-setup-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #2D2B28;
-    margin-bottom: 24px;
-  }
   /* 옵션 행 래퍼: fit-content 너비로 블록 레벨 중앙 배치(내부는 앞정렬) */
   .quiz-options-wrap {
     width: fit-content;
@@ -780,6 +774,7 @@
   }
   .quiz-start-btn {
     margin-top: 24px;
+    margin-right: 50px; /* 옵션 래퍼의 왼쪽 영역(라벨 쪽) 으로 중앙을 시프트 */
     padding: 12px 32px;
     font-size: 1rem;
     border: 1px solid #D5D2CC;
@@ -1124,7 +1119,6 @@
     <div class="tab-content" id="tabQuiz">
       <!-- 퀴즈 설정 화면 -->
       <div id="quizSetup">
-        <div class="quiz-setup-title" data-i18n="quizSetup">퀴즈 ��정</div>
         <div class="quiz-options-wrap">
           <div class="quiz-option">
             <label data-i18n="quizType">유형</label>
