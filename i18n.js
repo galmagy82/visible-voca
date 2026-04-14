@@ -201,7 +201,24 @@ const I18N = {
     menuVocaTitle: 'Visual Voca',
     menuVocaDesc: '단어의 느낌과 뉘앙스를 이미지와 함께 알아보세요',
     menuWritingTitle: 'Writing Coach',
-    menuWritingDesc: '에세이를 코칭받고, 나만의 그림책으로 만들어보세요'
+    menuWritingDesc: '에세이를 코칭받고, 나만의 그림책으로 만들어보세요',
+
+    /* Features 요약 섹션 (s-features) — 웰컴 페이지 하단 4카드 */
+    featuresTitle: 'Geminary가 다른 이유',
+    featuresSubtitle: '단어를 외우는 방식을 바꾸는 4가지 핵심',
+    feature1Title: '그림으로 기억되는 단어',
+    feature1Desc: '단어의 느낌을 AI가 이미지로 표현해드려요. 한번 보면 잊히지 않아요.',
+    feature1Tag: '핵심 기능',
+    feature2Title: '단어부터 문장까지',
+    feature2Desc: '단어는 물론 숙어, 표현, 문장도 AI가 쉽고 자연스럽게 설명해드려요.',
+    feature2Tag: '표현 무제한',
+    feature3Title: '어떤 언어로 검색해도 OK',
+    feature3Desc: '한국어로든 일본어로든 단어나 문장을 검색하면 그에 맞는 영어 단어를 바로 보여드려요.',
+    feature3Tag: '다국어 검색',
+    feature4Title: '검색할 수 있는 표현이 무한해요',
+    feature4Desc: 'AI가 실시간으로 설명하기 때문에 사전에 없는 표현도 바로 이해할 수 있어요.',
+    feature4Tag: 'AI 실시간',
+    featuresCta: '지금 시작하기'
   },
 
   en: {
@@ -388,7 +405,24 @@ Example: split, break down, take off`,
     menuVocaTitle: 'Visual Voca',
     menuVocaDesc: 'Explore the feel and nuance of words with images',
     menuWritingTitle: 'Writing Coach',
-    menuWritingDesc: 'Get essay coaching and create your own picture book'
+    menuWritingDesc: 'Get essay coaching and create your own picture book',
+
+    /* Features summary section (s-features) — 4 cards at the bottom of the welcome page */
+    featuresTitle: 'Why Geminary is different',
+    featuresSubtitle: '4 essentials that change the way you memorize words',
+    feature1Title: 'Words You Remember in Pictures',
+    feature1Desc: 'AI turns the feeling of each word into an image. See it once, never forget.',
+    feature1Tag: 'Core Feature',
+    feature2Title: 'From Words to Sentences',
+    feature2Desc: 'Words, idioms, expressions, and sentences — all explained naturally by AI.',
+    feature2Tag: 'Unlimited Range',
+    feature3Title: 'Search in Any Language',
+    feature3Desc: 'Type a word or sentence in Korean, Japanese, or any language — we instantly show the matching English word.',
+    feature3Tag: 'Multilingual Search',
+    feature4Title: 'Infinite Expressions to Explore',
+    feature4Desc: 'Because AI explains in real time, even expressions not in the dictionary are easy to understand.',
+    feature4Tag: 'Real-time AI',
+    featuresCta: 'Get Started Now'
   },
 
   ja: {
@@ -575,7 +609,24 @@ Example: split, break down, take off`,
     menuVocaTitle: 'Visual Voca',
     menuVocaDesc: '単語の感覚とニュアンスを画像と一緒に学びましょう',
     menuWritingTitle: 'Writing Coach',
-    menuWritingDesc: 'エッセイのコーチングを受けて、自分だけの絵本を作りましょう'
+    menuWritingDesc: 'エッセイのコーチングを受けて、自分だけの絵本を作りましょう',
+
+    /* Features 要約セクション (s-features) — ウェルカムページ下部 4 カード */
+    featuresTitle: 'Geminary が違う理由',
+    featuresSubtitle: '単語の覚え方を変える 4 つのポイント',
+    feature1Title: '絵で覚える単語',
+    feature1Desc: '単語のニュアンスを AI が画像で表現します。一度見たら忘れません。',
+    feature1Tag: '核心機能',
+    feature2Title: '単語から文まで',
+    feature2Desc: '単語はもちろん、イディオムや表現、文章も AI がわかりやすく自然に説明します。',
+    feature2Tag: '表現無制限',
+    feature3Title: 'どの言語で検索しても OK',
+    feature3Desc: '日本語でも韓国語でも、単語や文を検索すれば対応する英単語をすぐに表示します。',
+    feature3Tag: '多言語検索',
+    feature4Title: '検索できる表現が無限',
+    feature4Desc: 'AI がリアルタイムで説明するので、辞書にない表現もすぐに理解できます。',
+    feature4Tag: 'リアルタイム AI',
+    featuresCta: '今すぐ始める'
   },
 
   zh: {
@@ -762,7 +813,24 @@ Example: split, break down, take off`,
     menuVocaTitle: 'Visual Voca',
     menuVocaDesc: '用图片探索单词的感觉和语感',
     menuWritingTitle: 'Writing Coach',
-    menuWritingDesc: '获得作文辅导，制作属于你的绘本'
+    menuWritingDesc: '获得作文辅导，制作属于你的绘本',
+
+    /* Features 摘要部分 (s-features) — 欢迎页底部 4 张卡片 */
+    featuresTitle: 'Geminary 为什么不同',
+    featuresSubtitle: '改变单词记忆方式的 4 大核心',
+    feature1Title: '用图像记住单词',
+    feature1Desc: 'AI 将单词的感觉转化为图像。看一次就不会忘。',
+    feature1Tag: '核心功能',
+    feature2Title: '从单词到句子',
+    feature2Desc: '不仅是单词，连习语、表达和句子，AI 都能自然流畅地解释。',
+    feature2Tag: '无限表达',
+    feature3Title: '任何语言都能搜索',
+    feature3Desc: '用中文还是日文搜索单词或句子，都能立即显示对应的英语单词。',
+    feature3Tag: '多语言搜索',
+    feature4Title: '可搜索的表达无穷无尽',
+    feature4Desc: '因为 AI 实时解释，词典里没有的表达也能立即理解。',
+    feature4Tag: 'AI 实时',
+    featuresCta: '立即开始'
   },
 
   es: {
@@ -949,7 +1017,24 @@ Ejemplo: split, break down, take off`,
     menuVocaTitle: 'Visual Voca',
     menuVocaDesc: 'Explora la sensación y el matiz de las palabras con imágenes',
     menuWritingTitle: 'Writing Coach',
-    menuWritingDesc: 'Recibe coaching de escritura y crea tu propio libro ilustrado'
+    menuWritingDesc: 'Recibe coaching de escritura y crea tu propio libro ilustrado',
+
+    /* Sección resumen de Features (s-features) — 4 tarjetas al final de la página de bienvenida */
+    featuresTitle: 'Por qué Geminary es diferente',
+    featuresSubtitle: '4 claves que cambian la forma de memorizar palabras',
+    feature1Title: 'Palabras que recuerdas con imágenes',
+    feature1Desc: 'La IA transforma la sensación de cada palabra en una imagen. Verla una vez basta para no olvidarla.',
+    feature1Tag: 'Función clave',
+    feature2Title: 'De palabras a oraciones',
+    feature2Desc: 'Palabras, modismos, expresiones y oraciones — todo explicado de forma natural por la IA.',
+    feature2Tag: 'Alcance ilimitado',
+    feature3Title: 'Busca en cualquier idioma',
+    feature3Desc: 'Escribe una palabra u oración en español, coreano o japonés, y te mostramos al instante la palabra en inglés correspondiente.',
+    feature3Tag: 'Búsqueda multilingüe',
+    feature4Title: 'Expresiones infinitas para explorar',
+    feature4Desc: 'Como la IA explica en tiempo real, entiendes al instante incluso expresiones que no están en el diccionario.',
+    feature4Tag: 'IA en tiempo real',
+    featuresCta: 'Empezar ahora'
   },
 
   vi: {
@@ -1136,7 +1221,24 @@ Ví dụ: split, break down, take off`,
     menuVocaTitle: 'Visual Voca',
     menuVocaDesc: 'Khám phá cảm giác và sắc thái từ vựng qua hình ảnh',
     menuWritingTitle: 'Writing Coach',
-    menuWritingDesc: 'Nhận hướng dẫn viết luận và tạo sách tranh của riêng bạn'
+    menuWritingDesc: 'Nhận hướng dẫn viết luận và tạo sách tranh của riêng bạn',
+
+    /* Phần tóm tắt Features (s-features) — 4 thẻ ở cuối trang chào mừng */
+    featuresTitle: 'Vì sao Geminary khác biệt',
+    featuresSubtitle: '4 điểm cốt lõi thay đổi cách bạn ghi nhớ từ vựng',
+    feature1Title: 'Từ vựng ghi nhớ bằng hình ảnh',
+    feature1Desc: 'AI biến cảm giác của từ thành hình ảnh. Xem một lần, không thể quên.',
+    feature1Tag: 'Tính năng chính',
+    feature2Title: 'Từ từ vựng đến câu văn',
+    feature2Desc: 'Không chỉ từ mà cả thành ngữ, cách diễn đạt và câu đều được AI giải thích tự nhiên, dễ hiểu.',
+    feature2Tag: 'Phạm vi không giới hạn',
+    feature3Title: 'Tìm kiếm bằng ngôn ngữ nào cũng được',
+    feature3Desc: 'Dù bạn tìm bằng tiếng Việt, tiếng Hàn hay bất kỳ ngôn ngữ nào, chúng tôi hiển thị ngay từ tiếng Anh tương ứng.',
+    feature3Tag: 'Tìm kiếm đa ngôn ngữ',
+    feature4Title: 'Vô số cách diễn đạt để khám phá',
+    feature4Desc: 'Vì AI giải thích theo thời gian thực, ngay cả những cách diễn đạt không có trong từ điển cũng dễ hiểu.',
+    feature4Tag: 'AI thời gian thực',
+    featuresCta: 'Bắt đầu ngay'
   },
 
   th: {
@@ -1323,7 +1425,24 @@ Ví dụ: split, break down, take off`,
     menuVocaTitle: 'Visual Voca',
     menuVocaDesc: 'สำรวจความรู้สึกและนัยยะของคำศัพท์พร้อมภาพ',
     menuWritingTitle: 'Writing Coach',
-    menuWritingDesc: 'รับการฝึกเขียนเรียงความและสร้างหนังสือภาพของคุณเอง'
+    menuWritingDesc: 'รับการฝึกเขียนเรียงความและสร้างหนังสือภาพของคุณเอง',
+
+    /* ส่วนสรุป Features (s-features) — การ์ด 4 ใบท้ายหน้าต้อนรับ */
+    featuresTitle: 'ทำไม Geminary จึงแตกต่าง',
+    featuresSubtitle: '4 แก่นหลักที่เปลี่ยนวิธีจำคำศัพท์',
+    feature1Title: 'คำศัพท์ที่จำได้ด้วยภาพ',
+    feature1Desc: 'AI แปลงความรู้สึกของคำเป็นภาพ เห็นครั้งเดียวก็ไม่มีวันลืม',
+    feature1Tag: 'ฟีเจอร์หลัก',
+    feature2Title: 'จากคำศัพท์ถึงประโยค',
+    feature2Desc: 'ทั้งคำ สำนวน วลี และประโยค AI อธิบายได้เป็นธรรมชาติและเข้าใจง่าย',
+    feature2Tag: 'ไม่จำกัดขอบเขต',
+    feature3Title: 'ค้นหาด้วยภาษาใดก็ได้',
+    feature3Desc: 'พิมพ์คำหรือประโยคเป็นภาษาไทย เกาหลี หรือญี่ปุ่น ก็แสดงคำภาษาอังกฤษที่ตรงกันได้ทันที',
+    feature3Tag: 'ค้นหาหลายภาษา',
+    feature4Title: 'สำนวนให้ค้นได้ไม่มีที่สิ้นสุด',
+    feature4Desc: 'เพราะ AI อธิบายแบบเรียลไทม์ แม้สำนวนที่ไม่มีในพจนานุกรมก็เข้าใจได้ทันที',
+    feature4Tag: 'AI เรียลไทม์',
+    featuresCta: 'เริ่มต้นใช้งาน'
   },
 
   pt: {
@@ -1510,7 +1629,24 @@ Exemplo: split, break down, take off`,
     menuVocaTitle: 'Visual Voca',
     menuVocaDesc: 'Explore a sensação e nuance das palavras com imagens',
     menuWritingTitle: 'Writing Coach',
-    menuWritingDesc: 'Receba coaching de redação e crie seu próprio livro ilustrado'
+    menuWritingDesc: 'Receba coaching de redação e crie seu próprio livro ilustrado',
+
+    /* Seção resumo de Features (s-features) — 4 cartões ao final da página de boas-vindas */
+    featuresTitle: 'Por que Geminary é diferente',
+    featuresSubtitle: '4 essenciais que mudam a forma de memorizar palavras',
+    feature1Title: 'Palavras que você lembra por imagens',
+    feature1Desc: 'A IA transforma a sensação de cada palavra em imagem. Veja uma vez e nunca mais esqueça.',
+    feature1Tag: 'Recurso principal',
+    feature2Title: 'De palavras a frases',
+    feature2Desc: 'Palavras, expressões idiomáticas e frases — tudo explicado naturalmente pela IA.',
+    feature2Tag: 'Alcance ilimitado',
+    feature3Title: 'Busque em qualquer idioma',
+    feature3Desc: 'Digite uma palavra ou frase em português, coreano ou japonês — mostramos na hora a palavra em inglês correspondente.',
+    feature3Tag: 'Busca multilíngue',
+    feature4Title: 'Expressões infinitas para explorar',
+    feature4Desc: 'Como a IA explica em tempo real, até expressões que não estão no dicionário são entendidas na hora.',
+    feature4Tag: 'IA em tempo real',
+    featuresCta: 'Começar agora'
   }
 };
 
