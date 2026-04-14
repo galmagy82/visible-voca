@@ -203,6 +203,9 @@ const I18N = {
     menuWritingTitle: 'Writing Coach',
     menuWritingDesc: '에세이를 코칭받고, 나만의 그림책으로 만들어보세요',
 
+    /* 웰컴 페이지 상단 브랜드 오리진 */
+    brandOrigin: 'AI 영어사전 · Powered by Gemini AI',
+
     /* Features 요약 섹션 (s-features) — 웰컴 페이지 하단 4카드 */
     featuresTitle: 'Geminary가 다른 이유',
     featuresSubtitle: '단어를 외우는 방식을 바꾸는 4가지 핵심',
@@ -406,6 +409,9 @@ Example: split, break down, take off`,
     menuVocaDesc: 'Explore the feel and nuance of words with images',
     menuWritingTitle: 'Writing Coach',
     menuWritingDesc: 'Get essay coaching and create your own picture book',
+
+    /* Welcome page top brand origin line */
+    brandOrigin: 'AI English Dictionary · Powered by Gemini AI',
 
     /* Features summary section (s-features) — 4 cards at the bottom of the welcome page */
     featuresTitle: 'Why Geminary is different',
@@ -611,6 +617,9 @@ Example: split, break down, take off`,
     menuWritingTitle: 'Writing Coach',
     menuWritingDesc: 'エッセイのコーチングを受けて、自分だけの絵本を作りましょう',
 
+    /* ウェルカムページ上部のブランドオリジン */
+    brandOrigin: 'AI 英語辞書 · Powered by Gemini AI',
+
     /* Features 要約セクション (s-features) — ウェルカムページ下部 4 カード */
     featuresTitle: 'Geminary が違う理由',
     featuresSubtitle: '単語の覚え方を変える 4 つのポイント',
@@ -814,6 +823,9 @@ Example: split, break down, take off`,
     menuVocaDesc: '用图片探索单词的感觉和语感',
     menuWritingTitle: 'Writing Coach',
     menuWritingDesc: '获得作文辅导，制作属于你的绘本',
+
+    /* 欢迎页顶部品牌来源行 */
+    brandOrigin: 'AI 英语词典 · Powered by Gemini AI',
 
     /* Features 摘要部分 (s-features) — 欢迎页底部 4 张卡片 */
     featuresTitle: 'Geminary 为什么不同',
@@ -1019,6 +1031,9 @@ Ejemplo: split, break down, take off`,
     menuWritingTitle: 'Writing Coach',
     menuWritingDesc: 'Recibe coaching de escritura y crea tu propio libro ilustrado',
 
+    /* Línea de origen de marca en la parte superior de la página de bienvenida */
+    brandOrigin: 'Diccionario de inglés con IA · Powered by Gemini AI',
+
     /* Sección resumen de Features (s-features) — 4 tarjetas al final de la página de bienvenida */
     featuresTitle: 'Por qué Geminary es diferente',
     featuresSubtitle: '4 claves que cambian la forma de memorizar palabras',
@@ -1222,6 +1237,9 @@ Ví dụ: split, break down, take off`,
     menuVocaDesc: 'Khám phá cảm giác và sắc thái từ vựng qua hình ảnh',
     menuWritingTitle: 'Writing Coach',
     menuWritingDesc: 'Nhận hướng dẫn viết luận và tạo sách tranh của riêng bạn',
+
+    /* Dòng nguồn gốc thương hiệu ở đầu trang chào mừng */
+    brandOrigin: 'Từ điển tiếng Anh AI · Powered by Gemini AI',
 
     /* Phần tóm tắt Features (s-features) — 4 thẻ ở cuối trang chào mừng */
     featuresTitle: 'Vì sao Geminary khác biệt',
@@ -1427,6 +1445,9 @@ Ví dụ: split, break down, take off`,
     menuWritingTitle: 'Writing Coach',
     menuWritingDesc: 'รับการฝึกเขียนเรียงความและสร้างหนังสือภาพของคุณเอง',
 
+    /* บรรทัดที่มาของแบรนด์ที่ด้านบนของหน้าต้อนรับ */
+    brandOrigin: 'พจนานุกรมภาษาอังกฤษ AI · Powered by Gemini AI',
+
     /* ส่วนสรุป Features (s-features) — การ์ด 4 ใบท้ายหน้าต้อนรับ */
     featuresTitle: 'ทำไม Geminary จึงแตกต่าง',
     featuresSubtitle: '4 แก่นหลักที่เปลี่ยนวิธีจำคำศัพท์',
@@ -1630,6 +1651,9 @@ Exemplo: split, break down, take off`,
     menuVocaDesc: 'Explore a sensação e nuance das palavras com imagens',
     menuWritingTitle: 'Writing Coach',
     menuWritingDesc: 'Receba coaching de redação e crie seu próprio livro ilustrado',
+
+    /* Linha de origem da marca no topo da página de boas-vindas */
+    brandOrigin: 'Dicionário de inglês com IA · Powered by Gemini AI',
 
     /* Seção resumo de Features (s-features) — 4 cartões ao final da página de boas-vindas */
     featuresTitle: 'Por que Geminary é diferente',
