@@ -51,24 +51,46 @@ async function callGeminiText(prompt: string, apiKey: string) {
 /* v1 프롬프트 — 롤백용으로 보관 */
 const V1_IMAGE_PROMPT = (word: string) => `Generate an image: Create an illustration that captures the feeling and mood of the English word "${word}". Use a concrete, recognizable scene or situation rather than abstract shapes, but keep it stylish and sophisticated — not cartoonish or childish. Think editorial illustration style with warm, natural colors and clean composition. Minimize unnecessary objects — only include objects essential to explaining the word. No text in the image. The illustration must fill the entire canvas edge to edge with no white borders, margins, or padding.`
 
-/* v3 프롬프트 — Monocle/Kinfolk 매거진 스타일, 단어 느낌에 맞는 색감 */
-const V3_IMAGE_PROMPT = (word: string) => `영어 단어 "${word}"의 느낌과 분위기를 담은 에디토리얼 일러스트를 만드세요.
+/* v4 프롬프트 — 영어, 구조화된 섹션별 지시 */
+const V4_IMAGE_PROMPT = (word: string) => `Create an editorial illustration that captures the feeling, mood, and essence of the English word "${word}".
 
-스타일: Monocle/Kinfolk 매거진 스타일. 세련되고 품격 있게, 만화풍이나 유치하지 않게.
+Style:
+- Editorial illustration in the style of Monocle or Kinfolk magazine
+- Sophisticated and refined, not cartoonish or childish
+- Clean composition with a single focal point
 
-색감: 단어의 느낌에 가장 어울리는 색을 선택. 전체적으로 채도는 낮고 세련되게 유지.
+Scene:
+- Use a concrete, recognizable scene or situation
+- Only include elements essential to conveying the word
+- No abstract shapes or decorative elements
+- No text, letters, or typography in the image
 
-구도: 단일 초점, 깔끔한 중앙 구성. 추상적 도형 금지, 구체적인 장면/상황만. 단어 설명에 꼭 필요한 요소만 포함. 이미지에 텍스트 없을 것.
+Color:
+- Choose colors that best match the emotional tone of the word
+- Keep saturation low and refined
+- Harmonious, intentional color palette
 
-인물: 맥락 없이 손, 팔, 다리 등 신체 일부만 잘린 채 등장하지 않을 것. 사람이 등장할 경우 자연스러운 구도로 포함할 것.
+Lighting:
+- Natural, soft lighting
+- Avoid harsh shadows or overly dramatic contrast
 
-캔버스 전체를 가장자리까지 빈틈없이 채울 것. 흰색 테두리, 여백, 패딩 없이.`
+Composition:
+- Fill the entire canvas edge to edge
+- No white borders, no padding, no margins
+- No frames or vignettes of any kind
+- Full bleed image extending to all edges
+- Background should be simple and supportive, not distracting from the main subject
+
+People:
+- Do not include human body parts unless essential to the meaning
+- No hands, fingers, or feet unless the word specifically requires them
+- If people appear, show them in a natural, contextual pose`
 
 async function callGeminiImage(word: string, apiKey: string) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`
-  /* 현재 활성: v3 (Monocle/Kinfolk 스타일)
+  /* 현재 활성: v4 (영어, 구조화된 섹션별 지시)
      롤백하려면 아래 imagePrompt 를 V1_IMAGE_PROMPT(word) 로 교체 후 재배포 */
-  const imagePrompt = V3_IMAGE_PROMPT(word)
+  const imagePrompt = V4_IMAGE_PROMPT(word)
 
   /* aspectRatio 실험:
      모델이 자유롭게 캔버스 비율을 고르면 내부에 여백을 채우는 경향이 있어,
