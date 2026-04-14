@@ -1134,17 +1134,6 @@
             <option value="20">20</option>
           </select>
         </div>
-        <div class="quiz-option">
-          <label data-i18n="quizRange">출제 범위</label>
-          <select id="quizRange">
-            <option value="all" data-i18n="quizRangeAll">전체</option>
-            <option value="recent" data-i18n="quizRangeRecent">최근 추가</option>
-          </select>
-        </div>
-        <div class="quiz-option" id="quizDateOption" style="display:none;">
-          <label data-i18n="quizRangeDate">기준 날짜</label>
-          <input type="date" id="quizDate">
-        </div>
         <button class="quiz-start-btn" onclick="startQuiz()" data-i18n="quizStart">������ 시작</button>
         <div class="quiz-msg" id="quizMsg"></div>
       </div>
@@ -2572,17 +2561,6 @@ const DECOY_WORDS = [
   'inquire','insert','insight','inspire','install','instance','instant','instinct','institute','insult'
 ];
 
-/* 출제 범위 옵션 토글 */
-document.getElementById('quizRange').addEventListener('change', function() {
-  const dateOpt = document.getElementById('quizDateOption');
-  dateOpt.style.display = this.value === 'recent' ? 'flex' : 'none';
-  if (this.value === 'recent' && !document.getElementById('quizDate').value) {
-    const d = new Date();
-    d.setDate(d.getDate() - 7);
-    document.getElementById('quizDate').value = d.toISOString().split('T')[0];
-  }
-});
-
 /* 퀴즈 상태 */
 let quizQuestions = [];
 let quizIndex = 0;
@@ -2606,23 +2584,10 @@ function resetQuiz() {
 async function startQuiz() {
   const type = document.getElementById('quizType').value;
   const count = parseInt(document.getElementById('quizCount').value);
-  const range = document.getElementById('quizRange').value;
   const msgEl = document.getElementById('quizMsg');
 
-  /* 단어장에서 단어 가져오기 */
+  /* 단어장에서 단어 가져오기 (전체 범위) */
   let words = await getWordbookAll();
-
-  /* 출제 범위 필터 */
-  if (range === 'recent') {
-    const dateStr = document.getElementById('quizDate').value;
-    if (!dateStr) {
-      msgEl.textContent = t('quizNoDate');
-      return;
-    }
-    const since = new Date(dateStr).getTime();
-    /* added_at 은 Supabase timestamptz(ISO 문자열) — Date 변환 후 ms 비교 */
-    words = words.filter(w => new Date(w.added_at).getTime() >= since);
-  }
 
   if (words.length === 0) {
     msgEl.textContent = t('quizNoWords');
