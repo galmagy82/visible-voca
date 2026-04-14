@@ -1586,25 +1586,55 @@ function buildCacheKey(word) {
   return `${getLang()}:${word}`;
 }
 
-/* 캐시 저장 */
-async function saveCacheEntry(word, html) {
+/* 캐시 저장
+   - html    : 렌더된 결과 HTML
+   - snapshot: 단어장 추가 시 사용할 구조화된 필드 (_lastWbData 와 동일 형태).
+               HTML 캐시가 히트했을 때도 bindWbButton 이 풀 스냅샷을 얻을 수
+               있어야 단어장에 빈 필드로 저장되는 문제를 방지. */
+async function saveCacheEntry(word, html, snapshot = null) {
   try {
     const db = await openDB();
     const tx = db.transaction(STORE_NAME, 'readwrite');
-    tx.objectStore(STORE_NAME).put(html, buildCacheKey(word));
+    tx.objectStore(STORE_NAME).put({ html, snapshot }, buildCacheKey(word));
   } catch (e) {
     console.warn('캐시 저장 실패:', e);
   }
 }
 
-/* 캐시 조회 */
+/* 캐시 조회 — HTML 문자열 반환 (기존 호출부 호환 유지)
+   - 신규 포맷  : { html, snapshot } 객체 → html 추출
+   - 구 포맷(문자열): 그대로 반환 (스냅샷 없음) */
 async function getCacheEntry(word) {
   try {
     const db = await openDB();
     return new Promise((resolve) => {
       const tx = db.transaction(STORE_NAME, 'readonly');
       const req = tx.objectStore(STORE_NAME).get(buildCacheKey(word));
-      req.onsuccess = () => resolve(req.result || null);
+      req.onsuccess = () => {
+        const v = req.result;
+        if (!v) return resolve(null);
+        if (typeof v === 'string') return resolve(v);
+        resolve(v.html || null);
+      };
+      req.onerror = () => resolve(null);
+    });
+  } catch {
+    return null;
+  }
+}
+
+/* 캐시된 단어장 스냅샷 조회 — 신규 포맷에서만 존재. 없으면 null */
+async function getCacheSnapshot(word) {
+  try {
+    const db = await openDB();
+    return new Promise((resolve) => {
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const req = tx.objectStore(STORE_NAME).get(buildCacheKey(word));
+      req.onsuccess = () => {
+        const v = req.result;
+        if (!v || typeof v === 'string') return resolve(null);
+        resolve(v.snapshot || null);
+      };
       req.onerror = () => resolve(null);
     });
   } catch {
@@ -1748,7 +1778,8 @@ async function fetchWordResult(word, targetEl) {
     wordResults[word] = { html: dbHtml };
     targetEl.innerHTML = dbHtml;
     bindWbButton(targetEl);
-    saveCacheEntry(word, dbHtml);
+    /* buildHtmlFromDB 가 _lastWbData 를 채웠으므로 캐시에도 스냅샷 동봉 */
+    saveCacheEntry(word, dbHtml, window._lastWbData);
     return dbHtml;
   }
 
@@ -1835,7 +1866,8 @@ async function fetchWordResult(word, targetEl) {
       wordResults[word] = { html: dbHtml };
       targetEl.innerHTML = dbHtml;
       bindWbButton(targetEl);
-      saveCacheEntry(word, dbHtml);
+      /* buildHtmlFromDB 가 _lastWbData 를 채웠으므로 캐시에도 스냅샷 동봉 */
+      saveCacheEntry(word, dbHtml, window._lastWbData);
       return dbHtml;
     }
   }
@@ -1906,7 +1938,8 @@ async function fetchWordResult(word, targetEl) {
 
   /* 이미지 비동기 처리 — imagePromise가 있을 때만 */
   if (!imagePromise) {
-    saveCacheEntry(word, html);
+    /* _lastWbData 는 위에서 채워둔 상태 → 캐시에도 스냅샷 동봉 */
+    saveCacheEntry(word, html, window._lastWbData);
     /* Supabase 저장은 POS 가 있을 때만(= 단어/숙어/구동사)
        POS 가 없는 문장·구절·단편은 word_results 캐시 구조(언어별 텍스트 + 이미지) 와 맞지 않고,
        fetchFromSupabase 필터(cefr 필수)·hit 조건(이미지 필수)에 의해 항상 miss 되어
@@ -1930,7 +1963,7 @@ async function fetchWordResult(word, targetEl) {
       imgTag
     );
     wordResults[word] = { html: imgHtml };
-    saveCacheEntry(word, imgHtml);
+    saveCacheEntry(word, imgHtml, window._lastWbData);
     /* Supabase에 텍스트 + 이미지 저장 (정답 단어를 키로 저장)
        reusedImagePath 가 있으면 saveToSupabase 가 업로드 스킵하고 그 path 를 공유. */
     saveToSupabase(saveWord, { corrected, pos, ipa, cefr, description: desc, examples }, imageUrl, reusedImagePath);
@@ -1948,7 +1981,7 @@ async function fetchWordResult(word, targetEl) {
       ''
     );
     wordResults[word] = { html: noImgHtml };
-    saveCacheEntry(word, noImgHtml);
+    saveCacheEntry(word, noImgHtml, window._lastWbData);
     /* Supabase에 텍스트만 저장 (이미지 실패, 정답 단어를 키로 저장) */
     saveToSupabase(saveWord, { corrected, pos, ipa, cefr, description: desc, examples }, null);
   }
@@ -2182,11 +2215,35 @@ async function bindWbButton(container, wordOverride) {
   const btn = container.querySelector('[data-wb-word]');
   if (!btn || btn._bound) return;
   btn._bound = true;
-  /* wordOverride 가 있으면 캐시/모달에서 재렌더된 경우 — 최소 정보로 바인딩.
-     단어장 모달에서는 어차피 add 버튼을 숨기므로 상세 정보 필요 없음. */
-  const data = wordOverride
-    ? { word: wordOverride, pos: '', ipa: '', cefr: '', corrected: '', description: '', examples: '' }
-    : window._lastWbData;
+  /* wordOverride 가 있으면 IndexedDB 캐시 히트 경로(같은 단어 재검색, 멀티 단어 재표시 등)
+     — 이 경우 _lastWbData 가 비어 있거나 다른 단어 기준일 수 있으므로,
+     캐시에 함께 저장해둔 스냅샷을 조회해 풀 필드를 복구한다.
+     스냅샷이 없으면(구버전 캐시) word_results 공용 캐시로 폴백하여 채운다. */
+  let data;
+  if (wordOverride) {
+    const snap = await getCacheSnapshot(wordOverride);
+    if (snap) {
+      data = snap;
+    } else {
+      const dbResult = await fetchFromSupabase(wordOverride);
+      if (dbResult && dbResult.fromDB) {
+        data = {
+          word: wordOverride,
+          pos: dbResult.pos || '',
+          ipa: dbResult.ipa || '',
+          cefr: dbResult.cefr || '',
+          corrected: dbResult.corrected || '',
+          description: dbResult.description || '',
+          examples: dbResult.examples || '',
+        };
+      } else {
+        /* word_results 에도 없는 POS 없는 항목 — 최소 필드로 대체 */
+        data = { word: wordOverride, pos: '', ipa: '', cefr: '', corrected: '', description: '', examples: '' };
+      }
+    }
+  } else {
+    data = window._lastWbData;
+  }
   if (!data) return;
 
   const entry = await getWordbookEntry(data.word);
@@ -2245,6 +2302,34 @@ async function addToWordbook(data, btnEl) {
 async function getWordbookAll() {
   const map = await loadWordbookIfNeeded();
   return Array.from(map.values());
+}
+
+/* 스냅샷이 비어 있던 구 row 를 word_results 데이터로 업데이트 (백필)
+   - showWordbookDetail 에서 한 번 열면 자동 복구되도록. */
+async function backfillWordbookEntry(word, dbResult) {
+  const userId = _authUser?.id;
+  if (!userId) return;
+  const lower = word.toLowerCase();
+  const row = {
+    pos: dbResult.pos || '',
+    ipa: dbResult.ipa || '',
+    cefr: dbResult.cefr || '',
+    corrected: dbResult.corrected || '',
+    description: dbResult.description || '',
+    examples: dbResult.examples || '',
+  };
+  const map = await loadWordbookIfNeeded();
+  const cur = map.get(lower);
+  if (cur) map.set(lower, { ...cur, ...row });
+  try {
+    await supabaseClient
+      .from('user_wordbook')
+      .update(row)
+      .eq('user_id', userId)
+      .eq('word', lower);
+  } catch (e) {
+    console.warn('단어장 백필 실패:', e);
+  }
 }
 
 /* 단어장에서 삭제 */
@@ -2373,16 +2458,50 @@ async function showWordbookDetail(word, itemEl) {
     contentEl.innerHTML = `<div class="error">${t('loadFailed')}</div>`;
     return;
   }
-  const dbLike = {
-    word: entry.word,
-    corrected: entry.corrected,
-    pos: entry.pos,
-    ipa: entry.ipa,
-    cefr: entry.cefr,
-    description: entry.description,
-    examples: entry.examples,
-    imageUrl: existingImage ? existingImage.publicUrl : null,
-  };
+
+  /* 스냅샷 복구 로직 — description 이 비어 있으면 (구버전 버그로 빈 row 가 저장된 경우)
+     word_results 공용 캐시에서 조회해 재구성하고, user_wordbook row 도 백필한다.
+     word_results 에도 없으면(POS 없는 항목) 빈 필드로 표시 (최소 발음+이미지라도 보여줌). */
+  let dbLike;
+  if (!entry.description) {
+    const dbResult = await fetchFromSupabase(word);
+    if (dbResult && dbResult.fromDB) {
+      dbLike = {
+        word: dbResult.word,
+        corrected: dbResult.corrected,
+        pos: dbResult.pos,
+        ipa: dbResult.ipa,
+        cefr: dbResult.cefr,
+        description: dbResult.description,
+        examples: dbResult.examples,
+        imageUrl: dbResult.imageUrl || (existingImage ? existingImage.publicUrl : null),
+      };
+      /* user_wordbook row 백필 — 다음에 열 때부터는 스냅샷만으로 충분하도록 */
+      backfillWordbookEntry(word, dbResult);
+    } else {
+      dbLike = {
+        word: entry.word,
+        corrected: entry.corrected,
+        pos: entry.pos,
+        ipa: entry.ipa,
+        cefr: entry.cefr,
+        description: entry.description,
+        examples: entry.examples,
+        imageUrl: existingImage ? existingImage.publicUrl : null,
+      };
+    }
+  } else {
+    dbLike = {
+      word: entry.word,
+      corrected: entry.corrected,
+      pos: entry.pos,
+      ipa: entry.ipa,
+      cefr: entry.cefr,
+      description: entry.description,
+      examples: entry.examples,
+      imageUrl: existingImage ? existingImage.publicUrl : null,
+    };
+  }
   contentEl.innerHTML = buildHtmlFromDB(dbLike, word);
   /* 모달에서는 "단어장에 추가" 버튼 숨기기 (이미 추가된 상태) */
   const addBtn = contentEl.querySelector('.add-wordbook-btn');
