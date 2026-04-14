@@ -2597,7 +2597,12 @@ function resetQuiz() {
   document.getElementById('quizMsg').textContent = '';
 }
 
-/* 퀴즈 시작 */
+/* 퀴즈 시작
+   데이터 소스(기기 무관, 계정 기반):
+     - 느낌(설명)       : user_wordbook.description — 비어 있으면 word_results 로 폴백 후 백필
+     - 이미지           : word_results.image_path  — fetchExistingImage 로 공개 URL 확보
+   과거에는 IndexedDB 캐시(HTML)에서 추출했으나 새 기기에서는 캐시가 비어 퀴즈 자체가
+   불가능했기 때문에 계정 기반 소스로 재작성. */
 async function startQuiz() {
   const type = document.getElementById('quizType').value;
   const count = parseInt(document.getElementById('quizCount').value);
@@ -2624,18 +2629,36 @@ async function startQuiz() {
     return;
   }
 
-  /* 이미지 퀴즈인 경우 캐시에 이미지가 있는 단어만 필터 */
+  /* 퀴즈 유형별 필요 데이터 확보 */
   if (type === 'image') {
-    const wordsWithImage = [];
-    for (const w of words) {
-      const cached = await getCacheEntry(w.word);
-      if (cached && cached.includes('<img ')) {
-        wordsWithImage.push(w);
-      }
-    }
-    words = wordsWithImage;
+    /* 이미지 퀴즈: word_results 의 공용 이미지가 존재하는 단어만 필터.
+       병렬 조회로 지연 최소화하고, 결과(publicUrl) 는 w._imgUrl 에 캐시. */
+    const images = await Promise.all(words.map(w => fetchExistingImage(w.word)));
+    words = words
+      .map((w, i) => ({ ...w, _imgUrl: images[i]?.publicUrl || null }))
+      .filter(w => w._imgUrl);
     if (words.length === 0) {
       msgEl.textContent = t('quizNoImages');
+      return;
+    }
+  } else {
+    /* 느낌 퀴즈: description 이 비어 있는 단어는 word_results 에서 보강(백필).
+       word_results 에도 없으면 퀴즈 대상에서 제외. */
+    const needBackfill = words.filter(w => !w.description);
+    if (needBackfill.length > 0) {
+      const fills = await Promise.all(needBackfill.map(w => fetchFromSupabase(w.word)));
+      needBackfill.forEach((w, i) => {
+        const r = fills[i];
+        if (r && r.fromDB && r.description) {
+          w.description = r.description;
+          /* user_wordbook row 도 비동기 백필 */
+          backfillWordbookEntry(w.word, r);
+        }
+      });
+    }
+    words = words.filter(w => w.description);
+    if (words.length === 0) {
+      msgEl.textContent = t('quizNoWords');
       return;
     }
   }
@@ -2646,18 +2669,17 @@ async function startQuiz() {
 
   quizQuestions = [];
   for (const w of selected) {
-    const cached = await getCacheEntry(w.word);
     /* 보기 생성: 정답 + 오답 3개 */
     const decoys = getDecoys(w.word, words.map(x => x.word), 3);
     const choices = [w.word, ...decoys].sort(() => Math.random() - 0.5);
 
     let questionData = '';
     if (type === 'feel') {
-      /* 캐시에서 느낌 설명 추출 */
-      questionData = extractFeelText(cached);
+      /* description 은 원문 텍스트 — innerHTML 주입 시 XSS/마크업 깨짐 방지 위해 escape */
+      questionData = escapeHtml(w.description || t('noDescription'));
     } else {
-      /* 캐시에서 이미지 추출 */
-      questionData = extractImage(cached);
+      /* <img> 태그 조립 — src 는 위 필터에서 보관해둔 publicUrl */
+      questionData = `<img src="${escapeHtml(w._imgUrl)}" alt="${escapeHtml(w.word)}${t('imageAlt')}">`;
     }
 
     quizQuestions.push({
@@ -2687,20 +2709,6 @@ function getDecoys(answer, wordbookWords, count) {
   const extra = DECOY_WORDS.filter(w => w !== answer && !wordbookWords.includes(w));
   const pool = [...candidates, ...extra].sort(() => Math.random() - 0.5);
   return pool.slice(0, count);
-}
-
-/* 캐시된 HTML에서 느낌 설명 텍스트 추출 */
-function extractFeelText(html) {
-  if (!html) return t('noDescription');
-  const match = html.match(/<div class="feel-desc">([\s\S]*?)<\/div>/);
-  return match ? match[1].trim() : t('noDescription');
-}
-
-/* 캐시된 HTML에서 이미지 태그 추출 */
-function extractImage(html) {
-  if (!html) return '';
-  const match = html.match(/<img [^>]+>/);
-  return match ? match[0] : '';
 }
 
 /* 문제 표시 */
