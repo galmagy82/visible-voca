@@ -1696,11 +1696,14 @@ async function callSearch(prompt) {
 }
 
 // --- 이미지 생성 (Edge Function 경유) ---
-async function generateImage(word) {
+async function generateImage(word, sceneEn) {
+  /* sceneEn: 텍스트 응답의 [SCENE_EN:] 태그에서 추출한 영어 장면 1문장.
+     Edge Function 이 이미지 프롬프트에 주입해 생성 품질을 높인다.
+     없으면(구버전 캐시 경로 등) Edge Function 이 일반 프롬프트로 폴백. */
   const res = await fetch(EDGE_FUNCTION_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'image', userId: getUserId(), word })
+    body: JSON.stringify({ action: 'image', userId: getUserId(), word, sceneEn: sceneEn || '' })
   });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
@@ -1868,6 +1871,15 @@ async function fetchWordResult(word, targetEl) {
     verbForms = verbFormsMatch[1].trim();
     body = body.replace(/\[VERB_FORMS:\s*.+?\]\n?/i, '');
   }
+  /* 이미지 생성용 영어 장면 힌트 파싱 — UI 언어와 무관하게 항상 영어.
+     이미지 프롬프트는 100% 영어로 유지하기 위한 태그. UI 에는 노출되지 않고
+     Edge Function 의 이미지 프롬프트에 직접 주입된다. 화면 desc 와 별개. */
+  let sceneEn = '';
+  const sceneEnMatch = body.match(/\[SCENE_EN:\s*([\s\S]+?)\]/i);
+  if (sceneEnMatch) {
+    sceneEn = sceneEnMatch[1].trim();
+    body = body.replace(/\[SCENE_EN:\s*[\s\S]+?\]\n?/i, '');
+  }
 
   /* ③-a corrected word가 있으면 매핑 저장 + 정답 단어로 DB 2차 조회
      목적: 오타/비영어로 검색했더라도, 정답 영어 단어가 이미 DB에 있으면
@@ -1922,7 +1934,7 @@ async function fetchWordResult(word, targetEl) {
       reusedImagePath = existing.image_path;
       imagePromise = Promise.resolve(existing.publicUrl);
     } else {
-      imagePromise = generateImage(saveWord);
+      imagePromise = generateImage(saveWord, sceneEn);
     }
   }
 

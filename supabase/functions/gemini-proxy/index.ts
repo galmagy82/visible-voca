@@ -106,8 +106,21 @@ Derivational suffix caution:
 /* v5 프롬프트 — v4 에서 Color/Lighting 섹션(사진 보정·조명 용어) 을 제거하고,
    "hand-illustrated, not photograph" 방어선을 명시적으로 추가.
    배경: v4 결과가 실사/포토리얼로 기울어 학습 앱 톤(손그림 일러스트) 과 이질감.
-   v3 (한글) 에는 Color/Lighting 이 없었고, 그때 결과가 더 일러스트에 가까웠음 → 그 지점을 복원. */
-const V5_IMAGE_PROMPT = (word: string) => `Create an editorial illustration (as an illustrated picture, not a photograph) that captures the feeling, mood, and essence of the English word "${word}".
+   v3 (한글) 에는 Color/Lighting 이 없었고, 그때 결과가 더 일러스트에 가까웠음 → 그 지점을 복원.
+
+   sceneEn: 프론트에서 [SCENE_EN:] 태그로 뽑아 전달하는 영어 장면 1문장.
+     - 있으면: "Scene to convey" 섹션으로 최상단 삽입 → 단어 일반 해석보다 이 장면을 우선.
+     - 없으면: 일반 단어 기반 프롬프트로 폴백 (구버전 호출 호환). */
+const V5_IMAGE_PROMPT = (word: string, sceneEn: string) => {
+  const scenePriorityBlock = sceneEn ? `
+Scene to convey (highest priority):
+- Illustrate this specific scene: "${sceneEn}"
+- Your image MUST clearly depict this exact scene, not a generic interpretation of "${word}".
+- Include the subject, action, and setting described in the scene above.
+- If there is tension between the scene and generic meanings of "${word}", follow the scene.
+` : '';
+  return `Create an editorial illustration (as an illustrated picture, not a photograph) that captures the feeling, mood, and essence of the English word "${word}".
+${scenePriorityBlock}
 
 Style:
 - Editorial illustration in the style of Monocle or Kinfolk magazine
@@ -149,12 +162,14 @@ Derivational suffix caution:
   · "practically" (adv) drawn as "practical" (adj)
   · "happiness" (noun: the state) drawn only as "happy" (adj: a smile)
   · "creation" (noun: the act/result) drawn only as "create" (verb)`
+}
 
-async function callGeminiImage(word: string, apiKey: string) {
+async function callGeminiImage(word: string, sceneEn: string, apiKey: string) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`
-  /* 현재 활성: v5 (손그림 일러스트 톤 복원 + 사진 용어 제거)
-     롤백하려면 아래 imagePrompt 를 V4_IMAGE_PROMPT(word) 또는 V1_IMAGE_PROMPT(word) 로 교체 후 재배포 */
-  const imagePrompt = V5_IMAGE_PROMPT(word)
+  /* 현재 활성: v5 (손그림 일러스트 톤 복원 + 사진 용어 제거) + 장면 힌트 주입
+     롤백하려면 아래 imagePrompt 를 V4_IMAGE_PROMPT(word) 또는 V1_IMAGE_PROMPT(word) 로 교체 후 재배포.
+     sceneEn 이 비어 있으면 "Scene to convey" 섹션 없이 일반 프롬프트로 폴백. */
+  const imagePrompt = V5_IMAGE_PROMPT(word, sceneEn)
 
   /* aspectRatio 실험:
      모델이 자유롭게 캔버스 비율을 고르면 내부에 여백을 채우는 경향이 있어,
@@ -242,7 +257,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json()
-    const { action, userId, prompt, word, base64Data, mimeType, extractPrompt } = body
+    const { action, userId, prompt, word, sceneEn, base64Data, mimeType, extractPrompt } = body
 
     if (!userId || !action) {
       return new Response(
@@ -279,7 +294,7 @@ Deno.serve(async (req) => {
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           )
         }
-        const imageData = await callGeminiImage(word, apiKey)
+        const imageData = await callGeminiImage(word, sceneEn || '', apiKey)
         result = { image: imageData }
         break
       }
