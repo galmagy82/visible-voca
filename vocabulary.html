@@ -337,6 +337,16 @@
     border-radius: 4px;
     vertical-align: middle;
   }
+  /* 동사 3단변화 — 품사 라인 바로 아래에 화살표로 이어진 표시.
+     옵션 A: 라벨 없이 단어 + 화살표만 ("go → went → gone"). */
+  .verb-forms {
+    font-size: 0.95rem;
+    color: #3A3530;
+    margin-top: -12px;
+    margin-bottom: 20px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
   .corrected {
     font-size: 0.95rem;
     color: #5A8A42;
@@ -1198,6 +1208,15 @@ function stylePosLabels(html) {
   return html.replace(/\[(noun|verb|adjective|adverb|phrasal verb|preposition|conjunction|interjection|pronoun|determiner)\]/gi,
     '<span class="pos-label">[$1]</span>');
 }
+/* 동사 3단변화 문자열("present | past | past_participle") 을
+   라벨 없이 화살표로 이어진 표시용 HTML 로 변환. 옵션 A: "go → went → gone".
+   유효하지 않으면(파이프 없음 / 빈 토큰) 빈 문자열 반환 → 호출부에서 자연 숨김. */
+function formatVerbForms(str) {
+  if (!str) return '';
+  const parts = str.split('|').map(s => s.trim()).filter(Boolean);
+  if (parts.length < 2) return '';
+  return parts.map(escapeHtml).join(' &rarr; ');
+}
 
 // --- Supabase 초기화 ---
 const SUPABASE_URL = 'https://grdtxvpebjtfhuqdngfn.supabase.co';
@@ -1257,6 +1276,7 @@ async function fetchFromSupabase(word) {
         pos: textRow.pos,
         ipa: textRow.ipa,
         cefr: textRow.cefr,
+        verbForms: textRow.verb_forms || '',
         description: textRow.description,
         examples: textRow.examples,
         imageUrl: urlData?.publicUrl || null,
@@ -1426,6 +1446,8 @@ async function saveToSupabase(word, parsed, imageDataUrl, existingImagePath) {
         pos: parsed.pos || null,
         ipa: parsed.ipa || null,
         cefr: parsed.cefr || null,
+        /* 동사 3단변화 — 비동사는 '' 로 기본값 유지됨 */
+        verb_forms: parsed.verbForms || '',
         description: parsed.description || null,
         examples: parsed.examples || null,
         image_path: imagePath,
@@ -1712,6 +1734,9 @@ function buildHtmlFromDB(dbData, word, correctedOverride) {
     if (dbData.cefr) posLine += (posLine ? ' · ' : '') + `<span class="cefr-badge">${escapeHtml(dbData.cefr)}</span>`;
     html += `<div class="word-pos">${posLine}</div>`;
   }
+  /* 동사 3단변화 — DB/단어장 row 의 verb_forms 필드가 있을 때만 렌더 */
+  const vfHtml = formatVerbForms(dbData.verbForms);
+  if (vfHtml) html += `<div class="verb-forms">${vfHtml}</div>`;
   if (safeCorrected && safeCorrected.toLowerCase() !== safeWord.toLowerCase()) html += `<div class="corrected">${safeWord} → <span>${safeCorrected}</span></div>`;
   html += `<div class="feel-desc">${escapeHtml(dbData.description)}</div>`;
   if (dbData.imageUrl) {
@@ -1727,6 +1752,7 @@ function buildHtmlFromDB(dbData, word, correctedOverride) {
     corrected: dbData.corrected || '',
     description: dbData.description || '',
     examples: dbData.examples || '',
+    verbForms: dbData.verbForms || '',
   };
   return html;
 }
@@ -1834,6 +1860,14 @@ async function fetchWordResult(word, targetEl) {
     cefr = cefrMatch[1].trim();
     body = body.replace(/\[CEFR:\s*.+?\]\n?/i, '');
   }
+  /* 동사 3단변화 파싱 — 동사일 때만 Gemini 가 포함, 아니면 빈 문자열.
+     저장 포맷: "present | past | past_participle" (파이프 구분) */
+  let verbForms = '';
+  const verbFormsMatch = body.match(/\[VERB_FORMS:\s*(.+?)\]/i);
+  if (verbFormsMatch) {
+    verbForms = verbFormsMatch[1].trim();
+    body = body.replace(/\[VERB_FORMS:\s*.+?\]\n?/i, '');
+  }
 
   /* ③-a corrected word가 있으면 매핑 저장 + 정답 단어로 DB 2차 조회
      목적: 오타/비영어로 검색했더라도, 정답 영어 단어가 이미 DB에 있으면
@@ -1906,6 +1940,10 @@ async function fetchWordResult(word, targetEl) {
     if (cefr) posLine += (posLine ? ' · ' : '') + `<span class="cefr-badge">${escapeHtml(cefr)}</span>`;
     html += `<div class="word-pos">${posLine}</div>`;
   }
+  /* 동사 3단변화 표시 — Gemini 가 [VERB_FORMS:] 를 채웠을 때만 렌더.
+     프롬프트 지시상 동사가 아니면 채워지지 않으므로 별도 pos 체크 불필요. */
+  const verbFormsHtml = formatVerbForms(verbForms);
+  if (verbFormsHtml) html += `<div class="verb-forms">${verbFormsHtml}</div>`;
   if (corrected && corrected.toLowerCase() !== word.toLowerCase()) html += `<div class="corrected">${safeWord} → <span>${safeCorrected}</span></div>`;
   html += `<div class="feel-desc">${escapeHtml(desc)}</div>`;
   if (imagePromise) {
@@ -1921,6 +1959,7 @@ async function fetchWordResult(word, targetEl) {
     corrected: corrected || '',
     description: desc || '',
     examples: examples || '',
+    verbForms: verbForms || '',
   };
 
   wordResults[word] = { html };
@@ -1936,7 +1975,7 @@ async function fetchWordResult(word, targetEl) {
        fetchFromSupabase 필터(cefr 필수)·hit 조건(이미지 필수)에 의해 항상 miss 되어
        매 검색마다 중복 row 가 쌓이므로 저장 자체를 스킵한다. */
     if (pos) {
-      saveToSupabase(saveWord, { corrected, pos, ipa, cefr, description: desc, examples }, null);
+      saveToSupabase(saveWord, { corrected, pos, ipa, cefr, description: desc, examples, verbForms }, null);
     }
     return html;
   }
@@ -1957,7 +1996,7 @@ async function fetchWordResult(word, targetEl) {
     saveCacheEntry(word, imgHtml, window._lastWbData);
     /* Supabase에 텍스트 + 이미지 저장 (정답 단어를 키로 저장)
        reusedImagePath 가 있으면 saveToSupabase 가 업로드 스킵하고 그 path 를 공유. */
-    saveToSupabase(saveWord, { corrected, pos, ipa, cefr, description: desc, examples }, imageUrl, reusedImagePath);
+    saveToSupabase(saveWord, { corrected, pos, ipa, cefr, description: desc, examples, verbForms }, imageUrl, reusedImagePath);
   } catch (imgErr) {
     console.error('이미지 생성 실패:', imgErr);
     /* 이미지 영역 제거 */
@@ -1974,7 +2013,7 @@ async function fetchWordResult(word, targetEl) {
     wordResults[word] = { html: noImgHtml };
     saveCacheEntry(word, noImgHtml, window._lastWbData);
     /* Supabase에 텍스트만 저장 (이미지 실패, 정답 단어를 키로 저장) */
-    saveToSupabase(saveWord, { corrected, pos, ipa, cefr, description: desc, examples }, null);
+    saveToSupabase(saveWord, { corrected, pos, ipa, cefr, description: desc, examples, verbForms }, null);
   }
 
   return wordResults[word].html;
@@ -2226,10 +2265,11 @@ async function bindWbButton(container, wordOverride) {
           corrected: dbResult.corrected || '',
           description: dbResult.description || '',
           examples: dbResult.examples || '',
+          verbForms: dbResult.verbForms || '',
         };
       } else {
         /* word_results 에도 없는 POS 없는 항목 — 최소 필드로 대체 */
-        data = { word: wordOverride, pos: '', ipa: '', cefr: '', corrected: '', description: '', examples: '' };
+        data = { word: wordOverride, pos: '', ipa: '', cefr: '', corrected: '', description: '', examples: '', verbForms: '' };
       }
     }
   } else {
@@ -2264,6 +2304,8 @@ async function addToWordbook(data, btnEl) {
     corrected: data.corrected || '',
     description: data.description || '',
     examples: data.examples || '',
+    /* 동사 3단변화 스냅샷 — 비동사는 '' */
+    verb_forms: data.verbForms || '',
   };
   /* 낙관적 UI: 메모리 캐시 먼저 갱신하고 버튼 상태 바꿈 */
   const map = await loadWordbookIfNeeded();
@@ -2308,6 +2350,7 @@ async function backfillWordbookEntry(word, dbResult) {
     corrected: dbResult.corrected || '',
     description: dbResult.description || '',
     examples: dbResult.examples || '',
+    verb_forms: dbResult.verbForms || '',
   };
   const map = await loadWordbookIfNeeded();
   const cur = map.get(lower);
@@ -2464,6 +2507,7 @@ async function showWordbookDetail(word, itemEl) {
         pos: dbResult.pos,
         ipa: dbResult.ipa,
         cefr: dbResult.cefr,
+        verbForms: dbResult.verbForms || '',
         description: dbResult.description,
         examples: dbResult.examples,
         imageUrl: dbResult.imageUrl || (existingImage ? existingImage.publicUrl : null),
@@ -2477,6 +2521,7 @@ async function showWordbookDetail(word, itemEl) {
         pos: entry.pos,
         ipa: entry.ipa,
         cefr: entry.cefr,
+        verbForms: entry.verb_forms || '',
         description: entry.description,
         examples: entry.examples,
         imageUrl: existingImage ? existingImage.publicUrl : null,
@@ -2489,6 +2534,7 @@ async function showWordbookDetail(word, itemEl) {
       pos: entry.pos,
       ipa: entry.ipa,
       cefr: entry.cefr,
+      verbForms: entry.verb_forms || '',
       description: entry.description,
       examples: entry.examples,
       imageUrl: existingImage ? existingImage.publicUrl : null,
