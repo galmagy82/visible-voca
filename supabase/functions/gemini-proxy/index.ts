@@ -164,12 +164,77 @@ Derivational suffix caution:
   · "creation" (noun: the act/result) drawn only as "create" (verb)`
 }
 
+/* v6 프롬프트 — v5 에서 실사 편향의 근본 원인 2가지를 제거:
+   1) "Monocle or Kinfolk" 레퍼런스 삭제 — 두 매거진 모두 사진 중심이라
+      모델이 에디토리얼 사진 톤으로 끌리는 원인이었음.
+   2) 부정문("NOT a photograph") 대신 **긍정 매체 앵커**를 최상단에 배치:
+      "A gouache and ink illustration..." 으로 시작해 모델이 첫 토큰부터
+      회화 매체에 락되도록 유도.
+   참고 레퍼런스는 실제로 일러스트 중심 매체로 교체 (The New Yorker,
+   NYT editorial illustration, Christoph Niemann 스타일). */
+const V6_IMAGE_PROMPT = (word: string, sceneEn: string) => {
+  /* sceneEn 이 있을 때만 "Scene to depict" 블록 삽입 — 단어 일반 해석보다 이 장면 우선 */
+  const scenePriorityBlock = sceneEn ? `
+Scene to depict (highest priority):
+- Paint this specific scene: "${sceneEn}"
+- This exact scene must be clearly illustrated, not a generic interpretation of "${word}".
+- Include the subject, action, and setting described above.
+- If there is tension between the scene and generic meanings of "${word}", follow the scene.
+` : '';
+  return `A gouache and ink illustration — painted with visible brush texture and loose hand-drawn outlines. This is a painted picture, not a photograph.
+${scenePriorityBlock}
+The illustration visualizes the English word "${word}".
+
+Medium & style:
+- Gouache on textured paper, with soft ink linework visible
+- Inspired by contemporary editorial illustration: The New Yorker, The New York Times opinion section, The Atlantic, and Christoph Niemann's visual style
+- Flat, limited color palette (3–5 harmonious muted colors)
+- Visible painted texture and brushwork — not crisp, not airbrushed, not photographic
+- Warm, matte, printed-book quality
+- Refined adult editorial tone — not cartoonish, not childish, not anime, not manga
+
+Scene:
+- Concrete, recognizable situation
+- Only elements essential to conveying the word or scene
+- No text, letters, numbers, or typography anywhere in the image
+
+Framing:
+- Full bleed to all edges of the canvas
+- No white borders, no margins, no frames, no vignettes
+- Simple, supportive background that doesn't distract from the main subject
+
+People:
+- Avoid human body parts unless essential to the meaning
+- No disembodied hands or fingers
+- If people appear, show them in a natural, contextual pose
+
+Part of speech awareness:
+- First, identify the part of speech of "${word}".
+- Illustrate the meaning of THIS exact form, not a related derived form.
+- Noun: paint the thing itself, or a scene featuring it as the subject.
+- Verb: paint the action in progress — someone or something doing it.
+- Adjective: paint an object or scene that clearly exemplifies the quality.
+- Adverb: paint the situation or state that the adverb describes — the manner, degree, or extent. Do NOT fall back to the related adjective.
+  e.g. "practically" means "almost / virtually / in effect" → paint a scene of "almost empty", "nearly done", "virtually identical" — NOT a scene of practical/functional objects.
+- Preposition / Conjunction: paint the spatial or logical relationship between two elements (e.g. "between" → two objects with space between them; "although" → contrast of two situations).
+
+Derivational suffix caution:
+- Words ending in -ly, -ness, -tion, -ment, -ity are often derived from another base word but have DIFFERENT meanings. Illustrate the derived form's own meaning, not the base word's meaning.
+- Examples of WRONG behavior to avoid:
+  · "practically" (adv) painted as "practical" (adj)
+  · "happiness" (noun: the state) painted only as "happy" (adj: a smile)
+  · "creation" (noun: the act/result) painted only as "create" (verb)
+
+Format reminder: This is a painted illustration on textured paper. Favor loose brushwork and visible texture over photographic crispness. If in doubt, make it more painterly, not more realistic.`;
+}
+
 async function callGeminiImage(word: string, sceneEn: string, apiKey: string) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`
-  /* 현재 활성: v5 (손그림 일러스트 톤 복원 + 사진 용어 제거) + 장면 힌트 주입
-     롤백하려면 아래 imagePrompt 를 V4_IMAGE_PROMPT(word) 또는 V1_IMAGE_PROMPT(word) 로 교체 후 재배포.
-     sceneEn 이 비어 있으면 "Scene to convey" 섹션 없이 일반 프롬프트로 폴백. */
-  const imagePrompt = V5_IMAGE_PROMPT(word, sceneEn)
+  /* 현재 활성: v6 (매체 앵커를 긍정문 최상단에 배치 + 사진 레퍼런스 제거)
+     롤백: 실사 편향이 다시 나오거나 일러스트 품질이 V5 보다 떨어지면
+     아래 imagePrompt 를 V5_IMAGE_PROMPT / V4_IMAGE_PROMPT / V1_IMAGE_PROMPT 로 교체 후 재배포.
+     sceneEn 이 비어 있으면 "Scene to depict" 섹션 없이 일반 프롬프트로 폴백. */
+  const imagePrompt = V6_IMAGE_PROMPT(word, sceneEn)
 
   /* aspectRatio 실험:
      모델이 자유롭게 캔버스 비율을 고르면 내부에 여백을 채우는 경향이 있어,
