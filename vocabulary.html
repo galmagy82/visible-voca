@@ -2438,17 +2438,18 @@ async function showWordbookDetail(word, itemEl) {
 
   contentEl.innerHTML = `<div class="loading">${word}${t('loadingResult')}</div>`;
 
-  /* 단어장 row + 이미지(word_results 공용 캐시) 를 병렬 조회
-     - 텍스트 필드: user_wordbook 에 저장된 스냅샷
-     - 이미지     : word_results 에 있는 공용 이미지(언어 무관). 없으면 생략. */
-  const [entry, existingImage] = await Promise.all([
-    getWordbookEntry(word),
-    fetchExistingImage(word),
-  ]);
+  /* 단어장 row 먼저 조회 (메모리 캐시 기반이라 빠름) */
+  const entry = await getWordbookEntry(word);
   if (!entry) {
     contentEl.innerHTML = `<div class="error">${t('loadFailed')}</div>`;
     return;
   }
+  /* 이미지(word_results 공용 캐시) 는 교정된 단어(entry.corrected) 가 있으면 그 키로 조회.
+     - word_results 는 항상 교정본(saveWord) 으로 저장되므로,
+       user_wordbook.word(원본 입력) 로 조회하면 비영어/오타/활용형일 때 미스.
+     - entry.corrected 가 비어 있으면(오타 없는 영문 입력) word 자체가 곧 저장 키. */
+  const imageKey = entry.corrected ? entry.corrected.toLowerCase() : word;
+  const existingImage = await fetchExistingImage(imageKey);
 
   /* 스냅샷 복구 로직 — description 이 비어 있으면 (구버전 버그로 빈 row 가 저장된 경우)
      word_results 공용 캐시에서 조회해 재구성하고, user_wordbook row 도 백필한다.
