@@ -84,13 +84,77 @@ Composition:
 People:
 - Do not include human body parts unless essential to the meaning
 - No hands, fingers, or feet unless the word specifically requires them
-- If people appear, show them in a natural, contextual pose`
+- If people appear, show them in a natural, contextual pose
+
+Part of speech awareness:
+- First, identify the part of speech of "${word}".
+- Illustrate the meaning of THIS exact form, not a related derived form.
+- Noun: draw the thing itself, or a scene featuring it as the subject.
+- Verb: draw the action in progress — someone or something doing it.
+- Adjective: draw an object or scene that clearly exemplifies the quality.
+- Adverb: draw the situation or state that the adverb describes — the manner, degree, or extent. Do NOT fall back to the related adjective.
+  e.g. "practically" means "almost / virtually / in effect" → draw a scene of "almost empty", "nearly done", "virtually identical" — NOT a scene of practical/functional objects.
+- Preposition / Conjunction: draw the spatial or logical relationship between two elements (e.g. "between" → two objects with space between them; "although" → contrast of two situations).
+
+Derivational suffix caution:
+- Words ending in -ly, -ness, -tion, -ment, -ity are often derived from another base word but have DIFFERENT meanings. Illustrate the derived form's own meaning, not the base word's meaning.
+- Examples of WRONG behavior to avoid:
+  · "practically" (adv) drawn as "practical" (adj)
+  · "happiness" (noun: the state) drawn only as "happy" (adj: a smile)
+  · "creation" (noun: the act/result) drawn only as "create" (verb)`
+
+/* v5 프롬프트 — v4 에서 Color/Lighting 섹션(사진 보정·조명 용어) 을 제거하고,
+   "hand-illustrated, not photograph" 방어선을 명시적으로 추가.
+   배경: v4 결과가 실사/포토리얼로 기울어 학습 앱 톤(손그림 일러스트) 과 이질감.
+   v3 (한글) 에는 Color/Lighting 이 없었고, 그때 결과가 더 일러스트에 가까웠음 → 그 지점을 복원. */
+const V5_IMAGE_PROMPT = (word: string) => `Create an editorial illustration (as an illustrated picture, not a photograph) that captures the feeling, mood, and essence of the English word "${word}".
+
+Style:
+- Editorial illustration in the style of Monocle or Kinfolk magazine
+- Sophisticated and refined, not cartoonish or childish
+- Clean composition with a single focal point
+- Hand-illustrated look — NOT a photograph, NOT a 3D render, NOT photorealistic
+
+Scene:
+- Use a concrete, recognizable scene or situation
+- Only include elements essential to conveying the word
+- No abstract shapes or decorative elements
+- No text, letters, or typography in the image
+
+Framing:
+- Fill the entire canvas edge to edge
+- No white borders, no padding, no margins
+- No frames or vignettes of any kind
+- Full bleed image extending to all edges
+- Background should be simple and supportive, not distracting from the main subject
+
+People:
+- Do not include human body parts unless essential to the meaning
+- No hands, fingers, or feet unless the word specifically requires them
+- If people appear, show them in a natural, contextual pose
+
+Part of speech awareness:
+- First, identify the part of speech of "${word}".
+- Illustrate the meaning of THIS exact form, not a related derived form.
+- Noun: draw the thing itself, or a scene featuring it as the subject.
+- Verb: draw the action in progress — someone or something doing it.
+- Adjective: draw an object or scene that clearly exemplifies the quality.
+- Adverb: draw the situation or state that the adverb describes — the manner, degree, or extent. Do NOT fall back to the related adjective.
+  e.g. "practically" means "almost / virtually / in effect" → draw a scene of "almost empty", "nearly done", "virtually identical" — NOT a scene of practical/functional objects.
+- Preposition / Conjunction: draw the spatial or logical relationship between two elements (e.g. "between" → two objects with space between them; "although" → contrast of two situations).
+
+Derivational suffix caution:
+- Words ending in -ly, -ness, -tion, -ment, -ity are often derived from another base word but have DIFFERENT meanings. Illustrate the derived form's own meaning, not the base word's meaning.
+- Examples of WRONG behavior to avoid:
+  · "practically" (adv) drawn as "practical" (adj)
+  · "happiness" (noun: the state) drawn only as "happy" (adj: a smile)
+  · "creation" (noun: the act/result) drawn only as "create" (verb)`
 
 async function callGeminiImage(word: string, apiKey: string) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`
-  /* 현재 활성: v4 (영어, 구조화된 섹션별 지시)
-     롤백하려면 아래 imagePrompt 를 V1_IMAGE_PROMPT(word) 로 교체 후 재배포 */
-  const imagePrompt = V4_IMAGE_PROMPT(word)
+  /* 현재 활성: v5 (손그림 일러스트 톤 복원 + 사진 용어 제거)
+     롤백하려면 아래 imagePrompt 를 V4_IMAGE_PROMPT(word) 또는 V1_IMAGE_PROMPT(word) 로 교체 후 재배포 */
+  const imagePrompt = V5_IMAGE_PROMPT(word)
 
   /* aspectRatio 실험:
      모델이 자유롭게 캔버스 비율을 고르면 내부에 여백을 채우는 경향이 있어,
