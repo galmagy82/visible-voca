@@ -1209,13 +1209,15 @@ function stylePosLabels(html) {
     '<span class="pos-label">[$1]</span>');
 }
 /* 동사 3단변화 문자열("present | past | past_participle") 을
-   라벨 없이 화살표로 이어진 표시용 HTML 로 변환. 옵션 A: "go → went → gone".
+   라벨 없이 가운뎃점으로 이어진 표시용 HTML 로 변환. "go · went · gone".
+   영어 동사 3형태는 순서가 관습적으로 고정이라 화살표로 방향성을 강제할 필요가 없고,
+   본문 다른 영역(.word-pos 의 품사·CEFR 구분) 과도 톤을 통일한다.
    유효하지 않으면(파이프 없음 / 빈 토큰) 빈 문자열 반환 → 호출부에서 자연 숨김. */
 function formatVerbForms(str) {
   if (!str) return '';
   const parts = str.split('|').map(s => s.trim()).filter(Boolean);
   if (parts.length < 2) return '';
-  return parts.map(escapeHtml).join(' &rarr; ');
+  return parts.map(escapeHtml).join(' &middot; ');
 }
 
 // --- Supabase 초기화 ---
