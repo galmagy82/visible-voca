@@ -28,7 +28,7 @@ const corsHeaders = {
    기존 태그 방식으로 자동 폴백 (이 함수 변경 없이 복구 가능). */
 async function callGeminiText(prompt: string, apiKey: string, jsonMode?: boolean) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`
-  const generationConfig: Record<string, unknown> = { temperature: 0.7, maxOutputTokens: 2048 }
+  const generationConfig: Record<string, unknown> = { temperature: 0.7, maxOutputTokens: 8192 }
 
   /* JSON 구조화 출력 — 모든 필드를 required 로 선언해 Gemini 가 누락할 수 없게 강제.
      어휘 모드가 아닌 필드(pos, ipa 등)는 빈 문자열("")로 채워진다. */

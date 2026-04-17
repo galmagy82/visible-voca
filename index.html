@@ -887,7 +887,7 @@ body {
    디자인: 랜딩 톤(따뜻한 베이지/어스톤) 과 통일. 흰 카드 + subtle shadow.
    역할: 내러티브를 끝까지 본 사용자에게 4가지 핵심을 정리하고 전환 유도. */
 .section.s-features {
-  padding: 120px 24px;
+  padding: 40px 24px 80px;
   background: var(--bg);
 }
 .features-title {
@@ -1137,26 +1137,29 @@ body {
       <div class="feature-card card-green">
         <div class="feature-title" data-i18n="feature2Title">단어부터 문장까지</div>
         <div class="feature-desc" data-i18n="feature2Desc">단어는 물론 숙어, 문장도 AI가 쉽고 자연스럽게 설명해드려요.</div>
-        <div class="feature-preview">
-          <div class="feature-preview-placeholder">예시 준비중</div>
+        <div class="feature-preview" style="display:flex; flex-direction:column; gap:12px;">
+          <img src="assets/feature-settle-down.png" alt="settle down 숙어 검색 결과">
+          <img src="assets/feature-sentence.png" alt="문장 검색 결과">
         </div>
       </div>
 
       <!-- 3. 어떤 언어로 검색해도 OK -->
       <div class="feature-card card-purple">
-        <div class="feature-title" data-i18n="feature3Title">어떤 언어로 검색해도 OK</div>
-        <div class="feature-desc" data-i18n="feature3Desc">한국어로든 일본어로든 단어나 문장을 검색하면 그에 맞는 영어 단어를 바로 보여드려요.</div>
-        <div class="feature-preview">
-          <div class="feature-preview-placeholder">예시 준비중</div>
+        <div class="feature-title" data-i18n="feature3Title">모국어로 검색, 영어로 이해</div>
+        <div class="feature-desc" data-i18n="feature3Desc">궁금한 표현을 모국어로 검색하세요. AI가 딱 맞는 영어 표현을 찾아 설명해드려요.</div>
+        <div class="feature-preview" style="display:flex; flex-direction:column; gap:12px;">
+          <img src="assets/feature-korean1.png" alt="한국어로 검색한 결과 예시">
+          <img src="assets/feature-korean2.png" alt="한국어로 검색한 결과 예시 2">
         </div>
       </div>
 
       <!-- 4. 검색할 수 있는 표현이 무한해요 -->
       <div class="feature-card card-blue">
-        <div class="feature-title" data-i18n="feature4Title">검색할 수 있는 표현이 무한해요</div>
-        <div class="feature-desc" data-i18n="feature4Desc">AI가 실시간으로 설명하기 때문에 사전에 없는 표현도 바로 이해할 수 있어요.</div>
-        <div class="feature-preview">
-          <div class="feature-preview-placeholder">예시 준비중</div>
+        <div class="feature-title" data-i18n="feature4Title">AI니까 가능한 무한 사전</div>
+        <div class="feature-desc" data-i18n="feature4Desc">슬랭부터 최신 트렌드까지. AI가 실시간으로 분석해서 설명해드려요.</div>
+        <div class="feature-preview" style="display:flex; flex-direction:column; gap:12px;">
+          <img src="assets/feature-omg.png" alt="omg 슬랭 검색 결과" style="max-height:240px; object-fit:contain;">
+          <img src="assets/feature-spacex.png" alt="SpaceX 고유명사 검색 결과" style="max-height:240px; object-fit:contain;">
         </div>
       </div>
 
@@ -1172,7 +1175,7 @@ body {
 
   <!-- 최종 CTA: 로그인 상태면 vocabulary.html 로 바로 진입, 아니면 상단 로그인 섹션으로 스무스 스크롤.
        href="#top" 은 기본 폴백(스크롤). 실제 분기는 아래 스크립트의 click 핸들러에서 처리. -->
-  <a href="#top" id="featuresCtaBtn" class="cta-btn" style="display:inline-block; text-decoration:none; text-align:center; margin-top:48px;" data-i18n="featuresCta">
+  <a href="#top" id="featuresCtaBtn" class="cta-btn" style="display:inline-block; text-decoration:none; text-align:center; margin-top:28px;" data-i18n="featuresCta">
     지금 시작하기
   </a>
 </div>
