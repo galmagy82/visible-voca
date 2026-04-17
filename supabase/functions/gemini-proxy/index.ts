@@ -44,9 +44,10 @@ async function callGeminiText(prompt: string, apiKey: string, jsonMode?: boolean
         cefr:        { type: "STRING", description: "CEFR 난이도 A1-C2. 어휘 모드만. 표현 모드이면 빈 문자열" },
         verb_forms:  { type: "STRING", description: "동사 3단변화. 동사가 아니면 빈 문자열" },
         scene_en:    { type: "STRING", description: "이미지 생성용 영어 장면 묘사. 어휘 모드만" },
-        body:        { type: "STRING", description: "느낌 설명 + --- + 예문 본문" },
+        feeling:     { type: "STRING", description: "핵심 느낌 1~2문장 (어휘 모드: 느낌 요약 + 비유, 표현 모드: 모국어 번역)" },
+        examples:    { type: "ARRAY", description: "예문/풀이 블록. 한 줄 = 한 원소. [noun] 등 품사 라벨, 빈 줄(\"\")도 각각 원소로.", items: { type: "STRING" } },
       },
-      required: ["corrected", "source_lang", "pos", "ipa", "cefr", "verb_forms", "scene_en", "body"],
+      required: ["corrected", "source_lang", "pos", "ipa", "cefr", "verb_forms", "scene_en", "feeling", "examples"],
     }
   }
 

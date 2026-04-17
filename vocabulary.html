@@ -1843,15 +1843,15 @@ async function fetchWordResult(word, targetEl) {
   let verbForms = '';
   let sceneEn = '';
 
-  /* ── JSON 모드 응답 파싱 (한국어) ──
+  /* ── JSON 모드 응답 파싱 ──
      Gemini responseSchema 로 강제된 JSON 응답을 먼저 시도.
-     실패(비-JSON 응답 = 다른 언어 또는 롤백)하면 기존 태그 파서로 폴백.
+     실패(비-JSON 응답 = 롤백)하면 기존 태그 파서로 폴백.
      롤백: isJsonMode() 가 false 면 callSearch 가 jsonMode 를 보내지 않으므로
      Gemini 가 태그 방식 응답 → JSON.parse 실패 → 자동으로 태그 파서 진입. */
   let jsonParsed = false;
   try {
     const parsed = JSON.parse(text);
-    if (parsed && typeof parsed === 'object' && 'body' in parsed) {
+    if (parsed && typeof parsed === 'object' && 'feeling' in parsed) {
       corrected = parsed.corrected || '';
       sourceLang = parsed.source_lang || '';
       pos = parsed.pos || '';
@@ -1859,7 +1859,11 @@ async function fetchWordResult(word, targetEl) {
       cefr = parsed.cefr || '';
       verbForms = parsed.verb_forms || '';
       sceneEn = parsed.scene_en || '';
-      body = parsed.body || '';
+      /* feeling + examples 배열을 desc/examples 로 조립.
+         body 하나에 \n 누락 문제 → 필드 분리로 근본 해결. */
+      const feeling = parsed.feeling || '';
+      const exArr = Array.isArray(parsed.examples) ? parsed.examples : [];
+      body = feeling + '\n---\n' + exArr.join('\n');
       jsonParsed = true;
     }
   } catch (e) { /* 태그 기반 응답 — 아래에서 파싱 */ }
@@ -1943,7 +1947,7 @@ async function fetchWordResult(word, targetEl) {
     }
   }
 
-  const parts = body.split(/\n---\n?/);
+  const parts = body.split(/\n?---\n?/);
   const desc = parts[0].trim();
   const examples = parts.length > 1 ? parts[1].trim() : '';
   const safeWord = escapeHtml(word);
