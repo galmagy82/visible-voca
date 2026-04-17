@@ -838,6 +838,43 @@
     padding: 3px 10px;
     border-radius: 12px;
   }
+  /* 토글 스위치 */
+  .toggle-switch {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+  .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: #ccc;
+    border-radius: 24px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    left: 3px;
+    bottom: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.2s;
+  }
+  .toggle-switch input:checked + .toggle-slider {
+    background: var(--green, #5BAA6A);
+  }
+  .toggle-switch input:checked + .toggle-slider::before {
+    transform: translateX(20px);
+  }
 
   /* 퀴즈 설정 화면 */
   /* 옵션 행 래퍼: fit-content 너비로 블록 레벨 중앙 배치(내부는 앞정렬) */
@@ -1273,7 +1310,10 @@
         <div class="settings-list">
           <div class="settings-item">
             <span class="settings-item-label" data-i18n="settingsAutoAdd">검색 시 단어장에 바로 추가</span>
-            <span class="settings-item-badge" data-i18n="settingsComingSoon">준비중</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="autoAddToggle">
+              <span class="toggle-slider"></span>
+            </label>
           </div>
           <div class="settings-item">
             <span class="settings-item-label" data-i18n="settingsImageStyle">그림 스타일</span>
@@ -1299,6 +1339,31 @@
 </div>
 
 <script>
+// --- 자동 단어장 추가 설정 (localStorage) ---
+function isAutoAddEnabled() {
+  return localStorage.getItem('geminary_autoAdd') === 'true';
+}
+(function initAutoAddToggle() {
+  const toggle = document.getElementById('autoAddToggle');
+  if (!toggle) return;
+  toggle.checked = isAutoAddEnabled();
+  toggle.addEventListener('change', () => {
+    localStorage.setItem('geminary_autoAdd', toggle.checked ? 'true' : 'false');
+  });
+})();
+
+/* 검색 결과 렌더링 후 자동으로 단어장에 추가 */
+async function autoAddIfEnabled(targetEl) {
+  if (!isAutoAddEnabled()) return;
+  if (!_authUser?.id) return;
+  const data = window._lastWbData;
+  if (!data) return;
+  const entry = await getWordbookEntry(data.word);
+  if (entry) return;
+  const btn = targetEl.querySelector('.add-wordbook-btn[data-wb-word]');
+  addToWordbook(data, btn);
+}
+
 // --- 발음 듣기 (브라우저 TTS) ---
 function speak(text) {
   speechSynthesis.cancel();
@@ -1936,6 +2001,7 @@ async function fetchWordResult(word, targetEl) {
     wordResults[word] = { html: dbHtml };
     targetEl.innerHTML = dbHtml;
     bindWbButton(targetEl);
+    autoAddIfEnabled(targetEl);
     /* buildHtmlFromDB 가 _lastWbData 를 채웠으므로 캐시에도 스냅샷 동봉 */
     saveCacheEntry(word, dbHtml, window._lastWbData);
     return dbHtml;
@@ -2146,6 +2212,7 @@ async function fetchWordResult(word, targetEl) {
   wordResults[word] = { html };
   targetEl.innerHTML = html;
   bindWbButton(targetEl);
+  autoAddIfEnabled(targetEl);
 
   /* 이미지 비동기 처리 — imagePromise가 있을 때만 */
   if (!imagePromise) {
