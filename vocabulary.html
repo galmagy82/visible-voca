@@ -1361,7 +1361,7 @@ async function autoAddIfEnabled(targetEl) {
   const entry = await getWordbookEntry(data.word);
   if (entry) return;
   const btn = targetEl.querySelector('.add-wordbook-btn[data-wb-word]');
-  addToWordbook(data, btn);
+  setTimeout(() => addToWordbook(data, btn), 3000);
 }
 
 // --- 발음 듣기 (브라우저 TTS) ---
@@ -1812,9 +1812,9 @@ async function saveCacheEntry(word, html, snapshot = null) {
   }
 }
 
-/* 캐시 조회 — HTML 문자열 반환 (기존 호출부 호환 유지)
-   - 신규 포맷  : { html, snapshot } 객체 → html 추출
-   - 구 포맷(문자열): 그대로 반환 (스냅샷 없음) */
+/* 캐시 조회 — { html, snapshot } 반환
+   - 신규 포맷  : { html, snapshot } 객체
+   - 구 포맷(문자열): { html, snapshot: null } 로 변환 */
 async function getCacheEntry(word) {
   try {
     const db = await openDB();
@@ -1824,8 +1824,8 @@ async function getCacheEntry(word) {
       req.onsuccess = () => {
         const v = req.result;
         if (!v) return resolve(null);
-        if (typeof v === 'string') return resolve(v);
-        resolve(v.html || null);
+        if (typeof v === 'string') return resolve({ html: v, snapshot: null });
+        resolve({ html: v.html || null, snapshot: v.snapshot || null });
       };
       req.onerror = () => resolve(null);
     });
@@ -1968,16 +1968,21 @@ async function fetchWordResult(word, targetEl) {
   const settings = getSettings();
 
   /* ① 브라우저 캐시 확인 (IndexedDB) */
-  const cached = await getCacheEntry(word);
-  if (cached) {
+  const cachedObj = await getCacheEntry(word);
+  if (cachedObj && cachedObj.html) {
     /* 이미지 생성 활성화 상태인데 캐시에 이미지가 없으면 캐시 무시하고 재검색 */
-    if (settings.imageEnabled && !cached.includes('<img ')) {
+    if (settings.imageEnabled && !cachedObj.html.includes('<img ')) {
       /* 캐시 무시 — 아래로 계속 진행 */
     } else {
       targetEl.innerHTML = `<div class="loading">${getRandomSearching()}</div>`;
       await new Promise(r => setTimeout(r, 800));
-      wordResults[word] = { html: cached };
-      return cached;
+      wordResults[word] = { html: cachedObj.html };
+      targetEl.innerHTML = cachedObj.html;
+      /* 스냅샷 복원 후 단어장 버튼 바인딩 + 자동 추가 */
+      if (cachedObj.snapshot) window._lastWbData = cachedObj.snapshot;
+      bindWbButton(targetEl);
+      autoAddIfEnabled(targetEl);
+      return cachedObj.html;
     }
   }
 
@@ -2308,13 +2313,14 @@ function showSearchResult(word) {
 
 async function lookupWord(word) {
   const settings = getSettings();
-  const cached = await getCacheEntry(word);
-  if (cached) {
+  const cachedObj2 = await getCacheEntry(word);
+  if (cachedObj2 && cachedObj2.html) {
     /* 이미지 생성 활성화 상태인데 캐시에 이미지가 없으면 캐시 무시하고 재검색 */
-    if (!(settings.imageEnabled && !cached.includes('<img '))) {
+    if (!(settings.imageEnabled && !cachedObj2.html.includes('<img '))) {
       resultSearch.innerHTML = `<div class="loading">${getRandomSearching()}</div>`;
       await new Promise(r => setTimeout(r, 800));
-      wordResults[word] = { html: cached };
+      wordResults[word] = { html: cachedObj2.html };
+      if (cachedObj2.snapshot) window._lastWbData = cachedObj2.snapshot;
       showSearchResult(word);
       return;
     }
