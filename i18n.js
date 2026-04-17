@@ -222,7 +222,7 @@ const I18N = {
     feature1Desc: '단어의 느낌을 AI가 이미지로 표현해드려요. 한번 보면 잊히지 않아요.',
     feature1Tag: '핵심 기능',
     feature2Title: '단어부터 문장까지',
-    feature2Desc: '단어는 물론 숙어, 표현, 문장도 AI가 쉽고 자연스럽게 설명해드려요.',
+    feature2Desc: '단어는 물론 숙어, 문장도 AI가 쉽고 자연스럽게 설명해드려요.',
     feature2Tag: '표현 무제한',
     feature3Title: '어떤 언어로 검색해도 OK',
     feature3Desc: '한국어로든 일본어로든 단어나 문장을 검색하면 그에 맞는 영어 단어를 바로 보여드려요.',
