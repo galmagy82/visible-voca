@@ -22,15 +22,40 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 }
 
-/* Gemini 텍스트 생성 호출 */
-async function callGeminiText(prompt: string, apiKey: string) {
+/* Gemini 텍스트 생성 호출
+   jsonMode: true 이면 responseSchema 를 포함해 구조화 JSON 응답을 강제한다.
+   현재 한국어 프롬프트에서만 사용. 롤백: 프론트에서 jsonMode 를 보내지 않으면
+   기존 태그 방식으로 자동 폴백 (이 함수 변경 없이 복구 가능). */
+async function callGeminiText(prompt: string, apiKey: string, jsonMode?: boolean) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`
+  const generationConfig: Record<string, unknown> = { temperature: 0.7, maxOutputTokens: 2048 }
+
+  /* JSON 구조화 출력 — 모든 필드를 required 로 선언해 Gemini 가 누락할 수 없게 강제.
+     어휘 모드가 아닌 필드(pos, ipa 등)는 빈 문자열("")로 채워진다. */
+  if (jsonMode) {
+    generationConfig.responseMimeType = "application/json"
+    generationConfig.responseSchema = {
+      type: "OBJECT",
+      properties: {
+        corrected:   { type: "STRING", description: "교정된 영어 표현. 오류 없으면 빈 문자열" },
+        source_lang: { type: "STRING", description: "비영어 입력의 ISO 639-1 언어코드. 해당 없으면 빈 문자열" },
+        pos:         { type: "STRING", description: "품사(뜻) 형식. 어휘 모드만. 표현 모드이면 빈 문자열" },
+        ipa:         { type: "STRING", description: "IPA 발음기호. 어휘 모드만. 표현 모드이면 빈 문자열" },
+        cefr:        { type: "STRING", description: "CEFR 난이도 A1-C2. 어휘 모드만. 표현 모드이면 빈 문자열" },
+        verb_forms:  { type: "STRING", description: "동사 3단변화. 동사가 아니면 빈 문자열" },
+        scene_en:    { type: "STRING", description: "이미지 생성용 영어 장면 묘사. 어휘 모드만" },
+        body:        { type: "STRING", description: "느낌 설명 + --- + 예문 본문" },
+      },
+      required: ["corrected", "source_lang", "pos", "ipa", "cefr", "verb_forms", "scene_en", "body"],
+    }
+  }
+
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
+      generationConfig,
     }),
   })
   if (!res.ok) {
@@ -343,9 +368,10 @@ Deno.serve(async (req) => {
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           )
         }
-        /* 텍스트 생성과 사용량 카운트를 병렬 실행 */
+        /* 텍스트 생성과 사용량 카운트를 병렬 실행
+           jsonMode: 프론트가 true 를 보내면 Gemini JSON 구조화 응답 활성화 */
         const [text] = await Promise.all([
-          callGeminiText(prompt, apiKey),
+          callGeminiText(prompt, apiKey, body.jsonMode),
           incrementTrialCount(userId)
         ])
         result = { text }
