@@ -755,6 +755,90 @@
     max-width: 400px;
   }
 
+  /* 내 기록 탭 */
+  .myrecord-subtabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid #E5E2DE;
+    margin-bottom: 24px;
+  }
+  .myrecord-subtab {
+    padding: 10px 20px;
+    font-size: 0.85rem;
+    color: #6B6660;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .myrecord-subtab:hover { color: #4A4641; }
+  .myrecord-subtab.active {
+    color: #2D2B28;
+    font-weight: 600;
+    border-bottom-color: #2D2B28;
+  }
+  .myrecord-panel { display: none; }
+  .myrecord-panel.active { display: block; }
+
+  /* 내 캐릭터 플레이스홀더 */
+  .character-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 40px 20px;
+    color: #B0ACA6;
+  }
+  .character-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: #F0EFEC;
+    border: 2px dashed #D5D2CC;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+  }
+  .character-level {
+    font-size: 0.95rem;
+    color: #6B6660;
+  }
+  .character-coming {
+    font-size: 0.8rem;
+    color: #B0ACA6;
+    margin-top: 4px;
+  }
+
+  /* 설정 플레이스홀더 */
+  .settings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 0;
+  }
+  .settings-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: #F7F6F3;
+    border: 1px solid #E5E2DE;
+    border-radius: 10px;
+  }
+  .settings-item-label {
+    font-size: 0.9rem;
+    color: #4A4641;
+  }
+  .settings-item-badge {
+    font-size: 0.75rem;
+    color: #B0ACA6;
+    background: #EDECEA;
+    padding: 3px 10px;
+    border-radius: 12px;
+  }
+
   /* 퀴즈 설정 화면 */
   /* 옵션 행 래퍼: fit-content 너비로 블록 레벨 중앙 배치(내부는 앞정렬) */
   .quiz-options-wrap {
@@ -1000,6 +1084,7 @@
     <button class="tab" onclick="switchTab('photo')" data-i18n="tabPhoto" style="display:none;">사진에서 검색</button>
     <button class="tab" onclick="switchTab('wordbook')" data-i18n="tabWordbook">단어장</button>
     <button class="tab" onclick="switchTab('quiz')" data-i18n="tabQuiz">Quiz</button>
+    <button class="tab" onclick="switchTab('myrecord')" data-i18n="tabMyRecord">내 기록</button>
   </div>
 
   <!-- 오른쪽 컨텐츠 -->
@@ -1166,6 +1251,42 @@
       </div>
     </div>
 
+    <!-- 탭5: 내 기록 -->
+    <div class="tab-content" id="tabMyRecord">
+      <!-- 서브탭 버튼 -->
+      <div class="myrecord-subtabs">
+        <button class="myrecord-subtab active" onclick="switchMyRecordSub('character')" data-i18n="myrecordCharacter">내 캐릭터</button>
+        <button class="myrecord-subtab" onclick="switchMyRecordSub('settings')" data-i18n="myrecordSettings">설정</button>
+      </div>
+
+      <!-- 서브탭1: 내 캐릭터 -->
+      <div class="myrecord-panel active" id="panelCharacter">
+        <div class="character-placeholder">
+          <div class="character-avatar">🧑‍🎓</div>
+          <div class="character-level" data-i18n="myrecordLevel">Lv. —</div>
+          <div class="character-coming" data-i18n="myrecordComingSoon">준비중</div>
+        </div>
+      </div>
+
+      <!-- 서브탭2: 설정 -->
+      <div class="myrecord-panel" id="panelSettings">
+        <div class="settings-list">
+          <div class="settings-item">
+            <span class="settings-item-label" data-i18n="settingsAutoAdd">검색 시 단어장에 바로 추가</span>
+            <span class="settings-item-badge" data-i18n="settingsComingSoon">준비중</span>
+          </div>
+          <div class="settings-item">
+            <span class="settings-item-label" data-i18n="settingsImageStyle">그림 스타일</span>
+            <span class="settings-item-badge" data-i18n="settingsComingSoon">준비중</span>
+          </div>
+          <div class="settings-item">
+            <span class="settings-item-label" data-i18n="settingsImageText">그림에 넣을 말</span>
+            <span class="settings-item-badge" data-i18n="settingsComingSoon">준비중</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -1187,14 +1308,24 @@ function speak(text) {
   speechSynthesis.speak(u);
 }
 
+// --- 내 기록 서브탭 전환 ---
+function switchMyRecordSub(sub) {
+  document.querySelectorAll('.myrecord-subtab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.myrecord-panel').forEach(p => p.classList.remove('active'));
+  const subMap = { character: 0, settings: 1 };
+  document.querySelectorAll('.myrecord-subtab')[subMap[sub]].classList.add('active');
+  const panels = { character: 'panelCharacter', settings: 'panelSettings' };
+  document.getElementById(panels[sub]).classList.add('active');
+}
+
 // --- 탭 전환 ---
 function switchTab(tab) {
   /* 사이드바 탭 활성화 */
   document.querySelectorAll('.sidebar .tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  const map = { search: 0, photo: 1, wordbook: 2, quiz: 3 };
+  const map = { search: 0, photo: 1, wordbook: 2, quiz: 3, myrecord: 4 };
   document.querySelectorAll('.sidebar .tab')[map[tab]].classList.add('active');
-  const panels = { search: 'tabSearch', photo: 'tabPhoto', wordbook: 'tabWordbook', quiz: 'tabQuiz' };
+  const panels = { search: 'tabSearch', photo: 'tabPhoto', wordbook: 'tabWordbook', quiz: 'tabQuiz', myrecord: 'tabMyRecord' };
   document.getElementById(panels[tab]).classList.add('active');
 }
 
