@@ -1393,14 +1393,6 @@
               <span class="level-stat-value" id="statTotalExp">0</span>
               <span class="level-stat-label">Total EXP</span>
             </div>
-            <div class="level-stat">
-              <span class="level-stat-value" id="statWords">0</span>
-              <span class="level-stat-label" data-i18n="statSearches">검색</span>
-            </div>
-            <div class="level-stat">
-              <span class="level-stat-value" id="statQuiz">0</span>
-              <span class="level-stat-label" data-i18n="statQuizCorrect">퀴즈 정답</span>
-            </div>
           </div>
         </div>
       </div>
@@ -1586,8 +1578,6 @@ function updateLevelUI(info) {
   document.getElementById('levelProgressFill').style.width = info.percent + '%';
   document.getElementById('levelProgressText').textContent = `${info.currentExp} / ${info.needExp} EXP`;
   document.getElementById('statTotalExp').textContent = info.totalExp.toLocaleString();
-  document.getElementById('statWords').textContent = _statsCache.stat_searches.toLocaleString();
-  document.getElementById('statQuiz').textContent = _statsCache.stat_quiz.toLocaleString();
 }
 
 /* 레벨업 알림 */
@@ -3286,7 +3276,7 @@ function selectAnswer(index) {
 
   if (isCorrect) {
     quizCorrect++;
-    addExp(15, 'quiz');
+    addExp(5, 'quiz');
     document.getElementById('quizFeedback').textContent = t('quizCorrectFeedback');
     document.getElementById('quizFeedback').style.color = '#8abf6a';
   } else {
