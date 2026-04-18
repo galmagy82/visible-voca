@@ -838,6 +838,23 @@
     padding: 3px 10px;
     border-radius: 12px;
   }
+  /* 설정 그룹 소제목 */
+  .settings-group-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #8A8078;
+    margin-top: 8px;
+    padding-bottom: 4px;
+  }
+  .settings-group-title.settings-group-gap {
+    margin-top: 24px;
+  }
+  .settings-group-hint {
+    font-size: 0.72rem;
+    color: #B0ACA6;
+    line-height: 1.5;
+    margin-bottom: 4px;
+  }
   /* 토글 스위치 */
   .toggle-switch {
     position: relative;
@@ -1308,6 +1325,7 @@
       <!-- 서브탭2: 설정 -->
       <div class="myrecord-panel" id="panelSettings">
         <div class="settings-list">
+          <div class="settings-group-title" data-i18n="settingsWordbookGroup">단어장 설정</div>
           <div class="settings-item">
             <span class="settings-item-label" data-i18n="settingsAutoAdd">검색 시 단어장에 바로 추가</span>
             <label class="toggle-switch">
@@ -1315,12 +1333,14 @@
               <span class="toggle-slider"></span>
             </label>
           </div>
+          <div class="settings-group-title settings-group-gap" data-i18n="settingsImageGroup">단어 이미지 생성 설정</div>
+          <div class="settings-group-hint" data-i18n="settingsImageHint">* Geminary 단어지도에 등록되지 않은 단어를 최초로 검색 시 적용됩니다.</div>
           <div class="settings-item">
-            <span class="settings-item-label" data-i18n="settingsImageStyle">그림 스타일</span>
+            <span class="settings-item-label" data-i18n="settingsImageStyle">스타일</span>
             <span class="settings-item-badge" data-i18n="settingsComingSoon">준비중</span>
           </div>
           <div class="settings-item">
-            <span class="settings-item-label" data-i18n="settingsImageText">그림에 넣을 말</span>
+            <span class="settings-item-label" data-i18n="settingsImageText">넣을 문구</span>
             <span class="settings-item-badge" data-i18n="settingsComingSoon">준비중</span>
           </div>
         </div>
