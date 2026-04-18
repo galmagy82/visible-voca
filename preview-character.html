@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<!--
+  캐릭터 디자인 프리뷰 (독립 파일)
+  ────────────────────────────────────────────────────────────
+  목적: My 탭에 들어갈 레벨별 픽셀아트 캐릭터의 방향성 확인.
+  - AI 이미지 생성 없이, SVG <rect> 로 한 칸씩 직접 그림
+  - 30개 레벨 전체(Lv.1 Newcomer ~ Lv.30 Legend) 나란히 표시
+  - 모든 레벨이 동일한 휴머노이드 실루엣 공유 → 아이템 슬롯 호환
+  - 16 x 22 픽셀 그리드, 12배 확대 렌더
+  - 레벨별 호칭에 맞는 복장/소품으로 차별화, 체형·얼굴 비율은 고정
+  geminary 앱과 무관한 순수 프리뷰. 이 파일을 기준으로 이후 정제/에셋 작업.
+-->
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Character Preview — 30 Levels</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #f5f1ea;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    padding: 40px 20px;
+    min-height: 100vh;
+  }
+  h1 {
+    text-align: center;
+    font-size: 1.6rem;
+    color: #3a3530;
+    margin-bottom: 6px;
+  }
+  .note {
+    text-align: center;
+    color: #8a8680;
+    font-size: 0.9rem;
+    margin-bottom: 32px;
+  }
+  .tier-title {
+    text-align: center;
+    font-size: 1rem;
+    color: #6b655c;
+    margin: 36px 0 16px;
+    letter-spacing: 0.05em;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 16px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    text-align: center;
+  }
+  .card .title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #3a3530;
+    margin-bottom: 2px;
+  }
+  .card .subtitle {
+    font-size: 0.72rem;
+    color: #8a8680;
+    margin-bottom: 10px;
+  }
+  /* 픽셀아트 — SVG <rect> 조합, 안티앨리어싱 없는 선명한 픽셀 렌더 */
+  .sprite {
+    width: 128px;
+    height: 176px;
+    display: block;
+    margin: 0 auto;
+    background: #fafafa;
+    border-radius: 6px;
+    padding: 6px;
+  }
+  @media (max-width: 900px) {
+    .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  @media (max-width: 600px) {
+    .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .sprite { width: 112px; height: 154px; }
+  }
+</style>
+</head>
+<body>
+
+<h1>캐릭터 디자인 프리뷰 — 30 레벨</h1>
+<p class="note">16x22 픽셀 그리드 · 휴머노이드 실루엣 공유 · 복장·소품만 레벨별 변화</p>
+
+<div id="root"></div>
+
+<script>
+/*
+  ──────────────────────────────────────────────────────────────
+  COLORS — 색상 팔레트
+  ──────────────────────────────────────────────────────────────
+  모든 픽셀 맵은 아래 키 문자로 각 칸의 색상을 지정.
+  소문자 = 음영(shadow), 대문자 = 본색. '.' = 투명.
+  새 색상이 필요하면 여기에 키를 추가.
+*/
+const COLORS = {
+  '.': null,
+
+  // 얼굴/머리
+  'H': '#5C3317',    // 일반 머리색 (갈색)
+  'W': '#D8C4A0',    // 나이든 머리색 (밝은 회갈)
+  'h': '#F0F0F0',    // 흰 머리/수염 (세이지 전용)
+  'S': '#F5C8A8',    // 피부
+  'E': '#2C1810',    // 눈
+  'Y': '#FFD700',    // 빛나는 눈 (레전드/미식)
+  'M': '#A85538',    // 입
+
+  // 기본 셔츠 (캐주얼 Lv.1-10)
+  '1': '#FFFFFF', 'q': '#D8D8D8',    // 흰 티셔츠
+  '2': '#2ECC71', 'Q': '#1E8449',    // 초록
+  '3': '#E67E22', 'w': '#A05318',    // 주황
+  '4': '#F1C40F', 'e': '#B8960C',    // 노랑
+  '5': '#E74C3C', 'r': '#A93226',    // 빨강
+  '6': '#3498DB', 't': '#21618C',    // 파랑
+  '7': '#9B59B6', 'y': '#6C3483',    // 보라
+  '8': '#16A085', 'u': '#117864',    // 청록
+  '9': '#34495E', 'i': '#212F3C',    // 차콜
+
+  // 로브/중상위 복장
+  'R': '#2A3F5F', 'p': '#1A2A3F',    // 스콜라 로브 (짙은 파랑)
+  'V': '#4A148C', 'v': '#2E0854',    // 위자드 로브 (보라)
+  'I': '#5E3C7A', 'j': '#3E2750',    // 오라클 로브
+  'A': '#B71C1C', 'a': '#7F1212',    // 붉은 망토/케이프
+  'X': '#95A5A6', 'x': '#5D6D7E',    // 은빛 갑옷
+  'T': '#212121', 'k': '#0D0D0D',    // 검은 클로크
+  'L': '#F1948A',                    // 연한 분홍 (시인/우아함)
+  'D': '#6E2C00',                    // 가죽 갈색
+  'Z': '#5D4037',                    // 어두운 갈색 (연륜)
+
+  // 바지
+  'B': '#3B5998', 'd': '#2A3F6E',    // 청바지
+  'K': '#1A1A1A',                    // 검은 신발
+
+  // 소품/악세서리
+  'G': '#303030',                    // 안경 프레임
+  'O': '#D4AF37', 'o': '#B8902E',    // 금 장식
+  'P': '#F5E6A3',                    // 책 종이
+  'C': '#8B5A2B',                    // 책 표지 (갈색)
+  'J': '#7B4A12',                    // 나무 지팡이
+  'N': '#F4F4F4',                    // 흰 로브/후광
+  'g': '#FFE680',                    // 오라 파티클 (금빛)
+  'm': '#AEDFF7',                    // 차가운 빛 (오라클/미식)
+  'F': '#FFC0CB',                    // 꽃잎/빛 (시인)
+  'b': '#7E5109',                    // 종이 두루마리
+};
+
+/*
+  ──────────────────────────────────────────────────────────────
+  BASE — 모든 레벨이 공유하는 얼굴/목 레이아웃
+  ──────────────────────────────────────────────────────────────
+  머리·얼굴·입·목(0-8행)은 원칙적으로 고정. 몸통 이하만 레벨 차별화.
+  일부 레벨(세이지=흰 머리, 레전드=빛나는 눈)만 얼굴 팔레트를 건드림.
+*/
+
+/* 편의용: 문자열 패치 함수 — 특정 row의 특정 col 문자 교체.
+   원본 길이(16)를 넘지 않도록 clamp. str 이 경계를 넘으면 넘는 부분 자동 컷. */
+function patch(rows, y, x, str) {
+  const r = rows[y];
+  const result = r.slice(0, x) + str + r.slice(x + str.length);
+  rows[y] = result.slice(0, r.length);
+  return rows;
+}
+/* 깊은 복사 */
+function clone(rows) { return rows.slice(); }
+
+/* 표준 얼굴/목 (0-8행) */
+const FACE = [
+  '................', // 0
+  '....HHHHHH......', // 1
+  '...HHHHHHHH.....', // 2
+  '...HSSSSSSH.....', // 3
+  '...SSSSSSSS.....', // 4
+  '...SEESSEES.....', // 5
+  '...SSSSSSSS.....', // 6
+  '....SSMMSS......', // 7
+  '.....SSSS.......', // 8
+];
+
+/* 표준 몸통 패턴 빌더 — 셔츠 본색/음영 문자 받아 9-14행 생성
+   어깨→몸통→허리 형태 유지 */
+function body(main, shadow) {
+  return [
+    `...${main.repeat(8)}.....`.slice(0, 16),                               // 9
+    `..${main.repeat(10)}....`.slice(0, 16),                                // 10
+    `..${main}${shadow}${main.repeat(6)}${shadow}${main}....`.slice(0, 16), // 11
+    `..${main.repeat(10)}....`.slice(0, 16),                                // 12
+    `..${main}${shadow}${main.repeat(6)}${shadow}${main}....`.slice(0, 16), // 13
+    `...${main.repeat(8)}.....`.slice(0, 16),                               // 14
+  ];
+}
+
+/* 표준 바지+신발 (15-21행) */
+function legs(main, shadow, shoe) {
+  return [
+    `...${main.repeat(8)}.....`.slice(0, 16),
+    `...${main.repeat(3)}..${main.repeat(3)}.....`.slice(0, 16),
+    `...${main}${shadow}${main}..${main}${shadow}${main}.....`.slice(0, 16),
+    `...${main.repeat(3)}..${main.repeat(3)}.....`.slice(0, 16),
+    `...${main}${shadow}${main}..${main}${shadow}${main}.....`.slice(0, 16),
+    `...${shoe.repeat(3)}..${shoe.repeat(3)}.....`.slice(0, 16),
+    `...${shoe.repeat(3)}..${shoe.repeat(3)}.....`.slice(0, 16),
+  ];
+}
+
+/* 긴 로브 (다리 전체를 하나의 로브로 대체) */
+function longRobe(main, shadow, shoeTip) {
+  return [
+    `...${main.repeat(8)}.....`.slice(0, 16), // 9 어깨
+    `..${main.repeat(10)}....`.slice(0, 16),  // 10
+    `..${main}${shadow}${main.repeat(6)}${shadow}${main}....`.slice(0, 16),  // 11
+    `..${main.repeat(10)}....`.slice(0, 16),  // 12
+    `..${main}${shadow}${main.repeat(6)}${shadow}${main}....`.slice(0, 16),  // 13
+    `..${main.repeat(10)}....`.slice(0, 16),  // 14
+    `..${main.repeat(10)}....`.slice(0, 16),  // 15
+    `..${main.repeat(10)}....`.slice(0, 16),  // 16
+    `..${main.repeat(10)}....`.slice(0, 16),  // 17
+    `..${main.repeat(10)}....`.slice(0, 16),  // 18
+    `..${main}${shadow}${main.repeat(6)}${shadow}${main}....`.slice(0, 16),  // 19
+    shoeTip
+      ? `...${shoeTip.repeat(2)}....${shoeTip.repeat(2)}.....`.slice(0, 16)
+      : '................',
+    '................',
+  ];
+}
+
+/* 캐릭터 정의 — 각 레벨을 배열(22행)로 최종 조립 */
+function makeChar(parts) {
+  return [...parts.face, ...parts.upper, ...parts.lower];
+}
+
+/*
+  ──────────────────────────────────────────────────────────────
+  30 레벨 캐릭터 정의
+  ──────────────────────────────────────────────────────────────
+  공통 접근:
+  - 체형/얼굴 위치는 FACE 배열로 고정
+  - 셔츠는 body('1','q') 처럼 색 문자쌍으로 생성 → 단색 셔츠 변형 다량 생산
+  - 로브는 longRobe() 로 통일된 실루엣 유지
+  - 특징적 소품은 patch() 로 픽셀 단위 덧입힘
+*/
+
+/* ── TIER 1 · Beginner (1-5): 평상복 + 단순 소품 ──────────── */
+
+/* Lv.1 Newcomer — 흰 티셔츠 + 청바지 (가장 기본) */
+const LV1 = makeChar({
+  face: FACE,
+  upper: body('1', 'q'),
+  lower: legs('B', 'd', 'K'),
+});
+
+/* Lv.2 Curious — 노란 티셔츠 + 머리 오른쪽 위 빨간 물음표
+   물음표 배치: cols 12-14 (얼굴 오른쪽 빈 공간),
+   패턴:
+     ###    상단 가로바
+     ..#    우측 하강
+     .##    좌측으로 곡선
+     .#.    줄기
+     ...    (공백)
+     .#.    점
+*/
+const LV2 = (() => {
+  const f = clone(FACE);
+  patch(f, 0, 12, '555');   // 상단 가로바
+  patch(f, 1, 12, '..5');   // 우측 수직 하강
+  patch(f, 2, 12, '.55');   // 좌측으로 곡선
+  patch(f, 3, 12, '.5.');   // 중앙 줄기
+  patch(f, 5, 12, '.5.');   // 물음표 점
+  return makeChar({ face: f, upper: body('4', 'e'), lower: legs('B', 'd', 'K') });
+})();
+
+/* Lv.3 Seeker — 초록 티셔츠 + 가슴 좌측 돋보기 */
+const LV3 = (() => {
+  const up = body('2', 'Q');
+  /* 돋보기 구조:
+     - 4x4 렌즈 (cols 3-6, rows 10-13) — 네 모서리는 몸통색(2)으로 깎아 원형 느낌
+     - 렌즈 내부 2x2 'm' (차가운 유리빛)
+     - 손잡이는 렌즈 우하단에서 대각선으로 L자 (row 13 col 7 → row 14 cols 8-9) */
+  patch(up, 1, 3, '2OO2');   // row 10: 렌즈 상단 (모서리 깎음)
+  patch(up, 2, 3, 'OmmO');   // row 11: 렌즈 중단 + 유리
+  patch(up, 3, 3, 'OmmO');   // row 12: 렌즈 중단 + 유리
+  patch(up, 4, 3, '2OO2');   // row 13: 렌즈 하단 (모서리 깎음)
+  patch(up, 4, 7, 'O');      // row 13: 손잡이 시작 (대각선 연결)
+  patch(up, 5, 8, 'OO');     // row 14: 손잡이 끝
+  return makeChar({ face: FACE, upper: up, lower: legs('B', 'd', 'K') });
+})();
+
+/* Lv.4 Speller — 주황 티셔츠 + 가슴 앞 클립보드 */
+const LV4 = (() => {
+  const up = body('3', 'w');
+  /* 클립보드(흰 사각형) 가슴 중앙 */
+  patch(up, 2, 5, '11111'); // row 11
+  patch(up, 3, 5, '1P11P'); // row 12 (종이 두 줄)
+  patch(up, 4, 5, '11111'); // row 13
+  return makeChar({ face: FACE, upper: up, lower: legs('B', 'd', 'K') });
+})();
+
+/* Lv.5 Reader — 파란 티셔츠 + 가슴 아래 펼친 책 */
+const LV5 = (() => {
+  const up = body('6', 't');
+  patch(up, 3, 5, 'PPP.PPP'); // row 12 (책 펼침)
+  patch(up, 4, 5, 'CCC.CCC'); // row 13 (책 표지 바닥)
+  return makeChar({ face: FACE, upper: up, lower: legs('B', 'd', 'K') });
+})();
+
+/* ── TIER 2 · Student (6-10): 학생 느낌 + 학습 도구 ──────── */
+
+/* Lv.6 Listener — 헤드폰 (재설계)
+   구조:
+   - Row 0: 헤드밴드 상단 가로 아크 (cols 2-11, 10픽셀)
+   - Rows 1-3: 밴드 세로 사이드가 머리 양옆을 따라 내려옴 (cols 2 및 11)
+   - Rows 4-5: 2x2 이어컵이 얼굴 양 바깥에 배치 (cols 1-2, 11-12)
+   얼굴 픽셀은 건드리지 않아서 표정이 그대로 보임. */
+const LV6 = (() => {
+  const f = clone(FACE);
+  patch(f, 0, 2, 'TTTTTTTTTT');       // 헤드밴드 top
+  patch(f, 1, 2, 'T.HHHHHH.T');       // 사이드 + 머리(좁은 윗부분) 유지
+  patch(f, 2, 2, 'THHHHHHHHT');       // 사이드 + 머리(넓은 부분) 유지
+  patch(f, 3, 2, 'THSSSSSSHT');       // 사이드 + 머리+얼굴 라인 유지
+  patch(f, 4, 1, 'TTSSSSSSSSTT');     // 이어컵 L/R (얼굴 옆)
+  patch(f, 5, 1, 'TTSEESSEESTT');     // 이어컵 유지 + 눈
+  return makeChar({ face: f, upper: body('7', 'y'), lower: legs('B', 'd', 'K') });
+})();
+
+/* Lv.7 Speaker — 하늘색 셔츠 + 가슴 앞 마이크 */
+const LV7 = (() => {
+  const up = body('6', 't');
+  /* 마이크: 검정 원통 + 금색 머리 */
+  patch(up, 2, 7, 'OO'); // row 11 (마이크 헤드)
+  patch(up, 3, 7, 'TT'); // row 12
+  patch(up, 4, 7, 'TT'); // row 13
+  return makeChar({ face: FACE, upper: up, lower: legs('B', 'd', 'K') });
+})();
+
+/* Lv.8 Apprentice — 진한 초록 앞치마 (수련자) */
+const LV8 = (() => {
+  const up = body('2', 'Q');
+  /* 앞치마 어두운 중앙 패널 */
+  patch(up, 1, 4, 'QQQQQQ');
+  patch(up, 2, 4, 'QQQQQQ');
+  patch(up, 3, 4, 'QQQQQQ');
+  patch(up, 4, 4, 'QQQQQQ');
+  return makeChar({ face: FACE, upper: up, lower: legs('9', 'i', 'K') });
+})();
+
+/* Lv.9 Learner — 회색 셔츠 + 어깨 가로지르는 가방끈 */
+const LV9 = (() => {
+  const up = body('9', 'i');
+  /* 가방끈: 왼쪽 어깨에서 오른쪽 허리로 */
+  patch(up, 0, 4, 'D');
+  patch(up, 1, 5, 'D');
+  patch(up, 2, 6, 'D');
+  patch(up, 3, 7, 'D');
+  patch(up, 4, 8, 'D');
+  patch(up, 5, 9, 'D');
+  return makeChar({ face: FACE, upper: up, lower: legs('B', 'd', 'K') });
+})();
+
+/* Lv.10 Bookworm — 안경 + 보라 셔츠 + 책 한 권 들고 */
+const LV10 = (() => {
+  const f = clone(FACE);
+  patch(f, 5, 2, 'GGGGGGGGGGGG');     // 안경 프레임 가로바
+  patch(f, 6, 2, 'GEGGSSGGEGGG');     // 렌즈와 다리
+  const up = body('7', 'y');
+  patch(up, 3, 11, 'CC');              // 책 표지 (옆구리)
+  patch(up, 4, 11, 'CC');
+  return makeChar({ face: f, upper: up, lower: legs('B', 'd', 'K') });
+})();
+
+/* ── TIER 3 · Skilled (11-15): 숙련 복장, 로브 시작 ──────── */
+
+/* Lv.11 Wordsmith — 가죽 앞치마 (언어 장인) */
+const LV11 = (() => {
+  const up = body('9', 'i');
+  /* 앞치마: 갈색 가죽 */
+  patch(up, 1, 4, 'DDDDDD');
+  patch(up, 2, 4, 'DDDDDD');
+  patch(up, 3, 4, 'DDDDDD');
+  patch(up, 4, 4, 'DDDDDD');
+  patch(up, 5, 5, 'DDDD');
+  return makeChar({ face: FACE, upper: up, lower: legs('B', 'd', 'K') });
+})();
+
+/* Lv.12 Storyteller — 붉은 망토 (이야기꾼의 무대감) */
+const LV12 = (() => {
+  const up = body('5', 'r');
+  /* 망토: 어깨에서 시작해 몸통 양옆을 덮음 */
+  patch(up, 0, 2, 'A..........A');
+  patch(up, 1, 1, 'AA........AA');
+  patch(up, 2, 1, 'AA........AA');
+  patch(up, 3, 1, 'AA........AA');
+  patch(up, 4, 1, 'AA........AA');
+  patch(up, 5, 2, 'A..........A');
+  return makeChar({ face: FACE, upper: up, lower: legs('i', 'k', 'K') });
+})();
+
+/* Lv.13 Linguist — 삼색 스카프 + 노란 셔츠 (다국어 상징) */
+const LV13 = (() => {
+  const up = body('4', 'e');
+  /* 가슴 앞 스카프 줄무늬 3색 */
+  patch(up, 1, 4, '555555');
+  patch(up, 2, 4, '222222');
+  patch(up, 3, 4, '666666');
+  return makeChar({ face: FACE, upper: up, lower: legs('9', 'i', 'K') });
+})();
+
+/* Lv.14 Poet — 연분홍 셔츠 + 가슴 깃털펜 + 잔 꽃잎 */
+const LV14 = (() => {
+  const up = body('L', 'L');
+  /* 깃털펜: 가슴에서 위로 사선 */
+  patch(up, 1, 10, 'O');
+  patch(up, 2, 9, 'O');
+  patch(up, 3, 8, 'O');
+  patch(up, 4, 7, 'C');
+  /* 꽃잎 배경 파티클 */
+  patch(up, 0, 14, 'F');
+  patch(up, 2, 15, 'F');
+  patch(up, 4, 13, 'F');
+  return makeChar({ face: FACE, upper: up, lower: legs('9', 'i', 'K') });
+})();
+
+/* Lv.15 Scholar — 학자 로브 + 안경 + 펼친 책 */
+const LV15 = (() => {
+  const f = clone(FACE);
+  patch(f, 5, 2, 'GGGGGGGGGGGG');
+  patch(f, 6, 2, 'GEGGSSGGEGGG');
+  const lr = longRobe('R', 'p', 'K');
+  /* 가슴에 펼친 책 */
+  patch(lr, 3, 5, 'CCCCCC');
+  patch(lr, 4, 5, 'CPPCPC');
+  patch(lr, 5, 5, 'CCCCCC');
+  return makeChar({ face: f, upper: lr.slice(0, 6), lower: lr.slice(6) });
+})();
+
+/* ── TIER 4 · Expert (16-20): 교수/철학자/현자/예언자 ──────── */
+
+/* Lv.16 Professor — 학위모 + 파란 로브 */
+const LV16 = (() => {
+  const f = clone(FACE);
+  /* 학위모: 사각 플레이트 + 술 */
+  patch(f, 0, 3, 'TTTTTTTTTT');
+  patch(f, 1, 4, 'TTHHHHTT..');     // 모자 챙 + 머리
+  /* 안경 */
+  patch(f, 5, 2, 'GGGGGGGGGGGG');
+  patch(f, 6, 2, 'GEGGSSGGEGGG');
+  const lr = longRobe('R', 'p', 'K');
+  return makeChar({ face: f, upper: lr.slice(0, 6), lower: lr.slice(6) });
+})();
+
+/* Lv.17 Philosopher — 흰 토가 + 머리띠 */
+const LV17 = (() => {
+  const f = clone(FACE);
+  patch(f, 3, 3, 'OHSSSSSSHO');      // 머리띠 금색
+  const lr = longRobe('N', 'q', 'D');
+  /* 토가 대각선 주름 */
+  patch(lr, 1, 4, 'qqqqqq');
+  patch(lr, 3, 5, 'qqqq');
+  return makeChar({ face: f, upper: lr.slice(0, 6), lower: lr.slice(6) });
+})();
+
+/* Lv.18 Mentor — 정장 (차콜 재킷 + 금 배지) */
+const LV18 = (() => {
+  const up = body('9', 'i');
+  /* 재킷 라펠 */
+  patch(up, 1, 6, '1..1');
+  patch(up, 2, 6, '1..1');
+  /* 금 배지 */
+  patch(up, 3, 9, 'O');
+  return makeChar({ face: FACE, upper: up, lower: legs('9', 'i', 'K') });
+})();
+
+/* Lv.19 Sage — 흰 수염 + 긴 회색 로브 + 지팡이 */
+const LV19 = (() => {
+  const f = clone(FACE);
+  patch(f, 1, 4, 'hhhhhh');           // 머리 흰색
+  patch(f, 2, 3, 'hhhhhhhh');
+  patch(f, 3, 3, 'hSSSSSSh');
+  patch(f, 7, 4, 'hhhhhhhh');         // 수염
+  patch(f, 8, 5, 'hhhh');
+  const lr = longRobe('W', 'W', 'D');
+  /* 지팡이 (오른쪽) */
+  patch(lr, 0, 14, 'J');
+  patch(lr, 1, 14, 'J');
+  patch(lr, 2, 14, 'J');
+  patch(lr, 3, 14, 'J');
+  patch(lr, 4, 14, 'J');
+  patch(lr, 5, 14, 'J');
+  patch(lr, 6, 14, 'J');
+  patch(lr, 7, 14, 'J');
+  patch(lr, 8, 14, 'J');
+  patch(lr, 9, 14, 'J');
+  return makeChar({ face: f, upper: lr.slice(0, 6), lower: lr.slice(6) });
+})();
+
+/* Lv.20 Oracle — 푸른빛 로브 + 크리스탈 볼 + 차가운 오라 */
+const LV20 = (() => {
+  const f = clone(FACE);
+  patch(f, 0, 2, 'm..m...m..m....'); // 찬 빛 파티클
+  const lr = longRobe('I', 'j', 'D');
+  /* 크리스탈 볼 가슴 중앙 */
+  patch(lr, 3, 6, 'mmmm');
+  patch(lr, 4, 6, 'mmmm');
+  return makeChar({ face: f, upper: lr.slice(0, 6), lower: lr.slice(6) });
+})();
+
+/* ── TIER 5 · Master (21-25): 거장/전략가/챔피언/정복자/타이탄 ─ */
+
+/* Lv.21 Virtuoso — 연미복 + 보타이 + 가슴 훈장 */
+const LV21 = (() => {
+  const up = body('T', 'k');
+  patch(up, 0, 6, '1111');            // 흰 셔츠 칼라
+  patch(up, 1, 6, '1OO1');            // 보타이 (금)
+  patch(up, 3, 10, 'O');              // 가슴 훈장
+  return makeChar({ face: FACE, upper: up, lower: legs('T', 'k', 'K') });
+})();
+
+/* Lv.22 Mastermind — 검은 클로크 + 후드 + 붉은 눈 */
+const LV22 = (() => {
+  const f = clone(FACE);
+  patch(f, 0, 2, '.TTTTTTTTTT.....');
+  patch(f, 1, 2, 'TTTTTTTTTTTT....');
+  patch(f, 2, 2, 'TTTTTTTTTTTT....'); // 후드가 머리를 감쌈
+  patch(f, 3, 3, 'THSSSSSSHT');
+  patch(f, 5, 3, 'S55SS55S..');        // 붉은 눈 (5 = 빨강)
+  const lr = longRobe('T', 'k', 'K');
+  return makeChar({ face: f, upper: lr.slice(0, 6), lower: lr.slice(6) });
+})();
+
+/* Lv.23 Champion — 은빛 갑옷 + 금 메달 */
+const LV23 = (() => {
+  const up = body('X', 'x');
+  /* 갑옷 어깨 패드 강조 */
+  patch(up, 0, 2, 'X........X');
+  /* 금 메달 */
+  patch(up, 3, 8, 'OO');
+  patch(up, 4, 8, 'Oo');
+  return makeChar({ face: FACE, upper: up, lower: legs('X', 'x', 'K') });
+})();
+
+/* Lv.24 Conqueror — 붉은 망토 + 금관 */
+const LV24 = (() => {
+  const f = clone(FACE);
+  /* 금관: 머리 위 지그재그 */
+  patch(f, 0, 3, 'O.O.O.O.O.');
+  patch(f, 1, 3, 'OOOOOOOOOO');
+  const up = body('X', 'x');
+  /* 망토: 빨강으로 어깨 확장 */
+  patch(up, 0, 1, 'AA........AA');
+  patch(up, 1, 1, 'AA........AA');
+  patch(up, 2, 1, 'AA........AA');
+  patch(up, 3, 1, 'AA........AA');
+  patch(up, 4, 1, 'AA........AA');
+  patch(up, 5, 2, 'A..........A');
+  return makeChar({ face: f, upper: up, lower: legs('X', 'x', 'K') });
+})();
+
+/* Lv.25 Titan — 두꺼운 거대 갑옷 (실루엣 유지, 어깨만 확장) */
+const LV25 = (() => {
+  const up = body('X', 'x');
+  /* 어깨 보강 */
+  patch(up, 0, 1, 'XX........XX');
+  patch(up, 1, 0, 'XXXXXXXXXXXXXXXX');
+  patch(up, 2, 0, 'XxXXXXXXXXXXXXxX');
+  /* 가슴 금 장식 */
+  patch(up, 3, 6, 'OOOO');
+  patch(up, 4, 7, 'OO');
+  return makeChar({ face: FACE, upper: up, lower: legs('X', 'x', 'K') });
+})();
+
+/* ── TIER 6 · Mythic (26-30): 대가/신화/초월/불멸/전설 ─────── */
+
+/* Lv.26 Grandmaster — 장식 많은 보라 로브 + 금 문양 */
+const LV26 = (() => {
+  const lr = longRobe('V', 'v', 'K');
+  /* 가슴 금 문양 (다이아몬드) */
+  patch(lr, 3, 7, 'OO');
+  patch(lr, 2, 6, 'O..O');
+  patch(lr, 4, 6, 'O..O');
+  patch(lr, 5, 7, 'OO');
+  /* 로브 하단 금 트림 */
+  patch(lr, 10, 2, 'OOOOOOOOOO');
+  return makeChar({ face: FACE, upper: lr.slice(0, 6), lower: lr.slice(6) });
+})();
+
+/* Lv.27 Mythic — 빛나는 눈 + 신비로운 에너지 파티클 (차가운 빛) */
+const LV27 = (() => {
+  const f = clone(FACE);
+  patch(f, 0, 1, 'm...m...m..m....');
+  patch(f, 5, 0, '...SYYSSYYS.....'); // 빛나는 눈
+  const lr = longRobe('I', 'j', 'K');
+  /* 주변 파티클 */
+  patch(lr, 1, 1, 'm..........m....'.slice(0, 16));
+  patch(lr, 5, 0, 'm...............');
+  return makeChar({ face: f, upper: lr.slice(0, 6), lower: lr.slice(6) });
+})();
+
+/* Lv.28 Transcendent — 흰 로브 + 은은한 빛 아우라 (은/차가운 빛 혼합) */
+const LV28 = (() => {
+  const f = clone(FACE);
+  patch(f, 0, 1, 'g..m...g...m....'.slice(0, 16));
+  const lr = longRobe('N', 'q', 'K');
+  /* 가슴 별 모양 */
+  patch(lr, 2, 7, 'OO');
+  patch(lr, 3, 6, 'OOOO');
+  patch(lr, 4, 7, 'OO');
+  /* 사이드 빛 */
+  patch(lr, 1, 0, 'g..............g');
+  patch(lr, 5, 0, 'g..............g');
+  return makeChar({ face: f, upper: lr.slice(0, 6), lower: lr.slice(6) });
+})();
+
+/* Lv.29 Immortal — 빛의 후광(halo) + 금빛 로브 */
+const LV29 = (() => {
+  const f = clone(FACE);
+  /* 후광 — 머리 뒤쪽 반원 */
+  patch(f, 0, 2, '.gggggggggg.....');
+  patch(f, 1, 2, 'gg..HHHHHH..g...');
+  patch(f, 2, 2, 'g..HHHHHHHH..g..');
+  patch(f, 3, 2, 'g..HSSSSSSH..g..');
+  const lr = longRobe('N', 'q', 'D');
+  /* 금 트림 허리 */
+  patch(lr, 5, 2, 'OOOOOOOOOO');
+  return makeChar({ face: f, upper: lr.slice(0, 6), lower: lr.slice(6) });
+})();
+
+/* Lv.30 Legend — 보라 위자드 로브 + 빛나는 눈 + 금빛 오라 파티클 */
+const LV30 = (() => {
+  const f = clone(FACE);
+  patch(f, 0, 3, 'g..g..g..g......');
+  patch(f, 1, 0, 'g...HHHHHH...g..');
+  patch(f, 2, 0, '...HHHHHHHH..g..');
+  patch(f, 3, 0, 'g..HSSSSSSH.....');
+  patch(f, 5, 0, '...SYYSSYYS.....');
+  patch(f, 7, 0, '....SSMMSS....g.');
+  const lr = longRobe('V', 'v', 'O');
+  /* 허리 금 장식 */
+  patch(lr, 3, 5, 'OOOOOO');
+  patch(lr, 4, 5, 'OoooooO'.slice(0, 6));
+  patch(lr, 5, 5, 'OOOOOO');
+  /* 사이드 파티클 */
+  patch(lr, 1, 0, 'g..............g');
+  patch(lr, 6, 0, 'g..............g');
+  patch(lr, 9, 0, 'g..............g');
+  return makeChar({ face: f, upper: lr.slice(0, 6), lower: lr.slice(6) });
+})();
+
+/*
+  ──────────────────────────────────────────────────────────────
+  레벨 테이블 — 앱 내 LEVEL_TABLE 과 동일한 호칭
+  ──────────────────────────────────────────────────────────────
+*/
+const LEVELS = [
+  { lv: 1,  title: 'Newcomer',     sub: '평상복 · 시작',        map: LV1 },
+  { lv: 2,  title: 'Curious',      sub: '호기심 많은 탐색',      map: LV2 },
+  { lv: 3,  title: 'Seeker',       sub: '돋보기 · 탐구',        map: LV3 },
+  { lv: 4,  title: 'Speller',      sub: '클립보드 · 받아쓰기',   map: LV4 },
+  { lv: 5,  title: 'Reader',       sub: '독서가',                map: LV5 },
+  { lv: 6,  title: 'Listener',     sub: '헤드폰 · 경청',         map: LV6 },
+  { lv: 7,  title: 'Speaker',      sub: '마이크 · 발화',         map: LV7 },
+  { lv: 8,  title: 'Apprentice',   sub: '수련자 앞치마',         map: LV8 },
+  { lv: 9,  title: 'Learner',      sub: '가방 · 성실',           map: LV9 },
+  { lv: 10, title: 'Bookworm',     sub: '안경 · 책벌레',         map: LV10 },
+  { lv: 11, title: 'Wordsmith',    sub: '가죽 앞치마 · 장인',    map: LV11 },
+  { lv: 12, title: 'Storyteller',  sub: '붉은 망토 · 이야기꾼',  map: LV12 },
+  { lv: 13, title: 'Linguist',     sub: '다국어 스카프',         map: LV13 },
+  { lv: 14, title: 'Poet',         sub: '깃털펜 · 시인',         map: LV14 },
+  { lv: 15, title: 'Scholar',      sub: '학자 로브 · 책',        map: LV15 },
+  { lv: 16, title: 'Professor',    sub: '학위모 · 교수',         map: LV16 },
+  { lv: 17, title: 'Philosopher',  sub: '흰 토가 · 금 머리띠',   map: LV17 },
+  { lv: 18, title: 'Mentor',       sub: '정장 · 금 배지',        map: LV18 },
+  { lv: 19, title: 'Sage',         sub: '흰 수염 · 지팡이',      map: LV19 },
+  { lv: 20, title: 'Oracle',       sub: '크리스탈 볼 · 예언',    map: LV20 },
+  { lv: 21, title: 'Virtuoso',     sub: '연미복 · 훈장',         map: LV21 },
+  { lv: 22, title: 'Mastermind',   sub: '검은 후드 · 전략가',    map: LV22 },
+  { lv: 23, title: 'Champion',     sub: '은빛 갑옷 · 메달',      map: LV23 },
+  { lv: 24, title: 'Conqueror',    sub: '금관 · 붉은 망토',      map: LV24 },
+  { lv: 25, title: 'Titan',        sub: '거대 갑옷 · 위엄',      map: LV25 },
+  { lv: 26, title: 'Grandmaster',  sub: '보라 로브 · 금 문양',   map: LV26 },
+  { lv: 27, title: 'Mythic',       sub: '빛나는 눈 · 신비',      map: LV27 },
+  { lv: 28, title: 'Transcendent', sub: '흰 로브 · 초월의 빛',   map: LV28 },
+  { lv: 29, title: 'Immortal',     sub: '후광 · 불멸',           map: LV29 },
+  { lv: 30, title: 'Legend',       sub: '위자드 로브 · 전설',    map: LV30 },
+];
+
+/* 티어 구분(5개씩) — 시각적 그룹핑용 */
+const TIERS = [
+  { label: 'TIER 1 · Beginner',  range: [1,  5]  },
+  { label: 'TIER 2 · Student',   range: [6,  10] },
+  { label: 'TIER 3 · Skilled',   range: [11, 15] },
+  { label: 'TIER 4 · Expert',    range: [16, 20] },
+  { label: 'TIER 5 · Master',    range: [21, 25] },
+  { label: 'TIER 6 · Mythic',    range: [26, 30] },
+];
+
+/*
+  ──────────────────────────────────────────────────────────────
+  렌더링
+  ──────────────────────────────────────────────────────────────
+*/
+
+/* 픽셀 맵을 SVG <rect> 로 변환해 반환 */
+function spriteSVG(map) {
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('class', 'sprite');
+  svg.setAttribute('viewBox', '0 0 16 22');
+  svg.setAttribute('shape-rendering', 'crispEdges');
+
+  map.forEach((row, y) => {
+    for (let x = 0; x < row.length; x++) {
+      const ch = row[x];
+      const color = COLORS[ch];
+      if (!color) continue;
+      const rect = document.createElementNS(ns, 'rect');
+      rect.setAttribute('x', x);
+      rect.setAttribute('y', y);
+      rect.setAttribute('width', 1);
+      rect.setAttribute('height', 1);
+      rect.setAttribute('fill', color);
+      svg.appendChild(rect);
+    }
+  });
+  return svg;
+}
+
+/* 카드 한 장 생성 */
+function levelCard(info) {
+  const card = document.createElement('div');
+  card.className = 'card';
+
+  const title = document.createElement('div');
+  title.className = 'title';
+  title.textContent = `Lv.${info.lv} ${info.title}`;
+  card.appendChild(title);
+
+  const sub = document.createElement('div');
+  sub.className = 'subtitle';
+  sub.textContent = info.sub;
+  card.appendChild(sub);
+
+  card.appendChild(spriteSVG(info.map));
+  return card;
+}
+
+/* 티어별로 제목 + 5개 그리드 */
+const root = document.getElementById('root');
+TIERS.forEach(tier => {
+  const header = document.createElement('div');
+  header.className = 'tier-title';
+  header.textContent = tier.label;
+  root.appendChild(header);
+
+  const grid = document.createElement('div');
+  grid.className = 'grid';
+  LEVELS
+    .filter(l => l.lv >= tier.range[0] && l.lv <= tier.range[1])
+    .forEach(l => grid.appendChild(levelCard(l)));
+  root.appendChild(grid);
+});
+</script>
+
+</body>
+</html>
