@@ -847,27 +847,6 @@
     color: #8A8078;
     text-align: right;
   }
-  .level-stats {
-    display: flex;
-    justify-content: center;
-    gap: 32px;
-  }
-  .level-stat {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-  }
-  .level-stat-value {
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: #2D2B28;
-  }
-  .level-stat-label {
-    font-size: 0.75rem;
-    color: #8A8078;
-  }
-
   /* 설정 플레이스홀더 */
   .settings-list {
     display: flex;
@@ -1388,12 +1367,6 @@
             </div>
             <div class="level-progress-text" id="levelProgressText">0 / 50 EXP</div>
           </div>
-          <div class="level-stats">
-            <div class="level-stat">
-              <span class="level-stat-value" id="statTotalExp">0</span>
-              <span class="level-stat-label">Total EXP</span>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -1577,7 +1550,6 @@ function updateLevelUI(info) {
   document.getElementById('levelTitle').textContent = info.title;
   document.getElementById('levelProgressFill').style.width = info.percent + '%';
   document.getElementById('levelProgressText').textContent = `${info.currentExp} / ${info.needExp} EXP`;
-  document.getElementById('statTotalExp').textContent = info.totalExp.toLocaleString();
 }
 
 /* 레벨업 알림 */
