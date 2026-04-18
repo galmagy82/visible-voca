@@ -44,7 +44,10 @@ async function callGeminiText(prompt: string, apiKey: string, jsonMode?: boolean
         cefr:        { type: "STRING", description: "CEFR 난이도 A1-C2. 어휘 모드만. 표현 모드이면 빈 문자열" },
         verb_forms:  { type: "STRING", description: "동사 3단변화. 동사가 아니면 빈 문자열" },
         scene_en:    { type: "STRING", description: "이미지 생성용 영어 장면 묘사. 어휘 모드만" },
-        feeling:     { type: "STRING", description: "핵심 느낌 1~2문장 (어휘 모드: 느낌 요약 + 비유, 표현 모드: 모국어 번역)" },
+        // feeling: 문장 단위 배열로 반환하여 프론트에서 줄바꿈 렌더링에 사용
+        // - 어휘 모드: [핵심 느낌 문장, 비유/장면 묘사 문장] (정확히 2개 원소)
+        // - 표현 모드: 입력의 자연스러운 한국어 번역 (1-2개 원소)
+        feeling:     { type: "ARRAY", items: { type: "STRING" }, description: `문장 단위 배열. 어휘 모드: 정확히 2개 원소. [0]="큰따옴표로 감싼 핵심 느낌" + 자연스러운 서술어로 완결된 문장. [1]=비유나 구체적 장면 묘사 문장. 각 원소는 완결된 종결어미(~다/~예요/~해요 등)로 끝낼 것. "~는", "~ㄴ" 같은 수식어 형태로 끝나는 미완성 문장 금지. 예: ["\"하나였던 것이 딱 갈라지는\" 이미지예요.", "나무를 도끼로 쪼개는 장면을 떠올려보세요."] 표현 모드: 입력의 자연스러운 한국어 번역 1-2개 원소 배열, 구어체.` },
         examples:    { type: "ARRAY", description: "예문/풀이 블록. 한 줄 = 한 원소. [noun] 등 품사 라벨, 빈 줄(\"\")도 각각 원소로.", items: { type: "STRING" } },
       },
       required: ["corrected", "source_lang", "pos", "ipa", "cefr", "verb_forms", "scene_en", "feeling", "examples"],

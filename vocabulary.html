@@ -2334,8 +2334,14 @@ async function fetchWordResult(word, targetEl) {
       verbForms = parsed.verb_forms || '';
       sceneEn = parsed.scene_en || '';
       /* feeling + examples 배열을 desc/examples 로 조립.
-         body 하나에 \n 누락 문제 → 필드 분리로 근본 해결. */
-      const feeling = parsed.feeling || '';
+         body 하나에 \n 누락 문제 → 필드 분리로 근본 해결.
+         feeling 은 스키마 변경으로 배열 반환이 기본 (2026-04-18~).
+         - Array: 문장 단위 원소를 \n 으로 join → 렌더 시 줄바꿈 표시
+         - String: 구(舊) 스키마/폴백 호환 — 그대로 사용 */
+      const feelingRaw = parsed.feeling;
+      const feeling = Array.isArray(feelingRaw)
+        ? feelingRaw.filter(s => typeof s === 'string' && s.trim()).join('\n')
+        : (feelingRaw || '');
       const exArr = Array.isArray(parsed.examples) ? parsed.examples : [];
       body = feeling + '\n---\n' + exArr.join('\n');
       jsonParsed = true;
