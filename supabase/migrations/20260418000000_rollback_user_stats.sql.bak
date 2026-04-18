@@ -1,0 +1,9 @@
+-- ============================================================================
+-- 롤백: user_stats 테이블 삭제
+-- 사용법: Supabase SQL Editor 에서 수동 실행
+-- ============================================================================
+
+DROP POLICY IF EXISTS "user_stats_update_own" ON user_stats;
+DROP POLICY IF EXISTS "user_stats_insert_own" ON user_stats;
+DROP POLICY IF EXISTS "user_stats_select_own" ON user_stats;
+DROP TABLE IF EXISTS user_stats;

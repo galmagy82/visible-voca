@@ -803,34 +803,69 @@
   .myrecord-panel { display: none; }
   .myrecord-panel.active { display: block; }
 
-  /* 내 활동 플레이스홀더 */
-  .character-placeholder {
+  /* 레벨 카드 */
+  .level-card {
+    background: #FFFFFF;
+    border: 1px solid #E5E2DE;
+    border-radius: 14px;
+    padding: 28px;
+    text-align: center;
+  }
+  .level-header {
+    margin-bottom: 20px;
+  }
+  .level-number {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #2D2B28;
+    margin-right: 10px;
+  }
+  .level-title {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #4A90D9;
+  }
+  .level-progress-wrap {
+    margin-bottom: 24px;
+  }
+  .level-progress-bar {
+    width: 100%;
+    height: 10px;
+    background: #EDECEA;
+    border-radius: 5px;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+  .level-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4A90D9, #5BA0E9);
+    border-radius: 5px;
+    transition: width 0.5s ease;
+  }
+  .level-progress-text {
+    font-size: 0.8rem;
+    color: #8A8078;
+    text-align: right;
+  }
+  .level-stats {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+  }
+  .level-stat {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
-    padding: 40px 20px;
-    color: #B0ACA6;
+    gap: 4px;
   }
-  .character-avatar {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    background: #F0EFEC;
-    border: 2px dashed #D5D2CC;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2.5rem;
+  .level-stat-value {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #2D2B28;
   }
-  .character-level {
-    font-size: 0.95rem;
-    color: #6B6660;
-  }
-  .character-coming {
-    font-size: 0.8rem;
-    color: #B0ACA6;
-    margin-top: 4px;
+  .level-stat-label {
+    font-size: 0.75rem;
+    color: #8A8078;
   }
 
   /* 설정 플레이스홀더 */
@@ -1342,10 +1377,31 @@
 
       <!-- 서브탭1: 내 활동 -->
       <div class="myrecord-panel active" id="panelCharacter">
-        <div class="character-placeholder">
-          <div class="character-avatar">🧑‍🎓</div>
-          <div class="character-level" data-i18n="myrecordLevel">Lv. —</div>
-          <div class="character-coming" data-i18n="myrecordComingSoon">준비중</div>
+        <div class="level-card">
+          <div class="level-header">
+            <span class="level-number" id="levelNumber">Lv.1</span>
+            <span class="level-title" id="levelTitle">Newcomer</span>
+          </div>
+          <div class="level-progress-wrap">
+            <div class="level-progress-bar">
+              <div class="level-progress-fill" id="levelProgressFill" style="width:0%"></div>
+            </div>
+            <div class="level-progress-text" id="levelProgressText">0 / 50 EXP</div>
+          </div>
+          <div class="level-stats">
+            <div class="level-stat">
+              <span class="level-stat-value" id="statTotalExp">0</span>
+              <span class="level-stat-label">Total EXP</span>
+            </div>
+            <div class="level-stat">
+              <span class="level-stat-value" id="statWords">0</span>
+              <span class="level-stat-label" data-i18n="statSearches">검색</span>
+            </div>
+            <div class="level-stat">
+              <span class="level-stat-value" id="statQuiz">0</span>
+              <span class="level-stat-label" data-i18n="statQuizCorrect">퀴즈 정답</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1409,6 +1465,147 @@ async function autoAddIfEnabled(targetEl) {
   if (entry) return;
   const btn = targetEl.querySelector('.add-wordbook-btn[data-wb-word]');
   setTimeout(() => addToWordbook(data, btn), 2000);
+}
+
+// --- 레벨 시스템 ---
+const LEVEL_TABLE = [
+  { lv:1,  exp:0,     title:'Newcomer' },
+  { lv:2,  exp:50,    title:'Curious' },
+  { lv:3,  exp:120,   title:'Seeker' },
+  { lv:4,  exp:220,   title:'Speller' },
+  { lv:5,  exp:350,   title:'Reader' },
+  { lv:6,  exp:520,   title:'Listener' },
+  { lv:7,  exp:740,   title:'Speaker' },
+  { lv:8,  exp:1000,  title:'Apprentice' },
+  { lv:9,  exp:1350,  title:'Learner' },
+  { lv:10, exp:1800,  title:'Bookworm' },
+  { lv:11, exp:2350,  title:'Wordsmith' },
+  { lv:12, exp:3000,  title:'Storyteller' },
+  { lv:13, exp:3800,  title:'Linguist' },
+  { lv:14, exp:4800,  title:'Poet' },
+  { lv:15, exp:6000,  title:'Scholar' },
+  { lv:16, exp:7500,  title:'Professor' },
+  { lv:17, exp:9300,  title:'Philosopher' },
+  { lv:18, exp:11500, title:'Mentor' },
+  { lv:19, exp:14000, title:'Sage' },
+  { lv:20, exp:17000, title:'Oracle' },
+  { lv:21, exp:20500, title:'Virtuoso' },
+  { lv:22, exp:24500, title:'Mastermind' },
+  { lv:23, exp:29000, title:'Champion' },
+  { lv:24, exp:34500, title:'Conqueror' },
+  { lv:25, exp:40500, title:'Titan' },
+  { lv:26, exp:47500, title:'Grandmaster' },
+  { lv:27, exp:55500, title:'Mythic' },
+  { lv:28, exp:64500, title:'Transcendent' },
+  { lv:29, exp:75000, title:'Immortal' },
+  { lv:30, exp:88000, title:'Legend' },
+];
+
+/* 메모리 캐시 — Supabase 에서 가져온 통계를 저장해 매번 조회하지 않도록 */
+let _statsCache = { total_exp: 0, stat_searches: 0, stat_quiz: 0 };
+
+/* Supabase 에서 사용자 통계 로드 (없으면 행 생성) */
+async function loadStats() {
+  const userId = _authUser?.id;
+  if (!userId) return _statsCache;
+  const { data, error } = await supabaseClient
+    .from('user_stats')
+    .select('total_exp, stat_searches, stat_quiz')
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (error) { console.warn('user_stats 조회 실패:', error); return _statsCache; }
+  if (data) {
+    _statsCache = { total_exp: data.total_exp, stat_searches: data.stat_searches, stat_quiz: data.stat_quiz };
+  } else {
+    /* 최초 방문 — 단어장 수로 EXP 부트스트랩 */
+    const list = await getWordbookAll();
+    const bootstrapExp = list.length * 15;
+    const bootstrapSearches = list.length;
+    const row = { user_id: userId, total_exp: bootstrapExp, stat_searches: bootstrapSearches, stat_quiz: 0 };
+    await supabaseClient.from('user_stats').insert(row);
+    _statsCache = { total_exp: bootstrapExp, stat_searches: bootstrapSearches, stat_quiz: 0 };
+  }
+  return _statsCache;
+}
+
+/* EXP 로 레벨 정보 계산 */
+function getLevelInfo(exp) {
+  let current = LEVEL_TABLE[0];
+  let next = LEVEL_TABLE[1];
+  for (let i = LEVEL_TABLE.length - 1; i >= 0; i--) {
+    if (exp >= LEVEL_TABLE[i].exp) {
+      current = LEVEL_TABLE[i];
+      next = LEVEL_TABLE[i + 1] || null;
+      break;
+    }
+  }
+  /* Lv.30 이후: Legend Lv.31, 32... (15000 EXP 마다 +1) */
+  if (!next && exp >= LEVEL_TABLE[LEVEL_TABLE.length - 1].exp) {
+    const lastExp = LEVEL_TABLE[LEVEL_TABLE.length - 1].exp;
+    const extra = Math.floor((exp - lastExp) / 15000);
+    current = { lv: 30 + extra, exp: lastExp + extra * 15000, title: 'Legend' };
+    next = { lv: current.lv + 1, exp: current.exp + 15000, title: 'Legend' };
+  }
+  const currentExp = exp - current.exp;
+  const needExp = next ? next.exp - current.exp : 1;
+  const percent = Math.min(100, Math.floor((currentExp / needExp) * 100));
+  return { lv: current.lv, title: current.title, currentExp, needExp, nextExp: next ? next.exp : current.exp, percent, totalExp: exp };
+}
+
+/* EXP 추가 — 메모리 캐시 즉시 갱신 + Supabase 비동기 저장 */
+async function addExp(amount, source) {
+  const userId = _authUser?.id;
+  if (!userId) return;
+  const prevInfo = getLevelInfo(_statsCache.total_exp);
+  _statsCache.total_exp += amount;
+  if (source === 'search') _statsCache.stat_searches += 1;
+  else if (source === 'quiz') _statsCache.stat_quiz += 1;
+  const newInfo = getLevelInfo(_statsCache.total_exp);
+  updateLevelUI(newInfo);
+  if (newInfo.lv > prevInfo.lv) showLevelUpNotification(newInfo);
+  /* Supabase 에 비동기 저장 */
+  supabaseClient
+    .from('user_stats')
+    .upsert({
+      user_id: userId,
+      total_exp: _statsCache.total_exp,
+      stat_searches: _statsCache.stat_searches,
+      stat_quiz: _statsCache.stat_quiz,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'user_id' })
+    .then(({ error }) => { if (error) console.warn('user_stats 저장 실패:', error); });
+}
+
+/* 레벨 UI 업데이트 */
+function updateLevelUI(info) {
+  if (!info) info = getLevelInfo(_statsCache.total_exp);
+  const lvEl = document.getElementById('levelNumber');
+  if (!lvEl) return;
+  lvEl.textContent = `Lv.${info.lv}`;
+  document.getElementById('levelTitle').textContent = info.title;
+  document.getElementById('levelProgressFill').style.width = info.percent + '%';
+  document.getElementById('levelProgressText').textContent = `${info.currentExp} / ${info.needExp} EXP`;
+  document.getElementById('statTotalExp').textContent = info.totalExp.toLocaleString();
+  document.getElementById('statWords').textContent = _statsCache.stat_searches.toLocaleString();
+  document.getElementById('statQuiz').textContent = _statsCache.stat_quiz.toLocaleString();
+}
+
+/* 레벨업 알림 */
+function showLevelUpNotification(info) {
+  const badge = document.createElement('div');
+  badge.className = 'discovery-badge';
+  badge.innerHTML = `
+    <div class="badge-title">Level Up!</div>
+    <div class="badge-sub">Lv.${info.lv} ${info.title}</div>
+  `;
+  document.body.appendChild(badge);
+  setTimeout(() => badge.remove(), 7000);
+}
+
+/* 페이지 초기화 시 Supabase 에서 통계 로드 후 레벨 UI 렌더링 */
+async function initLevelUI() {
+  await loadStats();
+  updateLevelUI();
 }
 
 // --- 단어장 어휘/표현 서브탭 ---
@@ -1761,6 +1958,8 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
     return;
   }
   document.body.style.display = '';
+  /* 로그인 완료 후 레벨 UI 초기화 */
+  initLevelUI();
 });
 
 initAuth();
@@ -2038,6 +2237,7 @@ async function fetchWordResult(word, targetEl) {
       if (cachedObj.snapshot) window._lastWbData = cachedObj.snapshot;
       bindWbButton(targetEl);
       autoAddIfEnabled(targetEl);
+      addExp(10, 'search');
       return cachedObj.html;
     }
   }
@@ -2063,6 +2263,7 @@ async function fetchWordResult(word, targetEl) {
     targetEl.innerHTML = dbHtml;
     bindWbButton(targetEl);
     autoAddIfEnabled(targetEl);
+    addExp(10, 'search');
     /* buildHtmlFromDB 가 _lastWbData 를 채웠으므로 캐시에도 스냅샷 동봉 */
     saveCacheEntry(word, dbHtml, window._lastWbData);
     return dbHtml;
@@ -2274,6 +2475,7 @@ async function fetchWordResult(word, targetEl) {
   targetEl.innerHTML = html;
   bindWbButton(targetEl);
   autoAddIfEnabled(targetEl);
+  addExp(10, 'search');
 
   /* 이미지 비동기 처리 — imagePromise가 있을 때만 */
   if (!imagePromise) {
@@ -2630,6 +2832,7 @@ async function addToWordbook(data, btnEl) {
       .from('user_wordbook')
       .upsert(row, { onConflict: 'user_id,word' });
     if (error) throw error;
+    addExp(5, 'wordbook');
   } catch (e) {
     console.warn('단어장 추가 실패:', e);
     /* 롤백 */
@@ -3083,6 +3286,7 @@ function selectAnswer(index) {
 
   if (isCorrect) {
     quizCorrect++;
+    addExp(15, 'quiz');
     document.getElementById('quizFeedback').textContent = t('quizCorrectFeedback');
     document.getElementById('quizFeedback').style.color = '#8abf6a';
   } else {
