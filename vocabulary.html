@@ -33,7 +33,7 @@
 <title>Geminary</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <!-- 다국어 지원 -->
-<script src="i18n.js?v=20260418"></script>
+<script src="i18n.js?v=20260418b"></script>
 <!-- Supabase SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
@@ -755,7 +755,7 @@
     max-width: 400px;
   }
 
-  /* 내 기록 탭 */
+  /* My 탭 */
   .myrecord-subtabs {
     display: flex;
     gap: 0;
@@ -781,7 +781,7 @@
   .myrecord-panel { display: none; }
   .myrecord-panel.active { display: block; }
 
-  /* 내 캐릭터 플레이스홀더 */
+  /* 내 활동 플레이스홀더 */
   .character-placeholder {
     display: flex;
     flex-direction: column;
@@ -1121,7 +1121,7 @@
     <button class="tab" onclick="switchTab('photo')" data-i18n="tabPhoto" style="display:none;">사진에서 검색</button>
     <button class="tab" onclick="switchTab('wordbook')" data-i18n="tabWordbook">단어장</button>
     <button class="tab" onclick="switchTab('quiz')" data-i18n="tabQuiz">Quiz</button>
-    <button class="tab" onclick="switchTab('myrecord')" data-i18n="tabMyRecord">내 기록</button>
+    <button class="tab" onclick="switchTab('myrecord')" data-i18n="tabMyRecord">My</button>
   </div>
 
   <!-- 오른쪽 컨텐츠 -->
@@ -1288,15 +1288,15 @@
       </div>
     </div>
 
-    <!-- 탭5: 내 기록 -->
+    <!-- 탭5: My -->
     <div class="tab-content" id="tabMyRecord">
       <!-- 서브탭 버튼 -->
       <div class="myrecord-subtabs">
-        <button class="myrecord-subtab active" onclick="switchMyRecordSub('character')" data-i18n="myrecordCharacter">내 캐릭터</button>
+        <button class="myrecord-subtab active" onclick="switchMyRecordSub('character')" data-i18n="myrecordCharacter">내 활동</button>
         <button class="myrecord-subtab" onclick="switchMyRecordSub('settings')" data-i18n="myrecordSettings">설정</button>
       </div>
 
-      <!-- 서브탭1: 내 캐릭터 -->
+      <!-- 서브탭1: 내 활동 -->
       <div class="myrecord-panel active" id="panelCharacter">
         <div class="character-placeholder">
           <div class="character-avatar">🧑‍🎓</div>
@@ -1373,7 +1373,7 @@ function speak(text) {
   speechSynthesis.speak(u);
 }
 
-// --- 내 기록 서브탭 전환 ---
+// --- My 서브탭 전환 ---
 function switchMyRecordSub(sub) {
   document.querySelectorAll('.myrecord-subtab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.myrecord-panel').forEach(p => p.classList.remove('active'));
