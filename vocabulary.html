@@ -578,6 +578,28 @@
   }
 
   /* 단어장 탭 */
+  .wb-subtabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid #E5E2DE;
+    margin-bottom: 16px;
+  }
+  .wb-subtab {
+    padding: 10px 20px;
+    font-size: 0.85rem;
+    color: #6B6660;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .wb-subtab:hover { color: #4A4641; }
+  .wb-subtab.active {
+    color: #2D2B28;
+    font-weight: 600;
+    border-bottom-color: #2D2B28;
+  }
   .wordbook-toolbar {
     display: flex;
     gap: 12px;
@@ -1245,6 +1267,11 @@
 
     <!-- 탭3: 단어장 -->
     <div class="tab-content" id="tabWordbook">
+      <!-- 어휘/표현 서브탭 -->
+      <div class="wb-subtabs">
+        <button class="wb-subtab active" onclick="switchWbMode('vocab')" id="wbTabVocab" data-i18n="wbTabVocab">단어 (0)</button>
+        <button class="wb-subtab" onclick="switchWbMode('expr')" id="wbTabExpr" data-i18n="wbTabExpr">문장 (0)</button>
+      </div>
       <!-- 검색/정렬/전체삭제 툴바 -->
       <div class="wordbook-toolbar">
         <input type="text" id="wordbookFilter" data-i18n="wordbookFilterPlaceholder" placeholder="단어 검색..." oninput="renderWordbook()">
@@ -1382,6 +1409,15 @@ async function autoAddIfEnabled(targetEl) {
   if (entry) return;
   const btn = targetEl.querySelector('.add-wordbook-btn[data-wb-word]');
   setTimeout(() => addToWordbook(data, btn), 2000);
+}
+
+// --- 단어장 어휘/표현 서브탭 ---
+let _wbMode = 'vocab'; // 'vocab' | 'expr'
+function switchWbMode(mode) {
+  _wbMode = mode;
+  document.querySelectorAll('.wb-subtab').forEach(t => t.classList.remove('active'));
+  document.getElementById(mode === 'vocab' ? 'wbTabVocab' : 'wbTabExpr').classList.add('active');
+  renderWordbook();
 }
 
 // --- 발음 듣기 (브라우저 TTS) ---
@@ -2714,8 +2750,19 @@ async function renderWordbook() {
   const sort = document.getElementById('wordbookSort').value;
   const listEl = document.getElementById('wordbookList');
 
-  /* 필터 */
-  let filtered = list.filter(item => item.word.toLowerCase().includes(filter));
+  /* 어휘/표현 개수 업데이트 */
+  const vocabAll = list.filter(item => !!item.pos);
+  const exprAll = list.filter(item => !item.pos);
+  const vocabTab = document.getElementById('wbTabVocab');
+  const exprTab = document.getElementById('wbTabExpr');
+  if (vocabTab) vocabTab.textContent = `${t('wbVocab')} (${vocabAll.length})`;
+  if (exprTab) exprTab.textContent = `${t('wbExpr')} (${exprAll.length})`;
+
+  /* 모드 필터 — pos 유무로 어휘/표현 구분 */
+  let modeFiltered = _wbMode === 'vocab' ? vocabAll : exprAll;
+
+  /* 텍스트 필터 */
+  let filtered = modeFiltered.filter(item => item.word.toLowerCase().includes(filter));
 
   /* 정렬 — added_at 은 Supabase timestamptz(ISO 문자열), Date 변환 후 비교 */
   if (sort === 'alpha') {
