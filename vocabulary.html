@@ -220,6 +220,29 @@
     max-width: 320px;
     margin: 16px auto 0;
   }
+  /* 사진 검색 — 실제 마킹 예시 이미지 2장을 세로로 나란히 표시 */
+  .photo-guide-examples {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 8px auto 16px;
+    max-width: 420px;
+  }
+  .photo-guide-examples figure {
+    margin: 0;
+  }
+  .photo-guide-examples img {
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid #E5E2DE;
+    display: block;
+  }
+  .photo-guide-examples figcaption {
+    font-size: 0.85rem;
+    color: #6B6660;
+    margin-top: 6px;
+    text-align: center;
+  }
 
   /* ===== 기능 소개 4카드 그리드 =====
      vocabulary 페이지 검색창 아래 empty state에 노출.
@@ -1198,7 +1221,7 @@
   <!-- 왼쪽 탭 사이드바 -->
   <div class="sidebar">
     <button class="tab active" onclick="switchTab('search')" data-i18n="tabSearch">일반검색</button>
-    <button class="tab" onclick="switchTab('photo')" data-i18n="tabPhoto" style="display:none;">사진에서 검색</button>
+    <button class="tab" onclick="switchTab('photo')" data-i18n="tabPhoto">사진 검색</button>
     <button class="tab" onclick="switchTab('wordbook')" data-i18n="tabWordbook">단어장</button>
     <button class="tab" onclick="switchTab('quiz')" data-i18n="tabQuiz">Quiz</button>
     <button class="tab" onclick="switchTab('myrecord')" data-i18n="tabMyRecord">My</button>
@@ -1249,7 +1272,7 @@
       <div class="result-area" id="resultSearch"></div>
     </div>
 
-    <!-- 탭2: 사진에서 검색 -->
+    <!-- 탭2: 사진 검색 -->
     <div class="tab-content" id="tabPhoto">
       <div class="photo-upload-area">
         <button class="upload-btn" onclick="document.getElementById('photoInput').click()" data-i18n="uploadPhoto">📂 사진 올리기</button>
@@ -1257,49 +1280,18 @@
       </div>
       <!-- 가이드 -->
       <div class="guide" id="guidePhoto">
-        <strong data-i18n="photoGuideTitle">사진에서 검색</strong><br><br>
-        <!-- 가이드 일러스트: 책 페이지에 표시된 단어 예시 -->
-        <svg width="320" height="160" viewBox="0 0 320 160" style="display:block; margin:0 auto 16px;">
-          <!-- 책 페이지 배경 -->
-          <rect x="30" y="10" width="260" height="140" rx="4" fill="#252525" stroke="#444" stroke-width="1"/>
-          <!-- 책 중앙 접힌 선 -->
-          <line x1="160" y1="10" x2="160" y2="150" stroke="#333" stroke-width="1" stroke-dasharray="4,3"/>
-          <!-- 왼쪽 페이지 텍스트 줄 -->
-          <rect x="50" y="30" width="90" height="4" rx="2" fill="#444"/>
-          <rect x="50" y="42" width="80" height="4" rx="2" fill="#444"/>
-          <!-- 동그라미 표시된 단어 -->
-          <rect x="50" y="56" width="36" height="4" rx="2" fill="#7ab36a"/>
-          <ellipse cx="68" cy="58" rx="24" ry="10" fill="none" stroke="#7ab36a" stroke-width="1.5"/>
-          <rect x="92" y="56" width="50" height="4" rx="2" fill="#444"/>
-          <rect x="50" y="70" width="90" height="4" rx="2" fill="#444"/>
-          <!-- 밑줄 표시된 단어 -->
-          <rect x="50" y="84" width="45" height="4" rx="2" fill="#444"/>
-          <rect x="100" y="84" width="40" height="4" rx="2" fill="#d4a04a"/>
-          <line x1="98" y1="92" x2="142" y2="92" stroke="#d4a04a" stroke-width="1.5"/>
-          <rect x="50" y="98" width="90" height="4" rx="2" fill="#444"/>
-          <!-- #표시된 단어 -->
-          <text x="50" y="118" font-size="10" fill="#cc6666" font-family="monospace">#</text>
-          <rect x="60" y="112" width="35" height="4" rx="2" fill="#cc6666"/>
-          <rect x="100" y="112" width="40" height="4" rx="2" fill="#444"/>
-          <rect x="50" y="126" width="90" height="4" rx="2" fill="#444"/>
-          <!-- 오른쪽 페이지 텍스트 줄 -->
-          <rect x="180" y="30" width="90" height="4" rx="2" fill="#444"/>
-          <rect x="180" y="42" width="80" height="4" rx="2" fill="#444"/>
-          <rect x="180" y="56" width="90" height="4" rx="2" fill="#444"/>
-          <rect x="180" y="70" width="70" height="4" rx="2" fill="#444"/>
-          <rect x="180" y="84" width="90" height="4" rx="2" fill="#444"/>
-          <rect x="180" y="98" width="85" height="4" rx="2" fill="#444"/>
-          <rect x="180" y="112" width="90" height="4" rx="2" fill="#444"/>
-          <rect x="180" y="126" width="60" height="4" rx="2" fill="#444"/>
-          <!-- 범례 -->
-          <ellipse cx="186" cy="58" rx="6" ry="6" fill="none" stroke="#7ab36a" stroke-width="1"/>
-          <text x="196" y="61" font-size="8" fill="#7ab36a" font-family="sans-serif" data-i18n="photoGuideCircle">동그라미</text>
-          <line x1="180" y1="74" x2="192" y2="74" stroke="#d4a04a" stroke-width="1.5"/>
-          <text x="196" y="77" font-size="8" fill="#d4a04a" font-family="sans-serif" data-i18n="photoGuideUnderline">밑줄</text>
-          <text x="180" y="93" font-size="10" fill="#cc6666" font-family="monospace">#</text>
-          <text x="196" y="93" font-size="8" fill="#cc6666" font-family="sans-serif" data-i18n="photoGuideHash">#표시</text>
-        </svg>
-        <span data-i18n="photoGuideBody">책을 읽다가 모르는 단어나 표현에 동그라미(○), 밑줄(_), 또는 #표시를 해두세요.<br>표시한 페이지의 사진을 찍어 📂 버튼을 눌러서 올리세요.<br>표시된 단어를 자동으로 찾아서 검색합니다.<br><br>사진은 여러 장을 한꺼번에 올릴 수 있어요.</span>
+        <!-- 가이드 예시: 실제 책에 표시한 두 가지 마킹 방법 -->
+        <div class="photo-guide-examples">
+          <figure>
+            <img src="assets/guide-circle.png" alt="circle example">
+            <figcaption data-i18n="photoGuideExCircle">① 동그라미로 감싸기</figcaption>
+          </figure>
+          <figure>
+            <img src="assets/guide-parens.png" alt="parentheses and underline example">
+            <figcaption data-i18n="photoGuideExParens">② 괄호 + 밑줄로 감싸기</figcaption>
+          </figure>
+        </div>
+        <span data-i18n="photoGuideBody">책에서 검색하고 싶은 부분을 위 두 가지 방법 중 편한 대로 표시하세요.<br><br>표시한 페이지의 사진을 찍어 📂 버튼을 눌러서 올리세요.<br>사진은 여러 장을 한꺼번에 올릴 수 있어요.</span>
       </div>
       <!-- 추출된 단어 리스트 -->
       <div class="word-list" id="wordList"></div>
@@ -2636,23 +2628,65 @@ function buildNavBar() {
 
 function lookup() { startLookup(); }
 
-// --- 사진에서 검색 ---
+// --- 사진 검색 ---
 const resultPhoto = document.getElementById('resultPhoto');
 const wordListEl = document.getElementById('wordList');
 let photoWords = [];
 
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
+// 사진 업로드 속도 개선:
+// 원본(3~5MB, 4000×3000+) 을 그대로 Base64 전송하면 업로드가 오래 걸리므로
+// 클라이언트에서 최대 1536px 로 축소하고 JPEG 품질 0.85 로 재인코딩한다.
+// OCR/마크 검출에는 1536px 이면 충분 (Gemini 권장 해상도 수준).
+async function fileToResizedBase64(file, maxDim = 1536, quality = 0.85) {
+  const dataUrl = await new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onload = () => resolve(reader.result);
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+  const img = await new Promise((resolve, reject) => {
+    const im = new Image();
+    im.onload = () => resolve(im);
+    im.onerror = reject;
+    im.src = dataUrl;
+  });
+  // 긴 변 기준으로 축소 비율 계산 (원본이 더 작으면 그대로)
+  const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+  const w = Math.round(img.width * scale);
+  const h = Math.round(img.height * scale);
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, w, h);
+  // 리사이즈 후 항상 JPEG 로 재인코딩 → mimeType 고정
+  const jpegDataUrl = canvas.toDataURL('image/jpeg', quality);
+  return { data: jpegDataUrl.split(',')[1], mimeType: 'image/jpeg' };
 }
+
+// --- 사진 단어 추출용 프롬프트 (언어 무관 — Gemini 에 항상 영어로 전달) ---
+// 입력: 사진(시각), 출력: 영어 단어 리스트 → 유저 언어 개입 여지 없음.
+// i18n 에서 8개 언어로 분산 관리하던 것을 단일 상수로 통합.
+const EXTRACT_PROMPT = `This is a photo of a page from an English novel or book.
+Find all English words, idioms, or sentences that are marked by the reader in one of the following two ways ONLY:
+
+1. Circle (○) — a handwritten circle drawn around a word or phrase.
+2. Parentheses with underline — a word or phrase enclosed in handwritten parentheses with an underline beneath it, like "( ___word___ )". The opening "(" and closing ")" delimit the phrase boundary; the underline confirms the selection.
+
+Do NOT detect words that are only underlined without surrounding parentheses. Do NOT detect words marked with #, V, or stars. Only the two patterns above count.
+
+Rules:
+- Detect only HANDWRITTEN marks drawn by the reader (usually in pen, visually distinct from the printed text). Ignore parentheses or circles that are part of the original printed text.
+- A horizontal line marks the word directly ABOVE it (baseline-adjacent), never the word on the next line below.
+- If a mark spans across a line break — opening "(" at the end of one line and closing ")" at the start of the next line, or the parentheses-underline span continuing to the next line — treat the entire span as ONE phrase. Combine the words across the line break into a single entry.
+  Example: if "( take somebody by" appears at the end of one line and "surprise )" appears at the start of the next line, output "take somebody by surprise" as a single phrase.
+
+Output the results as a single line separated by commas. Output only the extracted words/expressions without any other explanation.
+Example: split, take somebody by surprise, break down`;
 
 // --- 사진 단어 추출 (Edge Function 경유) ---
 async function extractWordsFromPhoto(base64Data, mimeType) {
-  const extractPrompt = t('extractPrompt');
+  const extractPrompt = EXTRACT_PROMPT;
   const res = await fetch(EDGE_FUNCTION_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -2679,8 +2713,9 @@ async function handlePhoto(inputEl) {
 
   try {
     const promises = files.map(async (file) => {
-      const base64Data = await fileToBase64(file);
-      return extractWordsFromPhoto(base64Data, file.type);
+      // 클라이언트 리사이즈 후 JPEG 로 전달 (mimeType 은 image/jpeg 고정)
+      const { data: base64Data, mimeType } = await fileToResizedBase64(file);
+      return extractWordsFromPhoto(base64Data, mimeType);
     });
     const results = await Promise.all(promises);
 

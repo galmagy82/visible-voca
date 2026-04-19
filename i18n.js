@@ -42,7 +42,7 @@ const I18N = {
 
     /* 탭 */
     tabSearch: '일반검색',
-    tabPhoto: '사진에서 검색',
+    tabPhoto: '사진 검색',
     tabWordbook: '단어장',
     tabQuiz: '퀴즈',
     tabMyRecord: 'My',
@@ -73,10 +73,11 @@ const I18N = {
     listenPronunciation: '발음 듣기',
     imageAlt: '의 느낌을 표현한 이미지',
 
-    /* 사진에서 검색 */
+    /* 사진 검색 */
     uploadPhoto: '📂 사진 올리기',
-    photoGuideTitle: '사진에서 검색',
-    photoGuideBody: '책을 읽다가 모르는 단어나 표현에 동그라미(○), 밑줄(_), 또는 #표시를 해두세요.<br>표시한 페이지의 사진을 찍어 📂 버튼을 눌러서 올리세요.<br>표시된 단어를 자동으로 찾아서 검색합니다.<br><br>사진은 여러 장을 한꺼번에 올릴 수 있어요.',
+    photoGuideBody: '책에서 검색하고 싶은 부분을 위 두 가지 방법 중 편한 대로 표시하세요.<br><br>표시한 페이지의 사진을 찍어 📂 버튼을 눌러서 올리세요.<br>사진은 여러 장을 한꺼번에 올릴 수 있어요.',
+    photoGuideExCircle: '① 동그라미로 감싸기',
+    photoGuideExParens: '② 괄호 + 밑줄로 감싸기',
     photoGuideCircle: '동그라미',
     photoGuideUnderline: '밑줄',
     photoGuideHash: '#표시',
@@ -169,12 +170,6 @@ const I18N = {
     language: '언어',
     langKo: '한국어',
     langEn: 'English',
-
-    /* 사진 분석 프롬프트 */
-    extractPrompt: `이 사진은 영어 소설(Novel)의 페이지를 찍은 것입니다.
-사진에서 #표시, #표시와 동그라미, 또는 #표시와 밑줄로 표시된 영어 단어, 숙어, 또는 문장을 모두 찾아주세요.
-결과는 쉼표로 구분하여 한 줄로 출력해주세요. 다른 설명 없이 추출된 단어/표현만 출력하세요.
-예시: split, break down, take off`,
 
     /* 플레이스홀더 */
     geminiKeyPlaceholder: 'AIza... 형태의 Gemini API 키',
@@ -299,8 +294,9 @@ const I18N = {
 
     /* Photo search */
     uploadPhoto: '📂 Upload Photo',
-    photoGuideTitle: 'Photo Search',
-    photoGuideBody: 'While reading, mark unknown words with circles (○), underlines (_), or # marks.<br>Take a photo of the page and tap 📂 to upload.<br>Marked words will be found and searched automatically.<br><br>You can upload multiple photos at once.',
+    photoGuideBody: 'Mark anything you want to search using either method above.<br><br>Take a photo of the page and tap 📂 to upload.<br>You can upload multiple photos at once.',
+    photoGuideExCircle: '① Circle',
+    photoGuideExParens: '② Parentheses + underline',
     photoGuideCircle: 'Circle',
     photoGuideUnderline: 'Underline',
     photoGuideHash: '# Mark',
@@ -393,12 +389,6 @@ const I18N = {
     language: 'Language',
     langKo: '한국어',
     langEn: 'English',
-
-    /* Photo extraction prompt */
-    extractPrompt: `This is a photo of a page from an English novel.
-Find all English words, phrases, or sentences marked with #, # with circles, or # with underlines.
-Output them separated by commas in a single line. Only output the extracted words/expressions, nothing else.
-Example: split, break down, take off`,
 
     /* Placeholders */
     geminiKeyPlaceholder: 'Gemini API key (AIza...)',
@@ -523,8 +513,9 @@ Example: split, break down, take off`,
 
     /* 写真検索 */
     uploadPhoto: '📂 写真をアップロード',
-    photoGuideTitle: '写真から検索',
-    photoGuideBody: '読書中に知らない単語や表現に丸（○）、下線（_）、または#マークを付けてください。<br>マークしたページの写真を撮って📂ボタンで送信してください。<br>マークされた単語を自動で見つけて検索します。<br><br>複数の写真を一度にアップロードできます。',
+    photoGuideBody: '検索したい部分を上の2つの方法のどちらかで印をつけてください。<br><br>マークしたページの写真を撮って📂ボタンで送信してください。<br>複数の写真を一度にアップロードできます。',
+    photoGuideExCircle: '① 丸で囲む',
+    photoGuideExParens: '② 括弧＋下線で囲む',
     photoGuideCircle: '丸',
     photoGuideUnderline: '下線',
     photoGuideHash: '#マーク',
@@ -617,12 +608,6 @@ Example: split, break down, take off`,
     language: '言語',
     langKo: '한국어',
     langEn: 'English',
-
-    /* 写真解析プロンプト */
-    extractPrompt: `これは英語の小説のページを撮影した写真です。
-写真の中で#マーク、#マークと丸、または#マークと下線で印された英単語、熟語、または文を全て見つけてください。
-結果はカンマで区切って1行で出力してください。他の説明なしに抽出した単語/表現のみを出力してください。
-例：split, break down, take off`,
 
     /* プレースホルダー */
     geminiKeyPlaceholder: 'Gemini APIキー（AIza...）',
@@ -747,8 +732,9 @@ Example: split, break down, take off`,
 
     /* 拍照搜索 */
     uploadPhoto: '📂 上传照片',
-    photoGuideTitle: '拍照搜索',
-    photoGuideBody: '阅读时在不认识的单词或表达上画圈（○）、下划线（_）或#标记。<br>拍下标记页面的照片，点击📂按钮上传。<br>系统会自动找到标记的单词并搜索。<br><br>可以一次上传多张照片。',
+    photoGuideBody: '请用上述两种方法中任意一种标记想要检索的部分。<br><br>拍下标记页面的照片，点击📂按钮上传。<br>可以一次上传多张照片。',
+    photoGuideExCircle: '① 画圈',
+    photoGuideExParens: '② 括号 + 下划线',
     photoGuideCircle: '画圈',
     photoGuideUnderline: '下划线',
     photoGuideHash: '#标记',
@@ -842,11 +828,6 @@ Example: split, break down, take off`,
     langKo: '한국어',
     langEn: 'English',
 
-    /* 照片提取提示 */
-    extractPrompt: `这是一张英语小说页面的照片。
-请找出照片中用#标记、#标记加圈或#标记加下划线标注的所有英语单词、短语或句子。
-结果用逗号分隔，在一行中输出。只输出提取的单词/表达，不要其他说明。
-示例：split, break down, take off`,
 
     /* 占位符 */
     geminiKeyPlaceholder: 'Gemini API密钥（AIza...）',
@@ -971,8 +952,9 @@ Example: split, break down, take off`,
 
     /* Búsqueda con foto */
     uploadPhoto: '📂 Subir foto',
-    photoGuideTitle: 'Buscar con foto',
-    photoGuideBody: 'Mientras lees, marca las palabras desconocidas con círculos (○), subrayado (_) o marcas #.<br>Toma una foto de la página marcada y pulsa 📂 para subirla.<br>Las palabras marcadas se encontrarán y buscarán automáticamente.<br><br>Puedes subir varias fotos a la vez.',
+    photoGuideBody: 'Marca lo que quieras buscar usando cualquiera de los dos métodos de arriba.<br><br>Toma una foto de la página y pulsa 📂 para subirla.<br>Puedes subir varias fotos a la vez.',
+    photoGuideExCircle: '① Círculo',
+    photoGuideExParens: '② Paréntesis + subrayado',
     photoGuideCircle: 'Círculo',
     photoGuideUnderline: 'Subrayado',
     photoGuideHash: 'Marca #',
@@ -1065,12 +1047,6 @@ Example: split, break down, take off`,
     language: 'Idioma',
     langKo: '한국어',
     langEn: 'English',
-
-    /* Prompt de extracción */
-    extractPrompt: `Esta es una foto de una página de una novela en inglés.
-Encuentra todas las palabras, frases u oraciones en inglés marcadas con #, # con círculos, o # con subrayado.
-Muestra los resultados separados por comas en una sola línea. Solo muestra las palabras/expresiones extraídas, nada más.
-Ejemplo: split, break down, take off`,
 
     /* Placeholders */
     geminiKeyPlaceholder: 'Clave API de Gemini (AIza...)',
@@ -1195,8 +1171,9 @@ Ejemplo: split, break down, take off`,
 
     /* Tìm từ ảnh */
     uploadPhoto: '📂 Tải ảnh lên',
-    photoGuideTitle: 'Tìm từ ảnh',
-    photoGuideBody: 'Khi đọc sách, đánh dấu các từ chưa biết bằng khoanh tròn (○), gạch chân (_) hoặc dấu #.<br>Chụp ảnh trang đã đánh dấu và nhấn 📂 để tải lên.<br>Các từ được đánh dấu sẽ tự động được tìm kiếm.<br><br>Bạn có thể tải nhiều ảnh cùng lúc.',
+    photoGuideBody: 'Đánh dấu phần bạn muốn tìm kiếm bằng một trong hai cách ở trên.<br><br>Chụp ảnh trang đã đánh dấu và nhấn 📂 để tải lên.<br>Bạn có thể tải nhiều ảnh cùng lúc.',
+    photoGuideExCircle: '① Khoanh tròn',
+    photoGuideExParens: '② Ngoặc + gạch chân',
     photoGuideCircle: 'Khoanh tròn',
     photoGuideUnderline: 'Gạch chân',
     photoGuideHash: 'Dấu #',
@@ -1289,12 +1266,6 @@ Ejemplo: split, break down, take off`,
     language: 'Ngôn ngữ',
     langKo: '한국어',
     langEn: 'English',
-
-    /* Prompt trích xuất */
-    extractPrompt: `Đây là ảnh chụp trang sách tiểu thuyết tiếng Anh.
-Tìm tất cả từ, cụm từ hoặc câu tiếng Anh được đánh dấu bằng #, # với khoanh tròn, hoặc # với gạch chân.
-Xuất kết quả phân cách bằng dấu phẩy trên một dòng. Chỉ xuất từ/cụm từ, không giải thích thêm.
-Ví dụ: split, break down, take off`,
 
     /* Placeholder */
     geminiKeyPlaceholder: 'Khóa API Gemini (AIza...)',
@@ -1419,8 +1390,9 @@ Ví dụ: split, break down, take off`,
 
     /* ค้นจากรูป */
     uploadPhoto: '📂 อัปโหลดรูป',
-    photoGuideTitle: 'ค้นจากรูป',
-    photoGuideBody: 'ขณะอ่านหนังสือ ให้ทำเครื่องหมายคำที่ไม่รู้ด้วยวงกลม (○) ขีดเส้นใต้ (_) หรือเครื่องหมาย #<br>ถ่ายรูปหน้าที่ทำเครื่องหมาย แล้วกด 📂 เพื่ออัปโหลด<br>ระบบจะค้นหาคำที่ทำเครื่องหมายไว้อัตโนมัติ<br><br>สามารถอัปโหลดหลายรูปพร้อมกันได้',
+    photoGuideBody: 'ทำเครื่องหมายส่วนที่คุณต้องการค้นหาด้วยวิธีใดวิธีหนึ่งจาก 2 วิธีด้านบน<br><br>ถ่ายรูปหน้าที่ทำเครื่องหมาย แล้วกด 📂 เพื่ออัปโหลด<br>สามารถอัปโหลดหลายรูปพร้อมกันได้',
+    photoGuideExCircle: '① วงกลม',
+    photoGuideExParens: '② วงเล็บ + ขีดเส้นใต้',
     photoGuideCircle: 'วงกลม',
     photoGuideUnderline: 'ขีดเส้นใต้',
     photoGuideHash: 'เครื่องหมาย #',
@@ -1513,12 +1485,6 @@ Ví dụ: split, break down, take off`,
     language: 'ภาษา',
     langKo: '한국어',
     langEn: 'English',
-
-    /* Prompt การแยกคำ */
-    extractPrompt: `นี่คือรูปถ่ายหน้าหนังสือนิยายภาษาอังกฤษ
-ค้นหาคำ วลี หรือประโยคภาษาอังกฤษทั้งหมดที่ถูกทำเครื่องหมายด้วย # เครื่องหมาย # พร้อมวงกลม หรือ # พร้อมขีดเส้นใต้
-แสดงผลคั่นด้วยเครื่องหมายจุลภาคในบรรทัดเดียว แสดงเฉพาะคำ/สำนวนที่ดึงออกมาเท่านั้น
-ตัวอย่าง: split, break down, take off`,
 
     /* Placeholder */
     geminiKeyPlaceholder: 'คีย์ API Gemini (AIza...)',
@@ -1643,8 +1609,9 @@ Ví dụ: split, break down, take off`,
 
     /* Busca por foto */
     uploadPhoto: '📂 Enviar foto',
-    photoGuideTitle: 'Buscar por foto',
-    photoGuideBody: 'Ao ler, marque palavras desconhecidas com círculos (○), sublinhados (_) ou marcas #.<br>Tire uma foto da página marcada e toque em 📂 para enviar.<br>As palavras marcadas serão encontradas e pesquisadas automaticamente.<br><br>Você pode enviar várias fotos de uma vez.',
+    photoGuideBody: 'Marque qualquer parte que queira pesquisar usando um dos dois métodos acima.<br><br>Tire uma foto da página e toque em 📂 para enviar.<br>Você pode enviar várias fotos de uma vez.',
+    photoGuideExCircle: '① Círculo',
+    photoGuideExParens: '② Parênteses + sublinhado',
     photoGuideCircle: 'Círculo',
     photoGuideUnderline: 'Sublinhado',
     photoGuideHash: 'Marca #',
@@ -1737,12 +1704,6 @@ Ví dụ: split, break down, take off`,
     language: 'Idioma',
     langKo: '한국어',
     langEn: 'English',
-
-    /* Prompt de extração */
-    extractPrompt: `Esta é uma foto de uma página de um romance em inglês.
-Encontre todas as palavras, frases ou sentenças em inglês marcadas com #, # com círculos ou # com sublinhados.
-Apresente os resultados separados por vírgulas em uma linha. Apenas exiba as palavras/expressões extraídas, nada mais.
-Exemplo: split, break down, take off`,
 
     /* Placeholders */
     geminiKeyPlaceholder: 'Chave API Gemini (AIza...)',

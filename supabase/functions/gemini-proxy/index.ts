@@ -308,7 +308,14 @@ async function callGeminiExtract(base64Data: string, mimeType: string, extractPr
           { inlineData: { mimeType, data: base64Data } },
         ],
       }],
-      generationConfig: { temperature: 0.2, maxOutputTokens: 1024 },
+      // thinkingBudget: 0 → Gemini 2.5 Flash 의 thinking mode 비활성화.
+      // 단순 OCR/마크 검출에는 추론이 불필요하며, thinking 토큰 생성에
+      // 2~5초가 소요되므로 꺼서 응답속도를 단축한다.
+      generationConfig: {
+        temperature: 0.2,
+        maxOutputTokens: 1024,
+        thinkingConfig: { thinkingBudget: 0 },
+      },
     }),
   })
   if (!res.ok) {
