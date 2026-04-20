@@ -220,7 +220,8 @@
     max-width: 320px;
     margin: 16px auto 0;
   }
-  /* 사진 검색 — 실제 마킹 예시 이미지 2장을 세로로 나란히 표시 */
+  /* 사진 검색 — 두 가지 마킹 방법을 SVG 일러스트로 표시
+     (실사진은 수평/조명 편차가 있어 가독성이 떨어져 일러스트로 교체) */
   .photo-guide-examples {
     display: flex;
     flex-direction: column;
@@ -231,11 +232,13 @@
   .photo-guide-examples figure {
     margin: 0;
   }
-  .photo-guide-examples img {
+  .photo-guide-examples svg {
     width: 100%;
+    height: auto;
     border-radius: 8px;
     border: 1px solid #E5E2DE;
     display: block;
+    background: #FAF7F0;
   }
   .photo-guide-examples figcaption {
     font-size: 0.85rem;
@@ -1280,14 +1283,39 @@
       </div>
       <!-- 가이드 -->
       <div class="guide" id="guidePhoto">
-        <!-- 가이드 예시: 실제 책에 표시한 두 가지 마킹 방법 -->
+        <!-- 가이드 예시: 두 가지 마킹 방법을 SVG 로 표시
+             책 한 줄(세리프 회색 텍스트) + 연필(흑연 회색)로 그린 수기 마크를 오버레이 -->
         <div class="photo-guide-examples">
+          <!-- 공용 필터: feTurbulence + feDisplacementMap 으로 연필의
+               미세한 떨림/질감을 표현. 두 SVG 모두 url(#pencilRough) 로 참조 -->
+          <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+            <defs>
+              <filter id="pencilRough" x="-5%" y="-5%" width="110%" height="110%">
+                <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3" result="noise"/>
+                <feDisplacementMap in="SourceGraphic" in2="noise" scale="0.9"/>
+              </filter>
+            </defs>
+          </svg>
           <figure>
-            <img src="assets/guide-circle.png" alt="circle example">
+            <!-- ① 동그라미: 'panicky' 단어를 타원으로 감싸는 예시 -->
+            <svg viewBox="0 0 360 70" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="circle mark example">
+              <text x="24" y="44" font-family="Georgia, 'Times New Roman', serif" font-size="22" fill="#3A3733">Feeling panicky, KC studied</text>
+              <!-- 연필 동그라미: 흑연 회색(#4A4641), 얇은 선, 투명도 0.75, 러프 필터 -->
+              <ellipse cx="140" cy="38" rx="43" ry="19" fill="none" stroke="#4A4641" stroke-width="1.8" transform="rotate(-2 140 38)" opacity="0.75" filter="url(#pencilRough)"/>
+            </svg>
             <figcaption data-i18n="photoGuideExCircle">① 동그라미로 감싸기</figcaption>
           </figure>
           <figure>
-            <img src="assets/guide-parens.png" alt="parentheses and underline example">
+            <!-- ② 괄호 + 밑줄: 'he took a few gulps' 구절을 ( ___ ) 로 감싸는 예시 -->
+            <svg viewBox="0 0 360 70" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="parentheses and underline mark example">
+              <text x="24" y="44" font-family="Georgia, 'Times New Roman', serif" font-size="22" fill="#3A3733">After he took a few gulps,</text>
+              <!-- 왼쪽 괄호 ( — 'he' 앞 -->
+              <path d="M 74 24 Q 64 44 74 62" stroke="#4A4641" stroke-width="1.8" fill="none" stroke-linecap="round" opacity="0.75" filter="url(#pencilRough)"/>
+              <!-- 오른쪽 괄호 ) — 'gulps,' 뒤 (문장 끝) -->
+              <path d="M 280 24 Q 290 44 280 62" stroke="#4A4641" stroke-width="1.8" fill="none" stroke-linecap="round" opacity="0.75" filter="url(#pencilRough)"/>
+              <!-- 밑줄 (살짝 굽은 라인) -->
+              <path d="M 80 54 Q 180 58 276 54" stroke="#4A4641" stroke-width="1.8" fill="none" stroke-linecap="round" opacity="0.75" filter="url(#pencilRough)"/>
+            </svg>
             <figcaption data-i18n="photoGuideExParens">② 괄호 + 밑줄로 감싸기</figcaption>
           </figure>
         </div>
