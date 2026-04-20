@@ -2696,7 +2696,11 @@ async function fileToResizedBase64(file, maxDim = 1536, quality = 0.85) {
 // --- 사진 단어 추출용 프롬프트 (언어 무관 — Gemini 에 항상 영어로 전달) ---
 // 입력: 사진(시각), 출력: 영어 단어 리스트 → 유저 언어 개입 여지 없음.
 // i18n 에서 8개 언어로 분산 관리하던 것을 단일 상수로 통합.
-const EXTRACT_PROMPT = `This is a photo of a page from an English novel or book.
+//
+// v1 프롬프트 — 롤백용으로 보관.
+//   문제: "Do NOT ..." 부정 지시가 유일한 방어선이라 밑줄 단독 단어가 그대로 통과되거나,
+//   마크 없는 페이지에서 주변 단어를 끌어오는 환각이 발생함.
+const EXTRACT_PROMPT_V1 = `This is a photo of a page from an English novel or book.
 Find all English words, idioms, or sentences that are marked by the reader in one of the following two ways ONLY:
 
 1. Circle (○) — a handwritten circle drawn around a word or phrase.
@@ -2712,6 +2716,50 @@ Rules:
 
 Output the results as a single line separated by commas. Output only the extracted words/expressions without any other explanation.
 Example: split, take somebody by surprise, break down`;
+
+// v2 프롬프트 (현재 활성) — 오검출 3대 원인을 구조적으로 차단:
+//   1) 부정 지시 → 긍정 AND 조건 체크리스트. Pattern B 는 "( + ) + 밑줄" 세 요소 전부가 보여야만 통과.
+//   2) "마크 없으면 빈 응답" 을 명시적으로 허용 → 환각으로 주변 단어 끌어오는 동작 차단.
+//   3) Few-shot 예시(정답 2개 + 오답 3개, 특히 "밑줄만 있는 단어 제외" 오답 예시 포함) 추가.
+// 주의: Edge Function 이 thinkingBudget=0 으로 호출하므로(속도 최적화) "단계별로 생각하라" 류 지시는 효과 없음.
+//       규칙은 순수 체크리스트·패턴 정의 형태로만 유지할 것.
+// 롤백: 오검출 대신 미검출(찾아야 할 단어를 놓침) 이 더 문제가 되면 아래 EXTRACT_PROMPT 에
+//       EXTRACT_PROMPT_V1 을 할당하면 즉시 이전 버전으로 복구됨. 프론트만 배포하면 되고 Edge Function 재배포 불필요.
+const EXTRACT_PROMPT = `This is a photo of a page from an English novel or book. Your task is to extract words, idioms, or sentences that a reader has hand-marked on the page.
+
+A word qualifies for extraction ONLY if it matches one of these two exact patterns:
+
+Pattern A — Handwritten circle:
+  A closed handwritten loop drawn in pen around a word or phrase, fully enclosing it.
+
+Pattern B — Handwritten parentheses AND handwritten underline (ALL THREE elements are required):
+  (1) A handwritten "(" immediately to the LEFT of the phrase, AND
+  (2) A handwritten ")" immediately to the RIGHT of the phrase, AND
+  (3) A handwritten underline directly beneath the phrase.
+  If ANY ONE of these three elements is missing, the phrase does NOT qualify. A standalone underline is NOT a valid mark. A standalone "(" or standalone ")" is NOT a valid mark. Parentheses without an underline is NOT a valid mark.
+
+Valid marks are HANDWRITTEN only. A mark counts as handwritten when its ink color, stroke thickness, or slight wobble clearly differs from the printed text of the book. Printed parentheses, italics, quotation marks, brackets, or punctuation that belong to the original typesetting are NEVER valid marks.
+
+Underline attachment: an underline belongs to the word directly ABOVE it (baseline-adjacent), never to the word on the next line below.
+
+Line-break handling: if Pattern B spans a line break — "(" at the end of one line and ")" at the start of the next line, with underlines beneath the enclosed words on both lines — combine the enclosed text into ONE entry.
+  e.g. "( take somebody by" + "surprise )" → "take somebody by surprise"
+
+If the page contains no qualifying marks, output an empty response — absolutely nothing, not a dash, not a word, not a sentence like "no words found". Never guess. Never include words that do not carry a complete mark.
+
+Output format: one single line of extracted entries separated by commas, and nothing else. No explanation, no preamble, no quotes, no trailing period.
+
+Reference examples:
+  Input: page shows handwritten "( split )" with a handwritten underline under "split"
+    → Output: split
+  Input: page shows handwritten "( take somebody by" at end of line 3 and "surprise )" at start of line 4, with handwritten underlines beneath both
+    → Output: take somebody by surprise
+  Input: page shows the word "beautiful" with only a handwritten underline beneath it, no parentheses
+    → Do NOT output "beautiful". This fails Pattern B because elements (1) and (2) are missing.
+  Input: page shows "(note)" printed in the same ink color and font as the surrounding text (no handwriting)
+    → Do NOT output "note". The parentheses are printed, not handwritten.
+  Input: page has no handwritten marks anywhere
+    → Output an empty response (produce no characters at all).`;
 
 // --- 사진 단어 추출 (Edge Function 경유) ---
 async function extractWordsFromPhoto(base64Data, mimeType) {
