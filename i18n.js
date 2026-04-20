@@ -42,7 +42,7 @@ const I18N = {
 
     /* 탭 */
     tabSearch: '일반검색',
-    tabPhoto: '사진 검색',
+    tabPhoto: '사진검색',
     tabWordbook: '단어장',
     tabQuiz: '퀴즈',
     tabMyRecord: 'My',
