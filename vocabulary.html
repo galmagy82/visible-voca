@@ -1479,7 +1479,8 @@ async function autoAddIfEnabled(targetEl) {
   if (!_authUser?.id) return;
   const data = window._lastWbData;
   if (!data) return;
-  const entry = await getWordbookEntry(data.word);
+  /* 교정본이 있으면 교정본을 기준으로 조회 (예: 'drinke' → 'drink') */
+  const entry = await getWordbookEntry(data.corrected || data.word);
   if (entry) return;
   const btn = targetEl.querySelector('.add-wordbook-btn[data-wb-word]');
   setTimeout(() => addToWordbook(data, btn), 2000);
@@ -2873,7 +2874,8 @@ async function bindWbButton(container, wordOverride) {
   }
   if (!data) return;
 
-  const entry = await getWordbookEntry(data.word);
+  /* 교정본이 있으면 교정본을 기준으로 조회 */
+  const entry = await getWordbookEntry(data.corrected || data.word);
   if (entry) {
     btn.textContent = t('addedToWordbook');
     btn.classList.add('added');
@@ -2891,13 +2893,17 @@ async function addToWordbook(data, btnEl) {
     console.warn('미인증 사용자 — 단어장 추가 불가');
     return;
   }
+  /* 오타 교정 결과가 있으면 교정본을 기준 단어로 저장 (예: 'drinke' → 'drink').
+     저장된 row 의 corrected 필드는 비워 둬, 단어장에서 다시 꺼내 렌더링할 때
+     "교정됨" 안내가 반복 노출되지 않도록 한다. */
+  const primaryWord = (data.corrected || data.word).toLowerCase();
   const row = {
     user_id: userId,
-    word: data.word.toLowerCase(),
+    word: primaryWord,
     pos: data.pos || '',
     ipa: data.ipa || '',
     cefr: data.cefr || '',
-    corrected: data.corrected || '',
+    corrected: '',
     description: data.description || '',
     examples: data.examples || '',
     /* 동사 3단변화 스냅샷 — 비동사는 '' */
