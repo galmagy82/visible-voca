@@ -232,7 +232,10 @@
   .photo-guide-examples figure {
     margin: 0;
   }
-  .photo-guide-examples svg {
+  /* `figure` 로 한정: 상단의 필터 정의용 숨김 <svg>(width=0/height=0, position:absolute)
+     가 이 규칙에 걸려 width:100% + border 로 뷰포트 전체를 가로지르는 회색 선으로
+     렌더되던 문제를 차단. 예문 2개의 SVG 만 figure 안에 있으므로 그 둘에만 스타일 적용. */
+  .photo-guide-examples figure svg {
     width: 100%;
     height: auto;
     border-radius: 8px;
