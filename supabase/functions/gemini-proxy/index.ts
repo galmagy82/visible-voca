@@ -295,8 +295,13 @@ async function callGeminiImage(word: string, sceneEn: string, apiKey: string) {
   return null
 }
 
-/* Gemini 사진 단어 추출 호출 */
-async function callGeminiExtract(base64Data: string, mimeType: string, extractPrompt: string, apiKey: string) {
+/* Gemini 사진 단어 추출 호출
+   thinkingBudget:
+     - 0   → thinking off (마크 모드: 단순 패턴 검출이라 추론 불필요, 응답속도 우선)
+     - -1  → dynamic (AI 자동 검색 모드: 난이도 판단·ZPD 선별에 추론 필요. 모델이 자동 할당)
+     - 정수 → 상한 지정
+   프론트가 값을 안 보내면 기존 동작(0) 유지. */
+async function callGeminiExtract(base64Data: string, mimeType: string, extractPrompt: string, apiKey: string, thinkingBudget: number = 0) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`
   const res = await fetch(url, {
     method: "POST",
@@ -308,13 +313,10 @@ async function callGeminiExtract(base64Data: string, mimeType: string, extractPr
           { inlineData: { mimeType, data: base64Data } },
         ],
       }],
-      // thinkingBudget: 0 → Gemini 2.5 Flash 의 thinking mode 비활성화.
-      // 단순 OCR/마크 검출에는 추론이 불필요하며, thinking 토큰 생성에
-      // 2~5초가 소요되므로 꺼서 응답속도를 단축한다.
       generationConfig: {
         temperature: 0.2,
         maxOutputTokens: 1024,
-        thinkingConfig: { thinkingBudget: 0 },
+        thinkingConfig: { thinkingBudget },
       },
     }),
   })
@@ -358,7 +360,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json()
-    const { action, userId, prompt, word, sceneEn, base64Data, mimeType, extractPrompt } = body
+    const { action, userId, prompt, word, sceneEn, base64Data, mimeType, extractPrompt, thinkingBudget } = body
 
     if (!userId || !action) {
       return new Response(
@@ -401,14 +403,16 @@ Deno.serve(async (req) => {
         break
       }
       case "extract": {
-        /* 사진에서 단어 추출 */
+        /* 사진에서 단어 추출.
+           thinkingBudget: 프론트가 안 보내면 기본 0 (마크 모드 호환). AI 모드는 -1 전달. */
         if (!base64Data || !mimeType || !extractPrompt) {
           return new Response(
             JSON.stringify({ error: "base64Data, mimeType, extractPrompt are required" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           )
         }
-        const extracted = await callGeminiExtract(base64Data, mimeType, extractPrompt, apiKey)
+        const budget = typeof thinkingBudget === "number" ? thinkingBudget : 0
+        const extracted = await callGeminiExtract(base64Data, mimeType, extractPrompt, apiKey, budget)
         result = { text: extracted }
         break
       }

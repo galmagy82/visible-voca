@@ -3125,13 +3125,49 @@ Reference examples:
   Input: page has no handwritten marks anywhere
     → Output an empty response (produce no characters at all).`;
 
+// --- AI 자동 검색 모드 프롬프트 생성기 ---
+// 사용자의 GE (Renaissance STAR Reading Grade Equivalent) 점수를 받아,
+// 그 학습자의 ZPD (GE ~ GE+1.5) 범위에 해당하는 단어를 책 사진에서 선별하도록 지시한다.
+// 선별 기준·제외 조건·출력 형식(쉼표 구분 단일 라인)은 마크 모드와 동일 포맷 유지 → 기존 렌더링 코드 재사용.
+function buildExtractPromptAi(geScore) {
+  return `This is a photo of a page from an English book (novel, article, textbook, etc.).
+Your task is to identify English words on this page that a learner at Grade Equivalent (GE) ${geScore} would benefit from studying.
+
+GE score reference (Renaissance STAR Reading):
+- GE 1.0–3.0: early elementary (simple everyday words)
+- GE 4.0–6.0: upper elementary (common topical vocabulary, basic collocations)
+- GE 7.0–9.0: middle school (academic/abstract words, figurative usage)
+- GE 10.0–12.0: high school (sophisticated vocabulary, literary/idiomatic)
+- GE 13.0+: college-level (specialized, rare, or nuanced vocabulary)
+
+Selection rules:
+1. Pick words in the learner's Zone of Proximal Development — roughly GE ${geScore} to GE ${geScore}+1.5. Words clearly below this range are too easy and must NOT be selected. Words far above are unlikely to be acquired and should not be selected either.
+2. Prefer content words: nouns, verbs, adjectives, adverbs. Avoid function words (articles, prepositions, auxiliaries) unless used in an advanced/idiomatic sense.
+3. Avoid proper nouns (names of people, places), numbers, and exclamations.
+4. Deduplicate by lemma.
+5. Include short multi-word expressions (2–4 words) when clearly idiomatic or a fixed collocation at the target level.
+6. Output between 5 and 15 entries.
+
+If the image is not a readable English page, or no words of appropriate difficulty are present, output an empty response — absolutely nothing, not a dash, not a word, not a sentence like "no words found".
+
+Output format: one single line of entries separated by commas, and nothing else. No explanation, no preamble, no quotes, no trailing period.
+
+Example (GE 7.0):
+panicky, took a few gulps, barely noticed, skeptical, drift off`;
+}
+
 // --- 사진 단어 추출 (Edge Function 경유) ---
-async function extractWordsFromPhoto(base64Data, mimeType) {
-  const extractPrompt = EXTRACT_PROMPT;
+// mode: 'marked' (기본, 마크된 것만 추출) | 'ai' (GE 기반 자동 선별)
+// geScore: AI 모드일 때만 사용 (마크 모드는 무시)
+// thinkingBudget: 마크 모드 = 0 (속도 우선), AI 모드 = -1 (dynamic, 난이도 판단에 필요)
+async function extractWordsFromPhoto(base64Data, mimeType, mode = 'marked', geScore = null) {
+  const isAi = mode === 'ai';
+  const extractPrompt = isAi ? buildExtractPromptAi(geScore) : EXTRACT_PROMPT;
+  const thinkingBudget = isAi ? -1 : 0;
   const res = await fetch(EDGE_FUNCTION_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'extract', userId: getUserId(), base64Data, mimeType, extractPrompt })
+    body: JSON.stringify({ action: 'extract', userId: getUserId(), base64Data, mimeType, extractPrompt, thinkingBudget })
   });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
@@ -3165,11 +3201,16 @@ async function handlePhoto(inputEl) {
   wordListEl.innerHTML = '';
   resultPhoto.innerHTML = `<div class="loading">${files.length}${t('extractingWords')}</div>`;
 
+  /* AI 모드에서는 GE 점수를 한 번 조회해 모든 병렬 호출에 재사용 (중복 쿼리 방지).
+     handlePhoto 진입 시점에 이미 null 가드를 통과했으므로 여기서는 number 가 보장됨. */
+  const modeForExtract = _photoMode;
+  const geForExtract = modeForExtract === 'ai' ? await getMyGeScore() : null;
+
   try {
     const promises = files.map(async (file) => {
       // 클라이언트 리사이즈 후 JPEG 로 전달 (mimeType 은 image/jpeg 고정)
       const { data: base64Data, mimeType } = await fileToResizedBase64(file);
-      return extractWordsFromPhoto(base64Data, mimeType);
+      return extractWordsFromPhoto(base64Data, mimeType, modeForExtract, geForExtract);
     });
     const results = await Promise.all(promises);
 
