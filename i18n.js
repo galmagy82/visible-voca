@@ -57,8 +57,8 @@ const I18N = {
     settingsImageStyle: '스타일',
     settingsImageText: '넣을 문구',
     settingsComingSoon: '준비중',
-    settingsLevelGroup: '단어 레벨 설정',
-    settingsGeHint: '* Renaissance STAR Reading 의 GE 점수를 설정하면 사진 검색 AI 자동 추천이 활성화됩니다.',
+    settingsLevelGroup: 'GE 레벨 설정',
+    settingsGeHint: '* Renaissance STAR Reading 의 GE 점수를 설정하면 사진검색에서 AI 자동 검색이 활성화됩니다.',
     geUnset: '미설정',
     geLoginRequired: '로그인 필요',
 
@@ -79,7 +79,12 @@ const I18N = {
 
     /* 사진 검색 */
     uploadPhoto: '📂 사진 올리기',
+    photoModeMarked: '마크 검색',
+    photoModeAi: 'AI 자동 검색',
     photoGuideBody: '책에서 검색하고 싶은 부분을 위 두 가지 방법 중 편한 대로 표시하세요.<br><br>표시한 페이지의 사진을 찍어 📂 버튼을 눌러서 올리세요.<br>사진은 여러 장을 한꺼번에 올릴 수 있어요.',
+    photoGuideAiBody: 'AI가 GE 레벨에 맞는 단어들을 골라 줍니다.<br><br>검색할 페이지의 사진을 찍어 📂 버튼을 눌러서 올리세요.<br>사진은 여러 장을 한꺼번에 올릴 수 있어요.',
+    photoGeSetBtn: 'GE 레벨 먼저 설정하기',
+    photoGeRequiredMsg: 'AI 자동 검색은 GE 레벨 설정이 필요합니다.\n설정하러 갈까요?',
     photoGuideExCircle: '① 동그라미로 감싸기',
     photoGuideExParens: '② 괄호 + 밑줄로 감싸기',
     photoGuideCircle: '동그라미',
@@ -281,8 +286,8 @@ const I18N = {
     settingsImageStyle: 'Style',
     settingsImageText: 'Caption',
     settingsComingSoon: 'Coming soon',
-    settingsLevelGroup: 'Word Level',
-    settingsGeHint: '* Setting your Renaissance STAR Reading GE score enables AI auto-recommendations in photo search.',
+    settingsLevelGroup: 'GE Level',
+    settingsGeHint: '* Setting your Renaissance STAR Reading GE score enables AI Auto Search in photo search.',
     geUnset: 'Not set',
     geLoginRequired: 'Login required',
 
@@ -302,7 +307,12 @@ const I18N = {
 
     /* Photo search */
     uploadPhoto: '📂 Upload Photo',
+    photoModeMarked: 'Mark Search',
+    photoModeAi: 'AI Auto Search',
     photoGuideBody: 'Mark anything you want to search using either method above.<br><br>Take a photo of the page and tap 📂 to upload.<br>You can upload multiple photos at once.',
+    photoGuideAiBody: 'AI picks words that match your GE level.<br><br>Take a photo of the page and tap 📂 to upload.<br>You can upload multiple photos at once.',
+    photoGeSetBtn: 'Set GE level first',
+    photoGeRequiredMsg: 'AI Auto Search needs your GE level.\nGo to settings now?',
     photoGuideExCircle: '① Circle',
     photoGuideExParens: '② Parentheses + underline',
     photoGuideCircle: 'Circle',
@@ -504,8 +514,8 @@ const I18N = {
     settingsImageStyle: 'スタイル',
     settingsImageText: 'キャプション',
     settingsComingSoon: '準備中',
-    settingsLevelGroup: '単語レベル設定',
-    settingsGeHint: '* Renaissance STAR Reading の GE スコアを設定すると、写真検索の AI 自動おすすめが有効になります。',
+    settingsLevelGroup: 'GEレベル設定',
+    settingsGeHint: '* Renaissance STAR Reading の GE スコアを設定すると、写真検索で AI 自動検索が有効になります。',
     geUnset: '未設定',
     geLoginRequired: 'ログインが必要',
 
@@ -525,7 +535,12 @@ const I18N = {
 
     /* 写真検索 */
     uploadPhoto: '📂 写真をアップロード',
+    photoModeMarked: 'マーク検索',
+    photoModeAi: 'AI自動検索',
     photoGuideBody: '検索したい部分を上の2つの方法のどちらかで印をつけてください。<br><br>マークしたページの写真を撮って📂ボタンで送信してください。<br>複数の写真を一度にアップロードできます。',
+    photoGuideAiBody: 'AIがGEレベルに合う単語を選んでくれます。<br><br>検索したいページの写真を撮って📂ボタンで送信してください。<br>複数の写真を一度にアップロードできます。',
+    photoGeSetBtn: 'まずGEレベルを設定',
+    photoGeRequiredMsg: 'AI自動検索にはGEレベルの設定が必要です。\n設定画面へ移動しますか？',
     photoGuideExCircle: '① 丸で囲む',
     photoGuideExParens: '② 括弧＋下線で囲む',
     photoGuideCircle: '丸',
@@ -727,8 +742,8 @@ const I18N = {
     settingsImageStyle: '风格',
     settingsImageText: '标题文字',
     settingsComingSoon: '即将推出',
-    settingsLevelGroup: '单词难度设置',
-    settingsGeHint: '* 设置 Renaissance STAR Reading 的 GE 分数后，照片搜索的 AI 自动推荐将被启用。',
+    settingsLevelGroup: 'GE 等级设置',
+    settingsGeHint: '* 设置 Renaissance STAR Reading 的 GE 分数后，照片搜索中的 AI 自动搜索将被启用。',
     geUnset: '未设置',
     geLoginRequired: '需要登录',
 
@@ -748,7 +763,12 @@ const I18N = {
 
     /* 拍照搜索 */
     uploadPhoto: '📂 上传照片',
+    photoModeMarked: '标记搜索',
+    photoModeAi: 'AI 自动搜索',
     photoGuideBody: '请用上述两种方法中任意一种标记想要检索的部分。<br><br>拍下标记页面的照片，点击📂按钮上传。<br>可以一次上传多张照片。',
+    photoGuideAiBody: 'AI 会根据您的 GE 等级挑选单词。<br><br>拍下要检索的页面的照片，点击📂按钮上传。<br>可以一次上传多张照片。',
+    photoGeSetBtn: '先设置 GE 等级',
+    photoGeRequiredMsg: 'AI 自动搜索需要设置 GE 等级。\n现在去设置吗？',
     photoGuideExCircle: '① 画圈',
     photoGuideExParens: '② 括号 + 下划线',
     photoGuideCircle: '画圈',
@@ -951,8 +971,8 @@ const I18N = {
     settingsImageStyle: 'Estilo',
     settingsImageText: 'Texto',
     settingsComingSoon: 'Próximamente',
-    settingsLevelGroup: 'Nivel de vocabulario',
-    settingsGeHint: '* Al configurar tu puntaje GE de Renaissance STAR Reading se activa la recomendación automática por IA en la búsqueda por foto.',
+    settingsLevelGroup: 'Nivel GE',
+    settingsGeHint: '* Al configurar tu puntaje GE de Renaissance STAR Reading se activa la Búsqueda IA en la búsqueda por foto.',
     geUnset: 'No configurado',
     geLoginRequired: 'Inicio de sesión requerido',
 
@@ -972,7 +992,12 @@ const I18N = {
 
     /* Búsqueda con foto */
     uploadPhoto: '📂 Subir foto',
+    photoModeMarked: 'Buscar marcas',
+    photoModeAi: 'Búsqueda IA',
     photoGuideBody: 'Marca lo que quieras buscar usando cualquiera de los dos métodos de arriba.<br><br>Toma una foto de la página y pulsa 📂 para subirla.<br>Puedes subir varias fotos a la vez.',
+    photoGuideAiBody: 'La IA elige palabras según tu nivel GE.<br><br>Toma una foto de la página y pulsa 📂 para subirla.<br>Puedes subir varias fotos a la vez.',
+    photoGeSetBtn: 'Configurar nivel GE',
+    photoGeRequiredMsg: 'La Búsqueda IA necesita tu nivel GE.\n¿Ir a ajustes ahora?',
     photoGuideExCircle: '① Círculo',
     photoGuideExParens: '② Paréntesis + subrayado',
     photoGuideCircle: 'Círculo',
@@ -1174,8 +1199,8 @@ const I18N = {
     settingsImageStyle: 'Phong cách',
     settingsImageText: 'Chú thích',
     settingsComingSoon: 'Sắp ra mắt',
-    settingsLevelGroup: 'Cấp độ từ vựng',
-    settingsGeHint: '* Khi bạn đặt điểm GE của Renaissance STAR Reading, tính năng AI tự động gợi ý trong tìm kiếm bằng ảnh sẽ được kích hoạt.',
+    settingsLevelGroup: 'Cấp độ GE',
+    settingsGeHint: '* Khi bạn đặt điểm GE của Renaissance STAR Reading, tính năng Tìm AI tự động trong tìm kiếm bằng ảnh sẽ được kích hoạt.',
     geUnset: 'Chưa đặt',
     geLoginRequired: 'Cần đăng nhập',
 
@@ -1195,7 +1220,12 @@ const I18N = {
 
     /* Tìm từ ảnh */
     uploadPhoto: '📂 Tải ảnh lên',
+    photoModeMarked: 'Tìm theo dấu',
+    photoModeAi: 'Tìm AI tự động',
     photoGuideBody: 'Đánh dấu phần bạn muốn tìm kiếm bằng một trong hai cách ở trên.<br><br>Chụp ảnh trang đã đánh dấu và nhấn 📂 để tải lên.<br>Bạn có thể tải nhiều ảnh cùng lúc.',
+    photoGuideAiBody: 'AI sẽ chọn từ phù hợp với cấp GE của bạn.<br><br>Chụp ảnh trang cần tìm và nhấn 📂 để tải lên.<br>Bạn có thể tải nhiều ảnh cùng lúc.',
+    photoGeSetBtn: 'Cài cấp GE trước',
+    photoGeRequiredMsg: 'Tìm AI tự động cần cấp GE.\nĐi tới cài đặt ngay?',
     photoGuideExCircle: '① Khoanh tròn',
     photoGuideExParens: '② Ngoặc + gạch chân',
     photoGuideCircle: 'Khoanh tròn',
@@ -1397,8 +1427,8 @@ const I18N = {
     settingsImageStyle: 'สไตล์',
     settingsImageText: 'คำบรรยาย',
     settingsComingSoon: 'เร็วๆ นี้',
-    settingsLevelGroup: 'ระดับคำศัพท์',
-    settingsGeHint: '* เมื่อคุณตั้งคะแนน GE ของ Renaissance STAR Reading ระบบ AI แนะนำอัตโนมัติในการค้นหาด้วยรูปภาพจะถูกเปิดใช้งาน',
+    settingsLevelGroup: 'ตั้งค่าระดับ GE',
+    settingsGeHint: '* เมื่อคุณตั้งคะแนน GE ของ Renaissance STAR Reading ระบบค้นหาด้วย AI ในการค้นหาด้วยรูปภาพจะถูกเปิดใช้งาน',
     geUnset: 'ยังไม่ได้ตั้งค่า',
     geLoginRequired: 'ต้องเข้าสู่ระบบ',
 
@@ -1418,7 +1448,12 @@ const I18N = {
 
     /* ค้นจากรูป */
     uploadPhoto: '📂 อัปโหลดรูป',
+    photoModeMarked: 'ค้นหาเครื่องหมาย',
+    photoModeAi: 'ค้นหาด้วย AI',
     photoGuideBody: 'ทำเครื่องหมายส่วนที่คุณต้องการค้นหาด้วยวิธีใดวิธีหนึ่งจาก 2 วิธีด้านบน<br><br>ถ่ายรูปหน้าที่ทำเครื่องหมาย แล้วกด 📂 เพื่ออัปโหลด<br>สามารถอัปโหลดหลายรูปพร้อมกันได้',
+    photoGuideAiBody: 'AI จะเลือกคำที่เหมาะกับระดับ GE ของคุณ<br><br>ถ่ายรูปหน้าที่ต้องการค้นหา แล้วกด 📂 เพื่ออัปโหลด<br>สามารถอัปโหลดหลายรูปพร้อมกันได้',
+    photoGeSetBtn: 'ตั้งระดับ GE ก่อน',
+    photoGeRequiredMsg: 'ค้นหาด้วย AI ต้องตั้งระดับ GE ก่อน\nไปที่หน้าตั้งค่าเลยหรือไม่?',
     photoGuideExCircle: '① วงกลม',
     photoGuideExParens: '② วงเล็บ + ขีดเส้นใต้',
     photoGuideCircle: 'วงกลม',
@@ -1620,8 +1655,8 @@ const I18N = {
     settingsImageStyle: 'Estilo',
     settingsImageText: 'Legenda',
     settingsComingSoon: 'Em breve',
-    settingsLevelGroup: 'Nível de vocabulário',
-    settingsGeHint: '* Ao definir sua pontuação GE do Renaissance STAR Reading, a recomendação automática por IA na busca por foto é ativada.',
+    settingsLevelGroup: 'Nível GE',
+    settingsGeHint: '* Ao definir sua pontuação GE do Renaissance STAR Reading, a Busca IA na busca por foto é ativada.',
     geUnset: 'Não definido',
     geLoginRequired: 'Login necessário',
 
@@ -1641,7 +1676,12 @@ const I18N = {
 
     /* Busca por foto */
     uploadPhoto: '📂 Enviar foto',
+    photoModeMarked: 'Buscar marcas',
+    photoModeAi: 'Busca IA',
     photoGuideBody: 'Marque qualquer parte que queira pesquisar usando um dos dois métodos acima.<br><br>Tire uma foto da página e toque em 📂 para enviar.<br>Você pode enviar várias fotos de uma vez.',
+    photoGuideAiBody: 'A IA escolhe palavras adequadas ao seu nível GE.<br><br>Tire uma foto da página e toque em 📂 para enviar.<br>Você pode enviar várias fotos de uma vez.',
+    photoGeSetBtn: 'Definir nível GE',
+    photoGeRequiredMsg: 'A Busca IA precisa do seu nível GE.\nIr para configurações agora?',
     photoGuideExCircle: '① Círculo',
     photoGuideExParens: '② Parênteses + sublinhado',
     photoGuideCircle: 'Círculo',

@@ -220,6 +220,50 @@
     max-width: 320px;
     margin: 16px auto 0;
   }
+
+  /* 사진 검색 모드 탭 — 단어장 서브탭(wb-subtabs) 과 동일한 좌측 정렬 스타일.
+     사진 탭 최상단에 배치. */
+  .photo-mode-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid #E5E2DE;
+    margin-bottom: 20px;
+    width: 100%;
+  }
+  .photo-mode-tab {
+    padding: 10px 20px;
+    font-size: 0.85rem;
+    color: #6B6660;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .photo-mode-tab:hover { color: #4A4641; }
+  .photo-mode-tab.active {
+    color: #2D2B28;
+    font-weight: 600;
+    border-bottom-color: #2D2B28;
+  }
+
+  /* AI 가이드 내 GE 설정 이동 버튼 — 미설정 상태에서만 노출.
+     block + width:fit-content + margin:auto 로 본문 아래줄에 독립 배치 & 중앙 정렬. */
+  .ge-goto-btn {
+    display: block;
+    width: fit-content;
+    margin: 28px auto 0;
+    padding: 8px 18px;
+    background: #F5F3EF;
+    color: #2D2B28;
+    border: 1px solid #D4D1CD;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .ge-goto-btn:hover { background: #E0DEDA; }
   /* 사진 검색 — 두 가지 마킹 방법을 SVG 일러스트로 표시
      (실사진은 수평/조명 편차가 있어 가독성이 떨어져 일러스트로 교체) */
   .photo-guide-examples {
@@ -1364,12 +1408,18 @@
 
     <!-- 탭2: 사진 검색 -->
     <div class="tab-content" id="tabPhoto">
+      <!-- 모드 탭: 마크된 단어 추출(수기 마크 기반) vs AI 자동 추천(GE 레벨 기반)
+           상호 배타 — 두 모드를 동시에 쓰는 시나리오는 없음. 선택은 localStorage 에 저장. -->
+      <div class="photo-mode-tabs">
+        <button class="photo-mode-tab active" onclick="switchPhotoMode('ai')" data-i18n="photoModeAi">AI 자동 검색</button>
+        <button class="photo-mode-tab" onclick="switchPhotoMode('marked')" data-i18n="photoModeMarked">마크 검색</button>
+      </div>
       <div class="photo-upload-area">
-        <button class="upload-btn" onclick="document.getElementById('photoInput').click()" data-i18n="uploadPhoto">📂 사진 올리기</button>
+        <button class="upload-btn" onclick="handleUploadClick()" data-i18n="uploadPhoto">📂 사진 올리기</button>
         <input type="file" id="photoInput" accept="image/*" multiple style="display:none" onchange="handlePhoto(this)">
       </div>
-      <!-- 가이드 -->
-      <div class="guide" id="guidePhoto">
+      <!-- 가이드: 마크 모드 -->
+      <div class="guide" id="guidePhoto" style="display:none">
         <!-- 가이드 예시: 두 가지 마킹 방법을 SVG 로 표시
              책 한 줄(세리프 회색 텍스트) + 연필(흑연 회색)로 그린 수기 마크를 오버레이 -->
         <div class="photo-guide-examples">
@@ -1407,6 +1457,12 @@
           </figure>
         </div>
         <span data-i18n="photoGuideBody">책에서 검색하고 싶은 부분을 위 두 가지 방법 중 편한 대로 표시하세요.<br><br>표시한 페이지의 사진을 찍어 📂 버튼을 눌러서 올리세요.<br>사진은 여러 장을 한꺼번에 올릴 수 있어요.</span>
+      </div>
+      <!-- 가이드: AI 자동 추천 모드 (GE 레벨에 맞춰 AI 가 단어 선정) — 기본 노출 -->
+      <div class="guide" id="guidePhotoAi">
+        <span data-i18n="photoGuideAiBody">AI가 GE 레벨에 맞는 단어들을 골라 줍니다.<br><br>검색할 페이지의 사진을 찍어 📂 버튼을 눌러서 올리세요.<br>사진은 여러 장을 한꺼번에 올릴 수 있어요.</span>
+        <!-- GE 미설정일 때만 노출되는 설정 이동 버튼 (refreshAiGuideGeHint 가 제어) -->
+        <button class="ge-goto-btn" id="geGotoFromGuide" hidden onclick="gotoGeSettings()" data-i18n="photoGeSetBtn">GE 레벨 먼저 설정하기</button>
       </div>
       <!-- 추출된 단어 리스트 -->
       <div class="word-list" id="wordList"></div>
@@ -1614,6 +1670,8 @@ async function saveGeScore(score) {
     .from('user_profile')
     .upsert(row, { onConflict: 'user_id' });
   if (error) console.warn('user_profile 저장 실패:', error);
+  /* 저장 직후 AI 가이드의 GE 힌트 버튼을 숨기도록 갱신 */
+  refreshAiGuideGeHint();
 }
 
 /* 외부 사용자용 헬퍼 — 사진 검색 AI 모드 등에서 호출 예정 */
@@ -1679,6 +1737,65 @@ async function refreshGeSliderUI() {
   window.addEventListener('resize', () => {
     if (!bubble.hidden) updateGeBubble(parseFloat(slider.value));
   });
+})();
+
+/* 현재 사진 검색 모드 — handlePhoto 에서 AI/마크 분기 판단에 사용. 기본값은 'ai'. */
+let _photoMode = 'ai';
+
+/* 사진 검색 모드 전환 (마크 단어 추출 / AI 자동 추천)
+   — 현재 단계에서는 가이드 문구 전환까지만 담당.
+     실제 Edge Function 프롬프트 분기와 결과 파싱은 다음 단계에서 추가 예정. */
+function switchPhotoMode(mode) {
+  const m = mode === 'ai' ? 'ai' : 'marked';
+  _photoMode = m;
+  const tabs = document.querySelectorAll('.photo-mode-tab');
+  tabs.forEach(t => t.classList.remove('active'));
+  /* 탭 순서: [0] AI 자동 추천, [1] 마크된 단어 추출 */
+  tabs[m === 'ai' ? 0 : 1]?.classList.add('active');
+  const gMarked = document.getElementById('guidePhoto');
+  const gAi = document.getElementById('guidePhotoAi');
+  if (gMarked) gMarked.style.display = m === 'marked' ? '' : 'none';
+  if (gAi) gAi.style.display = m === 'ai' ? '' : 'none';
+  try { localStorage.setItem('geminary_photoMode', m); } catch (_) {}
+  /* AI 모드 진입 시 GE 미설정 힌트 버튼 상태 갱신 */
+  if (m === 'ai') refreshAiGuideGeHint();
+}
+
+/* AI 가이드 안 "GE 레벨 먼저 설정하기" 버튼의 노출 여부를 현재 GE 저장 상태에 맞춰 갱신.
+   - 미설정(null) → 버튼 노출
+   - 설정됨 → 버튼 숨김 */
+async function refreshAiGuideGeHint() {
+  const btn = document.getElementById('geGotoFromGuide');
+  if (!btn) return;
+  const score = await getMyGeScore();
+  btn.hidden = score !== null;
+}
+
+/* GE 설정 페이지로 이동 — 가이드 버튼 / 업로드 차단 팝업 양쪽에서 공용 */
+function gotoGeSettings() {
+  switchTab('myrecord');
+  switchMyRecordSub('settings');
+}
+
+/* 📂 사진 올리기 클릭 핸들러 — 파일 선택 창이 열리기 전에 GE 상태부터 검사.
+   AI 모드이고 GE 미설정이면 설정 이동 팝업만 띄우고 파일 선택 창은 열지 않음. */
+async function handleUploadClick() {
+  if (_photoMode === 'ai') {
+    const score = await getMyGeScore();
+    if (score === null) {
+      const ok = confirm(t('photoGeRequiredMsg'));
+      if (ok) gotoGeSettings();
+      return;
+    }
+  }
+  document.getElementById('photoInput').click();
+}
+
+/* 페이지 로드 시 localStorage 에서 직전 선택 모드 복원 */
+(function initPhotoMode() {
+  let saved = null;
+  try { saved = localStorage.getItem('geminary_photoMode'); } catch (_) {}
+  if (saved === 'ai' || saved === 'marked') switchPhotoMode(saved);
 })();
 
 /* 검색 결과 렌더링 후 자동으로 단어장에 추가 */
@@ -1833,6 +1950,8 @@ async function initLevelUI() {
   updateWordLevel();
   /* GE 슬라이더도 인증 상태 기준으로 갱신 */
   refreshGeSliderUI();
+  /* AI 가이드 GE 힌트 버튼도 인증 후 최종 상태로 갱신 */
+  refreshAiGuideGeHint();
 }
 
 /* CEFR → 숫자 변환 */
@@ -3029,7 +3148,20 @@ async function handlePhoto(inputEl) {
   const files = Array.from(inputEl.files);
   if (files.length === 0) return;
 
+  /* AI 자동 검색 모드에서 GE 미설정이면 업로드 진행 전 차단.
+     사용자에게 설정 이동을 물어보고, 확인 시 설정 페이지로 이동. */
+  if (_photoMode === 'ai') {
+    const score = await getMyGeScore();
+    if (score === null) {
+      const ok = confirm(t('photoGeRequiredMsg'));
+      inputEl.value = '';
+      if (ok) gotoGeSettings();
+      return;
+    }
+  }
+
   document.getElementById('guidePhoto').style.display = 'none';
+  document.getElementById('guidePhotoAi').style.display = 'none';
   wordListEl.innerHTML = '';
   resultPhoto.innerHTML = `<div class="loading">${files.length}${t('extractingWords')}</div>`;
 
