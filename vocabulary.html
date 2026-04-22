@@ -947,27 +947,45 @@
     line-height: 1.5;
     margin-bottom: 4px;
   }
-  /* GE 점수 슬라이더 아이템
-     settings-item 은 기본 가로 flex 지만, 여기는 세로(헤더 + 슬라이더) 구조 → 오버라이드 */
+  /* GE 점수 슬라이더 아이템 — 슬라이더 영역만 폭 전체 사용 */
   .ge-item {
-    flex-direction: column;
     align-items: stretch;
-    gap: 12px;
   }
-  .ge-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+  /* 슬라이더 영역 — 말풍선을 absolute 로 띄우기 위한 기준 컨테이너.
+     상단 padding 은 말풍선이 트랙 위에 올라설 공간. */
+  .ge-slider-wrap {
+    position: relative;
+    flex: 1;
+    padding-top: 28px;
   }
-  .ge-value {
-    font-size: 0.95rem;
+  /* 핸들 위에 뜨는 현재값 말풍선. left 는 JS 가 핸들 중심에 맞춰 갱신. */
+  .ge-bubble {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: translateX(-50%);
+    background: #A89A83;
+    color: #FFFFFF;
+    font-size: 0.78rem;
     font-weight: 600;
-    color: #6B5E44;
+    padding: 2px 8px;
+    border-radius: 8px;
+    white-space: nowrap;
+    pointer-events: none;
+    transition: left 0.05s linear;
   }
-  /* 미설정·로그아웃 상태: 값 문구를 흐리게 표시 */
-  .ge-value.unset {
-    color: #B0ACA6;
-    font-weight: 400;
+  /* 말풍선 하단 화살표 (핸들 가리키기) */
+  .ge-bubble::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -4px;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 4px solid #A89A83;
   }
   /* 슬라이더 트랙 — appearance 리셋 후 커스텀 */
   .ge-slider {
@@ -1005,13 +1023,14 @@
   /* 미설정 상태: 핸들을 회색으로 흐리게 */
   .ge-slider.unset::-webkit-slider-thumb { background: #C9C5BE; }
   .ge-slider.unset::-moz-range-thumb    { background: #C9C5BE; }
-  /* 로그아웃/비활성 상태 */
-  .ge-slider:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
+  /* 양끝 눈금 라벨 (1, 13) */
+  .ge-ticks {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    color: #B0ACA6;
+    margin-top: 6px;
   }
-  .ge-slider:disabled::-webkit-slider-thumb { background: #D5D1CA; cursor: not-allowed; }
-  .ge-slider:disabled::-moz-range-thumb    { background: #D5D1CA; cursor: not-allowed; }
   /* 토글 스위치 */
   .toggle-switch {
     position: relative;
@@ -1502,6 +1521,26 @@
               <span class="toggle-slider"></span>
             </label>
           </div>
+
+          <!-- 영어 레벨 설정 (Renaissance STAR Reading GE) — 사진 검색 AI 자동 추천의 기준값 -->
+          <div class="settings-group-title settings-group-gap" data-i18n="settingsLevelGroup">단어 레벨 설정</div>
+          <div class="settings-group-hint" data-i18n="settingsGeHint">* Renaissance STAR Reading 의 GE 점수를 설정하면 사진 검색 AI 자동 추천이 활성화됩니다.</div>
+          <div class="settings-item ge-item">
+            <!-- 슬라이더 영역: 말풍선(핸들 위) + 트랙 + 양끝 숫자 라벨.
+                 별도 "GE" 라벨은 그룹 제목·힌트에서 이미 설명되므로 생략. -->
+            <div class="ge-slider-wrap">
+              <!-- 말풍선: 핸들의 현재 x 위치에 맞춰 JS 가 left 를 갱신.
+                   미설정 상태에선 display:none (hidden 속성) 으로 숨김. -->
+              <div class="ge-bubble" id="geBubble" hidden>—</div>
+              <input type="range" id="geSlider" class="ge-slider unset"
+                     min="1.0" max="13.0" step="0.1" value="7.0">
+              <div class="ge-ticks">
+                <span>1</span>
+                <span>13</span>
+              </div>
+            </div>
+          </div>
+
           <div class="settings-group-title settings-group-gap" data-i18n="settingsImageGroup">단어 이미지 생성 설정</div>
           <div class="settings-group-hint" data-i18n="settingsImageHint">* Geminary 단어지도에 등록되지 않은 단어를 최초로 검색 시 적용됩니다.</div>
           <div class="settings-item">
@@ -1511,20 +1550,6 @@
           <div class="settings-item">
             <span class="settings-item-label" data-i18n="settingsImageText">넣을 문구</span>
             <span class="settings-item-badge" data-i18n="settingsComingSoon">준비중</span>
-          </div>
-
-          <!-- 영어 레벨 설정 (Renaissance STAR Reading GE) — 사진 검색 AI 자동 추천의 기준값 -->
-          <div class="settings-group-title settings-group-gap" data-i18n="settingsLevelGroup">영어 레벨 설정</div>
-          <div class="settings-group-hint" data-i18n="settingsGeHint">* Renaissance STAR Reading 의 GE 점수를 설정하면 사진 검색 AI 자동 추천이 활성화됩니다.</div>
-          <div class="settings-item ge-item">
-            <!-- 상단: 라벨 + 현재값. 드래그하면 .ge-value 가 실시간으로 갱신됨 -->
-            <div class="ge-header">
-              <span class="settings-item-label">GE</span>
-              <span class="ge-value unset" id="geValue" data-i18n="geUnset">미설정</span>
-            </div>
-            <!-- 슬라이더: 1.0~13.0 범위. 미설정/로그아웃 상태는 JS 에서 .unset/disabled 로 제어 -->
-            <input type="range" id="geSlider" class="ge-slider unset"
-                   min="1.0" max="13.0" step="0.1" value="7.0">
           </div>
         </div>
       </div>
@@ -1597,52 +1622,62 @@ async function getMyGeScore() {
   return await loadGeScore();
 }
 
-/* 슬라이더 UI 를 현재 인증/저장 상태에 맞춰 갱신 (로그인 전환·최초 로드 시 호출) */
+/* 말풍선 위치·값 갱신.
+   핸들 중심의 x 좌표는 percent * (트랙폭 - 핸들폭) + 핸들폭/2 로 계산.
+   양끝에서 말풍선이 삐져나오지 않게 이 오프셋이 꼭 필요. */
+function updateGeBubble(val) {
+  const slider = document.getElementById('geSlider');
+  const bubble = document.getElementById('geBubble');
+  if (!slider || !bubble) return;
+  const min = parseFloat(slider.min);
+  const max = parseFloat(slider.max);
+  const percent = (val - min) / (max - min);
+  const thumbWidth = 22;
+  const trackWidth = slider.offsetWidth;
+  const left = percent * (trackWidth - thumbWidth) + thumbWidth / 2;
+  bubble.style.left = left + 'px';
+  bubble.textContent = val.toFixed(1);
+}
+
+/* 슬라이더 UI 를 현재 저장 상태에 맞춰 갱신 (로그인 전환·최초 로드 시 호출).
+   로그아웃 분기는 미탑재 — 이 화면 자체가 인증된 사용자만 도달. */
 async function refreshGeSliderUI() {
   const slider = document.getElementById('geSlider');
-  const valueEl = document.getElementById('geValue');
-  if (!slider || !valueEl) return;
-  /* 로그아웃: 비활성 + 안내 */
-  if (!_authUser) {
-    slider.disabled = true;
-    slider.classList.add('unset');
-    slider.value = '7.0';
-    valueEl.textContent = t('geLoginRequired');
-    valueEl.classList.add('unset');
-    return;
-  }
-  /* 로그인: DB 에서 조회하여 상태 반영 */
-  slider.disabled = false;
+  const bubble = document.getElementById('geBubble');
+  if (!slider || !bubble) return;
   const score = await loadGeScore();
   if (score !== null) {
     slider.value = String(score);
     slider.classList.remove('unset');
-    valueEl.textContent = score.toFixed(1);
-    valueEl.classList.remove('unset');
+    bubble.hidden = false;
+    updateGeBubble(score);
   } else {
     slider.value = '7.0';
     slider.classList.add('unset');
-    valueEl.textContent = t('geUnset');
-    valueEl.classList.add('unset');
+    bubble.hidden = true;
   }
 }
 
-/* 슬라이더 이벤트 바인딩 — 페이지 로드 시 1회 */
+/* 슬라이더 이벤트 바인딩 — 페이지 로드 시 1회.
+   input: 드래그 중 실시간 말풍선 갱신 (저장 X)
+   change: 드래그 놓는 순간 1회 저장 */
 (function initGeSlider() {
   const slider = document.getElementById('geSlider');
-  const valueEl = document.getElementById('geValue');
-  if (!slider || !valueEl) return;
-  /* input: 드래그 중 실시간 표시(저장 X) + unset 스타일 제거 */
+  const bubble = document.getElementById('geBubble');
+  if (!slider || !bubble) return;
   slider.addEventListener('input', () => {
     const v = parseFloat(slider.value);
-    valueEl.textContent = v.toFixed(1);
-    valueEl.classList.remove('unset');
     slider.classList.remove('unset');
+    bubble.hidden = false;
+    updateGeBubble(v);
   });
-  /* change: 드래그 놓는 순간 1회 저장 */
   slider.addEventListener('change', () => {
     const v = parseFloat(slider.value);
     saveGeScore(v);
+  });
+  /* 창 크기 변경 시 trackWidth 변화 → 말풍선 위치 재계산 */
+  window.addEventListener('resize', () => {
+    if (!bubble.hidden) updateGeBubble(parseFloat(slider.value));
   });
 })();
 
@@ -1845,6 +1880,14 @@ function switchMyRecordSub(sub) {
   document.querySelectorAll('.myrecord-subtab')[subMap[sub]].classList.add('active');
   const panels = { character: 'panelCharacter', settings: 'panelSettings' };
   document.getElementById(panels[sub]).classList.add('active');
+  /* 설정 패널이 처음 열릴 때 슬라이더 trackWidth 가 0 → 가시화된 직후 말풍선 위치 재계산 */
+  if (sub === 'settings') {
+    const slider = document.getElementById('geSlider');
+    const bubble = document.getElementById('geBubble');
+    if (slider && bubble && !bubble.hidden) {
+      updateGeBubble(parseFloat(slider.value));
+    }
+  }
 }
 
 // --- 탭 전환 ---
