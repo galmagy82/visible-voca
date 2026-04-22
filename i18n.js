@@ -57,6 +57,10 @@ const I18N = {
     settingsImageStyle: '스타일',
     settingsImageText: '넣을 문구',
     settingsComingSoon: '준비중',
+    settingsLevelGroup: '영어 레벨 설정',
+    settingsGeHint: '* Renaissance STAR Reading 의 GE 점수를 설정하면 사진 검색 AI 자동 추천이 활성화됩니다.',
+    geUnset: '미설정',
+    geLoginRequired: '로그인 필요',
 
     /* 일반검색 */
     searchPlaceholder: '단어, 숙어, 문장을 입력하세요',
@@ -277,6 +281,10 @@ const I18N = {
     settingsImageStyle: 'Style',
     settingsImageText: 'Caption',
     settingsComingSoon: 'Coming soon',
+    settingsLevelGroup: 'English Level',
+    settingsGeHint: '* Setting your Renaissance STAR Reading GE score enables AI auto-recommendations in photo search.',
+    geUnset: 'Not set',
+    geLoginRequired: 'Login required',
 
     /* Search */
     searchPlaceholder: 'Enter a word, phrase, or sentence',
@@ -496,6 +504,10 @@ const I18N = {
     settingsImageStyle: 'スタイル',
     settingsImageText: 'キャプション',
     settingsComingSoon: '準備中',
+    settingsLevelGroup: '英語レベル設定',
+    settingsGeHint: '* Renaissance STAR Reading の GE スコアを設定すると、写真検索の AI 自動おすすめが有効になります。',
+    geUnset: '未設定',
+    geLoginRequired: 'ログインが必要',
 
     /* 検索 */
     searchPlaceholder: '単語・フレーズ・文を入力',
@@ -715,6 +727,10 @@ const I18N = {
     settingsImageStyle: '风格',
     settingsImageText: '标题文字',
     settingsComingSoon: '即将推出',
+    settingsLevelGroup: '英语水平设置',
+    settingsGeHint: '* 设置 Renaissance STAR Reading 的 GE 分数后，照片搜索的 AI 自动推荐将被启用。',
+    geUnset: '未设置',
+    geLoginRequired: '需要登录',
 
     /* 搜索 */
     searchPlaceholder: '输入单词、短语或句子',
@@ -935,6 +951,10 @@ const I18N = {
     settingsImageStyle: 'Estilo',
     settingsImageText: 'Texto',
     settingsComingSoon: 'Próximamente',
+    settingsLevelGroup: 'Nivel de inglés',
+    settingsGeHint: '* Al configurar tu puntaje GE de Renaissance STAR Reading se activa la recomendación automática por IA en la búsqueda por foto.',
+    geUnset: 'No configurado',
+    geLoginRequired: 'Inicio de sesión requerido',
 
     /* Búsqueda */
     searchPlaceholder: 'Introduce una palabra, frase u oración',
@@ -1154,6 +1174,10 @@ const I18N = {
     settingsImageStyle: 'Phong cách',
     settingsImageText: 'Chú thích',
     settingsComingSoon: 'Sắp ra mắt',
+    settingsLevelGroup: 'Cấp độ tiếng Anh',
+    settingsGeHint: '* Khi bạn đặt điểm GE của Renaissance STAR Reading, tính năng AI tự động gợi ý trong tìm kiếm bằng ảnh sẽ được kích hoạt.',
+    geUnset: 'Chưa đặt',
+    geLoginRequired: 'Cần đăng nhập',
 
     /* Tìm kiếm */
     searchPlaceholder: 'Nhập từ, cụm từ hoặc câu',
@@ -1373,6 +1397,10 @@ const I18N = {
     settingsImageStyle: 'สไตล์',
     settingsImageText: 'คำบรรยาย',
     settingsComingSoon: 'เร็วๆ นี้',
+    settingsLevelGroup: 'ระดับภาษาอังกฤษ',
+    settingsGeHint: '* เมื่อคุณตั้งคะแนน GE ของ Renaissance STAR Reading ระบบ AI แนะนำอัตโนมัติในการค้นหาด้วยรูปภาพจะถูกเปิดใช้งาน',
+    geUnset: 'ยังไม่ได้ตั้งค่า',
+    geLoginRequired: 'ต้องเข้าสู่ระบบ',
 
     /* ค้นหา */
     searchPlaceholder: 'พิมพ์คำ วลี หรือประโยค',
@@ -1592,6 +1620,10 @@ const I18N = {
     settingsImageStyle: 'Estilo',
     settingsImageText: 'Legenda',
     settingsComingSoon: 'Em breve',
+    settingsLevelGroup: 'Nível de inglês',
+    settingsGeHint: '* Ao definir sua pontuação GE do Renaissance STAR Reading, a recomendação automática por IA na busca por foto é ativada.',
+    geUnset: 'Não definido',
+    geLoginRequired: 'Login necessário',
 
     /* Busca */
     searchPlaceholder: 'Digite uma palavra, frase ou sentença',

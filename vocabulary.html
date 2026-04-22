@@ -947,6 +947,71 @@
     line-height: 1.5;
     margin-bottom: 4px;
   }
+  /* GE 점수 슬라이더 아이템
+     settings-item 은 기본 가로 flex 지만, 여기는 세로(헤더 + 슬라이더) 구조 → 오버라이드 */
+  .ge-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .ge-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .ge-value {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #6B5E44;
+  }
+  /* 미설정·로그아웃 상태: 값 문구를 흐리게 표시 */
+  .ge-value.unset {
+    color: #B0ACA6;
+    font-weight: 400;
+  }
+  /* 슬라이더 트랙 — appearance 리셋 후 커스텀 */
+  .ge-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    background: #E5E2DE;
+    border-radius: 3px;
+    outline: none;
+    margin: 0;
+  }
+  /* 핸들(thumb) — WebKit */
+  .ge-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #A89A83;
+    cursor: pointer;
+    border: 2px solid #FFFFFF;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  }
+  /* 핸들 — Firefox */
+  .ge-slider::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #A89A83;
+    cursor: pointer;
+    border: 2px solid #FFFFFF;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  }
+  /* 미설정 상태: 핸들을 회색으로 흐리게 */
+  .ge-slider.unset::-webkit-slider-thumb { background: #C9C5BE; }
+  .ge-slider.unset::-moz-range-thumb    { background: #C9C5BE; }
+  /* 로그아웃/비활성 상태 */
+  .ge-slider:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  .ge-slider:disabled::-webkit-slider-thumb { background: #D5D1CA; cursor: not-allowed; }
+  .ge-slider:disabled::-moz-range-thumb    { background: #D5D1CA; cursor: not-allowed; }
   /* 토글 스위치 */
   .toggle-switch {
     position: relative;
@@ -1447,6 +1512,20 @@
             <span class="settings-item-label" data-i18n="settingsImageText">넣을 문구</span>
             <span class="settings-item-badge" data-i18n="settingsComingSoon">준비중</span>
           </div>
+
+          <!-- 영어 레벨 설정 (Renaissance STAR Reading GE) — 사진 검색 AI 자동 추천의 기준값 -->
+          <div class="settings-group-title settings-group-gap" data-i18n="settingsLevelGroup">영어 레벨 설정</div>
+          <div class="settings-group-hint" data-i18n="settingsGeHint">* Renaissance STAR Reading 의 GE 점수를 설정하면 사진 검색 AI 자동 추천이 활성화됩니다.</div>
+          <div class="settings-item ge-item">
+            <!-- 상단: 라벨 + 현재값. 드래그하면 .ge-value 가 실시간으로 갱신됨 -->
+            <div class="ge-header">
+              <span class="settings-item-label">GE</span>
+              <span class="ge-value unset" id="geValue" data-i18n="geUnset">미설정</span>
+            </div>
+            <!-- 슬라이더: 1.0~13.0 범위. 미설정/로그아웃 상태는 JS 에서 .unset/disabled 로 제어 -->
+            <input type="range" id="geSlider" class="ge-slider unset"
+                   min="1.0" max="13.0" step="0.1" value="7.0">
+          </div>
         </div>
       </div>
     </div>
@@ -1473,6 +1552,97 @@ function isAutoAddEnabled() {
   toggle.checked = isAutoAddEnabled();
   toggle.addEventListener('change', () => {
     localStorage.setItem('geminary_autoAdd', toggle.checked ? 'true' : 'false');
+  });
+})();
+
+// --- GE 점수 (user_profile) — 사진 검색 AI 자동 추천의 기준값 ---
+/* 메모리 캐시 — 동일 세션 내 중복 조회 방지. null = 미조회/미입력 */
+let _geScore = null;
+
+/* Supabase user_profile 에서 GE 점수 로드 (미로그인은 null) */
+async function loadGeScore() {
+  const userId = _authUser?.id;
+  if (!userId) return null;
+  const { data, error } = await supabaseClient
+    .from('user_profile')
+    .select('ge_score')
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (error) { console.warn('user_profile 조회 실패:', error); return null; }
+  _geScore = data?.ge_score != null ? Number(data.ge_score) : null;
+  return _geScore;
+}
+
+/* GE 점수 저장 (upsert) — 드래그 놓는 순간 1회 호출 */
+async function saveGeScore(score) {
+  const userId = _authUser?.id;
+  if (!userId) return;
+  _geScore = score;
+  const nowIso = new Date().toISOString();
+  const row = {
+    user_id: userId,
+    ge_score: score,
+    ge_updated_at: nowIso,
+    updated_at: nowIso,
+  };
+  const { error } = await supabaseClient
+    .from('user_profile')
+    .upsert(row, { onConflict: 'user_id' });
+  if (error) console.warn('user_profile 저장 실패:', error);
+}
+
+/* 외부 사용자용 헬퍼 — 사진 검색 AI 모드 등에서 호출 예정 */
+async function getMyGeScore() {
+  if (_geScore !== null) return _geScore;
+  return await loadGeScore();
+}
+
+/* 슬라이더 UI 를 현재 인증/저장 상태에 맞춰 갱신 (로그인 전환·최초 로드 시 호출) */
+async function refreshGeSliderUI() {
+  const slider = document.getElementById('geSlider');
+  const valueEl = document.getElementById('geValue');
+  if (!slider || !valueEl) return;
+  /* 로그아웃: 비활성 + 안내 */
+  if (!_authUser) {
+    slider.disabled = true;
+    slider.classList.add('unset');
+    slider.value = '7.0';
+    valueEl.textContent = t('geLoginRequired');
+    valueEl.classList.add('unset');
+    return;
+  }
+  /* 로그인: DB 에서 조회하여 상태 반영 */
+  slider.disabled = false;
+  const score = await loadGeScore();
+  if (score !== null) {
+    slider.value = String(score);
+    slider.classList.remove('unset');
+    valueEl.textContent = score.toFixed(1);
+    valueEl.classList.remove('unset');
+  } else {
+    slider.value = '7.0';
+    slider.classList.add('unset');
+    valueEl.textContent = t('geUnset');
+    valueEl.classList.add('unset');
+  }
+}
+
+/* 슬라이더 이벤트 바인딩 — 페이지 로드 시 1회 */
+(function initGeSlider() {
+  const slider = document.getElementById('geSlider');
+  const valueEl = document.getElementById('geValue');
+  if (!slider || !valueEl) return;
+  /* input: 드래그 중 실시간 표시(저장 X) + unset 스타일 제거 */
+  slider.addEventListener('input', () => {
+    const v = parseFloat(slider.value);
+    valueEl.textContent = v.toFixed(1);
+    valueEl.classList.remove('unset');
+    slider.classList.remove('unset');
+  });
+  /* change: 드래그 놓는 순간 1회 저장 */
+  slider.addEventListener('change', () => {
+    const v = parseFloat(slider.value);
+    saveGeScore(v);
   });
 })();
 
@@ -1626,6 +1796,8 @@ async function initLevelUI() {
   await loadStats();
   updateLevelUI();
   updateWordLevel();
+  /* GE 슬라이더도 인증 상태 기준으로 갱신 */
+  refreshGeSliderUI();
 }
 
 /* CEFR → 숫자 변환 */
