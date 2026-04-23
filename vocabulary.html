@@ -247,6 +247,32 @@
     border-bottom-color: #2D2B28;
   }
 
+  /* 결과 상태 리셋 바 — 결과가 표시되면 업로드 영역/가이드 대신 이 바가 보인다.
+     작고 부차적인 스타일로 두어 결과가 주인공이 되도록.
+     CSS 의 display:flex 가 HTML hidden 속성을 덮어쓰는 문제 방지 위해
+     [hidden] 선택자(높은 specificity)로 display:none 명시. */
+  .photo-reset-bar {
+    width: 100%;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: flex-start;
+  }
+  .photo-reset-bar[hidden] { display: none; }
+  .photo-reset-btn {
+    padding: 6px 14px;
+    background: transparent;
+    color: #6B6660;
+    border: 1px solid #D4D1CD;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+  .photo-reset-btn:hover {
+    background: #F5F3EF;
+    color: #2D2B28;
+  }
+
   /* AI 가이드 내 GE 설정 이동 버튼 — 미설정 상태에서만 노출.
      block + width:fit-content + margin:auto 로 본문 아래줄에 독립 배치 & 중앙 정렬. */
   .ge-goto-btn {
@@ -1414,7 +1440,11 @@
         <button class="photo-mode-tab active" onclick="switchPhotoMode('ai')" data-i18n="photoModeAi">AI 자동 검색</button>
         <button class="photo-mode-tab" onclick="switchPhotoMode('marked')" data-i18n="photoModeMarked">마크 검색</button>
       </div>
-      <div class="photo-upload-area">
+      <!-- 결과 표시 상태에서만 노출되는 리셋 바 — 새 사진 올리기로 초기 상태 복원 -->
+      <div class="photo-reset-bar" id="photoResetBar" hidden>
+        <button class="photo-reset-btn" onclick="resetPhotoSearch()" data-i18n="photoResetBtn">↻ 새 사진 올리기</button>
+      </div>
+      <div class="photo-upload-area" id="photoUploadArea">
         <button class="upload-btn" onclick="handleUploadClick()" data-i18n="uploadPhoto">📂 사진 올리기</button>
         <input type="file" id="photoInput" accept="image/*" multiple style="display:none" onchange="handlePhoto(this)">
       </div>
@@ -1797,6 +1827,36 @@ async function handleUploadClick() {
   try { saved = localStorage.getItem('geminary_photoMode'); } catch (_) {}
   if (saved === 'ai' || saved === 'marked') switchPhotoMode(saved);
 })();
+
+/* 결과 표시 상태 진입 — 업로드 영역·가이드 숨기고 리셋 바 노출.
+   결과(단어 칩 리스트)가 주인공이 되도록 시각적 잡음 제거. */
+function enterPhotoResultState() {
+  const uploadArea = document.getElementById('photoUploadArea');
+  const resetBar = document.getElementById('photoResetBar');
+  if (uploadArea) uploadArea.style.display = 'none';
+  document.getElementById('guidePhoto').style.display = 'none';
+  document.getElementById('guidePhotoAi').style.display = 'none';
+  if (resetBar) resetBar.hidden = false;
+}
+
+/* 초기 상태 복원 — 리셋 바 클릭 시 호출.
+   결과 영역 비우고, 업로드 영역·현재 모드 가이드·힌트 버튼까지 올바른 상태로 되돌린다. */
+function resetPhotoSearch() {
+  /* 결과 상태 해제 */
+  const uploadArea = document.getElementById('photoUploadArea');
+  const resetBar = document.getElementById('photoResetBar');
+  if (uploadArea) uploadArea.style.display = '';
+  if (resetBar) resetBar.hidden = true;
+  /* 결과·단어 리스트·파일 인풋 초기화 */
+  if (wordListEl) wordListEl.innerHTML = '';
+  if (resultPhoto) resultPhoto.innerHTML = '';
+  photoWords = [];
+  wordResults = {};
+  const input = document.getElementById('photoInput');
+  if (input) input.value = '';
+  /* 현재 모드 기준으로 가이드 재표시 — switchPhotoMode 가 가이드 노출·GE 힌트 갱신까지 처리 */
+  switchPhotoMode(_photoMode);
+}
 
 /* 검색 결과 렌더링 후 자동으로 단어장에 추가 */
 async function autoAddIfEnabled(targetEl) {
@@ -3229,6 +3289,9 @@ async function handlePhoto(inputEl) {
     wordListEl.innerHTML = photoWords.map((w, i) =>
       `<button class="word-chip" onclick="selectPhotoWord(${i})">${w}</button>`
     ).join('');
+
+    /* 결과 성공 표시 후에만 결과 상태로 전환 (업로드 영역·가이드 숨김, 리셋 바 노출) */
+    enterPhotoResultState();
 
     inputEl.value = '';
   } catch (err) {
