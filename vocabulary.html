@@ -1450,6 +1450,8 @@
       </div>
       <!-- 가이드: 마크 모드 -->
       <div class="guide" id="guidePhoto" style="display:none">
+        <!-- 상단 안내 — "아래 두 가지 방법" 표현이 바로 아래 예시 그림을 가리키도록 그림 위에 배치 -->
+        <span data-i18n="photoGuideBody">책에서 검색하고 싶은 부분을 아래 두 가지 방법 중 편한 대로 표시하세요.</span>
         <!-- 가이드 예시: 두 가지 마킹 방법을 SVG 로 표시
              책 한 줄(세리프 회색 텍스트) + 연필(흑연 회색)로 그린 수기 마크를 오버레이 -->
         <div class="photo-guide-examples">
@@ -1470,7 +1472,6 @@
               <!-- 연필 동그라미: 흑연 회색(#4A4641), 얇은 선, 투명도 0.75, 러프 필터 -->
               <ellipse cx="140" cy="38" rx="43" ry="19" fill="none" stroke="#4A4641" stroke-width="1.8" transform="rotate(-2 140 38)" opacity="0.75" filter="url(#pencilRough)"/>
             </svg>
-            <figcaption data-i18n="photoGuideExCircle">① 동그라미로 감싸기</figcaption>
           </figure>
           <figure>
             <!-- ② 괄호 + 밑줄: 'he took a few gulps' 구절을 ( ___ ) 로 감싸는 예시 -->
@@ -1483,10 +1484,10 @@
               <!-- 밑줄 (살짝 굽은 라인) -->
               <path d="M 80 54 Q 180 58 276 54" stroke="#4A4641" stroke-width="1.8" fill="none" stroke-linecap="round" opacity="0.75" filter="url(#pencilRough)"/>
             </svg>
-            <figcaption data-i18n="photoGuideExParens">② 괄호 + 밑줄로 감싸기</figcaption>
           </figure>
         </div>
-        <span data-i18n="photoGuideBody">책에서 검색하고 싶은 부분을 위 두 가지 방법 중 편한 대로 표시하세요.<br><br>표시한 페이지의 사진을 찍어 📂 버튼을 눌러서 올리세요.<br>사진은 여러 장을 한꺼번에 올릴 수 있어요.</span>
+        <!-- 하단 안내 — 표시 후 업로드 절차 설명 -->
+        <span class="guide-upload-note" data-i18n="photoGuideBodyUpload">표시한 페이지의 사진을 찍어 📂 버튼을 눌러서 올리세요.<br>사진은 여러 장을 한꺼번에 올릴 수 있어요.</span>
       </div>
       <!-- 가이드: AI 자동 추천 모드 (GE 레벨에 맞춰 AI 가 단어 선정) — 기본 노출 -->
       <div class="guide" id="guidePhotoAi">
