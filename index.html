@@ -1290,6 +1290,24 @@ const observer = new IntersectionObserver((entries) => {
 
 sections.forEach(s => observer.observe(s));
 
+/* "Geminary는 왜 다를까요?" 앵커 클릭 정밀 스크롤.
+   네이티브 href="#features" 로 놔두면 URL 해시 변경 → 모바일 주소창 재노출 등
+   중간 레이아웃 변화로 인해 첫 클릭 시 scrollTop 이 목표보다 과하게 landing 하는
+   문제가 있음 (카드 상단이 뷰포트 위로 잘림).
+   → preventDefault 로 해시 변경 차단 + scrollIntoView 후 실제 위치 재측정·보정. */
+document.getElementById('exploreBtn')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  const target = document.getElementById('features');
+  if (!target) return;
+  target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  setTimeout(() => {
+    const rect = target.getBoundingClientRect();
+    if (Math.abs(rect.top) > 2) {
+      window.scrollBy({ top: rect.top, behavior: 'smooth' });
+    }
+  }, 750);
+});
+
 const progressBar = document.getElementById('progressBar');
 const scrollIndicator = document.getElementById('scrollIndicator');
 
