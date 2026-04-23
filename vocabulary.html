@@ -1883,6 +1883,12 @@
 </div>
 
 <script>
+/* 인증 사용자 상태 — 실제 초기화는 initAuth() 에서. 여기서 선언만 먼저 해둠.
+   이유: initPhotoMode IIFE 등 아래쪽 top-level 코드가 실행될 때 loadGeScore 경유로
+   _authUser?.id 를 접근하는데, 원래 위치(아래쪽)에선 TDZ(Temporal Dead Zone)로 ReferenceError.
+   선언만 스크립트 최상단으로 끌어올려 해결. 값 대입은 여전히 initAuth() 시점. */
+let _authUser = null;
+
 // --- 자동 단어장 추가 설정 (localStorage) ---
 function isAutoAddEnabled() {
   return localStorage.getItem('geminary_autoAdd') === 'true';
@@ -2756,7 +2762,7 @@ async function saveToSupabase(word, parsed, imageDataUrl, existingImagePath) {
 const EDGE_FUNCTION_URL = 'https://grdtxvpebjtfhuqdngfn.supabase.co/functions/v1/gemini-proxy';
 
 // --- 사용자 ID: 로그인 시 auth ID, 비로그인 시 익명 UUID ---
-let _authUser = null;
+/* _authUser 선언은 스크립트 최상단으로 이동됨(TDZ 방지). 여기서는 initAuth 에서 값만 대입. */
 
 /* 로컬 개발 환경 감지 — localhost/127.0.0.1/file:// 에서는 미인증 리다이렉트 스킵.
    프로덕션 도메인에서는 항상 false 라서 보안에 영향 없음. */
