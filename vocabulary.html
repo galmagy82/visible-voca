@@ -4121,9 +4121,11 @@ async function showWordbookDetail(word, itemEl) {
   const imageKey = entry.corrected ? entry.corrected.toLowerCase() : word;
   const existingImage = await fetchExistingImage(imageKey);
 
-  /* 스냅샷 복구 로직 — description 이 비어 있으면 (구버전 버그로 빈 row 가 저장된 경우)
-     word_results 공용 캐시에서 조회해 재구성하고, user_wordbook row 도 백필한다.
-     word_results 에도 없으면(POS 없는 항목) 빈 필드로 표시 (최소 발음+이미지라도 보여줌). */
+  /* 스냅샷 복구 로직 — description 이 비어 있으면 (세트 일괄 저장 스켈레톤 또는 구버전 빈 row)
+     ① word_results 공용 캐시에 있으면 그걸로 재구성 + user_wordbook 백필
+     ② 공용 캐시에도 없으면 여기서 바로 AI 검색 파이프라인(fetchWordResult) 을 돌려
+        설명·이미지까지 생성하고 user_wordbook 도 백필한다.
+        (이전에는 ② 의 경우 빈 필드로 열려서 "설명·이미지가 없다"는 불만이 있었음) */
   let dbLike;
   if (!entry.description) {
     const dbResult = await fetchFromSupabase(word);
@@ -4142,17 +4144,25 @@ async function showWordbookDetail(word, itemEl) {
       /* user_wordbook row 백필 — 다음에 열 때부터는 스냅샷만으로 충분하도록 */
       backfillWordbookEntry(word, dbResult);
     } else {
-      dbLike = {
-        word: entry.word,
-        corrected: entry.corrected,
-        pos: entry.pos,
-        ipa: entry.ipa,
-        cefr: entry.cefr,
-        verbForms: entry.verb_forms || '',
-        description: entry.description,
-        examples: entry.examples,
-        imageUrl: existingImage ? existingImage.publicUrl : null,
-      };
+      /* 스냅샷도 word_results 도 없음 → 모달 안에서 전체 검색 파이프라인 실행.
+         fetchWordResult 가 직접 contentEl 에 결과 HTML 을 렌더하므로
+         buildHtmlFromDB 경로를 우회하고 여기서 바로 반환한다. */
+      try {
+        await fetchWordResult(word, contentEl);
+      } catch (e) {
+        console.warn('세트 단어 상세 생성 실패:', e);
+        /* fetchWordResult 내부에서 에러 메시지를 이미 렌더했다면 그대로 두고,
+           아무것도 안 붙었으면 최소 메시지라도 — 보통 내부에서 처리됨 */
+      }
+      /* 모달에서는 "단어장에 추가" 버튼 불필요 (이미 단어장에 있음) */
+      const addBtn = contentEl.querySelector('.add-wordbook-btn');
+      if (addBtn) addBtn.style.display = 'none';
+      /* 생성된 스냅샷을 user_wordbook 에 백필 — set_id 는 update 대상이 아니라 보존됨.
+         fetchWordResult 는 내부에서 window._lastWbData 를 채워 두므로 그대로 사용. */
+      if (window._lastWbData) {
+        backfillWordbookEntry(word, window._lastWbData);
+      }
+      return;
     }
   } else {
     dbLike = {
