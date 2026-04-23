@@ -255,7 +255,9 @@
     width: 100%;
     margin-bottom: 16px;
     display: flex;
-    justify-content: flex-start;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
   }
   .photo-reset-bar[hidden] { display: none; }
   .photo-reset-btn {
@@ -271,6 +273,93 @@
   .photo-reset-btn:hover {
     background: #F5F3EF;
     color: #2D2B28;
+  }
+  /* 세트로 저장 버튼 — 결과 영역 리셋바의 우측에 배치.
+     강조색(짙은 톤 배경)로 "주 액션"임을 시각적으로 전달.
+     저장 완료 후에는 disabled + "✓ 저장됨" 텍스트로 상태 잠금. */
+  .photo-save-set-btn {
+    padding: 6px 14px;
+    background: #2D2B28;
+    color: #FFFFFF;
+    border: 1px solid #2D2B28;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, opacity 0.2s;
+  }
+  .photo-save-set-btn:hover:not(:disabled) {
+    background: #1F1D1B;
+  }
+  .photo-save-set-btn:disabled {
+    background: #8B8680;
+    border-color: #8B8680;
+    cursor: default;
+    opacity: 0.85;
+  }
+  /* 세트 저장 모달 — 기존 wb-modal-overlay 재사용.
+     사이즈만 좁혀서 "이름만 입력하는 간단한 폼"으로 느껴지게. */
+  .save-set-modal {
+    max-width: 380px;
+    padding: 24px;
+  }
+  .save-set-modal .modal-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #2D2B28;
+    margin: 0 0 12px;
+  }
+  .save-set-modal .modal-desc {
+    font-size: 0.85rem;
+    color: #6B6660;
+    margin: 0 0 14px;
+    line-height: 1.5;
+  }
+  .save-set-input {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 0.95rem;
+    color: #2D2B28;
+    background: #FFFFFF;
+    border: 1px solid #D4D1CD;
+    border-radius: 6px;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .save-set-input:focus { border-color: #2D2B28; }
+  .save-set-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  .save-set-cancel,
+  .save-set-save {
+    padding: 8px 16px;
+    font-size: 0.88rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+  .save-set-cancel {
+    background: transparent;
+    color: #6B6660;
+    border: 1px solid #D4D1CD;
+  }
+  .save-set-cancel:hover { background: #F5F3EF; color: #2D2B28; }
+  .save-set-save {
+    background: #2D2B28;
+    color: #FFFFFF;
+    border: 1px solid #2D2B28;
+    font-weight: 600;
+  }
+  .save-set-save:hover:not(:disabled) { background: #1F1D1B; }
+  .save-set-save:disabled {
+    background: #8B8680;
+    border-color: #8B8680;
+    cursor: default;
+    opacity: 0.7;
   }
 
   /* AI 가이드 내 GE 설정 이동 버튼 — 미설정 상태에서만 노출.
@@ -827,6 +916,71 @@
     font-size: 0.95rem;
     text-align: center;
     padding-top: 40px;
+  }
+
+  /* === 세트 서브탭 === */
+  /* 세트 카드 — 단어장 리스트 영역에서 "묶음"을 나타내는 큰 항목.
+     기본 wordbook-item 보다 약간 크고 두 줄 구조(제목 + 메타). */
+  .set-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    background: #FFFFFF;
+    border: 1px solid #E5E2DD;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .set-card:hover { background: #FAF9F7; border-color: #D5D2CC; }
+  .set-card-main { flex: 1; min-width: 0; }
+  .set-card-name {
+    color: #2D2B28;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .set-card-meta {
+    color: #8B8680;
+    font-size: 0.8rem;
+  }
+  .set-card-chevron {
+    color: #B0ACA6;
+    font-size: 1.1rem;
+    flex: 0 0 auto;
+  }
+  /* 세트 상세 뷰 헤더 — 뒤로가기 + 세트 이름 + 메타 */
+  .set-detail-header {
+    margin-bottom: 16px;
+  }
+  .set-detail-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 0;
+    background: transparent;
+    border: none;
+    color: #6B6660;
+    font-size: 0.88rem;
+    cursor: pointer;
+    margin-bottom: 8px;
+  }
+  .set-detail-back:hover { color: #2D2B28; }
+  .set-detail-title {
+    color: #2D2B28;
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin: 0 0 4px;
+    word-break: break-word;
+  }
+  .set-detail-meta {
+    color: #8B8680;
+    font-size: 0.82rem;
   }
   /* 단어장 상세 모달 */
   .wb-modal-overlay {
@@ -1440,9 +1594,11 @@
         <button class="photo-mode-tab active" onclick="switchPhotoMode('ai')" data-i18n="photoModeAi">AI 자동 검색</button>
         <button class="photo-mode-tab" onclick="switchPhotoMode('marked')" data-i18n="photoModeMarked">마크 검색</button>
       </div>
-      <!-- 결과 표시 상태에서만 노출되는 리셋 바 — 새 사진 올리기로 초기 상태 복원 -->
+      <!-- 결과 표시 상태에서만 노출되는 리셋 바 — 새 사진 올리기 + 세트 저장.
+           좌: 리셋 (부가적), 우: 세트 저장 (주 액션). -->
       <div class="photo-reset-bar" id="photoResetBar" hidden>
         <button class="photo-reset-btn" onclick="resetPhotoSearch()" data-i18n="photoResetBtn">↻ 새 사진 올리기</button>
+        <button class="photo-save-set-btn" id="photoSaveSetBtn" onclick="openSaveSetModal()" data-i18n="photoSaveAsSet">세트로 저장</button>
       </div>
       <div class="photo-upload-area" id="photoUploadArea">
         <button class="upload-btn" onclick="handleUploadClick()" data-i18n="uploadPhoto">📂 사진 올리기</button>
@@ -1502,13 +1658,14 @@
 
     <!-- 탭3: 단어장 -->
     <div class="tab-content" id="tabWordbook">
-      <!-- 어휘/표현 서브탭 -->
+      <!-- 어휘/표현/세트 서브탭 -->
       <div class="wb-subtabs">
         <button class="wb-subtab active" onclick="switchWbMode('vocab')" id="wbTabVocab" data-i18n="wbTabVocab">단어 (0)</button>
         <button class="wb-subtab" onclick="switchWbMode('expr')" id="wbTabExpr" data-i18n="wbTabExpr">문장 (0)</button>
+        <button class="wb-subtab" onclick="switchWbMode('sets')" id="wbTabSets" data-i18n="wbSets">세트 (0)</button>
       </div>
-      <!-- 검색/정렬/전체삭제 툴바 -->
-      <div class="wordbook-toolbar">
+      <!-- 검색/정렬/전체삭제 툴바 — 세트 모드에서는 숨김 -->
+      <div class="wordbook-toolbar" id="wordbookToolbar">
         <input type="text" id="wordbookFilter" data-i18n="wordbookFilterPlaceholder" placeholder="단어 검색..." oninput="renderWordbook()">
         <select id="wordbookSort" onchange="renderWordbook()">
           <option value="recent" data-i18n="sortRecent">최근 추가순</option>
@@ -1522,7 +1679,13 @@
         <button class="sel-btn danger" onclick="deleteSelected()" data-i18n="delete">삭제</button>
         <button class="sel-btn" onclick="exitSelectMode()" data-i18n="cancel">취소</button>
       </div>
-      <!-- 단어 목록 -->
+      <!-- 세트 상세 뷰 헤더 — 세트 안 단어들을 볼 때만 표시 -->
+      <div class="set-detail-header" id="setDetailHeader" hidden>
+        <button class="set-detail-back" onclick="closeSetDetail()"><span data-i18n="setBackToList">← 세트 목록</span></button>
+        <h3 class="set-detail-title" id="setDetailTitle"></h3>
+        <div class="set-detail-meta" id="setDetailMeta"></div>
+      </div>
+      <!-- 단어 목록 / 세트 목록 — _wbMode 와 _activeSetId 에 따라 내용 분기 렌더 -->
       <div class="wordbook-list" id="wordbookList"></div>
     </div>
 
@@ -1650,6 +1813,20 @@
   <div class="wb-modal">
     <button class="wb-modal-close" onclick="closeWbModal()">&#10005;</button>
     <div id="wbModalContent"></div>
+  </div>
+</div>
+
+<!-- 세트 저장 모달 — 사진 검색 결과를 하나의 세트로 묶어 단어장에 일괄 저장.
+     wb-modal-overlay 를 재사용하여 스타일/표시 토글 로직을 통일. -->
+<div class="wb-modal-overlay" id="saveSetModal" onclick="if(event.target===this)closeSaveSetModal()">
+  <div class="wb-modal save-set-modal">
+    <h3 class="modal-title" data-i18n="setNameModalTitle">세트 이름 정하기</h3>
+    <p class="modal-desc" data-i18n="setNameModalDesc">이 단어들을 한 묶음(세트)으로 단어장에 저장합니다. 나중에 단어장에서 세트별로 볼 수 있어요.</p>
+    <input type="text" class="save-set-input" id="saveSetInput" data-i18n="setNamePlaceholder" placeholder="예: 2026-04-24 · 사진" maxlength="60">
+    <div class="save-set-actions">
+      <button class="save-set-cancel" onclick="closeSaveSetModal()" data-i18n="setCancelBtn">취소</button>
+      <button class="save-set-save" id="saveSetConfirmBtn" onclick="confirmSaveAsSet()" data-i18n="setSaveBtn">저장</button>
+    </div>
   </div>
 </div>
 
@@ -1864,6 +2041,156 @@ function resetPhotoSearch() {
   clearPhotoResultContent();
   /* 현재 모드 기준으로 가이드 재표시 — switchPhotoMode 가 가이드 노출·GE 힌트 갱신까지 처리 */
   switchPhotoMode(_photoMode);
+  /* 세트 저장 버튼 상태도 초기화 — 다음 검색에서 다시 "세트로 저장" 으로 노출 */
+  resetSaveSetBtn();
+}
+
+// ===== 세트 저장 =====
+// 사진 검색 결과(photoWords 배열)를 word_sets + user_wordbook 에 일괄 저장.
+// 설계:
+//   - 단어 각각에 대해 user_wordbook 에 set_id 가 채워진 row 를 넣는다.
+//   - 이미 단어장에 있는 단어는 건너뛴다(사용자가 정성껏 채운 스냅샷 보존).
+//   - photoWords 가 비어 있으면 모달 자체를 열지 않는다.
+//   - 저장 후에는 버튼을 disabled + "✓ 저장됨" 으로 잠가, 중복 저장을 UI 에서도 차단.
+
+/* 기본 세트 이름 생성 — "YYYY-MM-DD · 사진" 형태.
+   사용자는 모달에서 자유롭게 덮어쓸 수 있다. */
+function buildDefaultSetName() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const src = t('setSaveDefaultName') || '사진';
+  return `${y}-${m}-${day} · ${src}`;
+}
+
+/* 저장 버튼을 초기 상태로 되돌림 — 리셋 또는 실패 시 재시도 가능하게. */
+function resetSaveSetBtn() {
+  const btn = document.getElementById('photoSaveSetBtn');
+  if (!btn) return;
+  btn.disabled = false;
+  btn.textContent = t('photoSaveAsSet') || '세트로 저장';
+}
+
+/* 모달 오픈 — 단어가 하나도 없으면 무시. */
+function openSaveSetModal() {
+  if (!photoWords || photoWords.length === 0) return;
+  if (!_authUser?.id) {
+    alert(t('needLoginForWordbook') || '단어장 저장은 로그인이 필요합니다.');
+    return;
+  }
+  const input = document.getElementById('saveSetInput');
+  if (input) {
+    input.value = buildDefaultSetName();
+    /* 다음 틱에 포커스 + 전체 선택 — 사용자가 곧바로 이름만 바꾸기 쉽게. */
+    setTimeout(() => { input.focus(); input.select(); }, 0);
+  }
+  const saveBtn = document.getElementById('saveSetConfirmBtn');
+  if (saveBtn) {
+    saveBtn.disabled = false;
+    saveBtn.textContent = t('setSaveBtn') || '저장';
+  }
+  const overlay = document.getElementById('saveSetModal');
+  if (overlay) overlay.classList.add('active');
+}
+
+function closeSaveSetModal() {
+  const overlay = document.getElementById('saveSetModal');
+  if (overlay) overlay.classList.remove('active');
+}
+
+/* 실제 저장 — word_sets insert → user_wordbook bulk insert.
+   새 단어(단어장 미존재) 만 insert 하고, 이미 있는 단어는 건너뛴다.
+   모두 건너뛰어 신규가 0 이면 세트 row 는 남기지 않고 롤백. */
+async function confirmSaveAsSet() {
+  const userId = _authUser?.id;
+  if (!userId) return;
+  if (!photoWords || photoWords.length === 0) return;
+
+  const input = document.getElementById('saveSetInput');
+  const saveBtn = document.getElementById('saveSetConfirmBtn');
+  const name = (input?.value || '').trim();
+  if (!name) {
+    input?.focus();
+    return;
+  }
+
+  /* 저장 진행 중에는 모달의 저장 버튼을 잠궈 더블 클릭 방지 */
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.textContent = t('setSaving') || '저장중…';
+  }
+
+  try {
+    /* 1) 단어장 캐시 로드 — 기존 단어 중복 체크용 */
+    const map = await loadWordbookIfNeeded();
+    const newWords = photoWords.filter(w => !map.has(w.toLowerCase()));
+    if (newWords.length === 0) {
+      alert(t('setAllAlreadyExists') || '이미 모든 단어가 단어장에 있습니다.');
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = t('setSaveBtn') || '저장';
+      }
+      return;
+    }
+
+    /* 2) word_sets row 생성 → id 회수 */
+    const { data: setRow, error: setErr } = await supabaseClient
+      .from('word_sets')
+      .insert({ user_id: userId, name, source: 'photo' })
+      .select('id')
+      .single();
+    if (setErr) throw setErr;
+    const setId = setRow.id;
+
+    /* 3) user_wordbook 에 스켈레톤 row 일괄 insert — 상세 스냅샷은 차후 상세 진입 시 백필 */
+    const nowIso = new Date().toISOString();
+    const rows = newWords.map(w => ({
+      user_id: userId,
+      word: w.toLowerCase(),
+      set_id: setId,
+    }));
+    const { error: wbErr } = await supabaseClient
+      .from('user_wordbook')
+      .insert(rows);
+    if (wbErr) throw wbErr;
+
+    /* 4) 메모리 캐시 갱신 — 다음 조회에서 즉시 반영되도록 */
+    for (const w of newWords) {
+      map.set(w.toLowerCase(), {
+        user_id: userId,
+        word: w.toLowerCase(),
+        pos: '', ipa: '', cefr: '', corrected: '',
+        description: '', examples: '', verb_forms: '',
+        set_id: setId,
+        added_at: nowIso,
+      });
+    }
+
+    /* 5) 세트 캐시 무효화 — 단어장 탭에서 "세트 (N)" 카운트와 목록을 최신 반영 */
+    if (typeof invalidateWordSetsCache === 'function') invalidateWordSetsCache();
+
+    /* 6) UI 잠금 — 리셋 바의 저장 버튼을 "✓ 저장됨" 으로 바꾸고 비활성화 */
+    closeSaveSetModal();
+    const photoBtn = document.getElementById('photoSaveSetBtn');
+    if (photoBtn) {
+      photoBtn.disabled = true;
+      photoBtn.textContent = t('setSavedLabel') || '✓ 저장됨';
+    }
+
+    /* 7) 경험치 — 단어 수만큼 보너스 (addToWordbook 은 개당 5 점이나,
+       세트 일괄은 단어당 3 점으로 약간 낮게 주어 "세트는 스켈레톤" 임을 반영.) */
+    if (typeof addExp === 'function') {
+      addExp(newWords.length * 3, 'wordbook_set');
+    }
+  } catch (e) {
+    console.warn('세트 저장 실패:', e);
+    alert(t('setSaveFailed') || '저장에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = t('setSaveBtn') || '저장';
+    }
+  }
 }
 
 /* 검색 결과 렌더링 후 자동으로 단어장에 추가 */
@@ -2041,13 +2368,34 @@ async function updateWordLevel() {
   document.getElementById('wordLevelWrap').style.display = '';
 }
 
-// --- 단어장 어휘/표현 서브탭 ---
-let _wbMode = 'vocab'; // 'vocab' | 'expr'
+// --- 단어장 어휘/표현/세트 서브탭 ---
+let _wbMode = 'vocab'; // 'vocab' | 'expr' | 'sets'
+/* 세트 상세 뷰 진입 상태 — null = 세트 목록, uuid = 그 세트의 단어 목록 */
+let _activeSetId = null;
+
 function switchWbMode(mode) {
   _wbMode = mode;
+  /* 모드 전환 시 세트 상세 뷰는 항상 초기화 — 탭을 나갔다가 돌아와도 목록부터 */
+  _activeSetId = null;
+  /* 이전 탭에서 진입한 선택삭제 모드도 해제 — 사용자가 다른 탭으로 이동할 때 상태 잔존 방지 */
+  if (selectMode) exitSelectMode();
   document.querySelectorAll('.wb-subtab').forEach(t => t.classList.remove('active'));
-  document.getElementById(mode === 'vocab' ? 'wbTabVocab' : 'wbTabExpr').classList.add('active');
+  const tabIdMap = { vocab: 'wbTabVocab', expr: 'wbTabExpr', sets: 'wbTabSets' };
+  const activeTab = document.getElementById(tabIdMap[mode]);
+  if (activeTab) activeTab.classList.add('active');
+  /* 모드별 UI 가시성 — 세트 모드는 툴바/선택삭제 숨김, 일반 모드는 노출 */
+  updateWbUIVisibility();
   renderWordbook();
+}
+
+/* 툴바/상세헤더 가시성 업데이트 — 모드·세트상세 여부에 따라.
+   - 툴바(검색/정렬/선택삭제): sets 모드에서만 숨김 (vocab/expr 은 노출)
+   - 세트 상세 헤더: sets 모드 + _activeSetId 가 있을 때만 노출 */
+function updateWbUIVisibility() {
+  const toolbar = document.getElementById('wordbookToolbar');
+  const header = document.getElementById('setDetailHeader');
+  if (toolbar) toolbar.style.display = _wbMode === 'sets' ? 'none' : '';
+  if (header) header.hidden = !(_wbMode === 'sets' && _activeSetId);
 }
 
 // --- 발음 듣기 (브라우저 TTS) ---
@@ -3506,6 +3854,96 @@ async function backfillWordbookEntry(word, dbResult) {
   }
 }
 
+// --- 세트 (word_sets 테이블) ---
+/* 사용자의 세트 목록을 한 번 조회해 캐시. 저장(confirmSaveAsSet) 성공 시 invalidate.
+   null = 미조회, 배열 = 조회 완료 (빈 배열 포함) */
+let _wordSets = null;
+
+async function loadWordSetsIfNeeded(force = false) {
+  if (_wordSets && !force) return _wordSets;
+  const userId = _authUser?.id;
+  if (!userId) { _wordSets = []; return _wordSets; }
+  try {
+    const { data, error } = await supabaseClient
+      .from('word_sets')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    _wordSets = data || [];
+    return _wordSets;
+  } catch (e) {
+    console.warn('세트 목록 로드 실패:', e);
+    _wordSets = [];
+    return _wordSets;
+  }
+}
+
+/* 세트 캐시 무효화 — 새 세트 생성/삭제 시 호출 */
+function invalidateWordSetsCache() { _wordSets = null; }
+
+/* 세트 목록 렌더 — 카드 형태. 각 카드 클릭 → openSetDetail
+   세트 카드 메타: "N 단어 · 작성일" */
+function renderSetList(listEl, sets, wordList) {
+  if (!sets || sets.length === 0) {
+    listEl.innerHTML = `<div class="wordbook-empty">${t('setListEmpty') || '저장된 세트가 없습니다.'}</div>`;
+    return;
+  }
+  /* 세트별 단어 수 — wordList 한 번 순회로 계산 (O(n)) */
+  const countMap = new Map();
+  for (const w of wordList) {
+    if (w.set_id) countMap.set(w.set_id, (countMap.get(w.set_id) || 0) + 1);
+  }
+  listEl.innerHTML = sets.map(s => {
+    const count = countMap.get(s.id) || 0;
+    const dateStr = formatSetDate(s.created_at);
+    const safeName = escapeHtml(s.name || '');
+    const safeId = s.id.replace(/'/g, "\\'");
+    return `<div class="set-card" onclick="openSetDetail('${safeId}')">
+      <div class="set-card-main">
+        <div class="set-card-name">${safeName}</div>
+        <div class="set-card-meta">${count}${t('setCardWords') || '개 단어'} · ${dateStr}</div>
+      </div>
+      <span class="set-card-chevron">›</span>
+    </div>`;
+  }).join('');
+}
+
+/* 세트 created_at(ISO) → 로컬 YYYY-MM-DD 형식 간단 표시 */
+function formatSetDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+/* 세트 상세 헤더 갱신 — 제목+메타 채우기 */
+function updateSetDetailHeader(setRow, wordList) {
+  const titleEl = document.getElementById('setDetailTitle');
+  const metaEl = document.getElementById('setDetailMeta');
+  if (!setRow) {
+    if (titleEl) titleEl.textContent = '';
+    if (metaEl) metaEl.textContent = '';
+    return;
+  }
+  const count = wordList.filter(w => w.set_id === setRow.id).length;
+  if (titleEl) titleEl.textContent = setRow.name || '';
+  if (metaEl) metaEl.textContent = `${count}${t('setCardWords') || '개 단어'} · ${formatSetDate(setRow.created_at)}`;
+}
+
+function openSetDetail(setId) {
+  _activeSetId = setId;
+  updateWbUIVisibility();
+  renderWordbook();
+}
+
+function closeSetDetail() {
+  _activeSetId = null;
+  updateWbUIVisibility();
+  renderWordbook();
+}
+
 /* 단어장에서 삭제 */
 async function removeFromWordbook(word) {
   const userId = _authUser?.id;
@@ -3573,22 +4011,60 @@ async function deleteSelected() {
   renderWordbook();
 }
 
-/* 단어장 목록 렌더링 */
+/* 단어장 목록 렌더링 — _wbMode 에 따라 분기:
+   - 'vocab'/'expr': 기존대로 단어 목록
+   - 'sets' + _activeSetId=null: 세트 카드 목록
+   - 'sets' + _activeSetId 설정: 해당 세트에 속한 단어 목록 */
 async function renderWordbook() {
   const list = await getWordbookAll();
   const filter = (document.getElementById('wordbookFilter').value || '').toLowerCase();
   const sort = document.getElementById('wordbookSort').value;
   const listEl = document.getElementById('wordbookList');
 
-  /* 어휘/표현 개수 업데이트 */
-  const vocabAll = list.filter(item => !!item.pos);
-  const exprAll = list.filter(item => !item.pos);
+  /* 어휘/표현/세트 개수 업데이트
+     — 어휘/표현 구분은 단어에 스페이스 포함 여부로 결정.
+       (세트 일괄 저장으로 스냅샷이 없는 단어도 올바르게 분류되게 하기 위함.
+        기존 pos 기반 분류는 세트 스켈레톤 단어를 모두 표현으로 몰아넣어 부자연스러웠음.) */
+  const vocabAll = list.filter(item => !item.word.includes(' '));
+  const exprAll = list.filter(item => item.word.includes(' '));
+  const sets = await loadWordSetsIfNeeded();
   const vocabTab = document.getElementById('wbTabVocab');
   const exprTab = document.getElementById('wbTabExpr');
+  const setsTab = document.getElementById('wbTabSets');
   if (vocabTab) vocabTab.textContent = `${t('wbVocab')} (${vocabAll.length})`;
   if (exprTab) exprTab.textContent = `${t('wbExpr')} (${exprAll.length})`;
+  if (setsTab) setsTab.textContent = `${t('wbSets')} (${sets.length})`;
 
-  /* 모드 필터 — pos 유무로 어휘/표현 구분 */
+  /* 세트 모드 분기 */
+  if (_wbMode === 'sets') {
+    updateWbUIVisibility();
+    if (!_activeSetId) {
+      /* 세트 목록 — 카드 리스트 */
+      renderSetList(listEl, sets, list);
+      return;
+    }
+    /* 세트 상세 — 이 세트에 속한 단어만 표시 */
+    const setRow = sets.find(s => s.id === _activeSetId);
+    updateSetDetailHeader(setRow, list);
+    const setWords = list.filter(w => w.set_id === _activeSetId);
+    if (setWords.length === 0) {
+      listEl.innerHTML = `<div class="wordbook-empty">${t('setEmpty') || '이 세트에 단어가 없습니다.'}</div>`;
+      return;
+    }
+    /* 세트 내부는 added_at 오름차순 (저장 순서 유지) */
+    const sortedSetWords = [...setWords].sort((a, b) => new Date(a.added_at) - new Date(b.added_at));
+    listEl.innerHTML = sortedSetWords.map(item => {
+      const safeWord = item.word.replace(/'/g, "\\'");
+      return `<div class="wordbook-item" data-word="${item.word}" onclick="onWordbookItemClick('${safeWord}', this)">
+        <span class="wordbook-item-check"></span>
+        <span class="wordbook-item-word">${item.word}</span>
+        <button class="wordbook-item-speak" onclick="event.stopPropagation(); speak('${safeWord}')" title="${t('pronunciation')}">&#128264;</button>
+      </div>`;
+    }).join('');
+    return;
+  }
+
+  /* 모드 필터 — 어휘/표현 (스페이스 기준) */
   let modeFiltered = _wbMode === 'vocab' ? vocabAll : exprAll;
 
   /* 텍스트 필터 */
