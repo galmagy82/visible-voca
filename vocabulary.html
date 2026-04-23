@@ -1492,7 +1492,7 @@
       <div class="guide" id="guidePhotoAi">
         <span data-i18n="photoGuideAiBody">AI가 GE 레벨에 맞는 단어들을 골라 줍니다.<br><br>검색할 페이지의 사진을 찍어 📂 버튼을 눌러서 올리세요.<br>사진은 여러 장을 한꺼번에 올릴 수 있어요.</span>
         <!-- GE 미설정일 때만 노출되는 설정 이동 버튼 (refreshAiGuideGeHint 가 제어) -->
-        <button class="ge-goto-btn" id="geGotoFromGuide" hidden onclick="gotoGeSettings()" data-i18n="photoGeSetBtn">GE 레벨 먼저 설정하기</button>
+        <button class="ge-goto-btn" id="geGotoFromGuide" hidden onclick="gotoGeSettings()" data-i18n="photoGeSetBtn">GE 레벨 설정하기</button>
       </div>
       <!-- 추출된 단어 리스트 -->
       <div class="word-list" id="wordList"></div>
@@ -1777,6 +1777,10 @@ let _photoMode = 'ai';
      실제 Edge Function 프롬프트 분기와 결과 파싱은 다음 단계에서 추가 예정. */
 function switchPhotoMode(mode) {
   const m = mode === 'ai' ? 'ai' : 'marked';
+  /* 결과 상태(리셋 바 노출)에서 모드 전환 시 이전 모드의 결과 내용을 지우고 새 모드의 초기 상태로 복원.
+     같은 사진을 다른 모드로 재사용하려면 어차피 재업로드가 필요하므로 reset 이 가장 자연스러움. */
+  const resetBar = document.getElementById('photoResetBar');
+  if (resetBar && !resetBar.hidden) clearPhotoResultContent();
   _photoMode = m;
   const tabs = document.querySelectorAll('.photo-mode-tab');
   tabs.forEach(t => t.classList.remove('active'));
@@ -1839,21 +1843,24 @@ function enterPhotoResultState() {
   if (resetBar) resetBar.hidden = false;
 }
 
-/* 초기 상태 복원 — 리셋 바 클릭 시 호출.
-   결과 영역 비우고, 업로드 영역·현재 모드 가이드·힌트 버튼까지 올바른 상태로 되돌린다. */
-function resetPhotoSearch() {
-  /* 결과 상태 해제 */
+/* 결과 상태 해제 + 내용 초기화 헬퍼 — resetPhotoSearch 와 모드 전환 양쪽에서 공용.
+   switchPhotoMode 는 호출하지 않음 (호출자 쪽에서 가이드 갱신 책임). */
+function clearPhotoResultContent() {
   const uploadArea = document.getElementById('photoUploadArea');
   const resetBar = document.getElementById('photoResetBar');
   if (uploadArea) uploadArea.style.display = '';
   if (resetBar) resetBar.hidden = true;
-  /* 결과·단어 리스트·파일 인풋 초기화 */
   if (wordListEl) wordListEl.innerHTML = '';
   if (resultPhoto) resultPhoto.innerHTML = '';
   photoWords = [];
   wordResults = {};
   const input = document.getElementById('photoInput');
   if (input) input.value = '';
+}
+
+/* 초기 상태 복원 — 리셋 바 클릭 시 호출. */
+function resetPhotoSearch() {
+  clearPhotoResultContent();
   /* 현재 모드 기준으로 가이드 재표시 — switchPhotoMode 가 가이드 노출·GE 힌트 갱신까지 처리 */
   switchPhotoMode(_photoMode);
 }
