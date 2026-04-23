@@ -2180,11 +2180,13 @@ async function confirmSaveAsSet() {
   }
 
   try {
-    /* 1) 단어장 캐시 로드 — 기존 단어 중복 체크용 */
+    /* 1) 단어장 캐시 로드 — 기존 단어 여부 판단용.
+       photoWords 자체에 대소문자 다른 중복이 있을 수 있으므로 lower 기준으로 dedup. */
     const map = await loadWordbookIfNeeded();
-    const newWords = photoWords.filter(w => !map.has(w.toLowerCase()));
-    if (newWords.length === 0) {
-      alert(t('setAllAlreadyExists') || '이미 모든 단어가 단어장에 있습니다.');
+    const allWordsLower = Array.from(new Set(photoWords.map(w => w.toLowerCase())));
+    const newWords = allWordsLower.filter(w => !map.has(w));
+    const existingWords = allWordsLower.filter(w => map.has(w));
+    if (allWordsLower.length === 0) {
       if (saveBtn) {
         saveBtn.disabled = false;
         saveBtn.textContent = t('setSaveBtn') || '저장';
@@ -2201,28 +2203,48 @@ async function confirmSaveAsSet() {
     if (setErr) throw setErr;
     const setId = setRow.id;
 
-    /* 3) user_wordbook 에 스켈레톤 row 일괄 insert — 상세 스냅샷은 차후 상세 진입 시 백필 */
+    /* 3-a) 신규 단어: 스켈레톤 row 일괄 insert (set_id 부여).
+       상세 스냅샷은 차후 상세 진입 시 백필. */
     const nowIso = new Date().toISOString();
-    const rows = newWords.map(w => ({
-      user_id: userId,
-      word: w.toLowerCase(),
-      set_id: setId,
-    }));
-    const { error: wbErr } = await supabaseClient
-      .from('user_wordbook')
-      .insert(rows);
-    if (wbErr) throw wbErr;
-
-    /* 4) 메모리 캐시 갱신 — 다음 조회에서 즉시 반영되도록 */
-    for (const w of newWords) {
-      map.set(w.toLowerCase(), {
+    if (newWords.length > 0) {
+      const rows = newWords.map(w => ({
         user_id: userId,
-        word: w.toLowerCase(),
+        word: w,
+        set_id: setId,
+      }));
+      const { error: wbErr } = await supabaseClient
+        .from('user_wordbook')
+        .insert(rows);
+      if (wbErr) throw wbErr;
+    }
+
+    /* 3-b) 기존 단어: set_id 만 새 세트로 UPDATE.
+       — 사용자 멘탈 모델: "이 사진의 N개 단어가 하나의 세트" (기존/신규 무관)
+       — 이전에 다른 세트에 소속돼 있었다면 새 세트로 이동. 현재 세트 생성 경로가
+         사진 검색뿐이라 같은 사진 재저장 외엔 실질 충돌 없음. */
+    if (existingWords.length > 0) {
+      const { error: updErr } = await supabaseClient
+        .from('user_wordbook')
+        .update({ set_id: setId })
+        .eq('user_id', userId)
+        .in('word', existingWords);
+      if (updErr) throw updErr;
+    }
+
+    /* 4) 메모리 캐시 갱신 — 신규는 새 row, 기존은 set_id 만 교체 */
+    for (const w of newWords) {
+      map.set(w, {
+        user_id: userId,
+        word: w,
         pos: '', ipa: '', cefr: '', corrected: '',
         description: '', examples: '', verb_forms: '',
         set_id: setId,
         added_at: nowIso,
       });
+    }
+    for (const w of existingWords) {
+      const row = map.get(w);
+      if (row) map.set(w, { ...row, set_id: setId });
     }
 
     /* 5) 세트 캐시 무효화 — 단어장 탭에서 "세트 (N)" 카운트와 목록을 최신 반영 */
