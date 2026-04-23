@@ -982,6 +982,42 @@
     color: #8B8680;
     font-size: 0.82rem;
   }
+  /* 세트 상세 헤더의 제목행(제목+삭제버튼 수평 정렬).
+     제목이 길어져도 삭제 버튼이 밀리지 않도록 제목 flex:1. */
+  .set-detail-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .set-detail-title-row .set-detail-title {
+    flex: 1;
+    min-width: 0;
+  }
+  /* 세트 삭제 버튼 — 파괴적 액션이라 빨간 계열 텍스트로 경고 시그널만 주고,
+     배경은 투명 유지해 제목을 방해하지 않음. 실제 확인은 모달에서. */
+  .set-delete-btn {
+    flex: 0 0 auto;
+    padding: 4px 10px;
+    background: transparent;
+    color: #B4402E;
+    border: 1px solid #E2C6BF;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+  .set-delete-btn:hover {
+    background: #FBEAE5;
+    color: #8E2F20;
+  }
+  /* 세트 삭제 확인 모달 — save-set-modal 과 같은 사이즈.
+     실행 버튼만 빨강 계열로 차이. */
+  .delete-set-save {
+    background: #B4402E;
+    border-color: #B4402E;
+  }
+  .delete-set-save:hover:not(:disabled) { background: #8E2F20; }
   /* 단어장 상세 모달 */
   .wb-modal-overlay {
     position: fixed;
@@ -1682,7 +1718,10 @@
       <!-- 세트 상세 뷰 헤더 — 세트 안 단어들을 볼 때만 표시 -->
       <div class="set-detail-header" id="setDetailHeader" hidden>
         <button class="set-detail-back" onclick="closeSetDetail()"><span data-i18n="setBackToList">← 세트 목록</span></button>
-        <h3 class="set-detail-title" id="setDetailTitle"></h3>
+        <div class="set-detail-title-row">
+          <h3 class="set-detail-title" id="setDetailTitle"></h3>
+          <button class="set-delete-btn" onclick="openDeleteSetModal()" data-i18n="setDeleteBtn">세트 삭제</button>
+        </div>
         <div class="set-detail-meta" id="setDetailMeta"></div>
       </div>
       <!-- 단어 목록 / 세트 목록 — _wbMode 와 _activeSetId 에 따라 내용 분기 렌더 -->
@@ -1826,6 +1865,19 @@
     <div class="save-set-actions">
       <button class="save-set-cancel" onclick="closeSaveSetModal()" data-i18n="setCancelBtn">취소</button>
       <button class="save-set-save" id="saveSetConfirmBtn" onclick="confirmSaveAsSet()" data-i18n="setSaveBtn">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 세트 삭제 확인 모달 — 제목에 세트 이름, 본문에 "단어는 유지된다"는 안내 노출.
+     실제 단어 수는 JS 에서 동적으로 채움. -->
+<div class="wb-modal-overlay" id="deleteSetModal" onclick="if(event.target===this)closeDeleteSetModal()">
+  <div class="wb-modal save-set-modal">
+    <h3 class="modal-title" id="deleteSetModalTitle"></h3>
+    <p class="modal-desc" id="deleteSetModalDesc"></p>
+    <div class="save-set-actions">
+      <button class="save-set-cancel" onclick="closeDeleteSetModal()" data-i18n="setCancelBtn">취소</button>
+      <button class="save-set-save delete-set-save" id="deleteSetConfirmBtn" onclick="confirmDeleteSet()" data-i18n="setDeleteConfirmBtn">삭제</button>
     </div>
   </div>
 </div>
@@ -3942,6 +3994,92 @@ function closeSetDetail() {
   _activeSetId = null;
   updateWbUIVisibility();
   renderWordbook();
+}
+
+// ===== 세트 삭제 =====
+/* 세트 삭제 확인 모달 오픈 — 현재 _activeSetId 대상.
+   제목에는 세트 이름, 본문에는 "단어 N개는 단어 탭에 유지" 메시지. */
+function openDeleteSetModal() {
+  if (!_activeSetId) return;
+  const sets = _wordSets || [];
+  const setRow = sets.find(s => s.id === _activeSetId);
+  if (!setRow) return;
+  const wordList = _wordbookMap ? Array.from(_wordbookMap.values()) : [];
+  const count = wordList.filter(w => w.set_id === _activeSetId).length;
+
+  /* 제목: "{name} 세트를 삭제할까요?" */
+  const titleTpl = t('setDeleteConfirmTitle') || '"{name}" 세트를 삭제할까요?';
+  const titleEl = document.getElementById('deleteSetModalTitle');
+  if (titleEl) titleEl.textContent = titleTpl.replace('{name}', setRow.name || '');
+
+  /* 본문: count 가 0 이면 "비어 있다" 메시지, 아니면 "단어 N개는 단어 탭에 유지" 메시지 */
+  const descEl = document.getElementById('deleteSetModalDesc');
+  if (descEl) {
+    if (count === 0) {
+      descEl.textContent = t('setDeleteEmptyDesc') || '이 세트는 비어 있습니다. 삭제해도 단어 탭에는 영향이 없습니다.';
+    } else {
+      const descTpl = t('setDeleteConfirmDesc') || '이 세트의 단어 {count}개는 단어 탭에 그대로 남습니다.';
+      descEl.textContent = descTpl.replace('{count}', String(count));
+    }
+  }
+
+  /* 버튼 잠금 해제(재오픈 대비) */
+  const btn = document.getElementById('deleteSetConfirmBtn');
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = t('setDeleteConfirmBtn') || '삭제';
+  }
+
+  document.getElementById('deleteSetModal').classList.add('active');
+}
+
+function closeDeleteSetModal() {
+  document.getElementById('deleteSetModal').classList.remove('active');
+}
+
+/* 실제 삭제 — word_sets.delete() 한 번으로 충분.
+   FK ON DELETE SET NULL 덕분에 user_wordbook.set_id 는 자동으로 NULL 처리.
+   클라이언트 캐시에서도 해당 단어들의 set_id 를 null 로 맞추고,
+   세트 목록 캐시 무효화 후 목록 뷰로 복귀. */
+async function confirmDeleteSet() {
+  const userId = _authUser?.id;
+  if (!userId || !_activeSetId) return;
+  const targetId = _activeSetId;
+  const btn = document.getElementById('deleteSetConfirmBtn');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = t('setDeleting') || '삭제중…';
+  }
+  try {
+    const { error } = await supabaseClient
+      .from('word_sets')
+      .delete()
+      .eq('id', targetId)
+      .eq('user_id', userId);
+    if (error) throw error;
+
+    /* 단어장 캐시에서 해당 단어들의 set_id 를 null 로 정리 — 단어 탭에는 그대로 남게 됨 */
+    if (_wordbookMap) {
+      for (const [k, row] of _wordbookMap) {
+        if (row.set_id === targetId) {
+          _wordbookMap.set(k, { ...row, set_id: null });
+        }
+      }
+    }
+    /* 세트 목록 캐시 무효화 — 다음 렌더에서 Supabase 재조회 */
+    invalidateWordSetsCache();
+
+    closeDeleteSetModal();
+    /* 세트 상세에서 나와 목록 뷰로 복귀 */
+    closeSetDetail();
+  } catch (e) {
+    console.warn('세트 삭제 실패:', e);
+    alert(t('setDeleteFailed') || '세트 삭제에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = t('setDeleteConfirmBtn') || '삭제';
+    }
+  }
 }
 
 /* 단어장에서 삭제 */
