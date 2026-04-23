@@ -1290,6 +1290,15 @@ const observer = new IntersectionObserver((entries) => {
 
 sections.forEach(s => observer.observe(s));
 
+/* "Geminary는 왜 다를까요?" 앵커 클릭 시 타깃 섹션(#features)의 enter 애니메이션을 미리 확정.
+   초기 상태: .section { transform: translateY(40px); opacity: 0 } → 첫 클릭 시 네이티브 앵커
+   스크롤이 끝나기 전 IntersectionObserver 가 .visible 을 붙이며 transform 이 translateY(0) 으로
+   애니메이션됨. 이 시각적 이동(40px) 때문에 섹션 상단이 뷰포트 위로 잘려 보이는 버그가 있었음.
+   클릭 시점에 .visible 을 선반영해 transform 이 이미 0 인 상태에서 스크롤을 시작하도록 한다. */
+document.getElementById('exploreBtn')?.addEventListener('click', () => {
+  document.getElementById('features')?.classList.add('visible');
+});
+
 const progressBar = document.getElementById('progressBar');
 const scrollIndicator = document.getElementById('scrollIndicator');
 
