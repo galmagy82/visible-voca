@@ -958,19 +958,6 @@
   .set-detail-header {
     margin-bottom: 16px;
   }
-  .set-detail-back {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 4px 0;
-    background: transparent;
-    border: none;
-    color: #6B6660;
-    font-size: 0.88rem;
-    cursor: pointer;
-    margin-bottom: 8px;
-  }
-  .set-detail-back:hover { color: #2D2B28; }
   .set-detail-title {
     color: #2D2B28;
     font-size: 1.15rem;
@@ -1717,7 +1704,6 @@
       </div>
       <!-- 세트 상세 뷰 헤더 — 세트 안 단어들을 볼 때만 표시 -->
       <div class="set-detail-header" id="setDetailHeader" hidden>
-        <button class="set-detail-back" onclick="closeSetDetail()"><span data-i18n="setBackToList">← 세트 목록</span></button>
         <div class="set-detail-title-row">
           <h3 class="set-detail-title" id="setDetailTitle"></h3>
           <button class="set-delete-btn" onclick="openDeleteSetModal()" data-i18n="setDeleteBtn">세트 삭제</button>
