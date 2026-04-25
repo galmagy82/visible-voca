@@ -461,80 +461,6 @@ Do NOT add commentary. Return ONLY the JSON object.`
   }
 }
 
-/* Reading Tutor 페이지 경계 걸친 문장 재번역 — 페이지별 번역에서 끊긴 문장만 재처리.
-   각 job 의 tail(앞 페이지 끝의 미완 문장 조각) + head(다음 페이지 시작 조각) 을 합쳐
-   하나의 완전한 문장으로 번역한 뒤, 같은 의미 지점에서 다시 split 해 두 조각의 번역을 반환.
-   여러 job 을 한 번의 호출로 묶어 처리해 호출 횟수를 1회로 유지 (지연/비용 최소화). */
-async function callGeminiMergeTranslate(jobs: Array<{ tail: string; head: string }>, targetLang: string, apiKey: string) {
-  const langName = READING_LANG_NAMES[targetLang] || 'Korean'
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`
-
-  /* JSON.stringify 로 입력을 그대로 직렬화해 보냄.
-     Gemini 가 페이지 경계 걸친 문장 재번역에 특화된 응답을 내도록 명확한 지시 + 구조화 schema 사용. */
-  const prompt = `You are a translator helping a reading-comprehension app fix sentences that span page boundaries in an English book.
-
-Each "job" describes one cross-page sentence:
-  - "tail" is text from the END of one page (an incomplete sentence ending without proper terminator).
-  - "head" is text from the BEGINNING of the next page (the continuation).
-Together, "tail" + " " + "head" form ONE continuous English passage.
-
-For each job:
-1. Translate the FULL passage (tail + head) into natural ${langName} as ONE coherent unit, using context from both parts.
-2. Split that ${langName} translation into two parts at the SAME semantic point where the English split occurs (between tail and head).
-3. Return "tailTrans" (translation of the tail portion) and "headTrans" (translation of the head portion).
-
-Goal: when displayed page-by-page, "tailTrans" appears at the end of page i and "headTrans" at the start of page i+1, and reading them in sequence yields a natural ${langName} sentence — far better than translating each fragment in isolation.
-
-Rules:
-- Preserve "results" array length exactly equal to the number of input jobs (one result per job, in the same order).
-- Do NOT add commentary or explanations.
-
-Input jobs (JSON):
-${JSON.stringify({ jobs })}`
-
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.3,
-        maxOutputTokens: 4096,
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: "OBJECT",
-          properties: {
-            results: {
-              type: "ARRAY",
-              description: "One entry per input job, same order.",
-              items: {
-                type: "OBJECT",
-                properties: {
-                  tailTrans: { type: "STRING", description: `${langName} translation of the tail portion.` },
-                  headTrans: { type: "STRING", description: `${langName} translation of the head portion.` },
-                },
-                required: ["tailTrans", "headTrans"],
-              },
-            },
-          },
-          required: ["results"],
-        },
-        thinkingConfig: { thinkingBudget: -1 },
-      },
-    }),
-  })
-  if (!res.ok) {
-    const err = await res.text()
-    throw new Error(`Gemini reading-merge-translate API error ${res.status}: ${err}`)
-  }
-  const data = await res.json()
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text
-  if (!text) throw new Error('Empty response from Gemini')
-  return JSON.parse(text) as {
-    results: Array<{ tailTrans: string; headTrans: string }>;
-  }
-}
-
 /* 사용량 증가: 최초 검색 시 row 생성, 이후 검색 시 trial_count +1 */
 async function incrementTrialCount(userId: string): Promise<number> {
   const { data } = await supabase
@@ -641,35 +567,9 @@ Deno.serve(async (req) => {
         result = parsed
         break
       }
-      case "reading-merge-translate": {
-        /* Reading Tutor: 페이지 경계 걸친 문장만 묶어 재번역 (D안).
-           프론트가 boundary 감지 후 문제 있는 조각만 jobs 로 묶어 1회 호출. 이미지 없음, 텍스트 전용. */
-        const jobs = Array.isArray(body.jobs) ? body.jobs : null
-        if (!jobs || jobs.length === 0) {
-          return new Response(
-            JSON.stringify({ error: "jobs array is required and must be non-empty" }),
-            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          )
-        }
-        /* 입력 정합성 점검 — 각 job 은 tail/head 문자열 둘 다 가져야 함 */
-        const validJobs = jobs.filter((j: unknown) =>
-          j && typeof (j as { tail: unknown }).tail === "string"
-            && typeof (j as { head: unknown }).head === "string"
-        ) as Array<{ tail: string; head: string }>
-        if (validJobs.length === 0) {
-          return new Response(
-            JSON.stringify({ error: "every job must include tail and head as strings" }),
-            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          )
-        }
-        const targetLang: string = typeof body.targetLang === "string" ? body.targetLang : "ko"
-        const merged = await callGeminiMergeTranslate(validJobs, targetLang, apiKey)
-        result = merged
-        break
-      }
       default:
         return new Response(
-          JSON.stringify({ error: "Invalid action. Use: search, image, extract, reading-extract, reading-merge-translate" }),
+          JSON.stringify({ error: "Invalid action. Use: search, image, extract, reading-extract" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         )
     }
