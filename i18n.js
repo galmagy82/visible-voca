@@ -260,7 +260,7 @@ const I18N = {
 
     /* Reading Tutor */
     readingUploadBtn: '📂 책 사진 올리기',
-    readingUploadHint: '한 번에 최대 30페이지까지 올릴 수 있어요',
+    readingUploadHint: '앞페이지부터 차례로 찍은 사진을 올리세요. 촬영 시각 순서대로 자동 정렬됩니다 (최대 30장).',
     readingExtracting: '텍스트 추출 중...',
     readingTranslate: '번역',
     readingShowOriginal: '원문',
@@ -270,6 +270,8 @@ const I18N = {
     readingError: '추출 중 오류가 발생했습니다. 다시 시도해 주세요.',
     readingReupload: '↻ 새로 올리기',
     readingBackToMain: '← 메인으로',
+    readingBackToReadingTutor: '← Reading Tutor',
+    readingBackToBookList: '← 내 책 목록',
     /* Reading Tutor — 책 저장 / 내 책 / 학습 단어 */
     readingMyBooks: '📚 내 책',
     readingMyBooksEmpty: '아직 저장한 책이 없어요',
@@ -556,7 +558,7 @@ const I18N = {
 
     /* Reading Tutor */
     readingUploadBtn: '📂 Upload book photos',
-    readingUploadHint: 'Up to 30 pages per upload',
+    readingUploadHint: 'Photograph pages in order — they\'ll be auto-sorted by capture time (up to 30).',
     readingExtracting: 'Extracting text...',
     readingTranslate: 'Translate',
     readingShowOriginal: 'Original',
@@ -566,6 +568,8 @@ const I18N = {
     readingError: 'An error occurred while extracting. Please try again.',
     readingReupload: '↻ Upload new',
     readingBackToMain: '← Back to main',
+    readingBackToReadingTutor: '← Reading Tutor',
+    readingBackToBookList: '← My books',
     /* Reading Tutor — book save / my books / study items */
     readingMyBooks: '📚 My books',
     readingMyBooksEmpty: 'No saved books yet',
@@ -851,7 +855,7 @@ const I18N = {
 
     /* Reading Tutor */
     readingUploadBtn: '📂 本の写真をアップロード',
-    readingUploadHint: '一度に最大30ページまでアップロード可能',
+    readingUploadHint: 'ページ順に撮影してアップロードしてください。撮影時刻で自動的に並びます（最大30枚）。',
     readingExtracting: 'テキストを抽出中...',
     readingTranslate: '翻訳',
     readingShowOriginal: '原文',
@@ -861,6 +865,8 @@ const I18N = {
     readingError: '抽出中にエラーが発生しました。もう一度お試しください。',
     readingReupload: '↻ 新しくアップロード',
     readingBackToMain: '← メインへ',
+    readingBackToReadingTutor: '← Reading Tutor',
+    readingBackToBookList: '← マイブック',
     /* Reading Tutor — 本の保存 / マイブック / 学習アイテム */
     readingMyBooks: '📚 マイブック',
     readingMyBooksEmpty: 'まだ保存した本はありません',
@@ -1147,7 +1153,7 @@ const I18N = {
 
     /* Reading Tutor */
     readingUploadBtn: '📂 上传书页照片',
-    readingUploadHint: '一次最多上传30页',
+    readingUploadHint: '请按页面顺序拍照后上传，将按拍摄时间自动排序（最多30张）。',
     readingExtracting: '正在提取文本...',
     readingTranslate: '翻译',
     readingShowOriginal: '原文',
@@ -1157,6 +1163,8 @@ const I18N = {
     readingError: '提取时发生错误，请重试。',
     readingReupload: '↻ 重新上传',
     readingBackToMain: '← 返回主页',
+    readingBackToReadingTutor: '← Reading Tutor',
+    readingBackToBookList: '← 我的书',
     /* Reading Tutor — 保存书籍 / 我的书 / 学习单词 */
     readingMyBooks: '📚 我的书',
     readingMyBooksEmpty: '还没有保存的书',
@@ -1442,7 +1450,7 @@ const I18N = {
 
     /* Reading Tutor */
     readingUploadBtn: '📂 Subir fotos del libro',
-    readingUploadHint: 'Hasta 30 páginas por carga',
+    readingUploadHint: 'Fotografía las páginas en orden y súbelas; se ordenarán automáticamente por hora de captura (hasta 30).',
     readingExtracting: 'Extrayendo texto...',
     readingTranslate: 'Traducir',
     readingShowOriginal: 'Original',
@@ -1452,6 +1460,8 @@ const I18N = {
     readingError: 'Ocurrió un error al extraer. Inténtalo de nuevo.',
     readingReupload: '↻ Subir nuevo',
     readingBackToMain: '← Volver al inicio',
+    readingBackToReadingTutor: '← Reading Tutor',
+    readingBackToBookList: '← Mis libros',
     /* Reading Tutor — guardar libro / mis libros / elementos de estudio */
     readingMyBooks: '📚 Mis libros',
     readingMyBooksEmpty: 'Aún no hay libros guardados',
@@ -1737,7 +1747,7 @@ const I18N = {
 
     /* Reading Tutor */
     readingUploadBtn: '📂 Tải ảnh sách lên',
-    readingUploadHint: 'Tối đa 30 trang mỗi lần',
+    readingUploadHint: 'Hãy chụp các trang theo thứ tự rồi tải lên; ảnh sẽ được tự động sắp xếp theo thời gian chụp (tối đa 30 ảnh).',
     readingExtracting: 'Đang trích xuất văn bản...',
     readingTranslate: 'Dịch',
     readingShowOriginal: 'Bản gốc',
@@ -1747,6 +1757,8 @@ const I18N = {
     readingError: 'Đã xảy ra lỗi khi trích xuất. Vui lòng thử lại.',
     readingReupload: '↻ Tải lên mới',
     readingBackToMain: '← Về trang chính',
+    readingBackToReadingTutor: '← Reading Tutor',
+    readingBackToBookList: '← Sách của tôi',
     /* Reading Tutor — lưu sách / sách của tôi / mục học */
     readingMyBooks: '📚 Sách của tôi',
     readingMyBooksEmpty: 'Chưa có sách đã lưu',
@@ -2032,7 +2044,7 @@ const I18N = {
 
     /* Reading Tutor */
     readingUploadBtn: '📂 อัปโหลดภาพหนังสือ',
-    readingUploadHint: 'อัปโหลดได้สูงสุด 30 หน้าต่อครั้ง',
+    readingUploadHint: 'ถ่ายภาพหน้าตามลำดับแล้วอัปโหลด ระบบจะจัดเรียงตามเวลาถ่ายอัตโนมัติ (สูงสุด 30 ภาพ)',
     readingExtracting: 'กำลังแยกข้อความ...',
     readingTranslate: 'แปล',
     readingShowOriginal: 'ต้นฉบับ',
@@ -2042,6 +2054,8 @@ const I18N = {
     readingError: 'เกิดข้อผิดพลาดขณะแยกข้อความ กรุณาลองใหม่',
     readingReupload: '↻ อัปโหลดใหม่',
     readingBackToMain: '← กลับไปหน้าหลัก',
+    readingBackToReadingTutor: '← Reading Tutor',
+    readingBackToBookList: '← หนังสือของฉัน',
     /* Reading Tutor — บันทึกหนังสือ / หนังสือของฉัน / รายการเรียน */
     readingMyBooks: '📚 หนังสือของฉัน',
     readingMyBooksEmpty: 'ยังไม่มีหนังสือที่บันทึกไว้',
@@ -2327,7 +2341,7 @@ const I18N = {
 
     /* Reading Tutor */
     readingUploadBtn: '📂 Enviar fotos do livro',
-    readingUploadHint: 'Até 30 páginas por envio',
+    readingUploadHint: 'Fotografe as páginas em ordem e envie; serão ordenadas automaticamente pelo horário de captura (até 30).',
     readingExtracting: 'Extraindo texto...',
     readingTranslate: 'Traduzir',
     readingShowOriginal: 'Original',
@@ -2337,6 +2351,8 @@ const I18N = {
     readingError: 'Ocorreu um erro ao extrair. Tente novamente.',
     readingReupload: '↻ Enviar novo',
     readingBackToMain: '← Voltar ao início',
+    readingBackToReadingTutor: '← Reading Tutor',
+    readingBackToBookList: '← Meus livros',
     /* Reading Tutor — salvar livro / meus livros / itens de estudo */
     readingMyBooks: '📚 Meus livros',
     readingMyBooksEmpty: 'Ainda não há livros salvos',
