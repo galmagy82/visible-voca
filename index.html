@@ -1265,13 +1265,16 @@ async function updateAuthUI() {
   }
 }
 
-/* Google 로그인 — 스크롤 위치를 저장한 뒤 OAuth 진행 */
+/* Google 로그인 — 스크롤 위치를 저장한 뒤 OAuth 진행
+   prompt:'select_account' — Google 쪽 세션이 살아있을 때도 계정 선택 화면을 강제로 띄워
+   다른 계정으로 로그인 가능하게 함. (없으면 직전 계정으로 자동 통과) */
 document.getElementById('googleLoginBtn').addEventListener('click', async () => {
   localStorage.setItem('geminary_scrollY', window.scrollY.toString());
   await supabaseClient.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: window.location.origin + '/index.html'
+      redirectTo: window.location.origin + '/index.html',
+      queryParams: { prompt: 'select_account' },
     }
   });
 });
