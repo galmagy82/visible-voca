@@ -22,7 +22,7 @@
 <!-- Supabase JS — 인증 세션 확인용 (vocabulary.html 와 동일 cdn) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <!-- 다국어 -->
-<script src="i18n.js?v=20260426c"></script>
+<script src="i18n.js?v=20260426d"></script>
 <!-- 공용 "내 영어 레벨" 컴포넌트 (모달 + 칩 + 로직 + renderSlider 임베드 헬퍼) -->
 <script src="level-picker.js?v=20260426"></script>
 <style>
@@ -48,12 +48,31 @@
     margin-bottom: 16px;
     min-height: 32px;  /* 칩 미렌더 시점에도 높이 유지 */
   }
+  /* 뒤로가기 링크 — 텍스트 앞에 CSS 로 그린 셰브론(< 모양). 유니코드 ← 보다 또렷하고
+     hover 시 살짝 왼쪽으로 슬라이드해 "뒤로 간다" 는 마이크로 인터랙션 힌트를 줌.
+     주의: ::before transform 에서 translate 가 rotate 보다 앞에 와야 문서 좌표계로
+           이동함 (rotate 뒤에 두면 회전된 축으로 이동해서 의도와 다른 방향으로 움직임). */
   .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
     font-size: 0.9rem;
     color: #6B6660;
     text-decoration: none;
+    transition: color 0.15s;
+  }
+  .back-link::before {
+    content: '';
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-left: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(45deg);
+    transition: transform 0.18s ease, border-color 0.15s;
   }
   .back-link:hover { color: #2D2B28; }
+  .back-link:hover::before { transform: translateX(-3px) rotate(45deg); }
   /* 칩(좌) + ⚙️(우) 묶음. 칩이 미렌더 상태일 때도 ⚙️ 위치가 흔들리지 않도록 flex */
   .top-bar-right {
     display: flex;
@@ -528,7 +547,7 @@
   <div class="top-bar">
     <!-- 뒤로가기 링크. 화면 상태(업로드 / 책 목록 / 책 뷰어 + saved/fresh) 에 따라
          updateTopBackLink() 가 href·라벨을 동적으로 바꿔 "직전 화면" 으로 돌아가게 함. -->
-    <a id="topBackLink" href="main.html" class="back-link" data-i18n="readingBackToMain">← 메인으로</a>
+    <a id="topBackLink" href="main.html" class="back-link" data-i18n="readingBackToMain">메인화면</a>
     <div class="top-bar-right">
       <!-- "내 영어 레벨" 칩 — level-picker.js 가 동적으로 렌더 (점수 빠른 확인 + 클릭 시 레벨 모달) -->
       <div class="level-chip-host" id="levelChipHost"></div>
@@ -985,26 +1004,27 @@ function updateTopBackLink() {
   const bookListVisible = !document.getElementById('bookListArea').hidden;
   const bookViewerVisible = !document.getElementById('bookViewer').hidden;
 
+  /* 폴백 문자열에는 화살표 미포함 — 셰브론은 .back-link::before 가 그려줌 */
   if (bookListVisible) {
     link.href = '#';
     link.setAttribute('data-i18n', 'readingBackToReadingTutor');
-    link.textContent = tt('readingBackToReadingTutor', '← Reading Tutor');
+    link.textContent = tt('readingBackToReadingTutor', 'Reading Tutor');
     link.onclick = (e) => { e.preventDefault(); backToUpload(); };
   } else if (bookViewerVisible && _isSavedView) {
     link.href = '#';
     link.setAttribute('data-i18n', 'readingBackToBookList');
-    link.textContent = tt('readingBackToBookList', '← 내 책 목록');
+    link.textContent = tt('readingBackToBookList', '내 책 목록');
     link.onclick = (e) => { e.preventDefault(); showBookList(); };
   } else if (bookViewerVisible) {
     link.href = '#';
     link.setAttribute('data-i18n', 'readingBackToReadingTutor');
-    link.textContent = tt('readingBackToReadingTutor', '← Reading Tutor');
+    link.textContent = tt('readingBackToReadingTutor', 'Reading Tutor');
     link.onclick = (e) => { e.preventDefault(); resetReading(); };
   } else {
     /* 업로드 화면(또는 로딩 중) — 메인으로 직행 */
     link.href = 'main.html';
     link.setAttribute('data-i18n', 'readingBackToMain');
-    link.textContent = tt('readingBackToMain', '← 메인으로');
+    link.textContent = tt('readingBackToMain', '메인화면');
     link.onclick = null;
   }
 }
