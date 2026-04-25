@@ -1092,37 +1092,51 @@ function renderPageContent(p, pageIdx) {
 /* 본문에서 학습 단어 surface 를 case-insensitive 로 찾아 <span class="study-highlight"> 로 감쌈.
    - 더 긴 surface 부터 매칭 (idiom 이 단어 매칭에 먹히지 않도록)
    - 알파벳/숫자 경계에서만 매칭 (단어 중간에 걸려 잘못 잡히는 것 방지)
-   - 위치 기반 occupied 배열로 중복 매칭 방지 → 최종 출력은 left-to-right 단일 패스로 안전하게 조립 */
+   - 위치 기반 occupied 배열로 중복 매칭 방지 → 최종 출력은 left-to-right 단일 패스로 안전하게 조립
+   - surface 안의 공백은 \s+ 로 컴파일 → OCR 줄바꿈 ("cuddle\nup with") / 연속 공백도 매칭됨 */
 function highlightText(rawText, studyItems, pageIdx) {
   const sorted = studyItems
     .map((item, idx) => ({ item, idx }))
-    .filter((x) => x.item && typeof x.item.surface === 'string' && x.item.surface.length > 0)
+    .filter((x) => x.item && typeof x.item.surface === 'string' && x.item.surface.trim().length > 0)
     .sort((a, b) => b.item.surface.length - a.item.surface.length);
 
   const occupied = new Array(rawText.length).fill(false);
   const matches = [];
-  const lowerText = rawText.toLowerCase();
   const isWord = (ch) => /[A-Za-z0-9]/.test(ch);
+  /* 정규식 메타문자 이스케이프 — surface 에 들어올 수 있는 ., (, ?, $, * 등 보호 */
+  const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
   for (const { item, idx } of sorted) {
-    const surface = item.surface;
-    const lowerSurface = surface.toLowerCase();
-    let pos = 0;
-    while (pos < rawText.length) {
-      const found = lowerText.indexOf(lowerSurface, pos);
-      if (found === -1) break;
-      const endIdx = found + surface.length;
-      /* 단어 경계: surface 양 끝이 알파벳/숫자일 때만 인접 문자도 비-알파벳/숫자여야 함 */
-      const startOk = !isWord(surface[0]) || found === 0 || !isWord(rawText[found - 1]);
-      const endOk = !isWord(surface[surface.length - 1]) || endIdx === rawText.length || !isWord(rawText[endIdx]);
+    const surface = item.surface.trim();
+    /* surface 의 모든 whitespace 를 \s+ 패턴으로 치환:
+       "cuddle up with" → /cuddle\s+up\s+with/ig
+       단일 단어 ("furry") 는 split 결과 1개라서 그대로 단어 매칭 */
+    const pattern = surface
+      .split(/\s+/)
+      .map(escapeRegex)
+      .join('\\s+');
+    let re;
+    try {
+      re = new RegExp(pattern, 'gi');
+    } catch (_e) {
+      continue;
+    }
+    const startsWord = isWord(surface[0]);
+    const endsWord = isWord(surface[surface.length - 1]);
+    let m;
+    while ((m = re.exec(rawText)) !== null) {
+      if (m[0].length === 0) { re.lastIndex++; continue; }
+      const start = m.index;
+      const end = start + m[0].length;
+      /* 단어 경계 검사: surface 끝 글자가 알파벳/숫자일 때만 인접 글자도 비-단어여야 함.
+         (구두점·idiom 끝 글자 등은 경계 검사 면제 — 기존 동작과 동일) */
+      const startOk = !startsWord || start === 0 || !isWord(rawText[start - 1]);
+      const endOk = !endsWord || end === rawText.length || !isWord(rawText[end]);
       let overlap = false;
-      for (let i = found; i < endIdx; i++) { if (occupied[i]) { overlap = true; break; } }
+      for (let i = start; i < end; i++) { if (occupied[i]) { overlap = true; break; } }
       if (startOk && endOk && !overlap) {
-        for (let i = found; i < endIdx; i++) occupied[i] = true;
-        matches.push({ start: found, end: endIdx, idx });
-        pos = endIdx;
-      } else {
-        pos = found + 1;
+        for (let i = start; i < end; i++) occupied[i] = true;
+        matches.push({ start, end, idx });
       }
     }
   }
