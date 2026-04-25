@@ -151,20 +151,27 @@
     color: #8A8078;
   }
 
-  /* 업로드 영역 추가 버튼 — "📚 내 책" 진입점 */
-  .my-books-btn {
+  /* 업로드 영역 보조 진입점 — "📚 My Books" 텍스트 링크.
+     업로드(메인 CTA) 와 시각 위계를 분리하기 위해 버튼 박스 대신 작은 텍스트 링크로 표현.
+     hover 시 ::after 화살표가 살짝 오른쪽으로 슬라이드 — back-link 의 chevron 과 대칭. */
+  .my-books-link {
     display: inline-block;
-    margin-top: 12px;
-    padding: 10px 18px;
-    font-size: 0.9rem;
-    border: 1px solid #D5D2CC;
-    border-radius: 10px;
-    background: #FFFFFF;
-    color: #4A4641;
+    margin-top: 22px;
+    padding: 6px 4px;
+    font-size: 0.875rem;
+    color: #6B6660;
+    background: none;
+    border: none;
     cursor: pointer;
-    transition: background 0.2s, border-color 0.2s;
+    transition: color 0.15s;
   }
-  .my-books-btn:hover { background: #EDECEA; border-color: #9A9590; color: #2D2B28; }
+  .my-books-link::after {
+    content: ' →';
+    display: inline-block;
+    transition: transform 0.18s ease;
+  }
+  .my-books-link:hover { color: #2D2B28; }
+  .my-books-link:hover::after { transform: translateX(3px); }
 
   /* 북 뷰어 — 결과 상태 */
   .book-toolbar {
@@ -563,7 +570,7 @@
 촬영 시각 순서대로 자동 정렬됩니다 (최대 30장).</div>
     <!-- 저장된 책 목록 진입 — 인증된 유저에게만 표시 (initAuth 에서 토글) -->
     <div>
-      <button class="my-books-btn" id="myBooksBtn" onclick="showBookList()" data-i18n="readingMyBooks" hidden>📚 내 책</button>
+      <button class="my-books-link" id="myBooksBtn" onclick="showBookList()" data-i18n="readingMyBooks" hidden>📚 My Books</button>
     </div>
   </div>
 
