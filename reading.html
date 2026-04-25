@@ -23,6 +23,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <!-- 다국어 -->
 <script src="i18n.js"></script>
+<!-- 공용 "내 영어 레벨" 컴포넌트 (모달 + 칩 + 로직) -->
+<script src="level-picker.js?v=20260425"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -212,7 +214,8 @@
   <div class="top-bar">
     <a href="main.html" class="back-link" data-i18n="readingBackToMain">← 메인으로</a>
     <div class="page-title" data-i18n="menuReadingTitle">Reading Tutor</div>
-    <div class="spacer"></div>
+    <!-- "내 영어 레벨" 칩 — level-picker.js 가 동적으로 렌더 -->
+    <div class="level-chip-host" id="levelChipHost"></div>
   </div>
 
   <!-- 업로드 영역 (초기 상태) -->
@@ -262,6 +265,9 @@ const isLocalDev = ['localhost', '127.0.0.1', ''].includes(location.hostname)
                 || location.protocol === 'file:';
 
 let _authUser = null;
+/* 현재 사용자의 GE 점수 캐시 — 헤더 칩 + (향후) 단어 추출에서 사용. null = 미설정/미조회 */
+let _geScore = null;
+
 async function initAuth() {
   const { data: { session } } = await supabaseClient.auth.getSession();
   _authUser = session?.user || null;
@@ -272,6 +278,42 @@ async function initAuth() {
   document.body.style.display = '';
   applyI18nForReading();
   setupTranslateToggle();
+  /* 로그인 후 GE 점수 로드 + 헤더 칩 렌더 (로컬 개발에서는 user 없으면 스킵) */
+  await loadAndRenderLevelChip();
+}
+
+/* "내 영어 레벨" 칩을 헤더에 그립니다.
+   - 점수가 있으면 "내 영어 레벨: 6.5 (중급) ✏️"
+   - 없으면 "내 영어 레벨 설정하기"
+   - 둘 다 클릭 시 모달이 열리고, 저장하면 칩이 갱신됨 */
+async function loadAndRenderLevelChip() {
+  if (!_authUser) return;  // 로컬 개발 비로그인 상태에서는 칩 비활성
+  if (typeof window.LevelPicker === 'undefined') return;
+  _geScore = await window.LevelPicker.load(supabaseClient, _authUser.id);
+  renderLevelChip();
+}
+
+function renderLevelChip() {
+  const host = document.getElementById('levelChipHost');
+  if (!host || typeof window.LevelPicker === 'undefined') return;
+  window.LevelPicker.renderChip({
+    container: host,
+    score: _geScore,
+    onClick: openLevelModal,
+  });
+}
+
+function openLevelModal() {
+  if (!_authUser || typeof window.LevelPicker === 'undefined') return;
+  window.LevelPicker.openModal({
+    supabase: supabaseClient,
+    userId: _authUser.id,
+    currentScore: _geScore,
+    onSave: (newScore) => {
+      _geScore = newScore;
+      renderLevelChip();
+    },
+  });
 }
 
 function getUserId() {

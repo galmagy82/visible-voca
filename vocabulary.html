@@ -34,6 +34,8 @@
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <!-- 다국어 지원 -->
 <script src="i18n.js?v=20260424"></script>
+<!-- 공용 "내 영어 레벨" 컴포넌트 — 본 페이지는 인라인 슬라이더를 유지하고 라벨 헬퍼만 활용 -->
+<script src="level-picker.js?v=20260425"></script>
 <!-- Supabase SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
@@ -1933,13 +1935,10 @@ async function getMyGeScore() {
 }
 
 /* GE 점수 → 5단계 레벨 라벨 (i18n 키 반환).
+   임계값/매핑은 level-picker.js (LevelPicker.label) 에 정의 — reading.html 등 다른 페이지와 공유.
    경계는 [a, b) 규칙: 정확히 3.0 은 초중급, 5.0 은 중급 ... 9.0 은 고급. */
 function geLevelLabel(val) {
-  if (val < 3) return t('geLabelBeginner');
-  if (val < 5) return t('geLabelElementary');
-  if (val < 7) return t('geLabelIntermediate');
-  if (val < 9) return t('geLabelUpperInt');
-  return t('geLabelAdvanced');
+  return window.LevelPicker.label(val);
 }
 
 /* 말풍선 위치·값 갱신.
