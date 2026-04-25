@@ -260,7 +260,7 @@ const I18N = {
 
     /* Reading Tutor */
     readingUploadBtn: '📂 책 사진 올리기',
-    readingUploadHint: '앞페이지부터 차례로 찍은 사진을 올리세요. 촬영 시각 순서대로 자동 정렬됩니다 (최대 30장).',
+    readingUploadHint: '앞페이지부터 차례로 찍은 사진을 올리세요.\n촬영 시각 순서대로 자동 정렬됩니다 (최대 30장).',
     readingExtracting: '텍스트 추출 중...',
     readingTranslate: '번역',
     readingShowOriginal: '원문',
@@ -558,7 +558,7 @@ const I18N = {
 
     /* Reading Tutor */
     readingUploadBtn: '📂 Upload book photos',
-    readingUploadHint: 'Photograph pages in order — they\'ll be auto-sorted by capture time (up to 30).',
+    readingUploadHint: 'Photograph pages in order.\nThey\'ll be auto-sorted by capture time (up to 30).',
     readingExtracting: 'Extracting text...',
     readingTranslate: 'Translate',
     readingShowOriginal: 'Original',
@@ -855,7 +855,7 @@ const I18N = {
 
     /* Reading Tutor */
     readingUploadBtn: '📂 本の写真をアップロード',
-    readingUploadHint: 'ページ順に撮影してアップロードしてください。撮影時刻で自動的に並びます（最大30枚）。',
+    readingUploadHint: 'ページ順に撮影してアップロードしてください。\n撮影時刻で自動的に並びます（最大30枚）。',
     readingExtracting: 'テキストを抽出中...',
     readingTranslate: '翻訳',
     readingShowOriginal: '原文',
@@ -1153,7 +1153,7 @@ const I18N = {
 
     /* Reading Tutor */
     readingUploadBtn: '📂 上传书页照片',
-    readingUploadHint: '请按页面顺序拍照后上传，将按拍摄时间自动排序（最多30张）。',
+    readingUploadHint: '请按页面顺序拍照后上传。\n将按拍摄时间自动排序（最多30张）。',
     readingExtracting: '正在提取文本...',
     readingTranslate: '翻译',
     readingShowOriginal: '原文',
@@ -1450,7 +1450,7 @@ const I18N = {
 
     /* Reading Tutor */
     readingUploadBtn: '📂 Subir fotos del libro',
-    readingUploadHint: 'Fotografía las páginas en orden y súbelas; se ordenarán automáticamente por hora de captura (hasta 30).',
+    readingUploadHint: 'Fotografía las páginas en orden y súbelas.\nSe ordenarán automáticamente por hora de captura (hasta 30).',
     readingExtracting: 'Extrayendo texto...',
     readingTranslate: 'Traducir',
     readingShowOriginal: 'Original',
@@ -1747,7 +1747,7 @@ const I18N = {
 
     /* Reading Tutor */
     readingUploadBtn: '📂 Tải ảnh sách lên',
-    readingUploadHint: 'Hãy chụp các trang theo thứ tự rồi tải lên; ảnh sẽ được tự động sắp xếp theo thời gian chụp (tối đa 30 ảnh).',
+    readingUploadHint: 'Hãy chụp các trang theo thứ tự rồi tải lên.\nẢnh sẽ được tự động sắp xếp theo thời gian chụp (tối đa 30 ảnh).',
     readingExtracting: 'Đang trích xuất văn bản...',
     readingTranslate: 'Dịch',
     readingShowOriginal: 'Bản gốc',
@@ -2044,7 +2044,7 @@ const I18N = {
 
     /* Reading Tutor */
     readingUploadBtn: '📂 อัปโหลดภาพหนังสือ',
-    readingUploadHint: 'ถ่ายภาพหน้าตามลำดับแล้วอัปโหลด ระบบจะจัดเรียงตามเวลาถ่ายอัตโนมัติ (สูงสุด 30 ภาพ)',
+    readingUploadHint: 'ถ่ายภาพหน้าตามลำดับแล้วอัปโหลด\nระบบจะจัดเรียงตามเวลาถ่ายอัตโนมัติ (สูงสุด 30 ภาพ)',
     readingExtracting: 'กำลังแยกข้อความ...',
     readingTranslate: 'แปล',
     readingShowOriginal: 'ต้นฉบับ',
@@ -2341,7 +2341,7 @@ const I18N = {
 
     /* Reading Tutor */
     readingUploadBtn: '📂 Enviar fotos do livro',
-    readingUploadHint: 'Fotografe as páginas em ordem e envie; serão ordenadas automaticamente pelo horário de captura (até 30).',
+    readingUploadHint: 'Fotografe as páginas em ordem e envie.\nSerão ordenadas automaticamente pelo horário de captura (até 30).',
     readingExtracting: 'Extraindo texto...',
     readingTranslate: 'Traduzir',
     readingShowOriginal: 'Original',
