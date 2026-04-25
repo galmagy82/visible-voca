@@ -97,6 +97,34 @@
     color: #4A4641;
   }
 
+  /* 좌상단 "← 메인화면" 백 링크 — 우상단 로그아웃과 대칭으로 배치.
+     셰브론은 ::before 가 CSS 로 그려주고 hover 시 살짝 좌측으로 슬라이드 (reading.html 와 동일). */
+  .back-link {
+    position: absolute;
+    top: 16px;
+    left: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: #6B6660;
+    text-decoration: none;
+    transition: color 0.15s;
+    z-index: 100;
+  }
+  .back-link::before {
+    content: '';
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-left: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(45deg);
+    transition: transform 0.18s ease, border-color 0.15s;
+  }
+  .back-link:hover { color: #2D2B28; }
+  .back-link:hover::before { transform: translateX(-3px) rotate(45deg); }
+
   /* 메인 레이아웃: 왼쪽 탭 + 오른쪽 컨텐츠 */
   .main-layout {
     display: flex;
@@ -1507,6 +1535,12 @@
       right: 12px;
       padding: 5px 12px;
     }
+    /* 좌상단 백 링크도 동일하게 모바일에서 톤다운 */
+    .back-link {
+      top: 14px;
+      left: 12px;
+      font-size: 0.8rem;
+    }
     .content {
       padding-left: 0;
       border-left: none;
@@ -1542,6 +1576,9 @@
 </head>
 <!-- 인증 확인 전까지 본문 숨김 (깜빡임 방지) -->
 <body style="display:none">
+
+<!-- 좌상단 고정 백 링크 — main.html 허브로 복귀. 우상단 로그아웃과 대칭. -->
+<a class="back-link" href="main.html" data-i18n="readingBackToMain">메인화면</a>
 
 <!-- 우상단 고정 로그아웃 버튼 — 사이드바에서 분리해 화면 우상단에 고정 -->
 <button class="top-logout" id="vocabLogoutBtn" data-i18n="logout">로그아웃</button>
