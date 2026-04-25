@@ -896,6 +896,8 @@ function highlightText(rawText, studyItems, pageIdx) {
 function renderStudyList(items, pageIdx) {
   const titleTpl = (typeof t === 'function') ? t('readingStudyItemsTitle') : '이 페이지의 학습 단어 ({n})';
   const title = titleTpl.replace('{n}', items.length);
+  /* 본문 예문(example_in_text) 은 의도적으로 표시하지 않음 — 페이지 본문에 이미 같은 문장이
+     하이라이트까지 된 채로 보이므로 카드에 또 띄우면 중복. 데이터는 jsonb 에 보관되지만 화면에는 안 씀. */
   const lis = items.map((it, i) => `
     <li class="study-item-li" id="study-item-${pageIdx}-${i}">
       <div>
@@ -903,7 +905,6 @@ function renderStudyList(items, pageIdx) {
         <span class="study-item-type">${escapeHtml(formatStudyType(it.type))}</span>
       </div>
       <div class="study-item-meaning">${escapeHtml(it.meaning || '')}</div>
-      ${it.example_in_text ? `<div class="study-item-example">${escapeHtml(it.example_in_text)}</div>` : ''}
     </li>`).join('');
   return `<details class="study-list-details" open>
     <summary class="study-list-summary">${escapeHtml(title)}</summary>

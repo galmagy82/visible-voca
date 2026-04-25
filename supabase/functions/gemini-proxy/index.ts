@@ -381,8 +381,7 @@ Selection rules for "study_items":
   - Skip items above GE ${targetMax.toFixed(1)} (too hard for context-based learning at this stage).
   - Prioritize items that expand this user's vocabulary in the next learning step.
   - "surface" must be the EXACT substring as it appears in the text (preserve casing/punctuation).
-  - "meaning" should be a concise ${langName} explanation (1 short phrase).
-  - "example_in_text" should be the sentence (or short clause) from the page where the item appears.`
+  - "meaning" should be a concise ${langName} explanation (1 short phrase).`
   } else {
     studyInstructions = `
 3. Return an empty array for "study_items" (user level not provided).`
@@ -424,12 +423,11 @@ Do NOT add commentary. Return ONLY the JSON object.`
               items: {
                 type: "OBJECT",
                 properties: {
-                  surface:         { type: "STRING", description: "Exact substring from the text." },
-                  type:            { type: "STRING", description: "word | idiom | phrasal_verb | collocation" },
-                  meaning:         { type: "STRING", description: `Concise meaning in ${langName}.` },
-                  example_in_text: { type: "STRING", description: "The sentence or short clause where it appears." },
+                  surface: { type: "STRING", description: "Exact substring from the text." },
+                  type:    { type: "STRING", description: "word | idiom | phrasal_verb | collocation" },
+                  meaning: { type: "STRING", description: `Concise meaning in ${langName}.` },
                 },
-                required: ["surface", "type", "meaning", "example_in_text"],
+                required: ["surface", "type", "meaning"],
               },
             },
           },
@@ -450,7 +448,7 @@ Do NOT add commentary. Return ONLY the JSON object.`
     original: string;
     translated: string;
     no_text: boolean;
-    study_items: Array<{ surface: string; type: string; meaning: string; example_in_text: string }>;
+    study_items: Array<{ surface: string; type: string; meaning: string }>;
   }
 }
 
