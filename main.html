@@ -142,6 +142,24 @@
     font-size: 0.9rem;
     color: #6B6660;
   }
+  /* 비활성(준비 중) 카드 — 클릭 막고 톤 다운, 우상단에 배지 노출 */
+  .menu-card.disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+    position: relative;
+  }
+  .menu-card.disabled:hover { border-color: #D5D2CC; background: #FFFFFF; }
+  .menu-card .coming-soon-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    font-size: 0.7rem;
+    color: #8A8078;
+    background: #EDECEA;
+    padding: 3px 8px;
+    border-radius: 10px;
+    letter-spacing: 0.02em;
+  }
 
   /* 설정 버튼 */
 
@@ -340,11 +358,15 @@
 <!-- 카테고리 메뉴 -->
 <div class="menu">
   <a class="menu-card" href="vocabulary.html">
-    <h2 data-i18n="menuVocaTitle">Visual Voca</h2>
+    <h2 data-i18n="menuVocaTitle">Visual Dictionary</h2>
     <p data-i18n="menuVocaDesc">단어의 느낌과 뉘앙스를 이미지와 함께 알아보세요</p>
   </a>
+  <a class="menu-card" href="reading.html">
+    <h2 data-i18n="menuReadingTitle">Reading Tutor</h2>
+    <p data-i18n="menuReadingDesc">책 사진을 읽기 자료로 만들어, 단어와 표현을 함께 학습하세요</p>
+  </a>
   <a class="menu-card" href="writing.html">
-    <h2 data-i18n="menuWritingTitle">Visual Essay</h2>
+    <h2 data-i18n="menuWritingTitle">Writing Tutor</h2>
     <p data-i18n="menuWritingDesc">에세이를 ���칭받고, 나만의 그림책으로 만들어보세요</p>
   </a>
 </div>

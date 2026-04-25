@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<!-- 인앱 브라우저 감지 → 외부 브라우저 전환 (vocabulary.html / main.html 동일 패턴) -->
+<script>
+(function() {
+  var ua = navigator.userAgent;
+  var isInApp = /KAKAOTALK|Line|FBAN|FBAV|Instagram|NAVER|wv/i.test(ua);
+  if (!isInApp) return;
+  if (/Android/i.test(ua)) {
+    location.href = 'intent://' + location.host + location.pathname + location.search +
+      '#Intent;scheme=https;package=com.android.chrome;end';
+  } else if (!location.search.includes('openExternalBrowser=1')) {
+    location.href = location.href + (location.search ? '&' : '?') + 'openExternalBrowser=1';
+  }
+})();
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reading Tutor — Geminary</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<!-- Supabase JS — 인증 세션 확인용 (vocabulary.html 와 동일 cdn) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<!-- 다국어 -->
+<script src="i18n.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #F7F6F3;
+    color: #2D2B28;
+    min-height: 100vh;
+    padding: 30px 20px 60px;
+  }
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  /* 상단 — 메인 복귀 + 타이틀 */
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+  .back-link {
+    font-size: 0.9rem;
+    color: #6B6660;
+    text-decoration: none;
+  }
+  .back-link:hover { color: #2D2B28; }
+  .page-title {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #2D2B28;
+  }
+  .top-bar .spacer { width: 80px; }
+
+  /* 업로드 영역 */
+  .upload-area {
+    text-align: center;
+    padding: 60px 20px;
+  }
+  .upload-btn {
+    padding: 14px 24px;
+    font-size: 1rem;
+    border: 1px dashed #B0ACA6;
+    border-radius: 12px;
+    background: #FFFFFF;
+    color: #6B6660;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .upload-btn:hover { background: #EDECEA; border-color: #9A9590; color: #2D2B28; }
+  .upload-hint {
+    margin-top: 14px;
+    font-size: 0.85rem;
+    color: #8A8078;
+  }
+
+  /* 추출 진행 상태 */
+  .loading-area {
+    text-align: center;
+    padding: 80px 20px;
+    color: #6B6660;
+  }
+  .spinner {
+    display: inline-block;
+    width: 28px;
+    height: 28px;
+    border: 3px solid #E5E2DE;
+    border-top-color: #5A8A42;
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+    margin-bottom: 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-progress {
+    margin-top: 8px;
+    font-size: 0.85rem;
+    color: #8A8078;
+  }
+
+  /* 북 뷰어 — 결과 상태 */
+  .book-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .reupload-btn {
+    padding: 8px 14px;
+    font-size: 0.85rem;
+    border: 1px solid #D5D2CC;
+    border-radius: 10px;
+    background: #FFFFFF;
+    color: #6B6660;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .reupload-btn:hover { background: #EDECEA; color: #2D2B28; }
+  .translate-toggle {
+    padding: 8px 14px;
+    font-size: 0.85rem;
+    border: 1px solid #D5D2CC;
+    border-radius: 10px;
+    background: #FFFFFF;
+    color: #4A4641;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .translate-toggle:hover { background: #EDECEA; }
+  .translate-toggle.active { background: #5A8A42; color: #FFFFFF; border-color: #5A8A42; }
+
+  /* 페이지 슬라이드 컨테이너 — overflow hidden + 좌우 슬라이드 트랜스폼 */
+  .book-stage {
+    position: relative;
+    background: #FFFFFF;
+    border: 1px solid #D5D2CC;
+    border-radius: 14px;
+    overflow: hidden;
+    min-height: 320px;
+  }
+  .page-track {
+    display: flex;
+    transition: transform 0.35s ease;
+    will-change: transform;
+  }
+  .page {
+    flex: 0 0 100%;
+    padding: 28px 24px;
+    min-height: 320px;
+    /* 텍스트를 가로 중앙 정렬 + 자식이 콘텐츠 너비만큼만 차지하도록 flex 사용 */
+    display: flex;
+    justify-content: center;
+  }
+  .page-text {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: #2D2B28;
+    white-space: pre-wrap;
+    word-break: break-word;
+    /* pre-wrap + flex child → 가장 긴 줄에 맞춰 박스 너비 자동 결정 (오른쪽 여백 최소화) */
+    max-width: 100%;
+  }
+  .page-error {
+    text-align: center;
+    color: #8A8078;
+    font-size: 0.9rem;
+    padding: 60px 20px;
+  }
+
+  /* 네비게이션 (페이지 카운터 + 화살표) */
+  .nav-bar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 24px;
+    margin-top: 16px;
+  }
+  .nav-arrow {
+    width: 38px;
+    height: 38px;
+    border: 1px solid #D5D2CC;
+    border-radius: 50%;
+    background: #FFFFFF;
+    color: #4A4641;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: background 0.2s;
+  }
+  .nav-arrow:hover:not(:disabled) { background: #EDECEA; }
+  .nav-arrow:disabled { opacity: 0.35; cursor: not-allowed; }
+  .page-counter {
+    font-size: 0.9rem;
+    color: #6B6660;
+    min-width: 60px;
+    text-align: center;
+  }
+
+  @media (max-width: 480px) {
+    .page { padding: 22px 18px; }
+    .page-text { font-size: 0.95rem; }
+  }
+</style>
+</head>
+<body style="display:none">
+<div class="container">
+
+  <!-- 상단 바 -->
+  <div class="top-bar">
+    <a href="main.html" class="back-link" data-i18n="readingBackToMain">← 메인으로</a>
+    <div class="page-title" data-i18n="menuReadingTitle">Reading Tutor</div>
+    <div class="spacer"></div>
+  </div>
+
+  <!-- 업로드 영역 (초기 상태) -->
+  <div class="upload-area" id="uploadArea">
+    <button class="upload-btn" onclick="document.getElementById('photoInput').click()" data-i18n="readingUploadBtn">📂 책 사진 올리기</button>
+    <input type="file" id="photoInput" accept="image/*" multiple style="display:none" onchange="handlePhotos(this)">
+    <div class="upload-hint" data-i18n="readingUploadHint">한 번에 최대 30페이지까지 올릴 수 있어요</div>
+  </div>
+
+  <!-- 추출 중 (로딩 상태) -->
+  <div class="loading-area" id="loadingArea" hidden>
+    <div class="spinner"></div>
+    <div data-i18n="readingExtracting">텍스트 추출 중...</div>
+    <div class="loading-progress" id="loadingProgress"></div>
+  </div>
+
+  <!-- 북 뷰어 (결과 상태) -->
+  <div id="bookViewer" hidden>
+    <div class="book-toolbar">
+      <button class="reupload-btn" onclick="resetReading()" data-i18n="readingReupload">↻ 새로 올리기</button>
+      <!-- 번역 토글 — UI 언어가 영어이면 숨김 (책 원문이 영어이므로 번역 의미 없음) -->
+      <button class="translate-toggle" id="translateToggle" onclick="toggleTranslate()"></button>
+    </div>
+    <div class="book-stage">
+      <div class="page-track" id="pageTrack"></div>
+    </div>
+    <div class="nav-bar">
+      <button class="nav-arrow" id="prevBtn" onclick="goPrev()">◀</button>
+      <div class="page-counter" id="pageCounter"></div>
+      <button class="nav-arrow" id="nextBtn" onclick="goNext()">▶</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ===== Reading Tutor ===== */
+
+/* --- Supabase 초기화 (vocabulary.html 와 동일 키) --- */
+const SUPABASE_URL = 'https://grdtxvpebjtfhuqdngfn.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_Ca5H8oz6gJ72mfgUW8zYvg_U6IVwooW';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const EDGE_FUNCTION_URL = 'https://grdtxvpebjtfhuqdngfn.supabase.co/functions/v1/gemini-proxy';
+
+/* 로컬 개발 환경에서는 인증 강제 안 함 */
+const isLocalDev = ['localhost', '127.0.0.1', ''].includes(location.hostname)
+                || location.protocol === 'file:';
+
+let _authUser = null;
+async function initAuth() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  _authUser = session?.user || null;
+  if (!_authUser && !isLocalDev) {
+    location.href = 'index.html';
+    return;
+  }
+  document.body.style.display = '';
+  applyI18nForReading();
+  setupTranslateToggle();
+}
+
+function getUserId() {
+  if (_authUser) return _authUser.id;
+  let id = localStorage.getItem('visibleVoca_userId');
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem('visibleVoca_userId', id);
+  }
+  return id;
+}
+
+/* --- 다국어 적용: i18n.js 의 글로벌 applyI18n 사용. lang 속성·title 만 보강. --- */
+function applyI18nForReading() {
+  const lang = (typeof getLang === 'function') ? getLang() : 'ko';
+  document.documentElement.lang = lang;
+  if (typeof applyI18n === 'function') applyI18n();
+  document.title = ((typeof t === 'function') ? t('menuReadingTitle') : 'Reading Tutor') + ' — Geminary';
+}
+
+/* --- 번역 토글 초기 설정: UI 언어가 영어면 버튼 숨김 --- */
+function setupTranslateToggle() {
+  const lang = (typeof getLang === 'function') ? getLang() : 'ko';
+  const btn = document.getElementById('translateToggle');
+  if (lang === 'en') {
+    btn.style.display = 'none';
+    return;
+  }
+  btn.textContent = (typeof t === 'function') ? t('readingTranslate') : '번역';
+}
+
+/* --- 이미지 → 리사이즈 + JPEG Base64 (vocabulary.html 패턴 차용) --- */
+async function fileToResizedBase64(file, maxDim = 1536, quality = 0.85) {
+  const dataUrl = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+  const img = await new Promise((resolve, reject) => {
+    const im = new Image();
+    im.onload = () => resolve(im);
+    im.onerror = reject;
+    im.src = dataUrl;
+  });
+  const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+  const w = Math.round(img.width * scale);
+  const h = Math.round(img.height * scale);
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+  const jpegDataUrl = canvas.toDataURL('image/jpeg', quality);
+  return { data: jpegDataUrl.split(',')[1], mimeType: 'image/jpeg' };
+}
+
+/* --- Edge Function 호출: 페이지 1장 → {original, translated, no_text} --- */
+async function extractReadingPage(base64Data, mimeType, targetLang) {
+  const res = await fetch(EDGE_FUNCTION_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      action: 'reading-extract',
+      userId: getUserId(),
+      base64Data, mimeType, targetLang,
+    }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'reading-extract API error');
+  }
+  return res.json();
+}
+
+/* ===== 메인 흐름 상태 ===== */
+const MAX_PAGES = 30;
+let _pages = [];        // [{ original, translated, no_text, error }, ...]
+let _currentIdx = 0;
+let _showTranslated = false;
+let _completedCount = 0;
+
+/* --- 사진 업로드 핸들러 --- */
+async function handlePhotos(inputEl) {
+  const files = Array.from(inputEl.files);
+  if (files.length === 0) return;
+  if (files.length > MAX_PAGES) {
+    alert((typeof t === 'function') ? t('readingMaxPagesAlert') : `최대 ${MAX_PAGES}페이지까지 업로드 가능합니다.`);
+    inputEl.value = '';
+    return;
+  }
+
+  const lang = (typeof getLang === 'function') ? getLang() : 'ko';
+
+  /* 상태 전환: 업로드 → 로딩 */
+  document.getElementById('uploadArea').hidden = true;
+  document.getElementById('bookViewer').hidden = true;
+  document.getElementById('loadingArea').hidden = false;
+  _completedCount = 0;
+  updateLoadingProgress(0, files.length);
+
+  /* 페이지별 병렬 호출 — Promise.allSettled 로 일부 실패 시 격리 */
+  const tasks = files.map(async (file) => {
+    const { data: base64Data, mimeType } = await fileToResizedBase64(file);
+    const result = await extractReadingPage(base64Data, mimeType, lang);
+    _completedCount++;
+    updateLoadingProgress(_completedCount, files.length);
+    return result;
+  });
+
+  const settled = await Promise.allSettled(tasks);
+
+  _pages = settled.map((r) => {
+    if (r.status === 'fulfilled') {
+      return {
+        original: r.value.original || '',
+        translated: r.value.translated || '',
+        no_text: !!r.value.no_text,
+        error: null,
+      };
+    }
+    console.error('reading-extract 실패:', r.reason);
+    return { original: '', translated: '', no_text: false, error: r.reason?.message || 'extract failed' };
+  });
+
+  inputEl.value = '';
+  _currentIdx = 0;
+  _showTranslated = false;
+
+  /* 상태 전환: 로딩 → 북 뷰어 */
+  document.getElementById('loadingArea').hidden = true;
+  document.getElementById('bookViewer').hidden = false;
+  renderBook();
+}
+
+function updateLoadingProgress(done, total) {
+  document.getElementById('loadingProgress').textContent = `${done} / ${total}`;
+}
+
+/* --- 북 뷰어 렌더 --- */
+function renderBook() {
+  const track = document.getElementById('pageTrack');
+  track.innerHTML = _pages.map((p) => `<div class="page">${renderPageContent(p)}</div>`).join('');
+  goTo(_currentIdx, /*animate*/ false);
+  updateNav();
+  updateTranslateBtnState();
+}
+
+function renderPageContent(p) {
+  if (p.error) {
+    return `<div class="page-error" data-i18n="readingPageError">${escapeHtml((typeof t === 'function') ? t('readingPageError') : '이 페이지의 텍스트를 추출하지 못했습니다.')}</div>`;
+  }
+  if (p.no_text) {
+    return `<div class="page-error" data-i18n="readingNoText">${escapeHtml((typeof t === 'function') ? t('readingNoText') : '이 페이지에는 글자가 없습니다.')}</div>`;
+  }
+  const text = _showTranslated && p.translated ? p.translated : p.original;
+  return `<div class="page-text">${escapeHtml(text)}</div>`;
+}
+
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+/* --- 네비게이션 --- */
+function goTo(idx, animate = true) {
+  _currentIdx = Math.max(0, Math.min(_pages.length - 1, idx));
+  const track = document.getElementById('pageTrack');
+  if (!animate) {
+    track.style.transition = 'none';
+    requestAnimationFrame(() => { track.style.transition = ''; });
+  }
+  track.style.transform = `translateX(-${_currentIdx * 100}%)`;
+  updateNav();
+}
+function goPrev() { if (_currentIdx > 0) goTo(_currentIdx - 1); }
+function goNext() { if (_currentIdx < _pages.length - 1) goTo(_currentIdx + 1); }
+
+function updateNav() {
+  document.getElementById('prevBtn').disabled = _currentIdx === 0;
+  document.getElementById('nextBtn').disabled = _currentIdx >= _pages.length - 1;
+  document.getElementById('pageCounter').textContent = `${_currentIdx + 1} / ${_pages.length}`;
+}
+
+/* --- 번역 토글 (전체 페이지 일괄) --- */
+function toggleTranslate() {
+  _showTranslated = !_showTranslated;
+  /* 모든 페이지를 다시 렌더 (현재 위치 유지) */
+  const track = document.getElementById('pageTrack');
+  track.innerHTML = _pages.map((p) => `<div class="page">${renderPageContent(p)}</div>`).join('');
+  goTo(_currentIdx, false);
+  updateTranslateBtnState();
+}
+function updateTranslateBtnState() {
+  const btn = document.getElementById('translateToggle');
+  if (btn.style.display === 'none') return;
+  btn.classList.toggle('active', _showTranslated);
+  btn.textContent = _showTranslated
+    ? ((typeof t === 'function') ? t('readingShowOriginal') : '원문')
+    : ((typeof t === 'function') ? t('readingTranslate') : '번역');
+}
+
+/* --- 새로 올리기 (세션 초기화) --- */
+function resetReading() {
+  _pages = [];
+  _currentIdx = 0;
+  _showTranslated = false;
+  document.getElementById('bookViewer').hidden = true;
+  document.getElementById('loadingArea').hidden = true;
+  document.getElementById('uploadArea').hidden = false;
+}
+
+/* --- 모바일 스와이프 (좌/우 페이지 넘김) --- */
+let _touchStartX = 0;
+let _touchEndX = 0;
+document.addEventListener('DOMContentLoaded', () => {
+  const stage = document.querySelector('.book-stage');
+  if (!stage) return;
+  stage.addEventListener('touchstart', (e) => {
+    _touchStartX = e.changedTouches[0].screenX;
+  }, { passive: true });
+  stage.addEventListener('touchend', (e) => {
+    _touchEndX = e.changedTouches[0].screenX;
+    const dx = _touchEndX - _touchStartX;
+    if (Math.abs(dx) < 40) return;
+    if (dx > 0) goPrev(); else goNext();
+  }, { passive: true });
+});
+
+/* 키보드 좌/우 화살표로도 넘기기 */
+document.addEventListener('keydown', (e) => {
+  if (document.getElementById('bookViewer').hidden) return;
+  if (e.key === 'ArrowLeft') goPrev();
+  if (e.key === 'ArrowRight') goNext();
+});
+
+/* 시작 */
+initAuth();
+</script>
+</body>
+</html>

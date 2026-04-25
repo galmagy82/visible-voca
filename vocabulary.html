@@ -1932,9 +1932,20 @@ async function getMyGeScore() {
   return await loadGeScore();
 }
 
+/* GE 점수 → 5단계 레벨 라벨 (i18n 키 반환).
+   경계는 [a, b) 규칙: 정확히 3.0 은 초중급, 5.0 은 중급 ... 9.0 은 고급. */
+function geLevelLabel(val) {
+  if (val < 3) return t('geLabelBeginner');
+  if (val < 5) return t('geLabelElementary');
+  if (val < 7) return t('geLabelIntermediate');
+  if (val < 9) return t('geLabelUpperInt');
+  return t('geLabelAdvanced');
+}
+
 /* 말풍선 위치·값 갱신.
    핸들 중심의 x 좌표는 percent * (트랙폭 - 핸들폭) + 핸들폭/2 로 계산.
-   양끝에서 말풍선이 삐져나오지 않게 이 오프셋이 꼭 필요. */
+   양끝에서 말풍선이 삐져나오지 않게 이 오프셋이 꼭 필요.
+   표시 형식: "6.5 (중급)" — 숫자 옆에 5단계 레벨 라벨 병기. */
 function updateGeBubble(val) {
   const slider = document.getElementById('geSlider');
   const bubble = document.getElementById('geBubble');
@@ -1946,7 +1957,7 @@ function updateGeBubble(val) {
   const trackWidth = slider.offsetWidth;
   const left = percent * (trackWidth - thumbWidth) + thumbWidth / 2;
   bubble.style.left = left + 'px';
-  bubble.textContent = val.toFixed(1);
+  bubble.textContent = `${val.toFixed(1)} (${geLevelLabel(val)})`;
 }
 
 /* 슬라이더 UI 를 현재 저장 상태에 맞춰 갱신 (로그인 전환·최초 로드 시 호출).

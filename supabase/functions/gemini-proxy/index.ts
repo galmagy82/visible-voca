@@ -328,6 +328,70 @@ async function callGeminiExtract(base64Data: string, mimeType: string, extractPr
   return data.candidates?.[0]?.content?.parts?.[0]?.text || null
 }
 
+/* Reading Tutor: 책 페이지 사진 1장 → 원문 OCR + 사용자 UI 언어로 번역
+   페이지 단위 호출. 프론트엔드가 N장을 병렬 호출한다.
+   responseSchema 로 JSON 구조화 응답을 강제하여 프론트 파싱 실패 위험 제거.
+   no_text: true 인 경우 빈 페이지/글자 없음으로 처리 (프론트가 안내 표시). */
+const READING_LANG_NAMES: Record<string, string> = {
+  ko: 'Korean',
+  en: 'English',
+  ja: 'Japanese',
+  zh: 'Chinese (Simplified)',
+  es: 'Spanish',
+  vi: 'Vietnamese',
+  th: 'Thai',
+  pt: 'Portuguese',
+}
+async function callGeminiReadingExtract(base64Data: string, mimeType: string, targetLang: string, apiKey: string) {
+  const langName = READING_LANG_NAMES[targetLang] || 'Korean'
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`
+  const prompt = `You are an OCR and translation assistant for a reading-comprehension app. The image is one page of an English book.
+
+Tasks:
+1. Extract the original English text exactly as it appears on the page, preserving line breaks (use \\n) and paragraph structure.
+2. Translate that text into natural ${langName}, preserving paragraph structure (line breaks between paragraphs).
+
+If the image contains no readable text (blank page, decoration only, illegible photo), set "no_text" to true and return empty strings for original and translated.
+
+Do NOT add commentary. Return ONLY the JSON object.`
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [{
+        parts: [
+          { text: prompt },
+          { inlineData: { mimeType, data: base64Data } },
+        ],
+      }],
+      generationConfig: {
+        temperature: 0.3,
+        maxOutputTokens: 4096,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "OBJECT",
+          properties: {
+            original:   { type: "STRING", description: "Extracted original text, preserving line breaks." },
+            translated: { type: "STRING", description: `Natural ${langName} translation, preserving paragraph breaks.` },
+            no_text:    { type: "BOOLEAN", description: "True if the page has no readable text." },
+          },
+          required: ["original", "translated", "no_text"],
+        },
+        thinkingConfig: { thinkingBudget: -1 },
+      },
+    }),
+  })
+  if (!res.ok) {
+    const err = await res.text()
+    throw new Error(`Gemini reading-extract API error ${res.status}: ${err}`)
+  }
+  const data = await res.json()
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text
+  if (!text) throw new Error('Empty response from Gemini')
+  return JSON.parse(text) as { original: string; translated: string; no_text: boolean }
+}
+
 /* 사용량 증가: 최초 검색 시 row 생성, 이후 검색 시 trial_count +1 */
 async function incrementTrialCount(userId: string): Promise<number> {
   const { data } = await supabase
@@ -416,9 +480,23 @@ Deno.serve(async (req) => {
         result = { text: extracted }
         break
       }
+      case "reading-extract": {
+        /* Reading Tutor: 책 페이지 1장 → 원문 + 번역 (구조화 JSON).
+           프론트엔드가 페이지별로 병렬 호출. 사용량 카운트는 별도 정책 필요시 프론트에서 처리. */
+        if (!base64Data || !mimeType) {
+          return new Response(
+            JSON.stringify({ error: "base64Data and mimeType are required" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          )
+        }
+        const targetLang: string = typeof body.targetLang === "string" ? body.targetLang : "ko"
+        const parsed = await callGeminiReadingExtract(base64Data, mimeType, targetLang, apiKey)
+        result = parsed
+        break
+      }
       default:
         return new Response(
-          JSON.stringify({ error: "Invalid action. Use: search, image, extract" }),
+          JSON.stringify({ error: "Invalid action. Use: search, image, extract, reading-extract" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         )
     }
