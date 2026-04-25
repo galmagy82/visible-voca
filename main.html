@@ -102,6 +102,8 @@
     .brand-icon-wrap svg { width: 38px; height: 38px; }
     .brand-name { font-size: 34px; }
     .brand-tagline { font-size: 15px; }
+    /* 모바일에서는 logout 도 살짝 안쪽으로 + 작게 */
+    .top-logout { top: 12px; right: 12px; padding: 5px 12px; }
   }
   button {
     padding: 14px 24px;
@@ -182,6 +184,25 @@
   }
 
   /* 설정 버튼 */
+
+  /* 우상단 로그아웃 버튼 — vocabulary.html / 과거 reading.html 와 동일 패턴.
+     body 가 인증 게이트 통과 후에만 노출되므로 별도 hidden 토글 없이 항상 노출. */
+  .top-logout {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    padding: 6px 14px;
+    font-size: 0.75rem;
+    color: #7A7570;
+    background: white;
+    border: 1px solid #D5D2CC;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+    z-index: 100;
+    transition: background 0.15s, color 0.15s;
+  }
+  .top-logout:hover { background: #F5F3F0; color: #4A4641; }
 
   /* 설정 모달 */
   .modal-overlay {
@@ -355,6 +376,9 @@
      auth 통과 후 inline script 에서 display:'' 로 노출. -->
 <body style="display:none">
 
+<!-- 우상단 로그아웃 버튼 — body 가 인증 게이트 통과 후에만 노출되므로 hidden 토글 불필요. -->
+<button class="top-logout" id="mainLogoutBtn" data-i18n="logout">로그아웃</button>
+
 <!-- 카테고리 메뉴.
      Hero 카드(Visual Dictionary) 가 곧 Geminary 브랜드 쇼케이스 역할 — 카드 진입 시
      vocabulary.html 의 "Geminary" 화면으로 연결되므로 카드 안에 동일한 브랜드 요소를 노출해
@@ -414,6 +438,12 @@ const isLocalDev = ['localhost', '127.0.0.1', ''].includes(location.hostname)
   document.documentElement.lang = getLang();
   applyI18n();
 })();
+
+/* 우상단 로그아웃 — Supabase 세션 종료 후 index 로 이동 (vocabulary.html 와 동일 흐름) */
+document.getElementById('mainLogoutBtn').addEventListener('click', async () => {
+  await supabaseClient.auth.signOut();
+  location.href = 'index.html';
+});
 </script>
 
 </body>
