@@ -225,7 +225,7 @@
      params:
      - supabase: 페이지의 supabase client
      - userId: 현재 로그인 사용자 id
-     - currentScore: 시작값 (null 이면 7.0 으로 시작)
+     - currentScore: 시작값 (null 이면 5.0 으로 시작 — 중급 진입 지점)
      - onSave(score): 저장 성공 후 콜백 (선택)
      - onCancel(): 취소 콜백 (선택) */
   function openModal({ supabase, userId, currentScore, onSave, onCancel }) {
@@ -235,7 +235,7 @@
     const old = document.getElementById('lp-overlay');
     if (old) old.remove();
 
-    const startVal = (currentScore != null) ? Number(currentScore) : 7.0;
+    const startVal = (currentScore != null) ? Number(currentScore) : 5.0;
 
     const overlay = document.createElement('div');
     overlay.id = 'lp-overlay';

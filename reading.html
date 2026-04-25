@@ -24,7 +24,7 @@
 <!-- 다국어 -->
 <script src="i18n.js?v=20260425"></script>
 <!-- 공용 "내 영어 레벨" 컴포넌트 (모달 + 칩 + 로직) -->
-<script src="level-picker.js?v=20260425"></script>
+<script src="level-picker.js?v=20260425b"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -474,9 +474,11 @@
   <!-- 2단: 페이지 제목 (큰 헤딩) -->
   <h1 class="page-heading" data-i18n="menuReadingTitle">Reading Tutor</h1>
 
-  <!-- 업로드 영역 (초기 상태) -->
+  <!-- 업로드 영역 (초기 상태)
+       업로드 버튼 클릭 시점에 GE 게이트 → 통과 시에만 파일 피커 오픈.
+       (handlePhotos 안에도 동일 게이트가 있어 다른 진입 경로에서도 안전) -->
   <div class="upload-area" id="uploadArea">
-    <button class="upload-btn" onclick="document.getElementById('photoInput').click()" data-i18n="readingUploadBtn">📂 책 사진 올리기</button>
+    <button class="upload-btn" onclick="onUploadBtnClick()" data-i18n="readingUploadBtn">📂 책 사진 올리기</button>
     <input type="file" id="photoInput" accept="image/*" multiple style="display:none" onchange="handlePhotos(this)">
     <div class="upload-hint" data-i18n="readingUploadHint">한 번에 최대 30페이지까지 올릴 수 있어요</div>
     <!-- 저장된 책 목록 진입 — 인증된 유저에게만 표시 (initAuth 에서 토글) -->
@@ -717,6 +719,15 @@ let _completedCount = 0;
 let _isSavedView = false;
 let _currentBookId = null;
 let _currentBookTitle = '';
+
+/* 업로드 버튼 클릭 진입점.
+   파일 피커를 열기 전에 GE 게이트를 통과시켜야 함 — 사용자가 사진 고른 뒤에야
+   레벨 모달이 끼어들어 흐름이 끊기는 걸 방지. 취소하면 파일 피커도 안 열림. */
+async function onUploadBtnClick() {
+  const ok = await ensureGeOrPrompt();
+  if (!ok) return;
+  document.getElementById('photoInput').click();
+}
 
 /* --- 사진 업로드 핸들러 --- */
 async function handlePhotos(inputEl) {
