@@ -22,7 +22,7 @@
 <!-- Supabase JS — 인증 세션 확인용 (vocabulary.html 와 동일 cdn) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <!-- 다국어 -->
-<script src="i18n.js"></script>
+<script src="i18n.js?v=20260425"></script>
 <!-- 공용 "내 영어 레벨" 컴포넌트 (모달 + 칩 + 로직) -->
 <script src="level-picker.js?v=20260425"></script>
 <style>
@@ -109,12 +109,35 @@
     color: #8A8078;
   }
 
+  /* 업로드 영역 추가 버튼 — "📚 내 책" 진입점 */
+  .my-books-btn {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 10px 18px;
+    font-size: 0.9rem;
+    border: 1px solid #D5D2CC;
+    border-radius: 10px;
+    background: #FFFFFF;
+    color: #4A4641;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .my-books-btn:hover { background: #EDECEA; border-color: #9A9590; color: #2D2B28; }
+
   /* 북 뷰어 — 결과 상태 */
   .book-toolbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 8px;
     margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  /* 좌측 버튼 묶음 (새로 올리기 + 저장된 표시) */
+  .toolbar-left, .toolbar-right {
+    display: flex;
+    gap: 8px;
+    align-items: center;
   }
   .reupload-btn {
     padding: 8px 14px;
@@ -139,6 +162,229 @@
   }
   .translate-toggle:hover { background: #EDECEA; }
   .translate-toggle.active { background: #5A8A42; color: #FFFFFF; border-color: #5A8A42; }
+  /* 책으로 저장 버튼 — 살짝 강조 */
+  .save-book-btn {
+    padding: 8px 14px;
+    font-size: 0.85rem;
+    border: 1px solid #5A8A42;
+    border-radius: 10px;
+    background: #FFFFFF;
+    color: #5A8A42;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+  .save-book-btn:hover { background: #5A8A42; color: #FFFFFF; }
+  .saved-badge {
+    font-size: 0.8rem;
+    color: #5A8A42;
+    background: #EAF1E2;
+    border: 1px solid #C9DBB8;
+    padding: 4px 10px;
+    border-radius: 999px;
+  }
+
+  /* 본문 인라인 학습 단어 하이라이트 */
+  .study-highlight {
+    background: rgba(90, 138, 66, 0.15);
+    border-bottom: 1.5px solid #5A8A42;
+    padding: 0 2px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .study-highlight:hover { background: rgba(90, 138, 66, 0.3); }
+  .study-highlight.active {
+    background: rgba(90, 138, 66, 0.4);
+  }
+
+  /* 페이지 본문 + 하단 학습 리스트 컨테이너
+     .page 의 flex(가운데 정렬)와 충돌하지 않도록 column 으로 자체 정렬 */
+  .page-content-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    width: 100%;
+    max-width: 100%;
+    align-items: center;
+  }
+
+  /* 학습 단어 collapsible 리스트 */
+  .study-list-details {
+    width: 100%;
+    max-width: 100%;
+    border-top: 1px dashed #D5D2CC;
+    padding-top: 14px;
+    margin-top: 4px;
+  }
+  .study-list-summary {
+    font-size: 0.9rem;
+    color: #4A4641;
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+    padding: 4px 0;
+  }
+  .study-list-summary::before {
+    content: '▸';
+    display: inline-block;
+    margin-right: 6px;
+    transition: transform 0.15s;
+  }
+  .study-list-details[open] .study-list-summary::before {
+    transform: rotate(90deg);
+  }
+  .study-list-ul {
+    list-style: none;
+    padding: 12px 0 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .study-item-li {
+    border-left: 3px solid #5A8A42;
+    padding: 6px 0 6px 12px;
+  }
+  .study-item-li.flash {
+    background: rgba(90, 138, 66, 0.08);
+    transition: background 0.4s;
+  }
+  .study-item-surface {
+    font-weight: 600;
+    color: #2D2B28;
+    margin-right: 8px;
+  }
+  .study-item-type {
+    font-size: 0.75rem;
+    color: #8A8078;
+    background: #F0EEEA;
+    padding: 1px 6px;
+    border-radius: 4px;
+    vertical-align: middle;
+  }
+  .study-item-meaning {
+    margin-top: 4px;
+    font-size: 0.92rem;
+    color: #4A4641;
+  }
+  .study-item-example {
+    margin-top: 3px;
+    font-size: 0.82rem;
+    color: #8A8078;
+    font-style: italic;
+  }
+
+  /* 내 책 목록 화면 */
+  .book-list-area { padding: 8px 0 60px; }
+  .book-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .book-list-title { font-size: 1.05rem; color: #2D2B28; font-weight: 600; }
+  .book-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 14px;
+  }
+  .book-card {
+    position: relative;
+    background: #FFFFFF;
+    border: 1px solid #D5D2CC;
+    border-radius: 12px;
+    padding: 16px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  }
+  .book-card:hover {
+    border-color: #5A8A42;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  }
+  .book-card-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #2D2B28;
+    margin-bottom: 6px;
+    word-break: break-word;
+    line-height: 1.4;
+  }
+  .book-card-meta {
+    font-size: 0.78rem;
+    color: #8A8078;
+  }
+  .book-card-delete {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 26px;
+    height: 26px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: #B0ACA6;
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    transition: background 0.15s, color 0.15s;
+  }
+  .book-card-delete:hover { background: #F2D5D5; color: #B85C5C; }
+  .book-list-empty {
+    padding: 60px 20px;
+    text-align: center;
+    color: #8A8078;
+  }
+
+  /* 책 저장 모달 */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(45, 43, 40, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+  }
+  .modal-card {
+    background: #FFFFFF;
+    border-radius: 14px;
+    max-width: 420px;
+    width: 100%;
+    padding: 24px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  }
+  .modal-title { font-size: 1.05rem; font-weight: 600; color: #2D2B28; margin-bottom: 6px; }
+  .modal-desc { font-size: 0.88rem; color: #6B6660; margin-bottom: 16px; }
+  .modal-input {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 0.95rem;
+    border: 1px solid #D5D2CC;
+    border-radius: 8px;
+    background: #FAFAF7;
+    color: #2D2B28;
+    font-family: inherit;
+  }
+  .modal-input:focus { outline: none; border-color: #5A8A42; background: #FFFFFF; }
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 20px;
+  }
+  .modal-btn {
+    padding: 9px 18px;
+    font-size: 0.9rem;
+    border-radius: 8px;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .modal-btn-cancel { background: #FFFFFF; border-color: #D5D2CC; color: #6B6660; }
+  .modal-btn-cancel:hover { background: #EDECEA; }
+  .modal-btn-primary { background: #5A8A42; color: #FFFFFF; }
+  .modal-btn-primary:hover { background: #4A7335; }
+  .modal-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
   /* 페이지 슬라이드 컨테이너 — overflow hidden + 좌우 슬라이드 트랜스폼 */
   .book-stage {
@@ -230,6 +476,10 @@
     <button class="upload-btn" onclick="document.getElementById('photoInput').click()" data-i18n="readingUploadBtn">📂 책 사진 올리기</button>
     <input type="file" id="photoInput" accept="image/*" multiple style="display:none" onchange="handlePhotos(this)">
     <div class="upload-hint" data-i18n="readingUploadHint">한 번에 최대 30페이지까지 올릴 수 있어요</div>
+    <!-- 저장된 책 목록 진입 — 인증된 유저에게만 표시 (initAuth 에서 토글) -->
+    <div>
+      <button class="my-books-btn" id="myBooksBtn" onclick="showBookList()" data-i18n="readingMyBooks" hidden>📚 내 책</button>
+    </div>
   </div>
 
   <!-- 추출 중 (로딩 상태) -->
@@ -239,12 +489,29 @@
     <div class="loading-progress" id="loadingProgress"></div>
   </div>
 
+  <!-- 내 책 목록 (저장된 책 카드 그리드) -->
+  <div class="book-list-area" id="bookListArea" hidden>
+    <div class="book-list-header">
+      <div class="book-list-title" data-i18n="readingMyBooks">📚 내 책</div>
+      <button class="reupload-btn" onclick="backToUpload()" data-i18n="readingNewBookUpload">+ 새 책 올리기</button>
+    </div>
+    <div id="bookListContent"></div>
+  </div>
+
   <!-- 북 뷰어 (결과 상태) -->
   <div id="bookViewer" hidden>
     <div class="book-toolbar">
-      <button class="reupload-btn" onclick="resetReading()" data-i18n="readingReupload">↻ 새로 올리기</button>
-      <!-- 번역 토글 — UI 언어가 영어이면 숨김 (책 원문이 영어이므로 번역 의미 없음) -->
-      <button class="translate-toggle" id="translateToggle" onclick="toggleTranslate()"></button>
+      <div class="toolbar-left">
+        <button class="reupload-btn" onclick="resetReading()" data-i18n="readingReupload">↻ 새로 올리기</button>
+        <!-- 저장된 책을 보고 있을 때만 표시되는 배지 -->
+        <span class="saved-badge" id="savedBadge" data-i18n="readingSavedIndicator" hidden>저장된 책</span>
+      </div>
+      <div class="toolbar-right">
+        <!-- 책으로 저장 — 새로 올린(미저장) 책일 때만 표시 -->
+        <button class="save-book-btn" id="saveBookBtn" onclick="openSaveBookModal()" data-i18n="readingSaveBookBtn" hidden>📚 책으로 저장</button>
+        <!-- 번역 토글 — UI 언어가 영어이면 숨김 -->
+        <button class="translate-toggle" id="translateToggle" onclick="toggleTranslate()"></button>
+      </div>
     </div>
     <div class="book-stage">
       <div class="page-track" id="pageTrack"></div>
@@ -256,6 +523,19 @@
     </div>
   </div>
 
+</div>
+
+<!-- 책 저장 모달 (제목 입력) — 기본 hidden, openSaveBookModal() 에서 토글 -->
+<div class="modal-overlay" id="saveBookModal" hidden>
+  <div class="modal-card">
+    <div class="modal-title" data-i18n="readingSaveBookTitle">책 저장하기</div>
+    <div class="modal-desc" data-i18n="readingSaveBookDesc">이 책의 제목을 입력하세요</div>
+    <input type="text" class="modal-input" id="saveBookTitleInput" maxlength="120" data-i18n="readingSaveBookPlaceholder" placeholder="예: 어린왕자 1장">
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-cancel" onclick="closeSaveBookModal()" data-i18n="setCancelBtn">취소</button>
+      <button class="modal-btn modal-btn-primary" id="saveBookConfirmBtn" onclick="saveCurrentBook()" data-i18n="setSaveBtn">저장</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -287,6 +567,10 @@ async function initAuth() {
   setupTranslateToggle();
   /* 로그인 후 GE 점수 로드 + 헤더 칩 렌더 (로컬 개발에서는 user 없으면 스킵) */
   await loadAndRenderLevelChip();
+  /* 인증된 유저에게만 "내 책" 진입 버튼 노출 (저장 기능은 RLS 로 user_id 매칭 필요) */
+  if (_authUser) {
+    document.getElementById('myBooksBtn').hidden = false;
+  }
 }
 
 /* "내 영어 레벨" 칩을 헤더에 그립니다.
@@ -320,6 +604,29 @@ function openLevelModal() {
       _geScore = newScore;
       renderLevelChip();
     },
+  });
+}
+
+/* 사진 업로드 직전 GE 게이트.
+   - GE 가 이미 있으면 즉시 true
+   - 비로그인(로컬 dev) 이면 true (게이트 스킵, 단어 추출 결과는 빈 배열)
+   - 미설정이면 모달 호출 → 저장 시 true, 취소 시 false
+   결과를 Promise<boolean> 으로 반환해 handlePhotos 에서 gate. */
+function ensureGeOrPrompt() {
+  if (_geScore != null) return Promise.resolve(true);
+  if (!_authUser || typeof window.LevelPicker === 'undefined') return Promise.resolve(true);
+  return new Promise((resolve) => {
+    window.LevelPicker.openModal({
+      supabase: supabaseClient,
+      userId: _authUser.id,
+      currentScore: _geScore,
+      onSave: (newScore) => {
+        _geScore = newScore;
+        renderLevelChip();
+        resolve(true);
+      },
+      onCancel: () => resolve(false),
+    });
   });
 }
 
@@ -377,15 +684,16 @@ async function fileToResizedBase64(file, maxDim = 1536, quality = 0.85) {
   return { data: jpegDataUrl.split(',')[1], mimeType: 'image/jpeg' };
 }
 
-/* --- Edge Function 호출: 페이지 1장 → {original, translated, no_text} --- */
-async function extractReadingPage(base64Data, mimeType, targetLang) {
+/* --- Edge Function 호출: 페이지 1장 → {original, translated, no_text, study_items}
+   geScore: 사용자 GE 점수 (null 이면 study_items 빈 배열 반환). */
+async function extractReadingPage(base64Data, mimeType, targetLang, geScore) {
   const res = await fetch(EDGE_FUNCTION_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       action: 'reading-extract',
       userId: getUserId(),
-      base64Data, mimeType, targetLang,
+      base64Data, mimeType, targetLang, geScore,
     }),
   });
   if (!res.ok) {
@@ -397,10 +705,15 @@ async function extractReadingPage(base64Data, mimeType, targetLang) {
 
 /* ===== 메인 흐름 상태 ===== */
 const MAX_PAGES = 30;
-let _pages = [];        // [{ original, translated, no_text, error }, ...]
+/* 페이지 데이터: { original, translated, no_text, error, study_items: [{surface, type, meaning, example_in_text}] } */
+let _pages = [];
 let _currentIdx = 0;
 let _showTranslated = false;
 let _completedCount = 0;
+/* 저장된 책 보기 모드. true 면 "책으로 저장" 버튼 숨기고 "저장된 책" 배지 표시 */
+let _isSavedView = false;
+let _currentBookId = null;
+let _currentBookTitle = '';
 
 /* --- 사진 업로드 핸들러 --- */
 async function handlePhotos(inputEl) {
@@ -412,19 +725,28 @@ async function handlePhotos(inputEl) {
     return;
   }
 
+  /* GE 게이트 — 미설정 시 모달 호출, 사용자가 취소하면 업로드 중단 */
+  const geOk = await ensureGeOrPrompt();
+  if (!geOk) {
+    inputEl.value = '';
+    return;
+  }
+
   const lang = (typeof getLang === 'function') ? getLang() : 'ko';
 
   /* 상태 전환: 업로드 → 로딩 */
   document.getElementById('uploadArea').hidden = true;
   document.getElementById('bookViewer').hidden = true;
+  document.getElementById('bookListArea').hidden = true;
   document.getElementById('loadingArea').hidden = false;
   _completedCount = 0;
   updateLoadingProgress(0, files.length);
 
-  /* 페이지별 병렬 호출 — Promise.allSettled 로 일부 실패 시 격리 */
+  /* 페이지별 병렬 호출 — Promise.allSettled 로 일부 실패 시 격리.
+     geScore 를 같이 전달해 단어 추출도 한 번에 처리. */
   const tasks = files.map(async (file) => {
     const { data: base64Data, mimeType } = await fileToResizedBase64(file);
-    const result = await extractReadingPage(base64Data, mimeType, lang);
+    const result = await extractReadingPage(base64Data, mimeType, lang, _geScore);
     _completedCount++;
     updateLoadingProgress(_completedCount, files.length);
     return result;
@@ -438,21 +760,42 @@ async function handlePhotos(inputEl) {
         original: r.value.original || '',
         translated: r.value.translated || '',
         no_text: !!r.value.no_text,
+        study_items: Array.isArray(r.value.study_items) ? r.value.study_items : [],
         error: null,
       };
     }
     console.error('reading-extract 실패:', r.reason);
-    return { original: '', translated: '', no_text: false, error: r.reason?.message || 'extract failed' };
+    return { original: '', translated: '', no_text: false, study_items: [], error: r.reason?.message || 'extract failed' };
   });
 
   inputEl.value = '';
   _currentIdx = 0;
   _showTranslated = false;
+  /* 새로 추출한 책은 미저장 — 저장 버튼 노출, 저장 배지 숨김 */
+  _isSavedView = false;
+  _currentBookId = null;
+  _currentBookTitle = '';
 
   /* 상태 전환: 로딩 → 북 뷰어 */
   document.getElementById('loadingArea').hidden = true;
   document.getElementById('bookViewer').hidden = false;
   renderBook();
+  updateBookViewerToolbar();
+}
+
+/* 북 뷰어 툴바: 저장 모드/신규 모드에 따라 저장 버튼·배지 토글 */
+function updateBookViewerToolbar() {
+  const saveBtn = document.getElementById('saveBookBtn');
+  const savedBadge = document.getElementById('savedBadge');
+  if (!saveBtn || !savedBadge) return;
+  if (_isSavedView) {
+    saveBtn.hidden = true;
+    savedBadge.hidden = false;
+  } else {
+    /* 비로그인(로컬 dev) 상태에서는 저장 불가 — 버튼도 숨김 */
+    saveBtn.hidden = !_authUser;
+    savedBadge.hidden = true;
+  }
 }
 
 function updateLoadingProgress(done, total) {
@@ -462,21 +805,125 @@ function updateLoadingProgress(done, total) {
 /* --- 북 뷰어 렌더 --- */
 function renderBook() {
   const track = document.getElementById('pageTrack');
-  track.innerHTML = _pages.map((p) => `<div class="page">${renderPageContent(p)}</div>`).join('');
+  track.innerHTML = _pages.map((p, i) => `<div class="page" data-page-idx="${i}">${renderPageContent(p, i)}</div>`).join('');
   goTo(_currentIdx, /*animate*/ false);
   updateNav();
   updateTranslateBtnState();
 }
 
-function renderPageContent(p) {
+function renderPageContent(p, pageIdx) {
   if (p.error) {
     return `<div class="page-error" data-i18n="readingPageError">${escapeHtml((typeof t === 'function') ? t('readingPageError') : '이 페이지의 텍스트를 추출하지 못했습니다.')}</div>`;
   }
   if (p.no_text) {
     return `<div class="page-error" data-i18n="readingNoText">${escapeHtml((typeof t === 'function') ? t('readingNoText') : '이 페이지에는 글자가 없습니다.')}</div>`;
   }
-  const text = _showTranslated && p.translated ? p.translated : p.original;
-  return `<div class="page-text">${escapeHtml(text)}</div>`;
+  const showT = _showTranslated && p.translated;
+  const text = showT ? p.translated : p.original;
+  const items = Array.isArray(p.study_items) ? p.study_items : [];
+  /* 번역 모드에서는 surface 가 영어 원문 substring 이므로 하이라이트 매칭 불가 → 평문 표시.
+     원문 모드에서만 하이라이트 적용. */
+  const html = (!showT && items.length > 0)
+    ? highlightText(text, items, pageIdx)
+    : escapeHtml(text);
+
+  /* 학습 단어 collapsible 리스트 (페이지 내 공급된 항목만) */
+  const listHtml = items.length > 0
+    ? renderStudyList(items, pageIdx)
+    : '';
+
+  return `<div class="page-content-wrap">
+    <div class="page-text">${html}</div>
+    ${listHtml}
+  </div>`;
+}
+
+/* 본문에서 학습 단어 surface 를 case-insensitive 로 찾아 <span class="study-highlight"> 로 감쌈.
+   - 더 긴 surface 부터 매칭 (idiom 이 단어 매칭에 먹히지 않도록)
+   - 알파벳/숫자 경계에서만 매칭 (단어 중간에 걸려 잘못 잡히는 것 방지)
+   - 위치 기반 occupied 배열로 중복 매칭 방지 → 최종 출력은 left-to-right 단일 패스로 안전하게 조립 */
+function highlightText(rawText, studyItems, pageIdx) {
+  const sorted = studyItems
+    .map((item, idx) => ({ item, idx }))
+    .filter((x) => x.item && typeof x.item.surface === 'string' && x.item.surface.length > 0)
+    .sort((a, b) => b.item.surface.length - a.item.surface.length);
+
+  const occupied = new Array(rawText.length).fill(false);
+  const matches = [];
+  const lowerText = rawText.toLowerCase();
+  const isWord = (ch) => /[A-Za-z0-9]/.test(ch);
+
+  for (const { item, idx } of sorted) {
+    const surface = item.surface;
+    const lowerSurface = surface.toLowerCase();
+    let pos = 0;
+    while (pos < rawText.length) {
+      const found = lowerText.indexOf(lowerSurface, pos);
+      if (found === -1) break;
+      const endIdx = found + surface.length;
+      /* 단어 경계: surface 양 끝이 알파벳/숫자일 때만 인접 문자도 비-알파벳/숫자여야 함 */
+      const startOk = !isWord(surface[0]) || found === 0 || !isWord(rawText[found - 1]);
+      const endOk = !isWord(surface[surface.length - 1]) || endIdx === rawText.length || !isWord(rawText[endIdx]);
+      let overlap = false;
+      for (let i = found; i < endIdx; i++) { if (occupied[i]) { overlap = true; break; } }
+      if (startOk && endOk && !overlap) {
+        for (let i = found; i < endIdx; i++) occupied[i] = true;
+        matches.push({ start: found, end: endIdx, idx });
+        pos = endIdx;
+      } else {
+        pos = found + 1;
+      }
+    }
+  }
+
+  matches.sort((a, b) => a.start - b.start);
+
+  let out = '';
+  let cursor = 0;
+  for (const m of matches) {
+    out += escapeHtml(rawText.slice(cursor, m.start));
+    out += `<span class="study-highlight" data-page-idx="${pageIdx}" data-item-idx="${m.idx}" onclick="scrollToStudyItem(${pageIdx}, ${m.idx})">${escapeHtml(rawText.slice(m.start, m.end))}</span>`;
+    cursor = m.end;
+  }
+  out += escapeHtml(rawText.slice(cursor));
+  return out;
+}
+
+/* 학습 단어 리스트 (페이지 하단 collapsible). open 기본값으로 펼침. */
+function renderStudyList(items, pageIdx) {
+  const titleTpl = (typeof t === 'function') ? t('readingStudyItemsTitle') : '이 페이지의 학습 단어 ({n})';
+  const title = titleTpl.replace('{n}', items.length);
+  const lis = items.map((it, i) => `
+    <li class="study-item-li" id="study-item-${pageIdx}-${i}">
+      <div>
+        <span class="study-item-surface">${escapeHtml(it.surface || '')}</span>
+        <span class="study-item-type">${escapeHtml(formatStudyType(it.type))}</span>
+      </div>
+      <div class="study-item-meaning">${escapeHtml(it.meaning || '')}</div>
+      ${it.example_in_text ? `<div class="study-item-example">${escapeHtml(it.example_in_text)}</div>` : ''}
+    </li>`).join('');
+  return `<details class="study-list-details" open>
+    <summary class="study-list-summary">${escapeHtml(title)}</summary>
+    <ul class="study-list-ul">${lis}</ul>
+  </details>`;
+}
+
+/* 학습 단어 타입을 보기 좋게 (원문 그대로 보여줘도 무방하지만 phrasal_verb → phrasal verb 등 정리) */
+function formatStudyType(typ) {
+  if (!typ) return '';
+  return String(typ).replace(/_/g, ' ');
+}
+
+/* 본문 하이라이트 클릭 → 해당 페이지 학습 단어 항목으로 부드럽게 스크롤 + 짧게 강조 */
+function scrollToStudyItem(pageIdx, itemIdx) {
+  const el = document.getElementById(`study-item-${pageIdx}-${itemIdx}`);
+  if (!el) return;
+  /* details 가 닫혀있으면 펼침 */
+  const details = el.closest('details');
+  if (details && !details.open) details.open = true;
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  el.classList.add('flash');
+  setTimeout(() => el.classList.remove('flash'), 600);
 }
 
 function escapeHtml(s) {
@@ -510,7 +957,7 @@ function toggleTranslate() {
   _showTranslated = !_showTranslated;
   /* 모든 페이지를 다시 렌더 (현재 위치 유지) */
   const track = document.getElementById('pageTrack');
-  track.innerHTML = _pages.map((p) => `<div class="page">${renderPageContent(p)}</div>`).join('');
+  track.innerHTML = _pages.map((p, i) => `<div class="page" data-page-idx="${i}">${renderPageContent(p, i)}</div>`).join('');
   goTo(_currentIdx, false);
   updateTranslateBtnState();
 }
@@ -528,9 +975,180 @@ function resetReading() {
   _pages = [];
   _currentIdx = 0;
   _showTranslated = false;
+  _isSavedView = false;
+  _currentBookId = null;
+  _currentBookTitle = '';
   document.getElementById('bookViewer').hidden = true;
   document.getElementById('loadingArea').hidden = true;
+  document.getElementById('bookListArea').hidden = true;
   document.getElementById('uploadArea').hidden = false;
+}
+
+/* 책 목록에서 "새 책 올리기" → 업로드 화면으로 복귀 */
+function backToUpload() {
+  document.getElementById('bookListArea').hidden = true;
+  document.getElementById('uploadArea').hidden = false;
+}
+
+/* ===== 내 책 (저장된 reading_books) ===== */
+
+/* "📚 내 책" 버튼 → 책 목록 화면으로 전환 + 데이터 로드 */
+async function showBookList() {
+  if (!_authUser) return;
+  document.getElementById('uploadArea').hidden = true;
+  document.getElementById('bookViewer').hidden = true;
+  document.getElementById('loadingArea').hidden = true;
+  document.getElementById('bookListArea').hidden = false;
+  const content = document.getElementById('bookListContent');
+  content.innerHTML = `<div class="book-list-empty">${escapeHtml((typeof t === 'function') ? t('readingLoadingBooks') : '책 목록을 불러오는 중...')}</div>`;
+  try {
+    const books = await loadBookList();
+    renderBookList(books);
+  } catch (e) {
+    console.error('book list load 실패:', e);
+    content.innerHTML = `<div class="book-list-empty">${escapeHtml(e?.message || 'load failed')}</div>`;
+  }
+}
+
+async function loadBookList() {
+  /* 본인 행만 조회 (RLS) — 최신순 */
+  const { data, error } = await supabaseClient
+    .from('reading_books')
+    .select('id, title, pages, created_at')
+    .eq('user_id', _authUser.id)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+function renderBookList(books) {
+  const content = document.getElementById('bookListContent');
+  if (!books || books.length === 0) {
+    content.innerHTML = `<div class="book-list-empty">${escapeHtml((typeof t === 'function') ? t('readingMyBooksEmpty') : '아직 저장한 책이 없어요')}</div>`;
+    return;
+  }
+  const pagesTpl = (typeof t === 'function') ? t('readingBookCardPages') : '{n}페이지';
+  const cards = books.map((b) => {
+    const pageCount = Array.isArray(b.pages) ? b.pages.length : 0;
+    const pagesText = pagesTpl.replace('{n}', pageCount);
+    const dateText = b.created_at ? new Date(b.created_at).toLocaleDateString() : '';
+    return `<div class="book-card" onclick="openSavedBook('${b.id}')">
+      <button class="book-card-delete" onclick="event.stopPropagation(); deleteBook('${b.id}')" aria-label="delete">×</button>
+      <div class="book-card-title">${escapeHtml(b.title || '')}</div>
+      <div class="book-card-meta">${escapeHtml(pagesText)} · ${escapeHtml(dateText)}</div>
+    </div>`;
+  }).join('');
+  content.innerHTML = `<div class="book-grid">${cards}</div>`;
+}
+
+/* 저장된 책 카드 클릭 → 해당 책 페이지 데이터를 로드해 북 뷰어로 표시 */
+async function openSavedBook(bookId) {
+  if (!_authUser) return;
+  document.getElementById('bookListArea').hidden = true;
+  document.getElementById('loadingArea').hidden = false;
+  try {
+    const { data, error } = await supabaseClient
+      .from('reading_books')
+      .select('id, title, pages')
+      .eq('id', bookId)
+      .single();
+    if (error) throw error;
+    _pages = Array.isArray(data.pages) ? data.pages.map((p) => ({
+      original: p.original || '',
+      translated: p.translated || '',
+      no_text: !!p.no_text,
+      study_items: Array.isArray(p.study_items) ? p.study_items : [],
+      error: null,
+    })) : [];
+    _currentIdx = 0;
+    _showTranslated = false;
+    _isSavedView = true;
+    _currentBookId = data.id;
+    _currentBookTitle = data.title || '';
+
+    document.getElementById('loadingArea').hidden = true;
+    document.getElementById('bookViewer').hidden = false;
+    renderBook();
+    updateBookViewerToolbar();
+  } catch (e) {
+    console.error('open saved book 실패:', e);
+    alert(e?.message || 'load failed');
+    document.getElementById('loadingArea').hidden = true;
+    showBookList();
+  }
+}
+
+async function deleteBook(bookId) {
+  const msg = (typeof t === 'function') ? t('readingDeleteBookConfirm') : '이 책을 삭제하시겠습니까?';
+  if (!confirm(msg)) return;
+  try {
+    const { error } = await supabaseClient
+      .from('reading_books')
+      .delete()
+      .eq('id', bookId);
+    if (error) throw error;
+    /* 목록 다시 로드 */
+    await showBookList();
+  } catch (e) {
+    console.error('delete book 실패:', e);
+    alert((typeof t === 'function') ? t('readingDeleteError') : '책 삭제에 실패했어요');
+  }
+}
+
+/* ===== 책으로 저장 (모달) ===== */
+
+function openSaveBookModal() {
+  const modal = document.getElementById('saveBookModal');
+  const input = document.getElementById('saveBookTitleInput');
+  input.value = _currentBookTitle || '';
+  modal.hidden = false;
+  setTimeout(() => input.focus(), 0);
+}
+
+function closeSaveBookModal() {
+  document.getElementById('saveBookModal').hidden = true;
+}
+
+async function saveCurrentBook() {
+  if (!_authUser) return;
+  const input = document.getElementById('saveBookTitleInput');
+  const title = (input.value || '').trim();
+  if (!title) {
+    input.focus();
+    return;
+  }
+  const btn = document.getElementById('saveBookConfirmBtn');
+  btn.disabled = true;
+  try {
+    /* 페이지 jsonb: 표시·하이라이트에 필요한 필드만 저장 (error 는 제외) */
+    const pagesPayload = _pages.map((p) => ({
+      original: p.original || '',
+      translated: p.translated || '',
+      no_text: !!p.no_text,
+      study_items: Array.isArray(p.study_items) ? p.study_items : [],
+    }));
+    const { data, error } = await supabaseClient
+      .from('reading_books')
+      .insert({
+        user_id: _authUser.id,
+        title,
+        pages: pagesPayload,
+      })
+      .select('id')
+      .single();
+    if (error) throw error;
+    /* 저장 후 → 저장 모드로 전환 (배지 표시, 저장 버튼 숨김) */
+    _isSavedView = true;
+    _currentBookId = data.id;
+    _currentBookTitle = title;
+    closeSaveBookModal();
+    updateBookViewerToolbar();
+  } catch (e) {
+    console.error('save book 실패:', e);
+    alert((typeof t === 'function') ? t('readingSaveError') : '책 저장에 실패했어요');
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 /* --- 모바일 스와이프 (좌/우 페이지 넘김) --- */
@@ -550,8 +1168,18 @@ document.addEventListener('DOMContentLoaded', () => {
   }, { passive: true });
 });
 
-/* 키보드 좌/우 화살표로도 넘기기 */
+/* 키보드 좌/우 화살표로도 넘기기. Esc 로 저장 모달 닫기. */
 document.addEventListener('keydown', (e) => {
+  /* 저장 모달이 열려 있으면 페이지 네비게이션 무시. Esc 로 닫기, Enter 로 저장. */
+  const modal = document.getElementById('saveBookModal');
+  if (modal && !modal.hidden) {
+    if (e.key === 'Escape') { closeSaveBookModal(); return; }
+    if (e.key === 'Enter') { e.preventDefault(); saveCurrentBook(); return; }
+    return;
+  }
+  /* 입력 폼에 포커스가 있으면 페이지 네비게이션 무시 */
+  const tag = document.activeElement?.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA') return;
   if (document.getElementById('bookViewer').hidden) return;
   if (e.key === 'ArrowLeft') goPrev();
   if (e.key === 'ArrowRight') goNext();

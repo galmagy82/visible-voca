@@ -342,16 +342,59 @@ const READING_LANG_NAMES: Record<string, string> = {
   th: 'Thai',
   pt: 'Portuguese',
 }
-async function callGeminiReadingExtract(base64Data: string, mimeType: string, targetLang: string, apiKey: string) {
+/* GE 점수 → 영어 라벨 매핑 (프롬프트용). i18n.js 의 한국어/다국어 라벨과 의미 동일. */
+function geBandLabelEn(ge: number): string {
+  if (ge < 3) return 'Beginner'
+  if (ge < 5) return 'Elementary'
+  if (ge < 7) return 'Intermediate'
+  if (ge < 9) return 'Upper-Intermediate'
+  return 'Advanced'
+}
+
+/* Reading Tutor 페이지 1장 추출 — OCR + 번역 + 학습 단어 동시 처리.
+   geScore 가 null/미지정이면 study_items 는 빈 배열로 반환되도록 프롬프트 분기. */
+async function callGeminiReadingExtract(base64Data: string, mimeType: string, targetLang: string, geScore: number | null, apiKey: string) {
   const langName = READING_LANG_NAMES[targetLang] || 'Korean'
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`
-  const prompt = `You are an OCR and translation assistant for a reading-comprehension app. The image is one page of an English book.
+
+  /* 단어 추출 지침 — 사용자 GE 기반으로 [+1.0, +2.5] 범위에서 선정.
+     GE 11 이상은 cap 에 빠르게 닿으므로 정성적 보완 문구 추가. */
+  let studyInstructions = ''
+  if (geScore != null) {
+    const targetMin = Math.min(13, geScore + 1.0)
+    const targetMax = Math.min(13, geScore + 2.5)
+    const bandLabel = geBandLabelEn(geScore)
+    const advancedCue = geScore >= 11
+      ? '\n  - This user is at an advanced level — prioritize sophisticated, low-frequency vocabulary, formal/literary expressions, and nuanced idioms.'
+      : ''
+    studyInstructions = `
+3. From the extracted text, pick words/idioms/expressions that this user should learn next.
+
+User profile:
+  - Reading level (Renaissance STAR Reading GE): ${geScore.toFixed(1)} (${bandLabel})
+  - Target items to pick: GE ${targetMin.toFixed(1)} ~ ${targetMax.toFixed(1)}${advancedCue}
+
+Selection rules for "study_items":
+  - Categories: "word" | "idiom" | "phrasal_verb" | "collocation"
+  - 0 to 7 items per page. NO MINIMUM. If nothing in the text falls in the target range, return an empty array.
+  - Skip items at or below GE ${geScore.toFixed(1)} (the user already knows these).
+  - Skip items above GE ${targetMax.toFixed(1)} (too hard for context-based learning at this stage).
+  - Prioritize items that expand this user's vocabulary in the next learning step.
+  - "surface" must be the EXACT substring as it appears in the text (preserve casing/punctuation).
+  - "meaning" should be a concise ${langName} explanation (1 short phrase).
+  - "example_in_text" should be the sentence (or short clause) from the page where the item appears.`
+  } else {
+    studyInstructions = `
+3. Return an empty array for "study_items" (user level not provided).`
+  }
+
+  const prompt = `You are an OCR + translation + vocabulary picker for a reading-comprehension app. The image is one page of an English book.
 
 Tasks:
 1. Extract the original English text exactly as it appears on the page, preserving line breaks (use \\n) and paragraph structure.
-2. Translate that text into natural ${langName}, preserving paragraph structure (line breaks between paragraphs).
+2. Translate that text into natural ${langName}, preserving paragraph structure (line breaks between paragraphs).${studyInstructions}
 
-If the image contains no readable text (blank page, decoration only, illegible photo), set "no_text" to true and return empty strings for original and translated.
+If the image contains no readable text (blank page, decoration only, illegible photo), set "no_text" to true, return empty strings for original and translated, and empty array for study_items.
 
 Do NOT add commentary. Return ONLY the JSON object.`
 
@@ -367,7 +410,7 @@ Do NOT add commentary. Return ONLY the JSON object.`
       }],
       generationConfig: {
         temperature: 0.3,
-        maxOutputTokens: 4096,
+        maxOutputTokens: 6144,
         responseMimeType: "application/json",
         responseSchema: {
           type: "OBJECT",
@@ -375,8 +418,22 @@ Do NOT add commentary. Return ONLY the JSON object.`
             original:   { type: "STRING", description: "Extracted original text, preserving line breaks." },
             translated: { type: "STRING", description: `Natural ${langName} translation, preserving paragraph breaks.` },
             no_text:    { type: "BOOLEAN", description: "True if the page has no readable text." },
+            study_items: {
+              type: "ARRAY",
+              description: "Words/idioms/expressions worth learning at the user's level. Empty if none.",
+              items: {
+                type: "OBJECT",
+                properties: {
+                  surface:         { type: "STRING", description: "Exact substring from the text." },
+                  type:            { type: "STRING", description: "word | idiom | phrasal_verb | collocation" },
+                  meaning:         { type: "STRING", description: `Concise meaning in ${langName}.` },
+                  example_in_text: { type: "STRING", description: "The sentence or short clause where it appears." },
+                },
+                required: ["surface", "type", "meaning", "example_in_text"],
+              },
+            },
           },
-          required: ["original", "translated", "no_text"],
+          required: ["original", "translated", "no_text", "study_items"],
         },
         thinkingConfig: { thinkingBudget: -1 },
       },
@@ -389,7 +446,12 @@ Do NOT add commentary. Return ONLY the JSON object.`
   const data = await res.json()
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text
   if (!text) throw new Error('Empty response from Gemini')
-  return JSON.parse(text) as { original: string; translated: string; no_text: boolean }
+  return JSON.parse(text) as {
+    original: string;
+    translated: string;
+    no_text: boolean;
+    study_items: Array<{ surface: string; type: string; meaning: string; example_in_text: string }>;
+  }
 }
 
 /* 사용량 증가: 최초 검색 시 row 생성, 이후 검색 시 trial_count +1 */
@@ -481,8 +543,9 @@ Deno.serve(async (req) => {
         break
       }
       case "reading-extract": {
-        /* Reading Tutor: 책 페이지 1장 → 원문 + 번역 (구조화 JSON).
-           프론트엔드가 페이지별로 병렬 호출. 사용량 카운트는 별도 정책 필요시 프론트에서 처리. */
+        /* Reading Tutor: 책 페이지 1장 → 원문 + 번역 + 학습 단어 (구조화 JSON).
+           프론트엔드가 페이지별로 병렬 호출. 사용량 카운트는 별도 정책 필요시 프론트에서 처리.
+           geScore: 사용자 GE 점수. null/미지정이면 study_items 빈 배열 반환. */
         if (!base64Data || !mimeType) {
           return new Response(
             JSON.stringify({ error: "base64Data and mimeType are required" }),
@@ -490,7 +553,8 @@ Deno.serve(async (req) => {
           )
         }
         const targetLang: string = typeof body.targetLang === "string" ? body.targetLang : "ko"
-        const parsed = await callGeminiReadingExtract(base64Data, mimeType, targetLang, apiKey)
+        const geScore: number | null = typeof body.geScore === "number" ? body.geScore : null
+        const parsed = await callGeminiReadingExtract(base64Data, mimeType, targetLang, geScore, apiKey)
         result = parsed
         break
       }
