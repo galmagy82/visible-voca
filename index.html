@@ -1325,20 +1325,22 @@ setTimeout(() => {
   sections[0].classList.add('visible');
 }, 300);
 
-/* ===== 시작하기 버튼 — 로그인 상태에서만 노출되므로 바로 이동 ===== */
+/* ===== 시작하기 버튼 — 로그인 상태에서만 노출되므로 바로 이동.
+   진입 목적지는 main.html (서비스 메뉴 허브). vocabulary.html 직행은 카드/브랜드
+   위계와 맞지 않아 중단됨 — 사용자는 항상 main 을 거쳐 원하는 도구를 선택. */
 document.getElementById('startBtn').addEventListener('click', function(e) {
   e.preventDefault();
-  location.href = 'vocabulary.html';
+  location.href = 'main.html';
 });
 
 /* ===== 페이지 최하단 CTA(featuresCta) — 세션 확인 후 분기 =====
-   - 로그인 상태: vocabulary.html 로 바로 진입
+   - 로그인 상태: main.html 로 바로 진입
    - 비로그인: 기본 앵커 동작(#top)으로 상단 로그인 섹션까지 스무스 스크롤 */
 document.getElementById('featuresCtaBtn').addEventListener('click', async function(e) {
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (session && session.user) {
     e.preventDefault();
-    location.href = 'vocabulary.html';
+    location.href = 'main.html';
   }
   /* 비로그인 시에는 preventDefault 하지 않음 → <a href="#top"> 기본 동작으로 상단 이동 */
 });
