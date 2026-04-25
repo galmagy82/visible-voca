@@ -305,6 +305,43 @@
     });
   }
 
+  /* ========== 슬라이더 위젯만 임베드 ==========
+     모달 chrome 없이 슬라이더(말풍선 + ticks) 만 임의의 컨테이너에 마운트.
+     컨테이너 마크업 + bubble 갱신 + resize 리스너까지 자체 관리.
+     params:
+     - container:  마운트할 부모 요소 (innerHTML 이 교체됨)
+     - initialValue: 시작 값 (null/undefined 면 5.0)
+     - id:         (옵션) 슬라이더에 부여할 고유 id 접두어 — 한 페이지에 여러 개 둘 때 사용
+     반환: { getValue, destroy } */
+  function renderSlider({ container, initialValue, id }) {
+    if (!container) return { getValue: () => null, destroy: () => {} };
+    ensureStyles();
+    const startVal = (initialValue != null) ? Number(initialValue) : 5.0;
+    const sliderId = id ? `${id}-slider` : `lp-embed-slider-${Math.random().toString(36).slice(2, 8)}`;
+    const bubbleId = id ? `${id}-bubble`  : `lp-embed-bubble-${Math.random().toString(36).slice(2, 8)}`;
+    container.innerHTML = `
+      <div class="lp-slider-wrap">
+        <div class="lp-bubble" id="${bubbleId}"></div>
+        <input type="range" id="${sliderId}" class="lp-slider"
+               min="1.0" max="13.0" step="0.1" value="${startVal}">
+        <div class="lp-ticks"><span>1</span><span>13</span></div>
+      </div>
+    `;
+    const slider = container.querySelector('#' + sliderId);
+    const bubble = container.querySelector('#' + bubbleId);
+
+    /* 첫 마운트 시 trackWidth 측정 위해 다음 frame 에서 위치 계산 */
+    requestAnimationFrame(() => updateBubble(slider, bubble));
+    slider.addEventListener('input', () => updateBubble(slider, bubble));
+    const onResize = () => updateBubble(slider, bubble);
+    window.addEventListener('resize', onResize);
+
+    return {
+      getValue: () => parseFloat(slider.value),
+      destroy: () => { window.removeEventListener('resize', onResize); },
+    };
+  }
+
   /* 글로벌로 노출 */
   window.LevelPicker = {
     bands: BANDS,
@@ -314,5 +351,6 @@
     save,
     renderChip,
     openModal,
+    renderSlider,
   };
 })();

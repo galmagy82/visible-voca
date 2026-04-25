@@ -353,8 +353,12 @@ function geBandLabelEn(ge: number): string {
 
 /* Reading Tutor 페이지 1장 추출 — OCR + 번역 + 학습 단어 동시 처리.
    geScore 가 null/미지정이면 study_items 는 빈 배열로 반환되도록 프롬프트 분기. */
-async function callGeminiReadingExtract(base64Data: string, mimeType: string, targetLang: string, geScore: number | null, apiKey: string) {
+async function callGeminiReadingExtract(base64Data: string, mimeType: string, targetLang: string, geScore: number | null, meaningLang: string, apiKey: string) {
   const langName = READING_LANG_NAMES[targetLang] || 'Korean'
+  /* 학습 단어 의미를 어떤 언어로 표기할지.
+     - 'en' → "English" (영영 풀이: "영어로 사고하는 훈련" 선호 학습자용)
+     - 그 외 → langName (UI 언어 = 모국어로 풀이) */
+  const meaningLangName = (meaningLang === 'en') ? 'English' : langName
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`
 
   /* 단어 추출 지침 — 사용자 GE 기반으로 [+1.0, +2.5] 범위에서 선정.
@@ -367,6 +371,11 @@ async function callGeminiReadingExtract(base64Data: string, mimeType: string, ta
     const advancedCue = geScore >= 11
       ? '\n  - This user is at an advanced level — prioritize sophisticated, low-frequency vocabulary, formal/literary expressions, and nuanced idioms.'
       : ''
+    /* meaningLang === 'en' 일 때는 학습자 영어 레벨에 맞춰 정의어를 가공해야 함을 명시.
+       단순히 "in English" 만 두면 너무 어려운 영영 정의가 나올 수 있음. */
+    const meaningGuide = (meaningLang === 'en')
+      ? `a concise English explanation suitable for a learner at GE ${geScore.toFixed(1)} (use simpler words than the target item itself)`
+      : `a concise ${langName} explanation (1 short phrase)`
     studyInstructions = `
 3. From the extracted text, pick words/idioms/expressions that this user should learn next.
 
@@ -381,7 +390,7 @@ Selection rules for "study_items":
   - Skip items above GE ${targetMax.toFixed(1)} (too hard for context-based learning at this stage).
   - Prioritize items that expand this user's vocabulary in the next learning step.
   - "surface" must be the EXACT substring as it appears in the text (preserve casing/punctuation).
-  - "meaning" should be a concise ${langName} explanation (1 short phrase).`
+  - "meaning" should be ${meaningGuide}.`
   } else {
     studyInstructions = `
 3. Return an empty array for "study_items" (user level not provided).`
@@ -425,7 +434,7 @@ Do NOT add commentary. Return ONLY the JSON object.`
                 properties: {
                   surface: { type: "STRING", description: "Exact substring from the text." },
                   type:    { type: "STRING", description: "word | idiom | phrasal_verb | collocation" },
-                  meaning: { type: "STRING", description: `Concise meaning in ${langName}.` },
+                  meaning: { type: "STRING", description: `Concise meaning in ${meaningLangName}.` },
                 },
                 required: ["surface", "type", "meaning"],
               },
@@ -552,7 +561,9 @@ Deno.serve(async (req) => {
         }
         const targetLang: string = typeof body.targetLang === "string" ? body.targetLang : "ko"
         const geScore: number | null = typeof body.geScore === "number" ? body.geScore : null
-        const parsed = await callGeminiReadingExtract(base64Data, mimeType, targetLang, geScore, apiKey)
+        /* meaningLang: 학습 단어 의미 표기 언어. 'en' 이면 영영 풀이, 그 외/미지정은 'native'(targetLang). */
+        const meaningLang: string = (body.meaningLang === "en") ? "en" : "native"
+        const parsed = await callGeminiReadingExtract(base64Data, mimeType, targetLang, geScore, meaningLang, apiKey)
         result = parsed
         break
       }

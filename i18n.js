@@ -288,6 +288,11 @@ const I18N = {
     readingDeleteError: '책 삭제에 실패했어요',
     readingGeRequiredTitle: '내 영어 레벨이 필요해요',
     readingGeRequiredDesc: 'Reading Tutor 는 내 영어 레벨에 맞는 단어를 추천하기 위해 레벨이 필요해요',
+    /* Reading Tutor — ⚙️ 설정 모달 */
+    readingSettingsTitle: 'Reading 설정',
+    readingMeaningLangLabel: '단어 설명 언어',
+    readingMeaningLangNative: '모국어',
+    readingMeaningLangEn: '영어',
 
     /* 웰컴 페이지 상단 브랜드 오리진 */
     brandOrigin: 'AI 영어사전 · Powered by Gemini AI',
@@ -579,6 +584,10 @@ const I18N = {
     readingDeleteError: 'Failed to delete the book',
     readingGeRequiredTitle: 'Your English level is needed',
     readingGeRequiredDesc: 'Reading Tutor needs your level to recommend words tailored to you',
+    readingSettingsTitle: 'Reading settings',
+    readingMeaningLangLabel: 'Word meaning language',
+    readingMeaningLangNative: 'My language',
+    readingMeaningLangEn: 'English',
 
     /* Welcome page top brand origin line */
     brandOrigin: 'AI English Dictionary · Powered by Gemini AI',
@@ -870,6 +879,10 @@ const I18N = {
     readingDeleteError: '本の削除に失敗しました',
     readingGeRequiredTitle: '英語レベルの設定が必要です',
     readingGeRequiredDesc: 'Reading Tutor は、あなたのレベルに合った単語を提案するためにレベルが必要です',
+    readingSettingsTitle: 'Reading 設定',
+    readingMeaningLangLabel: '単語の説明言語',
+    readingMeaningLangNative: '母国語',
+    readingMeaningLangEn: '英語',
 
     /* ウェルカムページ上部のブランドオリジン */
     brandOrigin: 'AI 英語辞書 · Powered by Gemini AI',
@@ -1162,6 +1175,10 @@ const I18N = {
     readingDeleteError: '删除书籍失败',
     readingGeRequiredTitle: '需要设置英语水平',
     readingGeRequiredDesc: 'Reading Tutor 需要您的水平来推荐适合您的单词',
+    readingSettingsTitle: 'Reading 设置',
+    readingMeaningLangLabel: '单词解释语言',
+    readingMeaningLangNative: '母语',
+    readingMeaningLangEn: '英语',
 
     /* 欢迎页顶部品牌来源行 */
     brandOrigin: 'AI 英语词典 · Powered by Gemini AI',
@@ -1453,6 +1470,10 @@ const I18N = {
     readingDeleteError: 'No se pudo eliminar el libro',
     readingGeRequiredTitle: 'Se necesita tu nivel de inglés',
     readingGeRequiredDesc: 'Reading Tutor necesita tu nivel para recomendar palabras adaptadas a ti',
+    readingSettingsTitle: 'Ajustes de Reading',
+    readingMeaningLangLabel: 'Idioma de la definición',
+    readingMeaningLangNative: 'Mi idioma',
+    readingMeaningLangEn: 'Inglés',
 
     /* Línea de origen de marca en la parte superior de la página de bienvenida */
     brandOrigin: 'Diccionario de inglés con IA · Powered by Gemini AI',
@@ -1744,6 +1765,10 @@ const I18N = {
     readingDeleteError: 'Không thể xóa sách',
     readingGeRequiredTitle: 'Cần biết trình độ tiếng Anh của bạn',
     readingGeRequiredDesc: 'Reading Tutor cần trình độ của bạn để đề xuất từ phù hợp',
+    readingSettingsTitle: 'Cài đặt Reading',
+    readingMeaningLangLabel: 'Ngôn ngữ giải nghĩa',
+    readingMeaningLangNative: 'Tiếng mẹ đẻ',
+    readingMeaningLangEn: 'Tiếng Anh',
 
     /* Dòng nguồn gốc thương hiệu ở đầu trang chào mừng */
     brandOrigin: 'Từ điển tiếng Anh AI · Powered by Gemini AI',
@@ -2035,6 +2060,10 @@ const I18N = {
     readingDeleteError: 'ลบหนังสือล้มเหลว',
     readingGeRequiredTitle: 'ต้องระบุระดับภาษาอังกฤษของคุณ',
     readingGeRequiredDesc: 'Reading Tutor ต้องการระดับของคุณเพื่อแนะนำคำที่เหมาะสม',
+    readingSettingsTitle: 'การตั้งค่า Reading',
+    readingMeaningLangLabel: 'ภาษาคำอธิบาย',
+    readingMeaningLangNative: 'ภาษาแม่',
+    readingMeaningLangEn: 'อังกฤษ',
 
     /* บรรทัดที่มาของแบรนด์ที่ด้านบนของหน้าต้อนรับ */
     brandOrigin: 'พจนานุกรมภาษาอังกฤษ AI · Powered by Gemini AI',
@@ -2326,6 +2355,10 @@ const I18N = {
     readingDeleteError: 'Falha ao excluir o livro',
     readingGeRequiredTitle: 'Precisamos do seu nível de inglês',
     readingGeRequiredDesc: 'Reading Tutor precisa do seu nível para recomendar palavras adequadas',
+    readingSettingsTitle: 'Ajustes do Reading',
+    readingMeaningLangLabel: 'Idioma da definição',
+    readingMeaningLangNative: 'Meu idioma',
+    readingMeaningLangEn: 'Inglês',
 
     /* Linha de origem da marca no topo da página de boas-vindas */
     brandOrigin: 'Dicionário de inglês com IA · Powered by Gemini AI',

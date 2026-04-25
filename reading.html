@@ -22,9 +22,9 @@
 <!-- Supabase JS — 인증 세션 확인용 (vocabulary.html 와 동일 cdn) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <!-- 다국어 -->
-<script src="i18n.js?v=20260425"></script>
-<!-- 공용 "내 영어 레벨" 컴포넌트 (모달 + 칩 + 로직) -->
-<script src="level-picker.js?v=20260425b"></script>
+<script src="i18n.js?v=20260426"></script>
+<!-- 공용 "내 영어 레벨" 컴포넌트 (모달 + 칩 + 로직 + renderSlider 임베드 헬퍼) -->
+<script src="level-picker.js?v=20260426"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -54,6 +54,27 @@
     text-decoration: none;
   }
   .back-link:hover { color: #2D2B28; }
+  /* 칩(좌) + ⚙️(우) 묶음. 칩이 미렌더 상태일 때도 ⚙️ 위치가 흔들리지 않도록 flex */
+  .top-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  /* ⚙️ 설정 진입 버튼 — 칩과 비슷한 톤이지만 좀 더 작게 */
+  .settings-gear-btn {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    font-size: 0.95rem;
+    line-height: 1;
+    border: 1px solid #D5D2CC;
+    border-radius: 50%;
+    background: #FFFFFF;
+    color: #4A4641;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .settings-gear-btn:hover { background: #EDECEA; border-color: #B0ACA6; }
   /* 2단: 페이지 제목 — 큰 헤딩으로 단독 배치 */
   .page-heading {
     font-size: 1.6rem;
@@ -389,6 +410,44 @@
   .modal-btn-primary:hover { background: #4A7335; }
   .modal-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
+  /* 설정 모달 — vocabulary.html 의 my-설정 그룹 스타일을 차용해 통일감 유지 */
+  .rs-group-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #2D2B28;
+    margin-bottom: 4px;
+  }
+  .rs-group-gap { margin-top: 20px; }
+  .rs-group-hint {
+    font-size: 0.78rem;
+    color: #8A8078;
+    line-height: 1.5;
+    margin-bottom: 14px;
+  }
+  /* 모달 내 슬라이더 호스트 — LevelPicker.renderSlider 가 innerHTML 로 슬라이더 마운트 */
+  .rs-slider-host { padding: 4px 0 4px; }
+  /* 라디오 그룹 (모국어 / 영어) */
+  .rs-radio-group {
+    display: flex;
+    gap: 16px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+  .rs-radio {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.92rem;
+    color: #4A4641;
+    cursor: pointer;
+  }
+  .rs-radio input[type="radio"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #5A8A42;
+    cursor: pointer;
+  }
+
   /* 페이지 슬라이드 컨테이너 — overflow hidden + 좌우 슬라이드 트랜스폼 */
   .book-stage {
     position: relative;
@@ -465,11 +524,15 @@
 <body style="display:none">
 <div class="container">
 
-  <!-- 1단: 유틸리티 (뒤로가기 + 내 영어 레벨 칩) -->
+  <!-- 1단: 유틸리티 (뒤로가기 + 내 영어 레벨 칩 + ⚙️ 설정) -->
   <div class="top-bar">
     <a href="main.html" class="back-link" data-i18n="readingBackToMain">← 메인으로</a>
-    <!-- "내 영어 레벨" 칩 — level-picker.js 가 동적으로 렌더 -->
-    <div class="level-chip-host" id="levelChipHost"></div>
+    <div class="top-bar-right">
+      <!-- "내 영어 레벨" 칩 — level-picker.js 가 동적으로 렌더 (점수 빠른 확인 + 클릭 시 레벨 모달) -->
+      <div class="level-chip-host" id="levelChipHost"></div>
+      <!-- ⚙️ Reading 설정 모달 진입 (레벨 + 단어 설명 언어 등) — 인증된 유저만 노출 -->
+      <button class="settings-gear-btn" id="readingSettingsBtn" onclick="openReadingSettings()" aria-label="settings" hidden>⚙️</button>
+    </div>
   </div>
   <!-- 2단: 페이지 제목 (큰 헤딩) -->
   <h1 class="page-heading" data-i18n="menuReadingTitle">Reading Tutor</h1>
@@ -543,6 +606,40 @@
   </div>
 </div>
 
+<!-- Reading 설정 모달 — ⚙️ 버튼에서 진입.
+     섹션 1: 내 영어 레벨 (vocabulary.html 의 my-설정 과 동일한 그룹 제목+힌트+슬라이더 UI)
+     섹션 2: 단어 설명 언어 (모국어 / 영어 라디오)
+     저장 시 user_profile 의 ge_score + meaning_lang 을 한 번에 upsert. -->
+<div class="modal-overlay" id="readingSettingsModal" hidden>
+  <div class="modal-card">
+    <div class="modal-title" data-i18n="readingSettingsTitle">Reading 설정</div>
+
+    <!-- 섹션 1: 내 영어 레벨 -->
+    <div class="rs-group-title" data-i18n="settingsLevelGroup">단어 레벨 설정</div>
+    <div class="rs-group-hint" data-i18n="settingsGeHint">* Renaissance STAR Reading 의 GE 점수를 설정하면 사진 검색 AI 자동 추천이 활성화됩니다.</div>
+    <!-- LevelPicker.renderSlider 로 마운트 — innerHTML 이 교체됨 -->
+    <div class="rs-slider-host" id="readingSettingsSliderHost"></div>
+
+    <!-- 섹션 2: 단어 설명 언어 -->
+    <div class="rs-group-title rs-group-gap" data-i18n="readingMeaningLangLabel">단어 설명 언어</div>
+    <div class="rs-radio-group">
+      <label class="rs-radio">
+        <input type="radio" name="rsMeaningLang" value="native">
+        <span data-i18n="readingMeaningLangNative">모국어</span>
+      </label>
+      <label class="rs-radio">
+        <input type="radio" name="rsMeaningLang" value="en">
+        <span data-i18n="readingMeaningLangEn">영어</span>
+      </label>
+    </div>
+
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-cancel" onclick="closeReadingSettings()" data-i18n="setCancelBtn">취소</button>
+      <button class="modal-btn modal-btn-primary" id="readingSettingsSaveBtn" onclick="saveReadingSettings()" data-i18n="setSaveBtn">저장</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ===== Reading Tutor ===== */
 
@@ -559,6 +656,12 @@ const isLocalDev = ['localhost', '127.0.0.1', ''].includes(location.hostname)
 let _authUser = null;
 /* 현재 사용자의 GE 점수 캐시 — 헤더 칩 + (향후) 단어 추출에서 사용. null = 미설정/미조회 */
 let _geScore = null;
+/* 단어 설명을 어떤 언어로 받을지 — 'native'(UI 언어, 기본) | 'en'(영영 풀이).
+   user_profile.meaning_lang 컬럼과 1:1 매핑. extractReadingPage 호출 시 함께 전달. */
+let _meaningLang = 'native';
+/* 설정 모달이 열려 있는 동안 mount 된 슬라이더 핸들 (renderSlider 반환값).
+   close 시 destroy 호출해 resize 리스너 누수 방지. */
+let _rsSliderHandle = null;
 
 async function initAuth() {
   const { data: { session } } = await supabaseClient.auth.getSession();
@@ -572,20 +675,30 @@ async function initAuth() {
   setupTranslateToggle();
   /* 로그인 후 GE 점수 로드 + 헤더 칩 렌더 (로컬 개발에서는 user 없으면 스킵) */
   await loadAndRenderLevelChip();
-  /* 인증된 유저에게만 "내 책" 진입 버튼 노출 (저장 기능은 RLS 로 user_id 매칭 필요) */
+  /* 인증된 유저에게만 "내 책" 진입 버튼과 ⚙️ 설정 버튼 노출
+     (둘 다 user_profile / reading_books 의 RLS 로 user_id 매칭 필요) */
   if (_authUser) {
     document.getElementById('myBooksBtn').hidden = false;
+    document.getElementById('readingSettingsBtn').hidden = false;
   }
 }
 
-/* "내 영어 레벨" 칩을 헤더에 그립니다.
-   - 점수가 있으면 "내 영어 레벨: 6.5 (중급) ✏️"
-   - 없으면 "내 영어 레벨 설정하기"
-   - 둘 다 클릭 시 모달이 열리고, 저장하면 칩이 갱신됨 */
+/* "내 영어 레벨" 칩 + meaning_lang 을 user_profile 에서 한 번에 로드.
+   - 칩: 점수 있으면 "내 영어 레벨: 6.5 (중급) ✏️", 없으면 "내 영어 레벨 설정하기"
+   - meaning_lang: 'native'(UI 언어) / 'en'(영영) — 단어 추출 시 함께 전달 */
 async function loadAndRenderLevelChip() {
   if (!_authUser) return;  // 로컬 개발 비로그인 상태에서는 칩 비활성
   if (typeof window.LevelPicker === 'undefined') return;
-  _geScore = await window.LevelPicker.load(supabaseClient, _authUser.id);
+  /* LevelPicker.load 는 ge_score 만 반환 → meaning_lang 까지 가져오려면 별도 쿼리.
+     RLS 로 본인 행만 보이므로 maybeSingle() 안전. 행이 없으면 둘 다 기본값 유지. */
+  const { data, error } = await supabaseClient
+    .from('user_profile')
+    .select('ge_score, meaning_lang')
+    .eq('user_id', _authUser.id)
+    .maybeSingle();
+  if (error) { console.warn('[reading] profile load failed:', error); }
+  _geScore = (data && data.ge_score != null) ? Number(data.ge_score) : null;
+  _meaningLang = (data && data.meaning_lang === 'en') ? 'en' : 'native';
   renderLevelChip();
 }
 
@@ -690,15 +803,16 @@ async function fileToResizedBase64(file, maxDim = 1536, quality = 0.85) {
 }
 
 /* --- Edge Function 호출: 페이지 1장 → {original, translated, no_text, study_items}
-   geScore: 사용자 GE 점수 (null 이면 study_items 빈 배열 반환). */
-async function extractReadingPage(base64Data, mimeType, targetLang, geScore) {
+   geScore:     사용자 GE 점수 (null 이면 study_items 빈 배열 반환).
+   meaningLang: 학습 단어 의미를 어떤 언어로 받을지 — 'native'(targetLang) | 'en'(영영). */
+async function extractReadingPage(base64Data, mimeType, targetLang, geScore, meaningLang) {
   const res = await fetch(EDGE_FUNCTION_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       action: 'reading-extract',
       userId: getUserId(),
-      base64Data, mimeType, targetLang, geScore,
+      base64Data, mimeType, targetLang, geScore, meaningLang,
     }),
   });
   if (!res.ok) {
@@ -757,10 +871,10 @@ async function handlePhotos(inputEl) {
   updateLoadingProgress(0, files.length);
 
   /* 페이지별 병렬 호출 — Promise.allSettled 로 일부 실패 시 격리.
-     geScore 를 같이 전달해 단어 추출도 한 번에 처리. */
+     geScore + meaningLang 을 같이 전달해 단어 추출도 한 번에 처리. */
   const tasks = files.map(async (file) => {
     const { data: base64Data, mimeType } = await fileToResizedBase64(file);
-    const result = await extractReadingPage(base64Data, mimeType, lang, _geScore);
+    const result = await extractReadingPage(base64Data, mimeType, lang, _geScore, _meaningLang);
     _completedCount++;
     updateLoadingProgress(_completedCount, files.length);
     return result;
@@ -1166,6 +1280,79 @@ async function saveCurrentBook() {
   }
 }
 
+/* ===== Reading 설정 모달 ===== */
+
+/* ⚙️ 클릭 → 모달 열기. 슬라이더는 LevelPicker.renderSlider 로 매번 마운트
+   (이전 핸들이 있으면 destroy 해서 resize 리스너 누수 방지). 라디오는 _meaningLang 으로 체크. */
+function openReadingSettings() {
+  if (!_authUser) return;
+  if (typeof window.LevelPicker === 'undefined') return;
+  const modal = document.getElementById('readingSettingsModal');
+  /* 슬라이더 호스트 — 이전에 열어둔 핸들이 있으면 정리 */
+  if (_rsSliderHandle && typeof _rsSliderHandle.destroy === 'function') {
+    _rsSliderHandle.destroy();
+    _rsSliderHandle = null;
+  }
+  const host = document.getElementById('readingSettingsSliderHost');
+  _rsSliderHandle = window.LevelPicker.renderSlider({
+    container: host,
+    initialValue: _geScore,  // null 이면 helper 가 5.0 기본값 사용
+    id: 'reading-settings',
+  });
+  /* 라디오 체크 — 현재 _meaningLang 에 맞춰 */
+  const radios = document.querySelectorAll('input[name="rsMeaningLang"]');
+  radios.forEach((r) => { r.checked = (r.value === _meaningLang); });
+  modal.hidden = false;
+}
+
+/* 모달 닫기 — 슬라이더 destroy 까지 책임짐 */
+function closeReadingSettings() {
+  document.getElementById('readingSettingsModal').hidden = true;
+  if (_rsSliderHandle && typeof _rsSliderHandle.destroy === 'function') {
+    _rsSliderHandle.destroy();
+    _rsSliderHandle = null;
+  }
+}
+
+/* 저장: ge_score + meaning_lang 을 user_profile 에 한 번에 upsert.
+   - 슬라이더에서 GE 값 읽고, 라디오에서 meaning_lang 읽음
+   - 성공 시 캐시 갱신 + 칩 재렌더 + 모달 닫기 */
+async function saveReadingSettings() {
+  if (!_authUser) return;
+  const btn = document.getElementById('readingSettingsSaveBtn');
+  /* 슬라이더 값 — 핸들 없으면 안전하게 기존값 유지 */
+  const ge = _rsSliderHandle ? _rsSliderHandle.getValue() : _geScore;
+  /* 라디오 — 체크된 값 (없으면 'native') */
+  const checked = document.querySelector('input[name="rsMeaningLang"]:checked');
+  const ml = (checked && checked.value === 'en') ? 'en' : 'native';
+
+  btn.disabled = true;
+  try {
+    const nowIso = new Date().toISOString();
+    const row = {
+      user_id: _authUser.id,
+      ge_score: ge,
+      ge_updated_at: nowIso,
+      meaning_lang: ml,
+      updated_at: nowIso,
+    };
+    const { error } = await supabaseClient
+      .from('user_profile')
+      .upsert(row, { onConflict: 'user_id' });
+    if (error) throw error;
+    /* 성공 → 캐시 갱신 + UI 갱신 */
+    _geScore = (ge != null) ? Number(ge) : null;
+    _meaningLang = ml;
+    renderLevelChip();
+    closeReadingSettings();
+  } catch (e) {
+    console.error('reading settings save 실패:', e);
+    alert(e?.message || 'save failed');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
 /* --- 모바일 스와이프 (좌/우 페이지 넘김) --- */
 let _touchStartX = 0;
 let _touchEndX = 0;
@@ -1183,13 +1370,20 @@ document.addEventListener('DOMContentLoaded', () => {
   }, { passive: true });
 });
 
-/* 키보드 좌/우 화살표로도 넘기기. Esc 로 저장 모달 닫기. */
+/* 키보드 좌/우 화살표로도 넘기기. Esc 로 열려있는 모달 닫기. */
 document.addEventListener('keydown', (e) => {
   /* 저장 모달이 열려 있으면 페이지 네비게이션 무시. Esc 로 닫기, Enter 로 저장. */
-  const modal = document.getElementById('saveBookModal');
-  if (modal && !modal.hidden) {
+  const saveModal = document.getElementById('saveBookModal');
+  if (saveModal && !saveModal.hidden) {
     if (e.key === 'Escape') { closeSaveBookModal(); return; }
     if (e.key === 'Enter') { e.preventDefault(); saveCurrentBook(); return; }
+    return;
+  }
+  /* 설정 모달이 열려 있으면 페이지 네비게이션 무시. Esc 로 닫기. (Enter 저장은 라디오 포커스
+     중 의도치 않게 발동될 수 있어 일부러 안 묶음) */
+  const settingsModal = document.getElementById('readingSettingsModal');
+  if (settingsModal && !settingsModal.hidden) {
+    if (e.key === 'Escape') { closeReadingSettings(); return; }
     return;
   }
   /* 입력 폼에 포커스가 있으면 페이지 네비게이션 무시 */
@@ -1198,6 +1392,15 @@ document.addEventListener('keydown', (e) => {
   if (document.getElementById('bookViewer').hidden) return;
   if (e.key === 'ArrowLeft') goPrev();
   if (e.key === 'ArrowRight') goNext();
+});
+
+/* 모달 빈 배경 클릭 → 닫기 (lp-overlay 와 동일 UX). 카드 안 클릭은 stopPropagation 없이도
+   target 비교로 무시되므로 안전. */
+document.addEventListener('click', (e) => {
+  const settingsModal = document.getElementById('readingSettingsModal');
+  if (settingsModal && !settingsModal.hidden && e.target === settingsModal) {
+    closeReadingSettings();
+  }
 });
 
 /* 시작 */
