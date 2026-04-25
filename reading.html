@@ -988,8 +988,8 @@ function updateBookViewerToolbar() {
 /* 상단 뒤로가기 링크 라벨/동작 + 페이지 제목(h1) 을 현재 화면 상태에 맞춰 갱신.
    - 업로드 화면: h1 "Reading Tutor" / 뒤로가기 "← 메인화면" → main.html
    - 책 목록: h1 "📚 My Books" / 뒤로가기 "← Reading Tutor" → 업로드 화면
-   - 책 뷰어 (책 목록 경유, _isSavedView=true): h1 "Reading Tutor" / "← My Books" → 책 목록
-   - 책 뷰어 (새로 올린 책 또는 저장 직후, _isSavedView=false): h1 "Reading Tutor" / "← Reading Tutor" → 업로드
+   - 책 뷰어 (제목 있음): h1 = 책 제목 / 뒤로가기는 _isSavedView 에 따라
+   - 책 뷰어 (제목 없음, 새 업로드 미저장): h1 "Reading Tutor" / "← Reading Tutor" → 업로드
    화면 전환이 일어나는 모든 함수 끝에서 호출. */
 function updateTopBackLink() {
   const link = document.getElementById('topBackLink');
@@ -1000,11 +1000,17 @@ function updateTopBackLink() {
   const bookListVisible = !document.getElementById('bookListArea').hidden;
   const bookViewerVisible = !document.getElementById('bookViewer').hidden;
 
-  /* 페이지 제목 — 책 목록 진입 시에만 "📚 My Books" 로 전환 (그 외엔 "Reading Tutor"). */
+  /* 페이지 제목 — 화면별 분기:
+     - 책 목록: "📚 My Books"
+     - 책 뷰어 + 제목 있음: 사용자 데이터(책 제목) 표시 — data-i18n 제거해서 언어 전환에 덮어쓰기 방지
+     - 그 외 (업로드/로딩/제목 없는 새 책): "Reading Tutor" */
   if (heading) {
     if (bookListVisible) {
       heading.setAttribute('data-i18n', 'readingMyBooks');
       heading.textContent = tt('readingMyBooks', '📚 My Books');
+    } else if (bookViewerVisible && _currentBookTitle) {
+      heading.removeAttribute('data-i18n');
+      heading.textContent = _currentBookTitle;
     } else {
       heading.setAttribute('data-i18n', 'menuReadingTitle');
       heading.textContent = tt('menuReadingTitle', 'Reading Tutor');
@@ -1391,6 +1397,8 @@ async function saveCurrentBook() {
     _currentBookTitle = title;
     closeSaveBookModal();
     updateBookViewerToolbar();
+    /* 저장 직후 상단 h1 을 "Reading Tutor" → 방금 입력한 책 제목으로 즉시 반영 */
+    updateTopBackLink();
   } catch (e) {
     console.error('save book 실패:', e);
     alert((typeof t === 'function') ? t('readingSaveError') : '책 저장에 실패했어요');
