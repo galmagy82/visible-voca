@@ -22,7 +22,7 @@
 <!-- Supabase JS — 인증 세션 확인용 (vocabulary.html 와 동일 cdn) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <!-- 다국어 -->
-<script src="i18n.js?v=20260426l"></script>
+<script src="i18n.js?v=20260426j"></script>
 <!-- 공용 "내 영어 레벨" 컴포넌트 (모달 + 칩 + 로직 + renderSlider 임베드 헬퍼) -->
 <script src="level-picker.js?v=20260426"></script>
 <style>
@@ -96,24 +96,6 @@
     transition: background 0.15s, border-color 0.15s;
   }
   .settings-gear-btn:hover { background: #EDECEA; border-color: #B0ACA6; }
-  /* 로그아웃 버튼: 페이지 우상단에 absolute 배치 (vocabulary.html 와 동일 패턴).
-     좁은 화면에서 .top-bar-right 의 ⚙️ 와 가로 위치가 겹칠 수 있는 점은 트레이드오프로 수용. */
-  .top-logout {
-    position: absolute;
-    top: 16px;
-    right: 20px;
-    padding: 6px 14px;
-    font-size: 0.75rem;
-    color: #7A7570;
-    background: white;
-    border: 1px solid #D5D2CC;
-    border-radius: 6px;
-    cursor: pointer;
-    white-space: nowrap;
-    z-index: 100;
-    transition: background 0.15s, color 0.15s;
-  }
-  .top-logout:hover { background: #F5F3F0; color: #4A4641; }
   /* 2단: 페이지 제목 — 큰 헤딩으로 단독 배치.
      Geminary 브랜드(main.html, 40px) 와 같은 DM Serif Display 폰트로 톤 일치,
      사이즈는 한 단계 작게(1.8rem ≈ 29px) 두어 메인 vs 서브 페이지 위계 유지. */
@@ -551,17 +533,10 @@
     .page { padding: 22px 18px; }
     .page-text { font-size: 0.95rem; }
     .page-heading { font-size: 1.5rem; margin-bottom: 24px; }
-    /* 모바일에서도 우상단 absolute 유지, 톤만 살짝 다운 */
-    .top-logout { top: 12px; right: 12px; padding: 5px 12px; }
   }
 </style>
 </head>
 <body style="display:none">
-
-<!-- 우상단 로그아웃 버튼 (vocabulary.html 와 동일 패턴).
-     position: absolute 로 .container 흐름 밖에서 떠 있음 — 인증된 유저에게만 노출 (initAuth 에서 hidden 해제). -->
-<button class="top-logout" id="readingLogoutBtn" data-i18n="logout" hidden>로그아웃</button>
-
 <div class="container">
 
   <!-- 1단: 유틸리티 (뒤로가기 + 내 영어 레벨 칩 + ⚙️ 설정) -->
@@ -722,7 +697,6 @@ async function initAuth() {
   if (_authUser) {
     document.getElementById('myBooksBtn').hidden = false;
     document.getElementById('readingSettingsBtn').hidden = false;
-    document.getElementById('readingLogoutBtn').hidden = false;
   }
   /* 초기 뒤로가기 라벨 — 업로드 화면이므로 "← 메인으로" 로 시작 */
   updateTopBackLink();
@@ -1569,12 +1543,6 @@ document.addEventListener('click', (e) => {
   if (settingsModal && !settingsModal.hidden && e.target === settingsModal) {
     closeReadingSettings();
   }
-});
-
-/* 우상단 로그아웃 — Supabase 세션 종료 후 index 로 이동 (vocabulary.html 와 동일 흐름) */
-document.getElementById('readingLogoutBtn').addEventListener('click', async () => {
-  await supabaseClient.auth.signOut();
-  location.href = 'index.html';
 });
 
 /* 시작 */
