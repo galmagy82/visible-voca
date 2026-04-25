@@ -267,8 +267,8 @@
     padding: 6px 0 6px 12px;
   }
   .study-item-li.flash {
-    background: rgba(90, 138, 66, 0.08);
-    transition: background 0.4s;
+    background: rgba(90, 138, 66, 0.25);
+    transition: background 0.6s;
   }
   .study-item-surface {
     font-weight: 600;
@@ -804,7 +804,8 @@ async function fileToResizedBase64(file, maxDim = 1536, quality = 0.85) {
 
 /* --- Edge Function 호출: 페이지 1장 → {original, translated, no_text, study_items}
    geScore:     사용자 GE 점수 (null 이면 study_items 빈 배열 반환).
-   meaningLang: 학습 단어 의미를 어떤 언어로 받을지 — 'native'(targetLang) | 'en'(영영). */
+   meaningLang: 학습 단어 의미를 어떤 언어로 받을지 — 'native'(targetLang) | 'en'(영영).
+   에러에 .status 를 부착해 재시도 로직이 일시적 vs 영구 실패를 구분할 수 있게 함. */
 async function extractReadingPage(base64Data, mimeType, targetLang, geScore, meaningLang) {
   const res = await fetch(EDGE_FUNCTION_URL, {
     method: 'POST',
@@ -817,9 +818,32 @@ async function extractReadingPage(base64Data, mimeType, targetLang, geScore, mea
   });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    throw new Error(data.error || 'reading-extract API error');
+    const err = new Error(data.error || `reading-extract API error (${res.status})`);
+    err.status = res.status;
+    throw err;
   }
   return res.json();
+}
+
+/* 일시적 실패(429/5xx/네트워크) 에 대해 지수 백오프로 재시도.
+   - 첫 재시도 1s, 두 번째 2.5s — 각 0~30% jitter 로 동시 재시도 충돌 회피
+   - 영구 에러(400/401/403/404 등) 는 재시도해도 똑같이 실패하므로 즉시 throw
+   - 네트워크 에러는 status 가 없음 → 재시도 대상으로 처리 */
+async function extractReadingPageWithRetry(base64Data, mimeType, targetLang, geScore, meaningLang) {
+  const delays = [1000, 2500];
+  for (let attempt = 0; attempt <= delays.length; attempt++) {
+    try {
+      return await extractReadingPage(base64Data, mimeType, targetLang, geScore, meaningLang);
+    } catch (e) {
+      const status = e && e.status;
+      const retryable = !status || status === 429 || (status >= 500 && status < 600);
+      if (!retryable || attempt === delays.length) throw e;
+      const base = delays[attempt];
+      const wait = base + Math.random() * base * 0.3;
+      console.warn(`[reading-extract] attempt ${attempt + 1} failed (status=${status || 'network'}), retrying in ${Math.round(wait)}ms`);
+      await new Promise((r) => setTimeout(r, wait));
+    }
+  }
 }
 
 /* ===== 메인 흐름 상태 ===== */
@@ -871,10 +895,11 @@ async function handlePhotos(inputEl) {
   updateLoadingProgress(0, files.length);
 
   /* 페이지별 병렬 호출 — Promise.allSettled 로 일부 실패 시 격리.
-     geScore + meaningLang 을 같이 전달해 단어 추출도 한 번에 처리. */
+     geScore + meaningLang 을 같이 전달해 단어 추출도 한 번에 처리.
+     재시도 헬퍼를 사용해 일시적 장애(429/5xx/네트워크) 는 자동 복구. */
   const tasks = files.map(async (file) => {
     const { data: base64Data, mimeType } = await fileToResizedBase64(file);
-    const result = await extractReadingPage(base64Data, mimeType, lang, _geScore, _meaningLang);
+    const result = await extractReadingPageWithRetry(base64Data, mimeType, lang, _geScore, _meaningLang);
     _completedCount++;
     updateLoadingProgress(_completedCount, files.length);
     return result;
@@ -1052,7 +1077,8 @@ function scrollToStudyItem(pageIdx, itemIdx) {
   if (details && !details.open) details.open = true;
   el.scrollIntoView({ behavior: 'smooth', block: 'center' });
   el.classList.add('flash');
-  setTimeout(() => el.classList.remove('flash'), 600);
+  /* 1.2s 동안 진한 배경 유지 후 transition(0.6s) 으로 부드럽게 페이드아웃 */
+  setTimeout(() => el.classList.remove('flash'), 1200);
 }
 
 function escapeHtml(s) {
