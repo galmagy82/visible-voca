@@ -1176,12 +1176,17 @@ function highlightText(rawText, studyItems, pageIdx) {
 
   for (const { item, idx } of sorted) {
     const surface = item.surface.trim();
-    /* surface 의 모든 whitespace 를 \s+ 패턴으로 치환:
-       "cuddle up with" → /cuddle\s+up\s+with/ig
-       단일 단어 ("furry") 는 split 결과 1개라서 그대로 단어 매칭 */
+    /* surface → 정규식 패턴:
+       - 단어 사이는 \s+ (다단어구의 줄바꿈 매칭, ex. "cuddle up\nwith")
+       - 단어 내부 글자 사이는 (?:-?\n\s{0,3})? — 책 인쇄/OCR 의 줄 끝 단어 분할 케이스만 커버:
+         · "mum\nbled"   (순수 줄바꿈)
+         · "mum-\nbled"  (하이픈 + 줄바꿈)
+         · 다음 줄 들여쓰기 공백 0~3개까지 허용
+         · \n 을 반드시 포함시켜 문단 안의 일반 공백/하이픈 합성어 오매칭 방지 */
+    const MID_WORD_BREAK = '(?:-?\\n\\s{0,3})?';
     const pattern = surface
       .split(/\s+/)
-      .map(escapeRegex)
+      .map((word) => word.split('').map(escapeRegex).join(MID_WORD_BREAK))
       .join('\\s+');
     let re;
     try {
