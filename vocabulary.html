@@ -1588,7 +1588,13 @@
   body.embed-mode #tabSearch .search-box,
   body.embed-mode #guideSearch { display: none !important; }
   body.embed-mode .main-layout { display: block; padding: 0; }
-  body.embed-mode .content { padding: 16px; }
+  /* 사이드바 구분용 .content border-left 는 embed 에서 사이드바가 사라지면
+     왼쪽 끝의 외로운 세로 막대처럼 보이므로 제거 + padding-left 도 0 으로 리셋. */
+  body.embed-mode .content {
+    padding: 16px;
+    border-left: none;
+    padding-left: 16px;
+  }
   /* 검색 결과 영역에 여유 padding-bottom — 모바일에서 마지막 카드가 잘리지 않도록 */
   body.embed-mode #resultSearch { padding-bottom: 24px; }
 </style>
