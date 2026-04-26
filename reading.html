@@ -22,7 +22,7 @@
 <!-- Supabase JS — 인증 세션 확인용 (vocabulary.html 와 동일 cdn) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <!-- 다국어 -->
-<script src="i18n.js?v=20260426u"></script>
+<script src="i18n.js?v=20260426t"></script>
 <!-- 공용 "내 영어 레벨" 컴포넌트 (모달 + 칩 + 로직 + renderSlider 임베드 헬퍼) -->
 <script src="level-picker.js?v=20260426"></script>
 <style>
@@ -245,20 +245,6 @@
   }
   .translate-toggle:hover { background: #EDECEA; }
   .translate-toggle.active { background: #5A8A42; color: #FFFFFF; border-color: #5A8A42; }
-  /* 본문 읽기 토글 — 번역 토글과 동일 톤. active(재생중)일 때 강조 색. */
-  .read-toggle {
-    padding: 8px 14px;
-    font-size: 0.85rem;
-    border: 1px solid #D5D2CC;
-    border-radius: 10px;
-    background: #FFFFFF;
-    color: #4A4641;
-    cursor: pointer;
-    transition: background 0.2s;
-    white-space: nowrap;
-  }
-  .read-toggle:hover { background: #EDECEA; }
-  .read-toggle.active { background: #5A8A42; color: #FFFFFF; border-color: #5A8A42; }
   /* 책으로 저장 버튼 — 살짝 강조 */
   .save-book-btn {
     padding: 8px 14px;
@@ -292,13 +278,6 @@
   .study-highlight:hover { background: rgba(90, 138, 66, 0.3); }
   .study-highlight.active {
     background: rgba(90, 138, 66, 0.4);
-  }
-  /* TTS follow-along 토큰 — 평소엔 투명(인라인), 재생 중인 단어에 .tts-current 노란 배경.
-     study-highlight 와 색이 다르게 → 두 표시가 공존해도 시각적으로 구분됨. */
-  .tts-token { transition: background 0.1s; border-radius: 3px; }
-  .tts-token.tts-current {
-    background: rgba(255, 224, 102, 0.85);
-    box-shadow: 0 0 0 2px rgba(255, 224, 102, 0.85);
   }
 
   /* 페이지 본문 + 하단 학습 리스트 컨테이너
@@ -736,9 +715,6 @@
       <div class="toolbar-right">
         <!-- 책으로 저장 — 새로 올린(미저장) 책일 때만 표시 -->
         <button class="save-book-btn" id="saveBookBtn" onclick="openSaveBookModal()" data-i18n="readingSaveBookBtn" hidden>📚 책으로 저장</button>
-        <!-- 본문 읽기 (브라우저 내장 TTS) — 번역 토글 옆에 같은 톤으로 배치.
-             상태에 따라 라벨/색이 토글됨 (idle → playing → paused). -->
-        <button class="read-toggle" id="readToggle" onclick="toggleRead()"></button>
         <!-- 번역 토글 — UI 언어가 영어이면 숨김 -->
         <button class="translate-toggle" id="translateToggle" onclick="toggleTranslate()"></button>
       </div>
@@ -843,8 +819,6 @@ async function initAuth() {
   document.body.style.display = '';
   applyI18nForReading();
   setupTranslateToggle();
-  /* 본문 읽기 토글 초기 라벨 세팅 (i18n 적용 후) */
-  if (typeof updateReadButton === 'function') updateReadButton();
   /* 로그인 후 GE 점수 로드 + 헤더 칩 렌더 (로컬 개발에서는 user 없으면 스킵) */
   await loadAndRenderLevelChip();
   /* 인증된 유저에게만 "내 책" 진입 버튼과 ⚙️ 설정 버튼 노출
@@ -1074,7 +1048,6 @@ async function handlePhotos(inputEl) {
   const lang = (typeof getLang === 'function') ? getLang() : 'ko';
 
   /* 상태 전환: 업로드 → 로딩 */
-  if (_ttsState !== 'idle') stopRead();
   document.getElementById('uploadArea').hidden = true;
   document.getElementById('bookViewer').hidden = true;
   document.getElementById('bookListArea').hidden = true;
@@ -1232,11 +1205,11 @@ function renderPageContent(p, pageIdx) {
   const showT = _showTranslated && p.translated;
   const text = showT ? p.translated : p.original;
   const items = Array.isArray(p.study_items) ? p.study_items : [];
-  /* 번역 모드: surface 매칭 불가 + TTS 도 영문 전용이라 토큰 불필요 → 평문.
-     원문 모드: 학습어 하이라이트 + TTS follow-along 용 토큰(.tts-token) 모두 emit. */
-  const html = showT
-    ? escapeHtml(text)
-    : (items.length > 0 ? highlightText(text, items, pageIdx) : tokenizeText(text, 0));
+  /* 번역 모드에서는 surface 가 영어 원문 substring 이므로 하이라이트 매칭 불가 → 평문 표시.
+     원문 모드에서만 하이라이트 적용. */
+  const html = (!showT && items.length > 0)
+    ? highlightText(text, items, pageIdx)
+    : escapeHtml(text);
 
   /* 학습 단어 collapsible 리스트 (페이지 내 공급된 항목만) */
   const listHtml = items.length > 0
@@ -1258,28 +1231,6 @@ function filterStudyItems(items) {
     if (!it || typeof it.surface !== 'string') return false;
     return !it.surface.trim().endsWith('-');
   });
-}
-
-/* 텍스트를 단어(=영문/숫자 연속) 단위로 잘라 <span class="tts-token" data-start="N"> 으로 감싼 HTML 반환.
-   - data-start: 원문 raw text 에서의 시작 char index (TTS boundary 이벤트의 charIndex 와 매칭됨)
-   - 비단어 문자(공백/구두점/줄바꿈)는 escape 만 해서 그대로 emit
-   - 단어 내 아포스트로피·하이픈은 한 토큰 안에 포함 ("don't", "well-known")
-   - baseOffset: 외부 호출자가 부분 문자열을 넘길 때 charIndex 보정용 */
-function tokenizeText(text, baseOffset) {
-  let result = '';
-  let i = 0;
-  while (i < text.length) {
-    if (/[A-Za-z0-9]/.test(text[i])) {
-      let j = i;
-      while (j < text.length && /[A-Za-z0-9'\-]/.test(text[j])) j++;
-      result += `<span class="tts-token" data-start="${baseOffset + i}">${escapeHtml(text.slice(i, j))}</span>`;
-      i = j;
-    } else {
-      result += escapeHtml(text[i]);
-      i++;
-    }
-  }
-  return result;
 }
 
 /* 본문에서 학습 단어 surface 를 case-insensitive 로 찾아 <span class="study-highlight"> 로 감쌈.
@@ -1341,16 +1292,14 @@ function highlightText(rawText, studyItems, pageIdx) {
 
   matches.sort((a, b) => a.start - b.start);
 
-  /* 출력 시 study-highlight 안팎에 모두 .tts-token 을 끼워 넣음.
-     → TTS 의 charIndex 가 study-highlight 단어든 일반 단어든 동일하게 매칭됨. */
   let out = '';
   let cursor = 0;
   for (const m of matches) {
-    out += tokenizeText(rawText.slice(cursor, m.start), cursor);
-    out += `<span class="study-highlight" data-page-idx="${pageIdx}" data-item-idx="${m.idx}" onclick="scrollToStudyItem(${pageIdx}, ${m.idx})">${tokenizeText(rawText.slice(m.start, m.end), m.start)}</span>`;
+    out += escapeHtml(rawText.slice(cursor, m.start));
+    out += `<span class="study-highlight" data-page-idx="${pageIdx}" data-item-idx="${m.idx}" onclick="scrollToStudyItem(${pageIdx}, ${m.idx})">${escapeHtml(rawText.slice(m.start, m.end))}</span>`;
     cursor = m.end;
   }
-  out += tokenizeText(rawText.slice(cursor), cursor);
+  out += escapeHtml(rawText.slice(cursor));
   return out;
 }
 
@@ -1418,10 +1367,7 @@ function escapeHtml(s) {
 
 /* --- 네비게이션 --- */
 function goTo(idx, animate = true) {
-  const newIdx = Math.max(0, Math.min(_pages.length - 1, idx));
-  /* 페이지가 실제로 바뀌면 진행중인 본문 읽기 정지 (다른 페이지 텍스트로 흘러가지 않도록) */
-  if (newIdx !== _currentIdx && _ttsState !== 'idle') stopRead();
-  _currentIdx = newIdx;
+  _currentIdx = Math.max(0, Math.min(_pages.length - 1, idx));
   const track = document.getElementById('pageTrack');
   if (!animate) {
     track.style.transition = 'none';
@@ -1441,8 +1387,6 @@ function updateNav() {
 
 /* --- 번역 토글 (전체 페이지 일괄) --- */
 function toggleTranslate() {
-  /* 본문 텍스트가 바뀌면 charIndex 매핑이 무효 → 진행중인 TTS 정지 */
-  if (_ttsState !== 'idle') stopRead();
   _showTranslated = !_showTranslated;
   /* 모든 페이지를 다시 렌더 (현재 위치 유지) */
   const track = document.getElementById('pageTrack');
@@ -1467,7 +1411,6 @@ function resetReading() {
   _isSavedView = false;
   _currentBookId = null;
   _currentBookTitle = '';
-  if (_ttsState !== 'idle') stopRead();
   document.getElementById('bookViewer').hidden = true;
   document.getElementById('loadingArea').hidden = true;
   document.getElementById('bookListArea').hidden = true;
@@ -1478,7 +1421,6 @@ function resetReading() {
 /* 책 목록(또는 책 뷰어 fresh 모드) 에서 뒤로가기 → 업로드 화면으로 복귀.
    책 뷰어도 같이 숨겨야 fresh 뷰어에서 호출되었을 때 화면이 정상 전환됨. */
 function backToUpload() {
-  if (_ttsState !== 'idle') stopRead();
   document.getElementById('bookListArea').hidden = true;
   document.getElementById('bookViewer').hidden = true;
   document.getElementById('loadingArea').hidden = true;
@@ -1491,7 +1433,6 @@ function backToUpload() {
 /* "📚 내 책" 버튼 → 책 목록 화면으로 전환 + 데이터 로드 */
 async function showBookList() {
   if (!_authUser) return;
-  if (_ttsState !== 'idle') stopRead();
   document.getElementById('uploadArea').hidden = true;
   document.getElementById('bookViewer').hidden = true;
   document.getElementById('loadingArea').hidden = true;
@@ -1765,112 +1706,7 @@ document.addEventListener('keydown', (e) => {
   if (document.getElementById('bookViewer').hidden) return;
   if (e.key === 'ArrowLeft') goPrev();
   if (e.key === 'ArrowRight') goNext();
-  if (e.key === 'Escape' && _ttsState !== 'idle') stopRead();
 });
-
-/* === 본문 읽기 (브라우저 내장 TTS + boundary 이벤트 follow-along) ===
-   - speak() 와 별도 상태 머신: idle / playing / paused
-   - 페이지 변경/번역 토글/책 닫기/Esc/단어 발음 클릭 → stopRead 로 정리
-   - SpeechSynthesisUtterance.onboundary 의 charIndex 를 .tts-token data-start 와 매칭해서
-     현재 읽는 단어를 노란색으로 강조 + 부드럽게 스크롤 */
-let _ttsState = 'idle';
-let _ttsUtterance = null;
-let _ttsCurrentEl = null;
-let _ttsPageIdx = -1;
-
-function toggleRead() {
-  if (_ttsState === 'idle') startRead();
-  else if (_ttsState === 'playing') pauseRead();
-  else if (_ttsState === 'paused') resumeRead();
-}
-
-function startRead() {
-  if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
-  const p = _pages[_currentIdx];
-  if (!p || p.error || p.no_text) return;
-  /* 번역 모드는 영문 TTS 와 매칭 불가 → 자동으로 원문으로 전환 */
-  if (_showTranslated) toggleTranslate();
-  const text = p.original;
-  if (!text) return;
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'en-US';
-  u.rate = 0.95;
-  u.onboundary = (e) => {
-    if (e.name && e.name !== 'word') return;
-    highlightTtsWord(e.charIndex);
-  };
-  u.onend = () => stopRead();
-  u.onerror = () => stopRead();
-  _ttsUtterance = u;
-  _ttsPageIdx = _currentIdx;
-  _ttsState = 'playing';
-  speechSynthesis.speak(u);
-  updateReadButton();
-}
-
-function pauseRead() {
-  if (!window.speechSynthesis) return;
-  speechSynthesis.pause();
-  _ttsState = 'paused';
-  updateReadButton();
-}
-
-function resumeRead() {
-  if (!window.speechSynthesis) return;
-  speechSynthesis.resume();
-  _ttsState = 'playing';
-  updateReadButton();
-}
-
-function stopRead() {
-  if (window.speechSynthesis) speechSynthesis.cancel();
-  if (_ttsCurrentEl) {
-    _ttsCurrentEl.classList.remove('tts-current');
-    _ttsCurrentEl = null;
-  }
-  _ttsUtterance = null;
-  _ttsState = 'idle';
-  _ttsPageIdx = -1;
-  updateReadButton();
-}
-
-function highlightTtsWord(charIndex) {
-  if (_ttsPageIdx < 0) return;
-  const page = document.querySelector(`.page[data-page-idx="${_ttsPageIdx}"]`);
-  if (!page) return;
-  /* 정확한 위치 매칭 우선, 없으면 charIndex 이후 가장 가까운 토큰 (TTS 엔진별 boundary 편차 허용) */
-  let span = page.querySelector(`.tts-token[data-start="${charIndex}"]`);
-  if (!span) {
-    const all = page.querySelectorAll('.tts-token');
-    for (const el of all) {
-      const s = Number(el.dataset.start);
-      if (s >= charIndex) { span = el; break; }
-    }
-  }
-  if (!span) return;
-  if (_ttsCurrentEl) _ttsCurrentEl.classList.remove('tts-current');
-  span.classList.add('tts-current');
-  _ttsCurrentEl = span;
-  /* nearest: 화면에 이미 보이면 스크롤 안 일어남 → 사용자 수동 스크롤 방해 최소화 */
-  span.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-function updateReadButton() {
-  const btn = document.getElementById('readToggle');
-  if (!btn) return;
-  const tt = (k, fb) => (typeof t === 'function') ? t(k) : fb;
-  if (_ttsState === 'playing') {
-    btn.textContent = '⏸ ' + tt('readingPause', '일시정지');
-    btn.classList.add('active');
-  } else if (_ttsState === 'paused') {
-    btn.textContent = '▶ ' + tt('readingResume', '이어 읽기');
-    btn.classList.remove('active');
-  } else {
-    btn.textContent = '🔊 ' + tt('readingReadAloud', '읽기');
-    btn.classList.remove('active');
-  }
-}
 
 /* 모달 빈 배경 클릭 → 닫기 (lp-overlay 와 동일 UX). 카드 안 클릭은 stopPropagation 없이도
    target 비교로 무시되므로 안전. */
@@ -1902,12 +1738,9 @@ function closeGeminaryPopup() {
   document.body.style.overflow = '';
 }
 /* 발음 듣기 — 브라우저 내장 SpeechSynthesis (vocabulary.html 의 speak() 와 동일 시그니처).
-   책 본문 단어는 영어이므로 lang='en-US' 고정. 추가 API 비용 0, 오프라인 동작.
-   진행중인 본문 읽기(stopRead)도 정리 — speechSynthesis.cancel() 이 그쪽 utterance 도 같이
-   취소하므로 상태/하이라이트/버튼 라벨이 어긋나지 않게. */
+   책 본문 단어는 영어이므로 lang='en-US' 고정. 추가 API 비용 0, 오프라인 동작. */
 function speak(text) {
   if (!text || !window.speechSynthesis) return;
-  if (_ttsState !== 'idle') stopRead();
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'en-US';

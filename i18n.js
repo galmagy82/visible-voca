@@ -260,9 +260,6 @@ const I18N = {
 
     /* Reading Tutor */
     readingIntroDesc: '책 페이지 사진들을 올려보세요.\n내 영어 레벨에 맞는 학습 단어를 알려주고, 책으로 저장할 수 있습니다.',
-    readingReadAloud: '읽기',
-    readingPause: '일시정지',
-    readingResume: '이어 읽기',
     readingUploadBtn: '📂 책 사진 올리기',
     readingUploadHint: '앞페이지부터 차례로 찍은 사진을 올리세요.\n촬영 시각 순서대로 자동 정렬됩니다 (최대 30장).',
     readingExtracting: '텍스트 추출 중...',
@@ -561,9 +558,6 @@ const I18N = {
 
     /* Reading Tutor */
     readingIntroDesc: 'Upload photos of your book pages.\nWe\'ll find study words matched to your English level and let you save them as a book.',
-    readingReadAloud: 'Read aloud',
-    readingPause: 'Pause',
-    readingResume: 'Resume',
     readingUploadBtn: '📂 Upload book photos',
     readingUploadHint: 'Photograph pages in order.\nThey\'ll be auto-sorted by capture time (up to 30).',
     readingExtracting: 'Extracting text...',
@@ -861,9 +855,6 @@ const I18N = {
 
     /* Reading Tutor */
     readingIntroDesc: '本のページの写真をアップロードしてください。\nあなたの英語レベルに合った学習単語を表示し、本として保存できます。',
-    readingReadAloud: '読み上げ',
-    readingPause: '一時停止',
-    readingResume: '再開',
     readingUploadBtn: '📂 本の写真をアップロード',
     readingUploadHint: 'ページ順に撮影してアップロードしてください。\n撮影時刻で自動的に並びます（最大30枚）。',
     readingExtracting: 'テキストを抽出中...',
@@ -1162,9 +1153,6 @@ const I18N = {
 
     /* Reading Tutor */
     readingIntroDesc: '请上传书页照片。\n我们会根据您的英语水平推荐学习词汇，并可保存为书籍。',
-    readingReadAloud: '朗读',
-    readingPause: '暂停',
-    readingResume: '继续',
     readingUploadBtn: '📂 上传书页照片',
     readingUploadHint: '请按页面顺序拍照后上传。\n将按拍摄时间自动排序（最多30张）。',
     readingExtracting: '正在提取文本...',
@@ -1462,9 +1450,6 @@ const I18N = {
 
     /* Reading Tutor */
     readingIntroDesc: 'Sube fotos de las páginas del libro.\nTe mostraremos palabras de estudio adaptadas a tu nivel de inglés y podrás guardarlas como libro.',
-    readingReadAloud: 'Leer en voz alta',
-    readingPause: 'Pausar',
-    readingResume: 'Reanudar',
     readingUploadBtn: '📂 Subir fotos del libro',
     readingUploadHint: 'Fotografía las páginas en orden y súbelas.\nSe ordenarán automáticamente por hora de captura (hasta 30).',
     readingExtracting: 'Extrayendo texto...',
@@ -1762,9 +1747,6 @@ const I18N = {
 
     /* Reading Tutor */
     readingIntroDesc: 'Hãy tải lên ảnh các trang sách.\nChúng tôi sẽ gợi ý từ vựng phù hợp với trình độ tiếng Anh của bạn và có thể lưu thành sách.',
-    readingReadAloud: 'Đọc to',
-    readingPause: 'Tạm dừng',
-    readingResume: 'Tiếp tục',
     readingUploadBtn: '📂 Tải ảnh sách lên',
     readingUploadHint: 'Hãy chụp các trang theo thứ tự rồi tải lên.\nẢnh sẽ được tự động sắp xếp theo thời gian chụp (tối đa 30 ảnh).',
     readingExtracting: 'Đang trích xuất văn bản...',
@@ -2062,9 +2044,6 @@ const I18N = {
 
     /* Reading Tutor */
     readingIntroDesc: 'อัปโหลดภาพหน้าหนังสือของคุณ\nเราจะแนะนำคำศัพท์ที่เหมาะกับระดับภาษาอังกฤษของคุณ และบันทึกเป็นหนังสือได้',
-    readingReadAloud: 'อ่านออกเสียง',
-    readingPause: 'หยุดชั่วคราว',
-    readingResume: 'เล่นต่อ',
     readingUploadBtn: '📂 อัปโหลดภาพหนังสือ',
     readingUploadHint: 'ถ่ายภาพหน้าตามลำดับแล้วอัปโหลด\nระบบจะจัดเรียงตามเวลาถ่ายอัตโนมัติ (สูงสุด 30 ภาพ)',
     readingExtracting: 'กำลังแยกข้อความ...',
@@ -2362,9 +2341,6 @@ const I18N = {
 
     /* Reading Tutor */
     readingIntroDesc: 'Envie fotos das páginas do livro.\nMostraremos palavras de estudo adequadas ao seu nível de inglês e poderá salvá-las como livro.',
-    readingReadAloud: 'Ler em voz alta',
-    readingPause: 'Pausar',
-    readingResume: 'Retomar',
     readingUploadBtn: '📂 Enviar fotos do livro',
     readingUploadHint: 'Fotografe as páginas em ordem e envie.\nSerão ordenadas automaticamente pelo horário de captura (até 30).',
     readingExtracting: 'Extraindo texto...',
