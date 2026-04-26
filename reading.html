@@ -22,7 +22,7 @@
 <!-- Supabase JS — 인증 세션 확인용 (vocabulary.html 와 동일 cdn) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <!-- 다국어 -->
-<script src="i18n.js?v=20260426p"></script>
+<script src="i18n.js?v=20260426q"></script>
 <!-- 공용 "내 영어 레벨" 컴포넌트 (모달 + 칩 + 로직 + renderSlider 임베드 헬퍼) -->
 <script src="level-picker.js?v=20260426"></script>
 <style>
@@ -577,6 +577,10 @@
     border-radius: 14px;
     overflow: hidden;
     box-shadow: 0 4px 32px rgba(0, 0, 0, 0.2);
+    /* 상단 40px 비스크롤 띠 — ✕ 버튼이 iframe 스크롤바와 겹치지 않게 분리.
+       단어장(.wb-modal) 모달과 동일한 패턴(닫기 버튼이 스크롤 영역 밖). */
+    padding-top: 40px;
+    box-sizing: border-box;
   }
   .word-popup-iframe {
     width: 100%;
@@ -584,23 +588,22 @@
     border: 0;
     display: block;
   }
+  /* 단어장 X 버튼(.wb-modal-close) 와 톤 통일 — 텍스트 ✕, 배경/그림자 없음 */
   .word-popup-close {
     position: absolute;
     top: 8px;
-    right: 8px;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
+    right: 12px;
+    font-size: 1.3rem;
+    line-height: 1;
     border: none;
-    background: white;
-    color: #4A4641;
+    background: transparent;
+    color: #6B6660;
     cursor: pointer;
-    font-size: 1rem;
+    padding: 4px 8px;
     z-index: 1;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
-    transition: background 0.15s;
+    transition: color 0.15s;
   }
-  .word-popup-close:hover { background: #F5F3F0; }
+  .word-popup-close:hover { color: #2D2B28; }
   @media (max-width: 480px) {
     .word-popup-overlay { padding: 12px; }
     .word-popup { height: 92vh; }
