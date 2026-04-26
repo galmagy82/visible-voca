@@ -1009,7 +1009,7 @@ async function handlePhotos(inputEl) {
         original: r.value.original || '',
         translated: r.value.translated || '',
         no_text: !!r.value.no_text,
-        study_items: Array.isArray(r.value.study_items) ? r.value.study_items : [],
+        study_items: filterStudyItems(r.value.study_items),
         error: null,
       };
     }
@@ -1155,6 +1155,17 @@ function renderPageContent(p, pageIdx) {
     <div class="page-text">${html}</div>
     ${listHtml}
   </div>`;
+}
+
+/* 페이지 경계 분할 fragment 제거 — 책에서 단어가 페이지를 넘기며 "grum-" / "bled" 로 쪼개지면
+   Gemini 가 앞쪽 조각("grum-")을 학습어로 뽑는 경우가 있음. surface 끝 하이픈으로 식별해서 컷.
+   _pages 에 저장되기 전에 적용 → 하이라이트·학습어 리스트·DB 저장 모두 깨끗해짐. */
+function filterStudyItems(items) {
+  if (!Array.isArray(items)) return [];
+  return items.filter((it) => {
+    if (!it || typeof it.surface !== 'string') return false;
+    return !it.surface.trim().endsWith('-');
+  });
 }
 
 /* 본문에서 학습 단어 surface 를 case-insensitive 로 찾아 <span class="study-highlight"> 로 감쌈.
@@ -1417,7 +1428,7 @@ async function openSavedBook(bookId) {
       original: p.original || '',
       translated: p.translated || '',
       no_text: !!p.no_text,
-      study_items: Array.isArray(p.study_items) ? p.study_items : [],
+      study_items: filterStudyItems(p.study_items),
       error: null,
     })) : [];
     _currentIdx = 0;
