@@ -1081,9 +1081,11 @@ body {
   </div>
   <div class="brand-icon-wrap">
     <svg viewBox="0 0 60 60" width="52" height="52" xmlns="http://www.w3.org/2000/svg">
-      <!-- 단어지도 노드 3개 — Geminary 옆 아이콘과 동일 각도/배치 -->
-      <line x1="16" y1="16" x2="44" y2="16" stroke="white" stroke-width="2" opacity="0.4"/>
-      <line x1="16" y1="16" x2="25" y2="44" stroke="white" stroke-width="2" opacity="0.4"/>
+      <!-- 단어지도 노드 3개 — Geminary 옆 아이콘과 동일 각도/배치.
+           선 끝점은 작은 원 가장자리에서 멈춤 — 작은 원의 opacity (0.6/0.8) 때문에
+           선이 원 안까지 들어가면 "막대기가 박힌" 듯 비쳐 보이는 문제 회피. -->
+      <line x1="16" y1="16" x2="39" y2="16" stroke="white" stroke-width="2" opacity="0.4"/>
+      <line x1="16" y1="16" x2="23.6" y2="39.7" stroke="white" stroke-width="2" opacity="0.4"/>
       <circle cx="16" cy="16" r="6" fill="white"/>
       <circle cx="44" cy="16" r="5" fill="white" opacity="0.8"/>
       <circle cx="25" cy="44" r="4.5" fill="white" opacity="0.6"/>

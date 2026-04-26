@@ -7,9 +7,10 @@
     </linearGradient>
   </defs>
   <rect width="64" height="64" rx="14" fill="url(#g)"/>
-  <!-- 단어지도 노드 3개 — Geminary 옆 아이콘과 동일 각도/배치 -->
-  <line x1="17" y1="17" x2="47" y2="17" stroke="white" stroke-width="2.5" opacity="0.4"/>
-  <line x1="17" y1="17" x2="27" y2="47" stroke="white" stroke-width="2.5" opacity="0.4"/>
+  <!-- 단어지도 노드 3개 — Geminary 옆 아이콘과 동일 각도/배치.
+       선 끝점은 작은 원 가장자리에서 멈춤 — opacity 때문에 선이 원 안에서 비치는 문제 회피. -->
+  <line x1="17" y1="17" x2="41" y2="17" stroke="white" stroke-width="2.5" opacity="0.4"/>
+  <line x1="17" y1="17" x2="25.4" y2="42.3" stroke="white" stroke-width="2.5" opacity="0.4"/>
   <circle cx="17" cy="17" r="7" fill="white"/>
   <circle cx="47" cy="17" r="6" fill="white" opacity="0.8"/>
   <circle cx="27" cy="47" r="5" fill="white" opacity="0.6"/>
