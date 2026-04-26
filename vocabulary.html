@@ -1587,6 +1587,12 @@
   body.embed-mode .sidebar,
   body.embed-mode #tabSearch .search-box,
   body.embed-mode #guideSearch { display: none !important; }
+  /* embed 모드 body — 외부 padding 0, position:relative 로 .embed-close-btn 의 absolute 기준점 제공.
+     단어장 모달(.wb-modal) 처럼 닫기 버튼이 스크롤과 함께 위로 흘러나가는 동작을 재현. */
+  body.embed-mode {
+    position: relative;
+    padding: 0;
+  }
   body.embed-mode .main-layout { display: block; padding: 0; }
   /* 사이드바 구분용 .content border-left 는 embed 에서 사이드바가 사라지면
      왼쪽 끝의 외로운 세로 막대처럼 보이므로 제거 + padding-left 도 0 으로 리셋. */
@@ -1597,10 +1603,34 @@
   }
   /* 검색 결과 영역에 여유 padding-bottom — 모바일에서 마지막 카드가 잘리지 않도록 */
   body.embed-mode #resultSearch { padding-bottom: 24px; }
+  /* embed 닫기 버튼 — embed-mode 에서만 노출, 단어장(.wb-modal-close) 스타일과 동일.
+     position:absolute(상위가 body 라 문서 흐름 안의 위치) 라 사용자가 스크롤다운하면
+     함께 위로 흘러나감 → 단어장 모달과 동일한 UX. */
+  .embed-close-btn { display: none; }
+  body.embed-mode .embed-close-btn {
+    display: inline-block;
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    font-size: 1.3rem;
+    line-height: 1;
+    border: none;
+    background: transparent;
+    color: #6B6660;
+    cursor: pointer;
+    padding: 4px 8px;
+    z-index: 10;
+    transition: color 0.15s;
+  }
+  body.embed-mode .embed-close-btn:hover { color: #2D2B28; }
 </style>
 </head>
 <!-- 인증 확인 전까지 본문 숨김 (깜빡임 방지) -->
 <body style="display:none">
+
+<!-- embed 모드 닫기 버튼 — reading.html 등 부모 창에 postMessage 로 닫기 요청.
+     일반 모드에서는 CSS 로 숨김(.embed-close-btn { display:none }) 처리. -->
+<button class="embed-close-btn" type="button" onclick="window.parent.postMessage({type:'close-word-popup'}, '*')" aria-label="close">&#10005;</button>
 
 <!-- 백 링크 — main.html 허브로 복귀. 로고 위, 탭 라인 위쪽에 배치 (본문 좌측 정렬과 일치). -->
 <div class="back-link-row">
