@@ -250,10 +250,10 @@ const I18N = {
     s8PeekDesc: '문틈 사이로 몰래 살짝 들여다보는 느낌',
 
     /* 메인 메뉴 */
-    menuVocaTitle: 'Visual Dictionary',
-    menuVocaDesc: '단어의 느낌과 뉘앙스를 이미지와 함께 알아보세요',
+    menuVocaTitle: '이미지 단어장',
+    menuVocaDesc: '저장한 단어를 그림과 함께 다시 보고, 퀴즈로 복습하세요',
     menuReadingTitle: 'Reading Tutor',
-    menuReadingDesc: '책 사진을 읽기 자료로 만들어, 단어와 표현을 함께 학습하세요',
+    menuReadingDesc: 'Novel 사진으로 내 레벨에 맞는 학습단어를 정리하세요',
     menuWritingTitle: 'Writing Tutor',
     menuWritingDesc: '에세이를 코칭받고, 나만의 그림책으로 만들어보세요',
     menuComingSoon: '준비 중',
@@ -552,10 +552,10 @@ const I18N = {
     s8PeekDesc: 'Taking a sneaky glance through a gap',
 
     /* Main menu */
-    menuVocaTitle: 'Visual Dictionary',
-    menuVocaDesc: 'Explore the feel and nuance of words with images',
+    menuVocaTitle: 'Image Wordbook',
+    menuVocaDesc: 'Review your saved words with images and test yourself with quizzes',
     menuReadingTitle: 'Reading Tutor',
-    menuReadingDesc: 'Turn book photos into reading material and study words and expressions together',
+    menuReadingDesc: 'Turn novel photos into study words tailored to your level',
     menuWritingTitle: 'Writing Tutor',
     menuWritingDesc: 'Get essay coaching and create your own picture book',
     menuComingSoon: 'Coming soon',
@@ -851,10 +851,10 @@ const I18N = {
     s8PeekDesc: 'ドアの隙間からこっそり覗き見る感覚',
 
     /* メインメニュー */
-    menuVocaTitle: 'Visual Dictionary',
-    menuVocaDesc: '単語の感覚とニュアンスを画像と一緒に学びましょう',
+    menuVocaTitle: '画像単語帳',
+    menuVocaDesc: '保存した単語を画像で振り返り、クイズで復習しましょう',
     menuReadingTitle: 'Reading Tutor',
-    menuReadingDesc: '本の写真を読み物にして、単語と表現を一緒に学びましょう',
+    menuReadingDesc: 'Novelの写真から、自分のレベルに合った学習単語を整理しましょう',
     menuWritingTitle: 'Writing Tutor',
     menuWritingDesc: 'エッセイのコーチングを受けて、自分だけの絵本を作りましょう',
     menuComingSoon: '準備中',
@@ -1151,10 +1151,10 @@ const I18N = {
     s8PeekDesc: '从门缝里偷偷窥视的感觉',
 
     /* 主菜单 */
-    menuVocaTitle: 'Visual Dictionary',
-    menuVocaDesc: '用图片探索单词的感觉和语感',
+    menuVocaTitle: '图像单词本',
+    menuVocaDesc: '用图像复习已保存的单词，并通过测验巩固',
     menuReadingTitle: 'Reading Tutor',
-    menuReadingDesc: '将书本照片转为阅读材料，一起学习单词和表达',
+    menuReadingDesc: '用小说照片整理符合你水平的学习单词',
     menuWritingTitle: 'Writing Tutor',
     menuWritingDesc: '获得作文辅导，制作属于你的绘本',
     menuComingSoon: '即将推出',
@@ -1450,10 +1450,10 @@ const I18N = {
     s8PeekDesc: 'Echar un vistazo furtivo por una rendija',
 
     /* Menú principal */
-    menuVocaTitle: 'Visual Dictionary',
-    menuVocaDesc: 'Explora la sensación y el matiz de las palabras con imágenes',
+    menuVocaTitle: 'Vocabulario con imágenes',
+    menuVocaDesc: 'Revisa tus palabras guardadas con imágenes y ponte a prueba con cuestionarios',
     menuReadingTitle: 'Reading Tutor',
-    menuReadingDesc: 'Convierte fotos de libros en material de lectura y estudia palabras y expresiones juntas',
+    menuReadingDesc: 'Convierte fotos de novelas en palabras de estudio a tu nivel',
     menuWritingTitle: 'Writing Tutor',
     menuWritingDesc: 'Recibe coaching de escritura y crea tu propio libro ilustrado',
     menuComingSoon: 'Próximamente',
@@ -1749,10 +1749,10 @@ const I18N = {
     s8PeekDesc: 'Lén nhìn qua khe cửa',
 
     /* Menu chính */
-    menuVocaTitle: 'Visual Dictionary',
-    menuVocaDesc: 'Khám phá cảm giác và sắc thái từ vựng qua hình ảnh',
+    menuVocaTitle: 'Sổ từ vựng có hình',
+    menuVocaDesc: 'Ôn lại từ đã lưu cùng hình ảnh và kiểm tra bằng câu đố',
     menuReadingTitle: 'Reading Tutor',
-    menuReadingDesc: 'Biến ảnh sách thành tài liệu đọc, học từ vựng và cách diễn đạt cùng nhau',
+    menuReadingDesc: 'Biến ảnh tiểu thuyết thành từ vựng học tập phù hợp với trình độ của bạn',
     menuWritingTitle: 'Writing Tutor',
     menuWritingDesc: 'Nhận hướng dẫn viết luận và tạo sách tranh của riêng bạn',
     menuComingSoon: 'Sắp ra mắt',
@@ -2048,10 +2048,10 @@ const I18N = {
     s8PeekDesc: 'แอบมองผ่านช่องประตูอย่างลับๆ',
 
     /* เมนูหลัก */
-    menuVocaTitle: 'Visual Dictionary',
-    menuVocaDesc: 'สำรวจความรู้สึกและนัยยะของคำศัพท์พร้อมภาพ',
+    menuVocaTitle: 'คลังคำศัพท์ภาพ',
+    menuVocaDesc: 'ทบทวนคำที่บันทึกไว้พร้อมภาพและทดสอบด้วยแบบทดสอบ',
     menuReadingTitle: 'Reading Tutor',
-    menuReadingDesc: 'เปลี่ยนภาพหนังสือเป็นเนื้อหาอ่าน เรียนรู้คำศัพท์และสำนวนไปพร้อมกัน',
+    menuReadingDesc: 'เปลี่ยนภาพนิยายเป็นคำศัพท์ที่เหมาะกับระดับของคุณ',
     menuWritingTitle: 'Writing Tutor',
     menuWritingDesc: 'รับการฝึกเขียนเรียงความและสร้างหนังสือภาพของคุณเอง',
     menuComingSoon: 'เร็วๆ นี้',
@@ -2347,10 +2347,10 @@ const I18N = {
     s8PeekDesc: 'Espiar por uma fresta de forma sorrateira',
 
     /* Menu principal */
-    menuVocaTitle: 'Visual Dictionary',
-    menuVocaDesc: 'Explore a sensação e nuance das palavras com imagens',
+    menuVocaTitle: 'Caderno com imagens',
+    menuVocaDesc: 'Revise suas palavras salvas com imagens e teste-se com quizzes',
     menuReadingTitle: 'Reading Tutor',
-    menuReadingDesc: 'Transforme fotos de livros em material de leitura e estude palavras e expressões juntas',
+    menuReadingDesc: 'Transforme fotos de romances em palavras de estudo no seu nível',
     menuWritingTitle: 'Writing Tutor',
     menuWritingDesc: 'Receba coaching de redação e crie seu próprio livro ilustrado',
     menuComingSoon: 'Em breve',

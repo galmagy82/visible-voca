@@ -35,7 +35,7 @@
 <!-- Supabase JS — 인증 세션 확인 후 비로그인 사용자는 index.html 로 리다이렉트 -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <!-- 다국어 지원 -->
-<script src="i18n.js"></script>
+<script src="i18n.js?v=20260427c"></script>
 <style>
   /* 웰컴 페이지와 동일한 브랜드 폰트 임포트 */
   @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&display=swap');
@@ -50,7 +50,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 60px 20px 40px;
+    padding: 32px 20px 40px;
   }
 
   /* === 브랜드 블록 (웰컴 페이지 s9 섹션 이식) ===
@@ -134,26 +134,52 @@
     transition: border-color 0.2s, background 0.2s;
     text-decoration: none;
     color: inherit;
+    text-align: center;
   }
   .menu-card:hover { border-color: #B0ACA6; background: #FAF9F7; }
 
-  /* Hero 카드 — Visual Dictionary 진입점이 곧 Geminary 브랜드 쇼케이스.
-     상단 페이지 헤더(아이콘+브랜드명+태그라인) 를 흡수해서, 카드 자체가
-     "Geminary 의 본체" 임을 시각적으로 보여줌. 서브 카드와 위계 차이가 분명하도록
-     패딩/정렬을 다르게 둔다. */
+  /* Hero 카드 — 메인 액션(Reading Tutor) 강조용.
+     배경/보더는 다른 카드와 동일 (톤 통일), 위계는 패딩과 타이포 크기로만 표현. */
   .menu-card-hero {
-    padding: 44px 28px;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    padding: 36px 28px;
   }
-  /* 카드 안에 들어간 브랜드 요소들의 margin 을 카드 컨텍스트에 맞게 재조정.
-     (상단 헤더에서 쓰던 큰 margin-bottom 은 여기선 과함) */
-  .menu-card-hero .brand-icon-wrap { margin-bottom: 18px; }
-  .menu-card-hero .brand-name { margin-bottom: 8px; }
-  .menu-card-hero .brand-tagline { margin-bottom: 6px; }
-  .menu-card-hero .brand-origin { margin-bottom: 0; }
+  .menu-card-hero h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  .menu-card-hero p {
+    font-size: 0.98rem;
+    line-height: 1.55;
+  }
+
+  /* 슬림 페이지 헤더 — 메인은 로그인 후 진입 화면이라 마케팅 카피 대신 단순 브랜드 식별만.
+     아이콘+워드마크를 화면 중앙 정렬. */
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 0 4px;
+    margin-bottom: 12px;
+  }
+  .page-header .brand-icon-small-wrap {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, #3B6FA0, #5B9BD5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .page-header .brand-wordmark {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    color: #2A2520;
+    letter-spacing: -0.3px;
+    line-height: 1;
+  }
   .menu-card h2 {
     font-size: 1.15rem;
     font-weight: 500;
@@ -379,42 +405,34 @@
 <!-- 우상단 로그아웃 버튼 — body 가 인증 게이트 통과 후에만 노출되므로 hidden 토글 불필요. -->
 <button class="top-logout" id="mainLogoutBtn" data-i18n="logout">로그아웃</button>
 
-<!-- 카테고리 메뉴.
-     Hero 카드(Visual Dictionary) 가 곧 Geminary 브랜드 쇼케이스 역할 — 카드 진입 시
-     vocabulary.html 의 "Geminary" 화면으로 연결되므로 카드 안에 동일한 브랜드 요소를 노출해
-     이름·아이덴티티가 끊김 없이 이어지게 했다. 별도 페이지 헤더는 두지 않음 (중복 방지). -->
+<!-- 메인 메뉴 — 슬림 헤더 + Reading Tutor hero + Writing Tutor + 이미지 단어장 (보조).
+     vocabulary.html 진입점은 마지막 작은 카드 하나로 정리, 본인 페이지 안에서 5개 탭으로 분기. -->
 <div class="menu">
-  <a class="menu-card menu-card-hero" href="vocabulary.html">
-    <div class="brand-icon-wrap">
-      <svg viewBox="0 0 60 60" width="44" height="44" xmlns="http://www.w3.org/2000/svg">
-        <!-- 단어지도 노드 3개가 선으로 연결된 심볼.
-             선 끝점은 작은 원 가장자리에서 멈춤 — 작은 원의 opacity (0.6/0.8) 때문에
-             선이 원 안까지 들어가면 "막대기가 박힌" 듯 비쳐 보이는 문제 회피. -->
-        <line x1="16" y1="16" x2="39" y2="16" stroke="white" stroke-width="2" opacity="0.4"/>
-        <line x1="16" y1="16" x2="23.6" y2="39.7" stroke="white" stroke-width="2" opacity="0.4"/>
+  <header class="page-header">
+    <div class="brand-icon-small-wrap">
+      <svg viewBox="0 0 60 60" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+        <!-- 단어지도 노드 3개 — 선 끝점은 작은 원 가장자리에서 멈춤 (opacity 비침 회피) -->
+        <line x1="16" y1="16" x2="39" y2="16" stroke="white" stroke-width="2.4" opacity="0.4"/>
+        <line x1="16" y1="16" x2="23.6" y2="39.7" stroke="white" stroke-width="2.4" opacity="0.4"/>
         <circle cx="16" cy="16" r="6" fill="white"/>
         <circle cx="44" cy="16" r="5" fill="white" opacity="0.8"/>
         <circle cx="25" cy="44" r="4.5" fill="white" opacity="0.6"/>
       </svg>
     </div>
-    <div class="brand-name">Geminary<svg class="word-map-icon" width="24" height="20" viewBox="0 0 28 24" xmlns="http://www.w3.org/2000/svg">
-      <!-- 브랜드명 우측에 곁들인 작은 장식 단어지도 -->
-      <line x1="6" y1="6" x2="18" y2="6" stroke="#4A90D9" stroke-width="1.5" opacity="0.5"/>
-      <line x1="6" y1="6" x2="10" y2="18" stroke="#4A90D9" stroke-width="1.5" opacity="0.5"/>
-      <circle cx="6" cy="6" r="3" fill="#4A90D9"/>
-      <circle cx="18" cy="6" r="3" fill="#5B9BD5"/>
-      <circle cx="10" cy="18" r="3" fill="#7BB3E0"/>
-    </svg></div>
-    <div class="brand-tagline" data-i18n="heroTagline">Novel 읽기, 이렇게 쉬워질 수 있어요</div>
-    <div class="brand-origin" data-i18n="brandOrigin">내 레벨에 딱 맞는 AI 영어 학습 도우미</div>
-  </a>
-  <a class="menu-card" href="reading.html">
+    <span class="brand-wordmark">Geminary</span>
+  </header>
+
+  <a class="menu-card menu-card-hero" href="reading.html">
     <h2 data-i18n="menuReadingTitle">Reading Tutor</h2>
-    <p data-i18n="menuReadingDesc">책 사진을 읽기 자료로 만들어, 단어와 표현을 함께 학습하세요</p>
+    <p data-i18n="menuReadingDesc">Novel 사진으로 내 레벨에 맞는 학습단어를 정리하세요</p>
   </a>
   <a class="menu-card" href="writing.html">
     <h2 data-i18n="menuWritingTitle">Writing Tutor</h2>
-    <p data-i18n="menuWritingDesc">에세이를 ���칭받고, 나만의 그림책으로 만들어보세요</p>
+    <p data-i18n="menuWritingDesc">에세이를 코칭받고, 나만의 그림책으로 만들어보세요</p>
+  </a>
+  <a class="menu-card" href="vocabulary.html">
+    <h2 data-i18n="menuVocaTitle">이미지 단어장</h2>
+    <p data-i18n="menuVocaDesc">저장한 단어를 그림과 함께 다시 보고, 퀴즈로 복습하세요</p>
   </a>
 </div>
 
