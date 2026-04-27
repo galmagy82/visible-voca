@@ -3217,7 +3217,6 @@ function buildHtmlFromDB(dbData, word, correctedOverride) {
 // --- 공통: 단어 검색 후 결과 HTML 생성 ---
 async function fetchWordResult(word, targetEl) {
   const settings = getSettings();
-  console.log('[scene_en debug] fetchWordResult start', { word });
 
   /* ① 브라우저 캐시 확인 (IndexedDB) */
   const cachedObj = await getCacheEntry(word);
@@ -3226,7 +3225,6 @@ async function fetchWordResult(word, targetEl) {
     if (settings.imageEnabled && !cachedObj.html.includes('<img ')) {
       /* 캐시 무시 — 아래로 계속 진행 */
     } else {
-      console.log('[scene_en debug] HIT: IndexedDB cache (early return)');
       targetEl.innerHTML = `<div class="loading">${getRandomSearching()}</div>`;
       await new Promise(r => setTimeout(r, 800));
       wordResults[word] = { html: cachedObj.html };
@@ -3253,7 +3251,6 @@ async function fetchWordResult(word, targetEl) {
 
   /* ② Supabase DB 조회 — 데이터 충분하면 API 호출 없이 반환 */
   const dbResult = await fetchFromSupabase(lookupKey);
-  console.log('[scene_en debug] fetchFromSupabase result', { lookupKey, hit: !!(dbResult && dbResult.fromDB) });
   if (dbResult && dbResult.fromDB) {
     targetEl.innerHTML = `<div class="loading">${getRandomSearching()}</div>`;
     await new Promise(r => setTimeout(r, 800));
@@ -3400,7 +3397,6 @@ async function fetchWordResult(word, targetEl) {
 
     /* 정답 단어로 DB 2차 조회 */
     const correctedDbResult = await fetchFromSupabase(corrected.toLowerCase());
-    console.log('[scene_en debug] corrected-word DB lookup', { corrected, hit: !!(correctedDbResult && correctedDbResult.fromDB) });
     if (correctedDbResult && correctedDbResult.fromDB) {
       const dbHtml = buildHtmlFromDB(correctedDbResult, word, corrected);
       wordResults[word] = { html: dbHtml };
@@ -3492,7 +3488,6 @@ async function fetchWordResult(word, targetEl) {
        fetchFromSupabase 필터(cefr 필수)·hit 조건(이미지 필수)에 의해 항상 miss 되어
        매 검색마다 중복 row 가 쌓이므로 저장 자체를 스킵한다. */
     if (pos) {
-      console.log('[scene_en debug] no-image path', { sceneEn, jsonParsed, pos });
       saveToSupabase(saveWord, { corrected, pos, ipa, cefr, description: desc, examples, verbForms }, null, null, sceneEn);
     }
     return html;
@@ -3514,7 +3509,6 @@ async function fetchWordResult(word, targetEl) {
     saveCacheEntry(word, imgHtml, window._lastWbData);
     /* Supabase에 텍스트 + 이미지 저장 (정답 단어를 키로 저장)
        reusedImagePath 가 있으면 saveToSupabase 가 업로드 스킵하고 그 path 를 공유. */
-    console.log('[scene_en debug] image-success path', { sceneEn, jsonParsed, reusedImagePath: !!reusedImagePath });
     saveToSupabase(saveWord, { corrected, pos, ipa, cefr, description: desc, examples, verbForms }, imageUrl, reusedImagePath, sceneEn);
   } catch (imgErr) {
     console.error('이미지 생성 실패:', imgErr);
@@ -3532,7 +3526,6 @@ async function fetchWordResult(word, targetEl) {
     wordResults[word] = { html: noImgHtml };
     saveCacheEntry(word, noImgHtml, window._lastWbData);
     /* Supabase에 텍스트만 저장 (이미지 실패, 정답 단어를 키로 저장) */
-    console.log('[scene_en debug] image-fail path', { sceneEn, jsonParsed });
     saveToSupabase(saveWord, { corrected, pos, ipa, cefr, description: desc, examples, verbForms }, null, null, sceneEn);
   }
 
