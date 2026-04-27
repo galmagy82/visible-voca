@@ -391,6 +391,7 @@ Selection rules for "study_items":
   - Prioritize items that expand this user's vocabulary in the next learning step.
   - "surface" must be the EXACT substring as it appears in the text (preserve casing/punctuation).
   - "lemma" is the dictionary/base form of "surface" used for vocabulary lookup. Strip inflections so the result is what a learner would search a dictionary for. Lowercase. Examples: "mending a puncture" → "mend a puncture", "ran into" → "run into", "cats" → "cat", "running" → "run", "went" → "go", "better off" → "better off" (no change needed). For multi-word items, lemmatize each verb/noun while preserving the structure.
+  - For verbs, prefer extracting the verb alone. Only include a particle/preposition when the combined form is a true phrasal verb whose meaning is non-compositional (e.g. "give up", "look into", "put off", "run into" meaning to encounter). Do NOT include literal motion prepositions where the meaning is just verb + direction (e.g. "skid across", "walk through", "run past", "came across the room" → extract "skid", "walk", "run", "come" only).
   - "meaning" should be ${meaningGuide}.`
   } else {
     studyInstructions = `
