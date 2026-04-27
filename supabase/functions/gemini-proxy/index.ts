@@ -398,6 +398,13 @@ Selection rules for "study_items":
 
   const prompt = `You are an OCR + translation + vocabulary picker for a reading-comprehension app. The image is one page of an English book.
 
+Page boundary handling:
+- The image should show one page, but the photo may have captured fragments of the adjacent page along the edges (cut-off lines, isolated words near the binding gutter, a different page number).
+- Extract text from the PRIMARY page only — the page that fills most of the frame and is clearly the subject of the photo.
+- Ignore edge fragments that are obviously from a different page (half-cut letters at the very edge, single isolated words across a binding gutter, mismatched paragraph flow at the edge).
+- If two complete facing pages are both fully captured, treat them as one continuous spread and extract both.
+- This rule applies to all three tasks below — do not include study_items whose "surface" comes from an ignored fragment.
+
 Tasks:
 1. Extract the original English text exactly as it appears on the page, preserving line breaks (use \\n) and paragraph structure.
 2. Translate that text into natural ${langName}, preserving paragraph structure (line breaks between paragraphs).${studyInstructions}
