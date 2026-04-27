@@ -1376,8 +1376,12 @@ function goTo(idx, animate = true) {
   track.style.transform = `translateX(-${_currentIdx * 100}%)`;
   updateNav();
 }
-function goPrev() { if (_currentIdx > 0) goTo(_currentIdx - 1); }
-function goNext() { if (_currentIdx < _pages.length - 1) goTo(_currentIdx + 1); }
+/* 페이지 이동 시 세로 스크롤을 상단으로 원복 — 사용자가 이전 페이지를 아래까지
+   읽다가 다음 페이지로 넘어가도 항상 처음부터 보이도록.
+   goTo 본체가 아닌 prev/next 에서만 호출하는 이유: toggleTranslate 가 현재 위치
+   유지를 위해 goTo(_currentIdx, false) 를 부르는데, 거기선 스크롤을 건드리면 안 됨. */
+function goPrev() { if (_currentIdx > 0) { goTo(_currentIdx - 1); window.scrollTo(0, 0); } }
+function goNext() { if (_currentIdx < _pages.length - 1) { goTo(_currentIdx + 1); window.scrollTo(0, 0); } }
 
 function updateNav() {
   document.getElementById('prevBtn').disabled = _currentIdx === 0;
