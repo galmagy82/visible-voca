@@ -217,7 +217,7 @@ const I18N = {
 
     /* Welcome 페이지 */
     quickStart: '바로 시작하기 →',
-    heroTagline: '단어의 느낌을 그림으로 만나다',
+    heroTagline: 'Novel 읽기, 이렇게 쉬워질 수 있어요',
     heroQuestion: '단어를 외워도<br><span class="em">금방 까먹는 이유,</span><br>알고 계신가요?',
     startBtn: '시작하기',
     feedback: '의견 보내기',
@@ -297,11 +297,15 @@ const I18N = {
     readingMeaningLangEn: '영어',
 
     /* 웰컴 페이지 상단 브랜드 오리진 */
-    brandOrigin: 'AI 영어사전 · Powered by Gemini AI',
+    brandOrigin: '내 레벨에 딱 맞는 AI 영어 학습 도우미',
 
     /* Features 요약 섹션 (s-features) — 웰컴 페이지 하단 4카드 */
     featuresTitle: 'Geminary가 다른 이유',
     featuresSubtitle: '단어를 외우는 방식을 바꾸는 4가지 핵심',
+    /* Reading Tutor 카드 — Welcome 페이지 features 섹션의 첫 번째 카드.
+       사진 업로드 → 학습 단어 자동 정리 라는 핵심 가치를 한 줄로 전달. */
+    readingFeatureTitle: 'Novel 페이지가 영어 교재로',
+    readingFeatureDesc: '책 사진을 올리면 AI가 내 레벨에 맞는 학습 단어를 정리해줘요',
     feature1Title: '그림으로 기억되는 단어',
     feature1Desc: '단어의 느낌을 AI가 이미지로 표현해드려요. 한번 보면 잊히지 않아요.',
     feature1Tag: '핵심 기능',
@@ -515,7 +519,7 @@ const I18N = {
 
     /* Welcome page */
     quickStart: 'Quick Start →',
-    heroTagline: 'Meet the feel of words through illustrations',
+    heroTagline: 'Reading novels can be this easy',
     heroQuestion: 'Ever wonder why<br><span class="em">you keep forgetting words</span><br>you just learned?',
     startBtn: 'Get Started',
     feedback: 'Feedback',
@@ -594,11 +598,13 @@ const I18N = {
     readingMeaningLangEn: 'English',
 
     /* Welcome page top brand origin line */
-    brandOrigin: 'AI English Dictionary · Powered by Gemini AI',
+    brandOrigin: 'AI English learning companion tailored to your level',
 
     /* Features summary section (s-features) — 4 cards at the bottom of the welcome page */
     featuresTitle: 'Why Geminary is different',
     featuresSubtitle: '4 essentials that change the way you memorize words',
+    readingFeatureTitle: 'Novel pages become your English textbook',
+    readingFeatureDesc: 'Upload book photos and AI organizes study words tailored to your level',
     feature1Title: 'Words You Remember in Pictures',
     feature1Desc: 'AI turns the feeling of each word into an image. See it once, never forget.',
     feature1Tag: 'Core Feature',
@@ -812,7 +818,7 @@ const I18N = {
 
     /* Welcomeページ */
     quickStart: 'すぐに始める →',
-    heroTagline: '単語の感覚をイラストで体験',
+    heroTagline: 'Novel 読みがこんなに楽になる',
     heroQuestion: '単語を覚えても<br><span class="em">すぐ忘れてしまう理由、</span><br>知っていますか？',
     startBtn: '始める',
     feedback: 'フィードバック',
@@ -891,11 +897,13 @@ const I18N = {
     readingMeaningLangEn: '英語',
 
     /* ウェルカムページ上部のブランドオリジン */
-    brandOrigin: 'AI 英語辞書 · Powered by Gemini AI',
+    brandOrigin: 'あなたのレベルにぴったりの AI 英語学習アシスタント',
 
     /* Features 要約セクション (s-features) — ウェルカムページ下部 4 カード */
     featuresTitle: 'Geminary が違う理由',
     featuresSubtitle: '単語の覚え方を変える 4 つのポイント',
+    readingFeatureTitle: 'Novel のページがあなたの英語教材に',
+    readingFeatureDesc: '本の写真をアップロードすれば、AI があなたのレベルに合った学習単語を整理します',
     feature1Title: '絵で覚える単語',
     feature1Desc: '単語のニュアンスを AI が画像で表現します。一度見たら忘れません。',
     feature1Tag: '核心機能',
@@ -1110,7 +1118,7 @@ const I18N = {
 
     /* 欢迎页面 */
     quickStart: '立即开始 →',
-    heroTagline: '用插画感受单词的韵味',
+    heroTagline: '读 Novel 也能这么轻松',
     heroQuestion: '背了单词<br><span class="em">却总是忘记的原因，</span><br>你知道吗？',
     startBtn: '开始',
     feedback: '意见反馈',
@@ -1189,11 +1197,13 @@ const I18N = {
     readingMeaningLangEn: '英语',
 
     /* 欢迎页顶部品牌来源行 */
-    brandOrigin: 'AI 英语词典 · Powered by Gemini AI',
+    brandOrigin: '为你的水平量身定制的 AI 英语学习助手',
 
     /* Features 摘要部分 (s-features) — 欢迎页底部 4 张卡片 */
     featuresTitle: 'Geminary 为什么不同',
     featuresSubtitle: '改变单词记忆方式的 4 大核心',
+    readingFeatureTitle: 'Novel 页面变成你的英语教材',
+    readingFeatureDesc: '上传书页照片，AI 会整理出适合你水平的学习词汇',
     feature1Title: '用图像记住单词',
     feature1Desc: 'AI 将单词的感觉转化为图像。看一次就不会忘。',
     feature1Tag: '核心功能',
@@ -1407,7 +1417,7 @@ const I18N = {
 
     /* Página de bienvenida */
     quickStart: 'Empezar ahora →',
-    heroTagline: 'Siente las palabras a través de ilustraciones',
+    heroTagline: 'Leer novelas puede ser así de fácil',
     heroQuestion: '¿Te preguntas por qué<br><span class="em">siempre olvidas las palabras</span><br>que acabas de aprender?',
     startBtn: 'Empezar',
     feedback: 'Comentarios',
@@ -1486,11 +1496,13 @@ const I18N = {
     readingMeaningLangEn: 'Inglés',
 
     /* Línea de origen de marca en la parte superior de la página de bienvenida */
-    brandOrigin: 'Diccionario de inglés con IA · Powered by Gemini AI',
+    brandOrigin: 'Asistente de inglés con IA adaptado a tu nivel',
 
     /* Sección resumen de Features (s-features) — 4 tarjetas al final de la página de bienvenida */
     featuresTitle: 'Por qué Geminary es diferente',
     featuresSubtitle: '4 claves que cambian la forma de memorizar palabras',
+    readingFeatureTitle: 'Páginas de novelas como tu libro de inglés',
+    readingFeatureDesc: 'Sube fotos del libro y la IA organiza palabras de estudio adaptadas a tu nivel',
     feature1Title: 'Palabras que recuerdas con imágenes',
     feature1Desc: 'La IA transforma la sensación de cada palabra en una imagen. Verla una vez basta para no olvidarla.',
     feature1Tag: 'Función clave',
@@ -1704,7 +1716,7 @@ const I18N = {
 
     /* Trang chào mừng */
     quickStart: 'Bắt đầu ngay →',
-    heroTagline: 'Cảm nhận từ vựng qua hình minh họa',
+    heroTagline: 'Đọc Novel có thể dễ dàng đến vậy',
     heroQuestion: 'Bạn có thắc mắc<br><span class="em">tại sao cứ quên từ</span><br>vừa mới học không?',
     startBtn: 'Bắt đầu',
     feedback: 'Góp ý',
@@ -1783,11 +1795,13 @@ const I18N = {
     readingMeaningLangEn: 'Tiếng Anh',
 
     /* Dòng nguồn gốc thương hiệu ở đầu trang chào mừng */
-    brandOrigin: 'Từ điển tiếng Anh AI · Powered by Gemini AI',
+    brandOrigin: 'Trợ lý học tiếng Anh AI phù hợp với trình độ của bạn',
 
     /* Phần tóm tắt Features (s-features) — 4 thẻ ở cuối trang chào mừng */
     featuresTitle: 'Vì sao Geminary khác biệt',
     featuresSubtitle: '4 điểm cốt lõi thay đổi cách bạn ghi nhớ từ vựng',
+    readingFeatureTitle: 'Trang Novel trở thành giáo trình tiếng Anh của bạn',
+    readingFeatureDesc: 'Tải ảnh trang sách lên và AI sắp xếp các từ học phù hợp với trình độ của bạn',
     feature1Title: 'Từ vựng ghi nhớ bằng hình ảnh',
     feature1Desc: 'AI biến cảm giác của từ thành hình ảnh. Xem một lần, không thể quên.',
     feature1Tag: 'Tính năng chính',
@@ -2001,7 +2015,7 @@ const I18N = {
 
     /* หน้าต้อนรับ */
     quickStart: 'เริ่มเลย →',
-    heroTagline: 'สัมผัสความรู้สึกของคำศัพท์ผ่านภาพวาด',
+    heroTagline: 'อ่าน Novel ง่ายแบบนี้ได้เลย',
     heroQuestion: 'เคยสงสัยไหมว่าทำไม<br><span class="em">คำที่เพิ่งท่องจำ</span><br>ถึงลืมเร็วนัก?',
     startBtn: 'เริ่มต้น',
     feedback: 'ส่งความคิดเห็น',
@@ -2080,11 +2094,13 @@ const I18N = {
     readingMeaningLangEn: 'อังกฤษ',
 
     /* บรรทัดที่มาของแบรนด์ที่ด้านบนของหน้าต้อนรับ */
-    brandOrigin: 'พจนานุกรมภาษาอังกฤษ AI · Powered by Gemini AI',
+    brandOrigin: 'ผู้ช่วยเรียนภาษาอังกฤษด้วย AI ที่เหมาะกับระดับของคุณ',
 
     /* ส่วนสรุป Features (s-features) — การ์ด 4 ใบท้ายหน้าต้อนรับ */
     featuresTitle: 'ทำไม Geminary จึงแตกต่าง',
     featuresSubtitle: '4 แก่นหลักที่เปลี่ยนวิธีจำคำศัพท์',
+    readingFeatureTitle: 'หน้า Novel กลายเป็นหนังสือเรียนภาษาอังกฤษของคุณ',
+    readingFeatureDesc: 'อัปโหลดรูปหน้าหนังสือ AI จะรวบรวมคำศัพท์การเรียนรู้ที่เหมาะกับระดับของคุณ',
     feature1Title: 'คำศัพท์ที่จำได้ด้วยภาพ',
     feature1Desc: 'AI แปลงความรู้สึกของคำเป็นภาพ เห็นครั้งเดียวก็ไม่มีวันลืม',
     feature1Tag: 'ฟีเจอร์หลัก',
@@ -2298,7 +2314,7 @@ const I18N = {
 
     /* Página de boas-vindas */
     quickStart: 'Começar agora →',
-    heroTagline: 'Sinta as palavras através de ilustrações',
+    heroTagline: 'Ler novels pode ser assim de fácil',
     heroQuestion: 'Já se perguntou por que<br><span class="em">sempre esquece as palavras</span><br>que acabou de aprender?',
     startBtn: 'Começar',
     feedback: 'Feedback',
@@ -2377,11 +2393,13 @@ const I18N = {
     readingMeaningLangEn: 'Inglês',
 
     /* Linha de origem da marca no topo da página de boas-vindas */
-    brandOrigin: 'Dicionário de inglês com IA · Powered by Gemini AI',
+    brandOrigin: 'Assistente de inglês com IA adaptado ao seu nível',
 
     /* Seção resumo de Features (s-features) — 4 cartões ao final da página de boas-vindas */
     featuresTitle: 'Por que Geminary é diferente',
     featuresSubtitle: '4 essenciais que mudam a forma de memorizar palavras',
+    readingFeatureTitle: 'Páginas de novels como seu material de inglês',
+    readingFeatureDesc: 'Envie fotos das páginas e a IA organiza palavras de estudo adaptadas ao seu nível',
     feature1Title: 'Palavras que você lembra por imagens',
     feature1Desc: 'A IA transforma a sensação de cada palavra em imagem. Veja uma vez e nunca mais esqueça.',
     feature1Tag: 'Recurso principal',
