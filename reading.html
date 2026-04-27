@@ -581,6 +581,31 @@
     font-size: 0.9rem;
     padding: 60px 20px;
   }
+  /* 추출 실패 페이지의 복구 버튼 영역 — 같은 사진 재시도 + 다른 사진 교체 두 가지 제공.
+     "실패 0%" 요구사항: 자동 재시도가 다 떨어져도 사용자가 항상 손으로 복구할 수 있게. */
+  .page-error-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+  .page-retry-btn,
+  .page-replace-btn {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    border: 1px solid #D5D2CC;
+    border-radius: 6px;
+    background: #FFFFFF;
+    color: #4A4641;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .page-retry-btn { background: #5A8A42; color: #FFFFFF; border-color: #5A8A42; }
+  .page-retry-btn:hover { background: #4D7838; border-color: #4D7838; }
+  .page-replace-btn:hover { background: #F0EEEA; }
+  .page-retry-btn:disabled,
+  .page-replace-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
   /* 네비게이션 (페이지 카운터 + 화살표) */
   .nav-bar {
@@ -982,11 +1007,12 @@ async function extractReadingPage(base64Data, mimeType, targetLang, geScore, mea
 }
 
 /* 일시적 실패(429/5xx/네트워크) 에 대해 지수 백오프로 재시도.
-   - 첫 재시도 1s, 두 번째 2.5s — 각 0~30% jitter 로 동시 재시도 충돌 회피
+   - 5회 시도(최초+4 재시도): 1s → 2.5s → 5s → 10s — 각 0~30% jitter 로 동시 재시도 충돌 회피
+   - "실패 절대 금지" 요구사항: 동시성 throttle 과 결합하면 일시 장애는 거의 자동 복구
    - 영구 에러(400/401/403/404 등) 는 재시도해도 똑같이 실패하므로 즉시 throw
    - 네트워크 에러는 status 가 없음 → 재시도 대상으로 처리 */
 async function extractReadingPageWithRetry(base64Data, mimeType, targetLang, geScore, meaningLang) {
-  const delays = [1000, 2500];
+  const delays = [1000, 2500, 5000, 10000];
   for (let attempt = 0; attempt <= delays.length; attempt++) {
     try {
       return await extractReadingPage(base64Data, mimeType, targetLang, geScore, meaningLang);
@@ -1002,8 +1028,35 @@ async function extractReadingPageWithRetry(base64Data, mimeType, targetLang, geS
   }
 }
 
+/* 페이지별 호출을 N개씩 묶어 처리하는 워커 풀 — 한꺼번에 30개를 던지면
+   Gemini 동시성 한계로 429/503 이 떨어지는 페이지가 생김. 6개씩 throttle 하면
+   대기열이 자연스레 분산돼 실패율이 크게 줄어듦. Promise.allSettled 와 동일한
+   { status, value | reason } 배열을 반환해 호출 측 변경을 최소화. */
+async function runWithConcurrency(items, limit, worker) {
+  const results = new Array(items.length);
+  let nextIdx = 0;
+  async function loop() {
+    while (true) {
+      const idx = nextIdx++;
+      if (idx >= items.length) return;
+      try {
+        results[idx] = { status: 'fulfilled', value: await worker(items[idx], idx) };
+      } catch (e) {
+        results[idx] = { status: 'rejected', reason: e };
+      }
+    }
+  }
+  const workerCount = Math.min(limit, items.length);
+  await Promise.all(Array.from({ length: workerCount }, () => loop()));
+  return results;
+}
+
 /* ===== 메인 흐름 상태 ===== */
 const MAX_PAGES = 30;
+/* 페이지별 동시 호출 상한 — Gemini 측 burst 제한 회피. 6 정도면 9~30장 모두
+   준수한 throughput 을 유지하면서도 429 가 거의 안 뜸. 늘렸을 때 이득은 작고
+   실패 위험만 커지므로 이 값에서 안정. */
+const PAGE_CONCURRENCY = 6;
 /* 페이지 데이터: { original, translated, no_text, error, study_items: [{surface, type, meaning, example_in_text}] } */
 let _pages = [];
 let _currentIdx = 0;
@@ -1063,31 +1116,53 @@ async function handlePhotos(inputEl) {
   _completedCount = 0;
   updateLoadingProgress(0, files.length);
 
-  /* 페이지별 병렬 호출 — Promise.allSettled 로 일부 실패 시 격리.
-     geScore + meaningLang 을 같이 전달해 단어 추출도 한 번에 처리.
-     재시도 헬퍼를 사용해 일시적 장애(429/5xx/네트워크) 는 자동 복구. */
-  const tasks = files.map(async (file) => {
-    const { data: base64Data, mimeType } = await fileToResizedBase64(file);
-    const result = await extractReadingPageWithRetry(base64Data, mimeType, lang, _geScore, _meaningLang);
-    _completedCount++;
-    updateLoadingProgress(_completedCount, files.length);
-    return result;
+  /* 페이지별 호출을 PAGE_CONCURRENCY 만큼 throttle — 30장이라도 6개씩 처리.
+     워커 내부에서 catch 하므로 settled.value 는 항상 존재. 실패해도 base64Data 는
+     같이 반환해 페이지 객체에 _image 로 보관 → 사용자가 "다시 시도" 버튼으로
+     재업로드 없이 같은 사진을 재호출 가능. */
+  const settled = await runWithConcurrency(files, PAGE_CONCURRENCY, async (file) => {
+    let base64Data = null, mimeType = null;
+    try {
+      const r = await fileToResizedBase64(file);
+      base64Data = r.data;
+      mimeType = r.mimeType;
+    } catch (e) {
+      _completedCount++;
+      updateLoadingProgress(_completedCount, files.length);
+      return { ok: false, error: 'image preprocessing failed', base64Data: null, mimeType: null };
+    }
+    try {
+      const result = await extractReadingPageWithRetry(base64Data, mimeType, lang, _geScore, _meaningLang);
+      return { ok: true, result, base64Data, mimeType };
+    } catch (e) {
+      console.error('reading-extract 실패:', e);
+      return { ok: false, error: e?.message || 'extract failed', base64Data, mimeType };
+    } finally {
+      _completedCount++;
+      updateLoadingProgress(_completedCount, files.length);
+    }
   });
 
-  const settled = await Promise.allSettled(tasks);
-
   _pages = settled.map((r) => {
-    if (r.status === 'fulfilled') {
+    const v = r.value;
+    /* _image: 같은 사진 재시도용 캐시. 저장 시 saveBook 의 화이트리스트에서
+       제외되므로 DB 에는 안 들어감. */
+    const image = { base64Data: v.base64Data, mimeType: v.mimeType };
+    if (v.ok) {
       return {
-        original: r.value.original || '',
-        translated: r.value.translated || '',
-        no_text: !!r.value.no_text,
-        study_items: filterStudyItems(r.value.study_items),
+        original: v.result.original || '',
+        translated: v.result.translated || '',
+        no_text: !!v.result.no_text,
+        study_items: filterStudyItems(v.result.study_items),
         error: null,
+        _image: image,
       };
     }
-    console.error('reading-extract 실패:', r.reason);
-    return { original: '', translated: '', no_text: false, study_items: [], error: r.reason?.message || 'extract failed' };
+    return {
+      original: '', translated: '', no_text: false, study_items: [],
+      error: v.error,
+      _image: image,
+    };
   });
 
   inputEl.value = '';
@@ -1205,7 +1280,22 @@ function renderBook() {
 
 function renderPageContent(p, pageIdx) {
   if (p.error) {
-    return `<div class="page-error" data-i18n="readingPageError">${escapeHtml((typeof t === 'function') ? t('readingPageError') : '이 페이지의 텍스트를 추출하지 못했습니다.')}</div>`;
+    /* 두 가지 복구 경로:
+       - "다시 시도": _image 가 있으면 같은 사진으로 재호출 (네트워크/일시 장애 케이스)
+       - "다른 사진으로 교체": 사진 자체가 흐릿/반사 등 문제일 때 file picker 로 그 페이지만 교체.
+       _image 가 비어있으면(이미지 전처리 자체 실패) 재시도 버튼은 숨김 — 의미 없음. */
+    const tt = (k, fb) => (typeof t === 'function') ? t(k) : fb;
+    const msg = tt('readingPageError', '이 페이지의 텍스트를 추출하지 못했습니다.');
+    const retryLabel = tt('readingRetryPage', '다시 시도');
+    const replaceLabel = tt('readingReplacePhoto', '다른 사진으로 교체');
+    const canRetry = !!(p._image && p._image.base64Data);
+    return `<div class="page-error">
+      <div>${escapeHtml(msg)}</div>
+      <div class="page-error-actions">
+        ${canRetry ? `<button class="page-retry-btn" type="button" data-page-idx="${pageIdx}">${escapeHtml(retryLabel)}</button>` : ''}
+        <button class="page-replace-btn" type="button" data-page-idx="${pageIdx}">${escapeHtml(replaceLabel)}</button>
+      </div>
+    </div>`;
   }
   if (p.no_text) {
     return `<div class="page-error" data-i18n="readingNoText">${escapeHtml((typeof t === 'function') ? t('readingNoText') : '이 페이지에는 글자가 없습니다.')}</div>`;
@@ -1228,6 +1318,85 @@ function renderPageContent(p, pageIdx) {
     <div class="page-text">${html}</div>
     ${listHtml}
   </div>`;
+}
+
+/* 단일 페이지 DOM 만 다시 그림 — 재시도/교체 후 전체 renderBook() 을 호출하면
+   현재 보이는 페이지 위치(translateX) 까지 리셋되므로 해당 .page 컨테이너만 교체. */
+function rerenderPage(pageIdx) {
+  const track = document.getElementById('pageTrack');
+  if (!track) return;
+  const pageEl = track.querySelector(`.page[data-page-idx="${pageIdx}"]`);
+  if (pageEl) pageEl.innerHTML = renderPageContent(_pages[pageIdx], pageIdx);
+}
+
+/* 재시도/교체 진행 중 표시 — 버튼 자리에 "재시도 중..." 메시지로 잠시 대체.
+   완료 후엔 rerenderPage 가 정상 콘텐츠 또는 다시 에러 UI 로 갱신. */
+function setPageBusy(pageIdx, label) {
+  const track = document.getElementById('pageTrack');
+  if (!track) return;
+  const pageEl = track.querySelector(`.page[data-page-idx="${pageIdx}"]`);
+  if (!pageEl) return;
+  pageEl.innerHTML = `<div class="page-error"><div>${escapeHtml(label)}</div></div>`;
+}
+
+/* 같은 사진으로 재호출 — 네트워크/일시 장애 케이스 회복용.
+   _image.base64Data 가 메모리에 살아있어야 동작 (handlePhotos 에서 캐싱). */
+async function retryPage(pageIdx) {
+  const p = _pages[pageIdx];
+  if (!p || !p._image || !p._image.base64Data) return;
+  const tt = (k, fb) => (typeof t === 'function') ? t(k) : fb;
+  setPageBusy(pageIdx, tt('readingRetryingPage', '재시도 중...'));
+  const lang = (typeof getLang === 'function') ? getLang() : 'ko';
+  try {
+    const result = await extractReadingPageWithRetry(p._image.base64Data, p._image.mimeType, lang, _geScore, _meaningLang);
+    _pages[pageIdx] = {
+      original: result.original || '',
+      translated: result.translated || '',
+      no_text: !!result.no_text,
+      study_items: filterStudyItems(result.study_items),
+      error: null,
+      _image: p._image,
+    };
+  } catch (e) {
+    console.error('retry 실패:', e);
+    _pages[pageIdx] = { ...p, error: e?.message || 'retry failed' };
+  }
+  rerenderPage(pageIdx);
+}
+
+/* 새 사진으로 교체 — 사진 자체가 흐릿하거나 반사되어 모델이 못 읽는 경우 회복용.
+   임시 file input 을 만들어 한 장만 받고, 성공 시 _pages[idx] 와 _image 를 모두 갱신. */
+async function replacePagePhoto(pageIdx) {
+  const tt = (k, fb) => (typeof t === 'function') ? t(k) : fb;
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = async () => {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    setPageBusy(pageIdx, tt('readingRetryingPage', '재시도 중...'));
+    const lang = (typeof getLang === 'function') ? getLang() : 'ko';
+    try {
+      const { data: base64Data, mimeType } = await fileToResizedBase64(file);
+      const result = await extractReadingPageWithRetry(base64Data, mimeType, lang, _geScore, _meaningLang);
+      _pages[pageIdx] = {
+        original: result.original || '',
+        translated: result.translated || '',
+        no_text: !!result.no_text,
+        study_items: filterStudyItems(result.study_items),
+        error: null,
+        _image: { base64Data, mimeType },
+      };
+    } catch (e) {
+      console.error('replace 실패:', e);
+      _pages[pageIdx] = {
+        ..._pages[pageIdx],
+        error: e?.message || 'replace failed',
+      };
+    }
+    rerenderPage(pageIdx);
+  };
+  input.click();
 }
 
 /* 페이지 경계 분할 fragment 제거 — 책에서 단어가 페이지를 넘기며 "grum-" / "bled" 로 쪼개지면
@@ -1780,6 +1949,17 @@ document.addEventListener('click', (e) => {
   const btn = e.target.closest('.study-item-geminary');
   if (btn) {
     openGeminaryPopup(btn.dataset.word);
+    return;
+  }
+  /* 추출 실패 페이지의 복구 버튼 — 위임으로 처리해 rerenderPage 후에도 자동 동작 */
+  const retryBtn = e.target.closest('.page-retry-btn');
+  if (retryBtn) {
+    retryPage(parseInt(retryBtn.dataset.pageIdx, 10));
+    return;
+  }
+  const replaceBtn = e.target.closest('.page-replace-btn');
+  if (replaceBtn) {
+    replacePagePhoto(parseInt(replaceBtn.dataset.pageIdx, 10));
     return;
   }
   /* 팝업 빈 배경 클릭 → 닫기 (오버레이 자체가 target 일 때만) */
