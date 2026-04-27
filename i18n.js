@@ -2439,7 +2439,7 @@ const PROMPT_KO_TAG = `너는 한국어로만 대답하는 영어 단어·표현
 [IPA: /발음기호/] 형식으로 IPA 발음기호.
 [CEFR: A1~C2] 형식으로 CEFR 난이도.
 [VERB_FORMS: 현재형 | 과거형 | 과거분사형] 형식으로 동사 3단변화를 적어줘. 영어 동사가 아니면 이 줄을 생략. 예) go → [VERB_FORMS: go | went | gone], give up → [VERB_FORMS: give up | gave up | given up]. be 동사는 [VERB_FORMS: be | was/were | been].
-[SCENE_EN: ...] 형식으로 이 단어를 가장 잘 설명할 수 있는 구체적인 장면 1문장을 반드시 영어로 작성. 주체·행동·상황을 포함할 것. UI 언어와 무관하게 항상 영어로 작성할 것. 이 값은 이미지 생성 프롬프트에 직접 사용된다. 방향성·자세·주체성이 의미의 핵심인 단어(left/right, get on/off, push/pull, raise/lower, sit/stand, take off/put on 등)는 그 방향·주체를 명시적으로 표현하고, 반대 방향이 아님을 보이는 대조 디테일을 1개 이상 포함할 것. 예 1) practically → [SCENE_EN: A nearly-empty coffee cup with only a few drops left at the bottom, conveying the sense of "almost, virtually"]. 예 2) left-handed → [SCENE_EN: A person writing on paper holding a pen with their LEFT hand only, while their right hand rests flat on the desk]. 예 3) get off → [SCENE_EN: A passenger stepping DOWN from the bus onto the sidewalk, one foot already on the ground, the bus door open behind them].
+[SCENE_EN: ...] 형식으로 이 단어를 가장 잘 설명할 수 있는 구체적인 장면 1문장을 반드시 영어로 작성. 주체·행동·상황을 포함할 것. UI 언어와 무관하게 항상 영어로 작성할 것. 이 값은 이미지 생성 프롬프트에 직접 사용된다. 예) practically → [SCENE_EN: A nearly-empty coffee cup with only a few drops left at the bottom, conveying the sense of "almost, virtually"].
 1줄: 핵심 느낌을 큰따옴표로 감싸서 한 문장 요약. 예) "하나였던 것이 딱 갈라지는" 이미지예요.
 2줄: 그 느낌을 바로 이해할 수 있는 비유나 장면 딱 1문장만. 반드시 2줄(핵심 1문장 + 부연 1문장) 이내로 끝낼 것. 절대 3줄 이상 쓰지 말 것.
 ---
@@ -2523,10 +2523,7 @@ verb_forms (어휘 모드만):
 scene_en (어휘 모드만):
 - 이 단어를 가장 잘 설명할 수 있는 구체적인 장면 1문장을 반드시 영어로 작성. 주체·행동·상황 포함.
 - 이미지 생성 프롬프트에 직접 사용됨.
-- 방향성·자세·주체성이 의미의 핵심인 단어(left/right, get on/off, push/pull, raise/lower, sit/stand, take off/put on 등)는 그 방향·주체를 명시적으로 표현하고, 반대 방향이 아님을 보이는 대조 디테일을 1개 이상 포함할 것.
-- 예 1) "practically" → "A nearly-empty coffee cup with only a few drops left at the bottom, conveying the sense of almost, virtually"
-- 예 2) "left-handed" → "A person writing on paper holding a pen with their LEFT hand only, while their right hand rests flat on the desk"
-- 예 3) "get off" → "A passenger stepping DOWN from the bus onto the sidewalk, one foot already on the ground, the bus door open behind them"
+- 예) "A nearly-empty coffee cup with only a few drops left at the bottom, conveying the sense of almost, virtually"
 - 표현 모드면 빈 문자열 "".
 
 feeling:
