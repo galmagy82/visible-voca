@@ -1315,13 +1315,16 @@ function renderStudyList(items, pageIdx) {
   const safeSpeakLabel = escapeHtml(speakLabel);
   const lis = items.map((it, i) => {
     const safeSurface = escapeHtml(it.surface || '');
+    /* Geminary 검색은 사전 검색 친화적인 lemma(원형) 로 보냄. lemma 가 없는 옛 데이터는
+       surface 그대로 폴백 — 신규 추출부터 lemma 가 채워지므로 자연 마이그레이션. */
+    const safeLemma = escapeHtml(it.lemma || it.surface || '');
     return `
     <li class="study-item-li" id="study-item-${pageIdx}-${i}">
       <div>
         <span class="study-item-surface">${safeSurface}</span>
         <button class="study-item-speak" type="button" data-word="${safeSurface}" title="${safeSpeakLabel}" aria-label="${safeSpeakLabel}">&#128264;</button>
         <span class="study-item-type">${escapeHtml(formatStudyType(it.type))}</span>
-        <button class="study-item-geminary" type="button" data-word="${safeSurface}" aria-label="Geminary">
+        <button class="study-item-geminary" type="button" data-word="${safeLemma}" aria-label="Geminary">
           <svg width="14" height="12" viewBox="0 0 28 24" xmlns="http://www.w3.org/2000/svg">
             <line x1="6" y1="6" x2="15" y2="6" stroke="#4A90D9" stroke-width="1.5" opacity="0.5"/>
             <line x1="6" y1="6" x2="9.3" y2="15.2" stroke="#4A90D9" stroke-width="1.5" opacity="0.5"/>

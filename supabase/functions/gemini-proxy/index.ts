@@ -390,6 +390,7 @@ Selection rules for "study_items":
   - Skip items above GE ${targetMax.toFixed(1)} (too hard for context-based learning at this stage).
   - Prioritize items that expand this user's vocabulary in the next learning step.
   - "surface" must be the EXACT substring as it appears in the text (preserve casing/punctuation).
+  - "lemma" is the dictionary/base form of "surface" used for vocabulary lookup. Strip inflections so the result is what a learner would search a dictionary for. Lowercase. Examples: "mending a puncture" → "mend a puncture", "ran into" → "run into", "cats" → "cat", "running" → "run", "went" → "go", "better off" → "better off" (no change needed). For multi-word items, lemmatize each verb/noun while preserving the structure.
   - "meaning" should be ${meaningGuide}.`
   } else {
     studyInstructions = `
@@ -441,10 +442,11 @@ Do NOT add commentary. Return ONLY the JSON object.`
                 type: "OBJECT",
                 properties: {
                   surface: { type: "STRING", description: "Exact substring from the text." },
+                  lemma:   { type: "STRING", description: "Dictionary/base form of surface for vocabulary lookup (lowercase, inflections stripped)." },
                   type:    { type: "STRING", description: "word | idiom | phrasal_verb | collocation" },
                   meaning: { type: "STRING", description: `Concise meaning in ${meaningLangName}.` },
                 },
-                required: ["surface", "type", "meaning"],
+                required: ["surface", "lemma", "type", "meaning"],
               },
             },
           },
