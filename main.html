@@ -440,18 +440,20 @@
     <span class="brand-wordmark">Geminary</span>
   </header>
 
+  <!-- 카드 제목은 모든 언어 공통(브랜드 단어)이라 data-i18n 미사용.
+       inner page 의 h1 (data-i18n="menuReadingTitle" 등) 은 그대로 유지. -->
   <a class="menu-card menu-card-hero" href="reading.html">
-    <h2 data-i18n="menuReadingTitle">Novel Reading</h2>
+    <h2>Novel</h2>
     <p data-i18n="menuReadingDesc">Novel 사진으로 내 레벨에 맞는 학습단어를 정리하세요</p>
   </a>
-  <!-- Essay Writing — 출시 전 준비 중. disabled 클래스 + pointer-events: none 으로
+  <!-- Essay — 출시 전 준비 중. disabled 클래스 + pointer-events: none 으로
        클릭/탐색 모두 차단, 설명문구는 menuComingSoon ("준비 중") 으로 교체. -->
   <a class="menu-card disabled" href="writing.html" aria-disabled="true">
-    <h2 data-i18n="menuWritingTitle">Essay Writing</h2>
+    <h2>Essay</h2>
     <p data-i18n="menuComingSoon">준비 중</p>
   </a>
   <a class="menu-card" href="vocabulary.html">
-    <h2 data-i18n="menuVocaTitle">Visual Voca</h2>
+    <h2>Word</h2>
     <p data-i18n="menuVocaDesc">저장한 단어를 그림과 함께 다시 보고, 퀴즈로 복습하세요</p>
   </a>
 </div>

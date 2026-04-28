@@ -17,7 +17,7 @@
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Novel Reading — Geminary</title>
+<title>Geminary Novel</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg?v=2">
 <!-- Supabase JS — 인증 세션 확인용 (vocabulary.html 와 동일 cdn) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -1003,7 +1003,8 @@ function applyI18nForReading() {
   const lang = (typeof getLang === 'function') ? getLang() : 'ko';
   document.documentElement.lang = lang;
   if (typeof applyI18n === 'function') applyI18n();
-  document.title = ((typeof t === 'function') ? t('menuReadingTitle') : 'Novel Reading') + ' — Geminary';
+  /* document.title — i18n 키 값(예: "Geminary Novel")이 이미 브랜드명을 포함하므로 별도 suffix 미부여. */
+  document.title = (typeof t === 'function') ? t('menuReadingTitle') : 'Geminary Novel';
 }
 
 /* --- 번역 토글 초기 설정: UI 언어가 영어면 버튼 숨김 --- */
@@ -1379,7 +1380,7 @@ function updateTopBackLink() {
       heading.textContent = _currentBookTitle;
     } else {
       heading.setAttribute('data-i18n', 'menuReadingTitle');
-      heading.textContent = tt('menuReadingTitle', 'Novel Reading');
+      heading.textContent = tt('menuReadingTitle', 'Geminary Novel');
     }
   }
 
@@ -1387,7 +1388,7 @@ function updateTopBackLink() {
   if (bookListVisible) {
     link.href = '#';
     link.setAttribute('data-i18n', 'readingBackToReadingTutor');
-    link.textContent = tt('readingBackToReadingTutor', 'Novel Reading');
+    link.textContent = tt('readingBackToReadingTutor', 'Geminary Novel');
     link.onclick = (e) => { e.preventDefault(); backToUpload(); };
   } else if (bookViewerVisible && _isSavedView) {
     link.href = '#';
@@ -1397,7 +1398,7 @@ function updateTopBackLink() {
   } else if (bookViewerVisible) {
     link.href = '#';
     link.setAttribute('data-i18n', 'readingBackToReadingTutor');
-    link.textContent = tt('readingBackToReadingTutor', 'Novel Reading');
+    link.textContent = tt('readingBackToReadingTutor', 'Geminary Novel');
     link.onclick = (e) => { e.preventDefault(); resetReading(); };
   } else {
     /* 업로드 화면(또는 로딩 중) — 메인으로 직행 */

@@ -250,9 +250,9 @@ const I18N = {
     s8PeekDesc: '문틈 사이로 몰래 살짝 들여다보는 느낌',
 
     /* 메인 메뉴 */
-    menuVocaTitle: 'Visual Voca',
+    menuVocaTitle: 'Geminary Word',
     menuVocaDesc: '저장한 단어를 그림과 함께 다시 보고, 퀴즈로 복습하세요',
-    menuReadingTitle: 'Novel Reading',
+    menuReadingTitle: 'Geminary Novel',
     menuReadingDesc: '페이지 사진만 찍으세요<br>핵심표현, 한글번역까지! 엄마표 영어를 더 단단하게!',
     menuWritingTitle: 'Essay Writing',
     menuWritingDesc: '에세이를 코칭받고, 나만의 그림책으로 만들어보세요',
@@ -278,7 +278,7 @@ const I18N = {
     readingRetryingAll: '재시도 중...',
     readingError: '추출 중 오류가 발생했습니다. 다시 시도해 주세요.',
     readingBackToMain: '메인화면',
-    readingBackToReadingTutor: 'Novel Reading',
+    readingBackToReadingTutor: 'Geminary Novel',
     readingBackToBookList: 'My Books',
     /* Novel Reading — 책 저장 / 내 책 / 학습 단어 */
     readingMyBooks: '📚 My Books',
@@ -560,9 +560,9 @@ const I18N = {
     s8PeekDesc: 'Taking a sneaky glance through a gap',
 
     /* Main menu */
-    menuVocaTitle: 'Visual Voca',
+    menuVocaTitle: 'Geminary Word',
     menuVocaDesc: 'Review your saved words with images and test yourself with quizzes',
-    menuReadingTitle: 'Novel Reading',
+    menuReadingTitle: 'Geminary Novel',
     menuReadingDesc: 'Just snap a page.<br>Key phrases & translations included — make at-home English stronger.',
     menuWritingTitle: 'Essay Writing',
     menuWritingDesc: 'Get essay coaching and create your own picture book',
@@ -587,7 +587,7 @@ const I18N = {
     readingRetryingAll: 'Retrying...',
     readingError: 'An error occurred while extracting. Please try again.',
     readingBackToMain: 'Home',
-    readingBackToReadingTutor: 'Novel Reading',
+    readingBackToReadingTutor: 'Geminary Novel',
     readingBackToBookList: 'My Books',
     /* Novel Reading — book save / my books / study items */
     readingMyBooks: '📚 My Books',
@@ -866,9 +866,9 @@ const I18N = {
     s8PeekDesc: 'ドアの隙間からこっそり覗き見る感覚',
 
     /* メインメニュー */
-    menuVocaTitle: 'Visual Voca',
+    menuVocaTitle: 'Geminary Word',
     menuVocaDesc: '保存した単語を画像で振り返り、クイズで復習しましょう',
-    menuReadingTitle: 'Novel Reading',
+    menuReadingTitle: 'Geminary Novel',
     menuReadingDesc: 'ページの写真を撮るだけ。<br>重要表現と日本語訳まで！おうち英語をもっと力強く。',
     menuWritingTitle: 'Essay Writing',
     menuWritingDesc: 'エッセイのコーチングを受けて、自分だけの絵本を作りましょう',
@@ -893,7 +893,7 @@ const I18N = {
     readingRetryingAll: '再試行中...',
     readingError: '抽出中にエラーが発生しました。もう一度お試しください。',
     readingBackToMain: 'メイン',
-    readingBackToReadingTutor: 'Novel Reading',
+    readingBackToReadingTutor: 'Geminary Novel',
     readingBackToBookList: 'My Books',
     /* Novel Reading — 本の保存 / マイブック / 学習アイテム */
     readingMyBooks: '📚 My Books',
@@ -1173,9 +1173,9 @@ const I18N = {
     s8PeekDesc: '从门缝里偷偷窥视的感觉',
 
     /* 主菜单 */
-    menuVocaTitle: 'Visual Voca',
+    menuVocaTitle: 'Geminary Word',
     menuVocaDesc: '用图像复习已保存的单词，并通过测验巩固',
-    menuReadingTitle: 'Novel Reading',
+    menuReadingTitle: 'Geminary Novel',
     menuReadingDesc: '只需拍下页面照片。<br>核心表达加中文翻译——让在家学英语更扎实。',
     menuWritingTitle: 'Essay Writing',
     menuWritingDesc: '获得作文辅导，制作属于你的绘本',
@@ -1200,7 +1200,7 @@ const I18N = {
     readingRetryingAll: '重试中...',
     readingError: '提取时发生错误，请重试。',
     readingBackToMain: '主页',
-    readingBackToReadingTutor: 'Novel Reading',
+    readingBackToReadingTutor: 'Geminary Novel',
     readingBackToBookList: 'My Books',
     /* Novel Reading — 保存书籍 / 我的书 / 学习单词 */
     readingMyBooks: '📚 My Books',
@@ -1479,9 +1479,9 @@ const I18N = {
     s8PeekDesc: 'Echar un vistazo furtivo por una rendija',
 
     /* Menú principal */
-    menuVocaTitle: 'Visual Voca',
+    menuVocaTitle: 'Geminary Word',
     menuVocaDesc: 'Revisa tus palabras guardadas con imágenes y ponte a prueba con cuestionarios',
-    menuReadingTitle: 'Novel Reading',
+    menuReadingTitle: 'Geminary Novel',
     menuReadingDesc: 'Solo haz una foto de la página.<br>Frases clave y traducciones — refuerza el inglés en casa.',
     menuWritingTitle: 'Essay Writing',
     menuWritingDesc: 'Recibe coaching de escritura y crea tu propio libro ilustrado',
@@ -1506,7 +1506,7 @@ const I18N = {
     readingRetryingAll: 'Reintentando...',
     readingError: 'Ocurrió un error al extraer. Inténtalo de nuevo.',
     readingBackToMain: 'Inicio',
-    readingBackToReadingTutor: 'Novel Reading',
+    readingBackToReadingTutor: 'Geminary Novel',
     readingBackToBookList: 'My Books',
     /* Novel Reading — guardar libro / mis libros / elementos de estudio */
     readingMyBooks: '📚 My Books',
@@ -1785,9 +1785,9 @@ const I18N = {
     s8PeekDesc: 'Lén nhìn qua khe cửa',
 
     /* Menu chính */
-    menuVocaTitle: 'Visual Voca',
+    menuVocaTitle: 'Geminary Word',
     menuVocaDesc: 'Ôn lại từ đã lưu cùng hình ảnh và kiểm tra bằng câu đố',
-    menuReadingTitle: 'Novel Reading',
+    menuReadingTitle: 'Geminary Novel',
     menuReadingDesc: 'Chỉ cần chụp ảnh trang sách.<br>Cụm từ quan trọng và bản dịch — học tiếng Anh tại nhà vững chắc hơn.',
     menuWritingTitle: 'Essay Writing',
     menuWritingDesc: 'Nhận hướng dẫn viết luận và tạo sách tranh của riêng bạn',
@@ -1812,7 +1812,7 @@ const I18N = {
     readingRetryingAll: 'Đang thử lại...',
     readingError: 'Đã xảy ra lỗi khi trích xuất. Vui lòng thử lại.',
     readingBackToMain: 'Trang chính',
-    readingBackToReadingTutor: 'Novel Reading',
+    readingBackToReadingTutor: 'Geminary Novel',
     readingBackToBookList: 'My Books',
     /* Novel Reading — lưu sách / sách của tôi / mục học */
     readingMyBooks: '📚 My Books',
@@ -2091,9 +2091,9 @@ const I18N = {
     s8PeekDesc: 'แอบมองผ่านช่องประตูอย่างลับๆ',
 
     /* เมนูหลัก */
-    menuVocaTitle: 'Visual Voca',
+    menuVocaTitle: 'Geminary Word',
     menuVocaDesc: 'ทบทวนคำที่บันทึกไว้พร้อมภาพและทดสอบด้วยแบบทดสอบ',
-    menuReadingTitle: 'Novel Reading',
+    menuReadingTitle: 'Geminary Novel',
     menuReadingDesc: 'แค่ถ่ายรูปหน้าหนังสือ<br>สำนวนสำคัญและคำแปล — เรียนภาษาอังกฤษที่บ้านให้แน่นยิ่งขึ้น',
     menuWritingTitle: 'Essay Writing',
     menuWritingDesc: 'รับการฝึกเขียนเรียงความและสร้างหนังสือภาพของคุณเอง',
@@ -2118,7 +2118,7 @@ const I18N = {
     readingRetryingAll: 'กำลังลองอีกครั้ง...',
     readingError: 'เกิดข้อผิดพลาดขณะแยกข้อความ กรุณาลองใหม่',
     readingBackToMain: 'หน้าหลัก',
-    readingBackToReadingTutor: 'Novel Reading',
+    readingBackToReadingTutor: 'Geminary Novel',
     readingBackToBookList: 'My Books',
     /* Novel Reading — บันทึกหนังสือ / หนังสือของฉัน / รายการเรียน */
     readingMyBooks: '📚 My Books',
@@ -2397,9 +2397,9 @@ const I18N = {
     s8PeekDesc: 'Espiar por uma fresta de forma sorrateira',
 
     /* Menu principal */
-    menuVocaTitle: 'Visual Voca',
+    menuVocaTitle: 'Geminary Word',
     menuVocaDesc: 'Revise suas palavras salvas com imagens e teste-se com quizzes',
-    menuReadingTitle: 'Novel Reading',
+    menuReadingTitle: 'Geminary Novel',
     menuReadingDesc: 'É só tirar uma foto da página.<br>Frases-chave e traduções — fortaleça o inglês em casa.',
     menuWritingTitle: 'Essay Writing',
     menuWritingDesc: 'Receba coaching de redação e crie seu próprio livro ilustrado',
@@ -2424,7 +2424,7 @@ const I18N = {
     readingRetryingAll: 'Tentando novamente...',
     readingError: 'Ocorreu um erro ao extrair. Tente novamente.',
     readingBackToMain: 'Início',
-    readingBackToReadingTutor: 'Novel Reading',
+    readingBackToReadingTutor: 'Geminary Novel',
     readingBackToBookList: 'My Books',
     /* Novel Reading — salvar livro / meus livros / itens de estudo */
     readingMyBooks: '📚 My Books',
