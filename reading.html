@@ -808,6 +808,21 @@
 
 </div>
 
+<!-- 추출 실패 모달 — 사진 업로드 후 일부 페이지 추출이 실패하면 자동 노출.
+     "X, Y, Z 페이지 추출 실패" + 재시도 버튼. 닫기 버튼 없음 — 오버레이 빈 영역 클릭으로
+     닫힘 (페이지 카드 단독 retry/replace 로 우회 가능). 재시도 진행 중엔 버튼 disabled +
+     "재시도 중..." 라벨. 재시도 완료 후 전부 성공이면 자동 닫힘, 일부만 성공이면
+     남은 실패 페이지로 모달 갱신. -->
+<div class="modal-overlay" id="extractFailedModal" hidden>
+  <div class="modal-card">
+    <div class="modal-title" data-i18n="readingExtractFailedTitle">추출 실패</div>
+    <div class="modal-desc" id="extractFailedDesc"></div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-primary" id="extractFailedRetryBtn" onclick="retryAllFailedPagesFromModal()" data-i18n="readingRetryAll">재시도</button>
+    </div>
+  </div>
+</div>
+
 <!-- 책 저장 모달 (제목 입력) — 기본 hidden, openSaveBookModal() 에서 토글 -->
 <div class="modal-overlay" id="saveBookModal" hidden>
   <div class="modal-card">
@@ -1314,6 +1329,9 @@ async function handlePhotos(inputEl) {
   renderBook();
   updateBookViewerToolbar();
   updateTopBackLink();
+  /* 추출 실패 페이지가 있으면 자동으로 모달 노출 — 사용자가 페이지를 일일이 넘기며
+     찾지 않도록. saved book 로드(openSavedBook) 에서는 호출 안 함 — 거기엔 error 가 없음. */
+  maybeOpenExtractFailedModal();
 }
 
 /* 북 뷰어 툴바: 저장 여부에 따라 저장 버튼·배지 토글.
@@ -1590,6 +1608,69 @@ async function replacePagePhoto(pageIdx) {
     rerenderPage(pageIdx);
   };
   input.click();
+}
+
+/* 추출 실패 모달 — 추출 완료 직후 _pages 에 error 가 있으면 자동 노출.
+   닫기 버튼 없이 오버레이 빈 영역 클릭으로 닫힘. */
+function maybeOpenExtractFailedModal() {
+  const failed = collectFailedPageIndices();
+  if (failed.length === 0) return;
+  showExtractFailedModal(failed);
+}
+
+function collectFailedPageIndices() {
+  const out = [];
+  for (let i = 0; i < _pages.length; i++) {
+    if (_pages[i] && _pages[i].error) out.push(i);
+  }
+  return out;
+}
+
+function showExtractFailedModal(failedIndices) {
+  const modal = document.getElementById('extractFailedModal');
+  const desc = document.getElementById('extractFailedDesc');
+  const btn = document.getElementById('extractFailedRetryBtn');
+  if (!modal || !desc || !btn) return;
+  const tt = (k, fb) => (typeof t === 'function') ? t(k) : fb;
+  /* {pages} 자리 치환 — t() 가 placeholder 미지원이라 직접 replace */
+  const tmpl = tt('readingExtractFailedDesc', '{pages}페이지의 텍스트를 추출하지 못했습니다.');
+  desc.textContent = tmpl.replace('{pages}', failedIndices.map((i) => i + 1).join(', '));
+  btn.textContent = tt('readingRetryAll', '재시도');
+  btn.disabled = false;
+  modal.hidden = false;
+}
+
+function closeExtractFailedModal() {
+  const modal = document.getElementById('extractFailedModal');
+  if (modal) modal.hidden = true;
+}
+
+/* 모달 "재시도" 버튼 핸들러 — 실패 페이지 인덱스 모아 PAGE_CONCURRENCY(=6) 병렬 재시도.
+   재시도 중엔 버튼 disabled + "재시도 중..." 라벨. 완료 후 모두 성공이면 모달 자동 닫힘,
+   일부라도 여전히 실패면 남은 페이지 번호로 모달 갱신 (사용자 또 누를 수 있게). */
+async function retryAllFailedPagesFromModal() {
+  const btn = document.getElementById('extractFailedRetryBtn');
+  if (!btn || btn.disabled) return;
+  const failed = collectFailedPageIndices();
+  if (failed.length === 0) {
+    closeExtractFailedModal();
+    return;
+  }
+  const tt = (k, fb) => (typeof t === 'function') ? t(k) : fb;
+  btn.disabled = true;
+  btn.textContent = tt('readingRetryingAll', '재시도 중...');
+  try {
+    await runWithConcurrency(failed, PAGE_CONCURRENCY, async (idx) => {
+      await retryPage(idx);
+    });
+  } finally {
+    const stillFailed = collectFailedPageIndices();
+    if (stillFailed.length === 0) {
+      closeExtractFailedModal();
+    } else {
+      showExtractFailedModal(stillFailed);
+    }
+  }
 }
 
 /* 페이지 경계 분할 fragment 제거 — 책에서 단어가 페이지를 넘기며 "grum-" / "bled" 로 쪼개지면
@@ -2171,6 +2252,13 @@ document.addEventListener('click', (e) => {
   if (overlay && !overlay.hidden && e.target === overlay) {
     closeGeminaryPopup();
   }
+  /* 추출 실패 모달도 동일 패턴 — 오버레이 빈 영역 클릭으로 닫기.
+     재시도 진행 중(버튼 disabled)에도 닫기 허용 — runWithConcurrency 는 백그라운드 계속,
+     완료 후 finally 에서 stillFailed 가 0 이면 closeExtractFailedModal() 이 다시 호출돼도 안전. */
+  const extractModal = document.getElementById('extractFailedModal');
+  if (extractModal && !extractModal.hidden && e.target === extractModal) {
+    closeExtractFailedModal();
+  }
 });
 /* iframe(vocabulary.html embed-mode) 내부 ✕ 버튼이 postMessage 로 닫기 요청 → 부모에서 닫음 */
 window.addEventListener('message', (e) => {
@@ -2181,6 +2269,8 @@ document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
   const overlay = document.getElementById('wordPopupOverlay');
   if (overlay && !overlay.hidden) closeGeminaryPopup();
+  const extractModal = document.getElementById('extractFailedModal');
+  if (extractModal && !extractModal.hidden) closeExtractFailedModal();
 });
 
 /* 시작 */
