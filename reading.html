@@ -646,6 +646,45 @@
   .page-retry-btn:disabled,
   .page-replace-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+  /* 추출 실패 페이지 발견 배너 — 책 뷰어 상단에 노출.
+     30장 업로드 시 한두 장이 실패해도 사용자가 페이지를 일일이 넘기며 찾지 않도록
+     실패 페이지 번호를 한꺼번에 보여주고 배치 재시도(병렬 6개) 버튼을 함께 제공. */
+  .extract-error-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    padding: 10px 14px;
+    border: 1px solid #E8C7A2;
+    border-radius: 8px;
+    background: #FBF1E3;
+    color: #6E4A1F;
+    font-size: 0.9rem;
+  }
+  .extract-error-banner-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    word-break: keep-all;
+  }
+  .extract-error-banner-btn {
+    flex: 0 0 auto;
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    border: 1px solid #5A8A42;
+    border-radius: 6px;
+    background: #5A8A42;
+    color: #FFFFFF;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .extract-error-banner-btn:hover { background: #4D7838; border-color: #4D7838; }
+  .extract-error-banner-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
   /* 네비게이션 (페이지 카운터 + 화살표) */
   .nav-bar {
     display: flex;
@@ -783,6 +822,13 @@
 
   <!-- 북 뷰어 (결과 상태) -->
   <div id="bookViewer" hidden>
+    <!-- 추출 실패 페이지 발견 배너 — _pages 중 error 가 있는 페이지를 모아 한 번에 안내.
+         실패 페이지 번호 목록 + "모두 재시도" 버튼. 실패 페이지 0개일 땐 hidden.
+         renderBook() 와 재시도/교체 완료 직후 updateExtractErrorBanner() 가 갱신. -->
+    <div class="extract-error-banner" id="extractErrorBanner" hidden>
+      <div class="extract-error-banner-text" id="extractErrorBannerText"></div>
+      <button class="extract-error-banner-btn" id="extractErrorBannerBtn" type="button" onclick="retryAllFailedPages()"></button>
+    </div>
     <div class="book-toolbar">
       <div class="toolbar-left">
         <!-- 저장된 책을 보고 있을 때만 표시되는 배지.
@@ -1417,6 +1463,63 @@ function renderBook() {
   goTo(_currentIdx, /*animate*/ false);
   updateNav();
   updateTranslateBtnState();
+  updateExtractErrorBanner();
+}
+
+/* 추출 실패 페이지 배너 갱신 — _pages 를 스캔해 error 가 있는 인덱스를 모은 뒤
+   "3, 7, 9페이지 추출 실패" 형식으로 표시. 0개면 숨김.
+   "모두 재시도" 진행 중에는 _retryAllInProgress 플래그가 true → 버튼만 라벨/disabled
+   바뀌고 텍스트는 그대로 유지(실패 페이지 목록은 retryAll 완료 후 한 번에 갱신). */
+let _retryAllInProgress = false;
+function updateExtractErrorBanner() {
+  const banner = document.getElementById('extractErrorBanner');
+  const textEl = document.getElementById('extractErrorBannerText');
+  const btn = document.getElementById('extractErrorBannerBtn');
+  if (!banner || !textEl || !btn) return;
+  const tt = (k, fb) => (typeof t === 'function') ? t(k) : fb;
+  /* 실패 페이지 인덱스 수집 (1-indexed 로 사람에게 보여줄 것) */
+  const failedIndices = [];
+  for (let i = 0; i < _pages.length; i++) {
+    if (_pages[i] && _pages[i].error) failedIndices.push(i);
+  }
+  if (failedIndices.length === 0) {
+    banner.hidden = true;
+    return;
+  }
+  const pagesLabel = failedIndices.map((i) => i + 1).join(', ');
+  /* {pages} 플레이스홀더를 직접 치환 — t() 가 placeholder 를 지원하지 않을 수 있어 안전한 방식 */
+  const tmpl = tt('readingPagesExtractFailed', '{pages}페이지 추출 실패');
+  textEl.textContent = tmpl.replace('{pages}', pagesLabel);
+  btn.textContent = _retryAllInProgress
+    ? tt('readingRetryingAll', '재시도 중...')
+    : tt('readingRetryAll', '모두 재시도');
+  btn.disabled = _retryAllInProgress;
+  banner.hidden = false;
+}
+
+/* 실패한 모든 페이지를 한 번에 재시도 — 기존 PAGE_CONCURRENCY(=6) 정책 그대로.
+   각 페이지는 retryPage() 를 재사용 → 페이지 카드 자리에 "재시도 중..." 표시 +
+   완료 후 rerenderPage 로 정상 콘텐츠 또는 새 에러 UI 로 전환.
+   배너 자체는 진행 중엔 disabled+라벨 변경, 완료 후 한꺼번에 갱신. */
+async function retryAllFailedPages() {
+  if (_retryAllInProgress) return;
+  const failedIndices = [];
+  for (let i = 0; i < _pages.length; i++) {
+    if (_pages[i] && _pages[i].error) failedIndices.push(i);
+  }
+  if (failedIndices.length === 0) return;
+  _retryAllInProgress = true;
+  updateExtractErrorBanner();
+  try {
+    /* runWithConcurrency 의 워커는 항상 settled 결과를 반환하도록 retryPage 가 내부에서
+       catch — 여기선 단순히 동시 실행 throttle 만 하면 됨. */
+    await runWithConcurrency(failedIndices, PAGE_CONCURRENCY, async (idx) => {
+      await retryPage(idx);
+    });
+  } finally {
+    _retryAllInProgress = false;
+    updateExtractErrorBanner();
+  }
 }
 
 function renderPageContent(p, pageIdx) {
@@ -1537,6 +1640,9 @@ async function retryPage(pageIdx) {
     };
   }
   rerenderPage(pageIdx);
+  /* 단일 retry 호출 — retryAllFailedPages 진행 중엔 일괄 갱신 단계에서 한 번에 처리하므로 skip.
+     혼자 retry 한 경우엔 즉시 배너 새로고침 (성공하면 목록에서 빠지고, 여전히 실패면 그대로). */
+  if (!_retryAllInProgress) updateExtractErrorBanner();
 }
 
 /* 새 사진으로 교체 — 사진 자체가 흐릿하거나 반사되어 모델이 못 읽는 경우 회복용.
@@ -1588,6 +1694,7 @@ async function replacePagePhoto(pageIdx) {
       };
     }
     rerenderPage(pageIdx);
+    updateExtractErrorBanner();
   };
   input.click();
 }
