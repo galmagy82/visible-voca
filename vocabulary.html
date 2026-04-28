@@ -4697,7 +4697,14 @@ function selectAnswer(index) {
   /* 정답·오답 양쪽 모두 정답 단어 발음 — 청각 단서로 단어 형태를 함께 학습.
      speak() 가 내부에서 speechSynthesis.cancel() 을 호출하므로 빠른 연속 클릭에도
      안전. */
-  speak(q.word);
+  /* TODO 진단용 로그 — 원인 파악 후 제거 */
+  console.log('[quiz speak] q.word=', JSON.stringify(q.word), 'speaking=', speechSynthesis.speaking, 'pending=', speechSynthesis.pending, 'paused=', speechSynthesis.paused);
+  try {
+    speak(q.word);
+    console.log('[quiz speak] speak() called ok');
+  } catch (e) {
+    console.error('[quiz speak] speak() threw:', e);
+  }
 
   document.getElementById('quizNextBtn').style.display = 'inline-block';
 }
