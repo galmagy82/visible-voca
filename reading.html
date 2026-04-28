@@ -179,17 +179,44 @@
     padding: 80px 20px;
     color: #6B6660;
   }
-  .spinner {
-    display: inline-block;
-    width: 28px;
-    height: 28px;
-    border: 3px solid #E5E2DE;
-    border-top-color: #5A8A42;
-    border-radius: 50%;
-    animation: spin 0.9s linear infinite;
-    margin-bottom: 16px;
+  /* 추출 진행 바 — done/total 비율로 채워지며, 트랙 위로 밝은 줄이 좌→우로 흐름.
+     의도: 0/N 초기 구간(모든 페이지가 첫 호출 중) 에 채움이 0% 라 멈춰 보이는 문제를
+     해결. shimmer 가 항상 흐르므로 사용자는 "작업이 진행 중" 임을 즉시 인지.
+     색상은 spinner 와 동일한 #5A8A42 (브랜드 그린) 으로 통일. */
+  .loading-bar {
+    position: relative;
+    width: 240px;
+    max-width: 80%;
+    height: 6px;
+    margin: 16px auto 0;
+    background: #E5E2DE;
+    border-radius: 3px;
+    overflow: hidden;
   }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: #5A8A42;
+    border-radius: 3px;
+    /* 채움 변화는 부드럽게 보간 — 페이지 완료 시점에 톡톡 튀지 않도록 */
+    transition: width 0.4s ease;
+  }
+  /* shimmer: 트랙·채움 위 모두를 덮는 50% 폭 빛 줄. translateX 로 좌→우 슬라이드.
+     반복 1.4s 는 starWave 와 동일 호흡 — Geminary 검색 화면 톤과 통일. */
+  .loading-bar-shimmer {
+    position: absolute;
+    top: 0;
+    left: -50%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
+    animation: shimmerSweep 1.4s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes shimmerSweep {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(400%); }
+  }
   .loading-progress {
     margin-top: 8px;
     font-size: 0.85rem;
@@ -734,10 +761,15 @@
     </div>
   </div>
 
-  <!-- 추출 중 (로딩 상태) -->
+  <!-- 추출 중 (로딩 상태)
+       progress bar 는 done/total 비율로 채워지며, 트랙 위로 shimmer 가 항상 흐름.
+       loadingProgress 텍스트는 바 아래 보조 표시 (e.g. "3 / 5"). -->
   <div class="loading-area" id="loadingArea" hidden>
-    <div class="spinner"></div>
     <div data-i18n="readingExtracting">텍스트 추출 중...</div>
+    <div class="loading-bar" id="loadingBar">
+      <div class="loading-bar-fill" id="loadingBarFill"></div>
+      <div class="loading-bar-shimmer"></div>
+    </div>
     <div class="loading-progress" id="loadingProgress"></div>
   </div>
 
@@ -1368,8 +1400,14 @@ function updateTopBackLink() {
   if (settingsBtn) settingsBtn.hidden = !(onUploadScreen && _authUser);
 }
 
+/* 추출 진행 갱신 — 텍스트("3 / 5")와 progress bar 채움(width %) 모두 업데이트.
+   total 이 0/falsy 면 카운트 텍스트는 비우고 바도 0% 로 — 저장된 책 로드처럼
+   페이지별 카운트가 의미 없는 경우 (단일 fetch) 에는 shimmer 만 흐르게 두기 위함. */
 function updateLoadingProgress(done, total) {
-  document.getElementById('loadingProgress').textContent = `${done} / ${total}`;
+  const text = document.getElementById('loadingProgress');
+  const fill = document.getElementById('loadingBarFill');
+  if (text) text.textContent = total ? `${done} / ${total}` : '';
+  if (fill) fill.style.width = total ? `${(done / total) * 100}%` : '0%';
 }
 
 /* --- 북 뷰어 렌더 --- */
@@ -1838,6 +1876,9 @@ function renderBookList(books) {
 async function openSavedBook(bookId) {
   if (!_authUser) return;
   document.getElementById('bookListArea').hidden = true;
+  /* 이전 업로드 잔여 상태(바 채움/카운트 텍스트) 초기화 — DB 단일 fetch 라 페이지별
+     진행률 의미 없으므로 shimmer 만 흐르도록 (0/0). */
+  updateLoadingProgress(0, 0);
   document.getElementById('loadingArea').hidden = false;
   try {
     const { data, error } = await supabaseClient
