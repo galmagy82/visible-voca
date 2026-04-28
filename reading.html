@@ -1225,14 +1225,16 @@ async function handlePhotos(inputEl) {
       console.error('preprocess 실패:', e);
       _completedCount++;
       updateLoadingProgress(_completedCount, files.length);
-      return { ok: false, errorDetail: `[preprocess] ${e?.message || 'image preprocessing failed'}`, base64Data: null, mimeType: null };
+      /* preprocess 실패도 file 핸들은 그대로 반환 — 사용자가 잠시 뒤 "다시 시도"
+         눌렀을 때 RAM 압박이 풀려있으면 fileToResizedBase64 가 통할 가능성이 높음. */
+      return { ok: false, errorDetail: `[preprocess] ${e?.message || 'image preprocessing failed'}`, base64Data: null, mimeType: null, file };
     }
     try {
       const result = await extractReadingPageWithRetry(base64Data, mimeType, lang, _geScore, _meaningLang);
-      return { ok: true, result, base64Data, mimeType };
+      return { ok: true, result, base64Data, mimeType, file };
     } catch (e) {
       console.error('reading-extract 실패:', e);
-      return { ok: false, errorDetail: formatExtractError(e), base64Data, mimeType };
+      return { ok: false, errorDetail: formatExtractError(e), base64Data, mimeType, file };
     } finally {
       _completedCount++;
       updateLoadingProgress(_completedCount, files.length);
@@ -1243,9 +1245,11 @@ async function handlePhotos(inputEl) {
     const v = r.value;
     /* _image: 같은 사진 재시도용 캐시. 저장 시 saveBook 의 화이트리스트에서
        제외되므로 DB 에는 안 들어감.
+       file: 원본 File 핸들 (OS 레벨 참조라 RAM 거의 안 씀) — base64 가 없어도
+             "다시 시도" 가 fileToResizedBase64 부터 다시 돌릴 수 있게 보관.
        errorDetail: 실패 원인 진단 문자열 ([status] 또는 [network]/[preprocess]).
        역시 화이트리스트 밖이라 DB 에는 안 들어감. */
-    const image = { base64Data: v.base64Data, mimeType: v.mimeType };
+    const image = { file: v.file, base64Data: v.base64Data, mimeType: v.mimeType };
     if (v.ok) {
       return {
         original: v.result.original || '',
@@ -1380,14 +1384,16 @@ function renderBook() {
 function renderPageContent(p, pageIdx) {
   if (p.error) {
     /* 두 가지 복구 경로:
-       - "다시 시도": _image 가 있으면 같은 사진으로 재호출 (네트워크/일시 장애 케이스)
-       - "다른 사진으로 교체": 사진 자체가 흐릿/반사 등 문제일 때 file picker 로 그 페이지만 교체.
-       _image 가 비어있으면(이미지 전처리 자체 실패) 재시도 버튼은 숨김 — 의미 없음. */
+       - "다시 시도": file 또는 base64 가 있으면 같은 사진으로 재호출. preprocess 실패였더라도
+         RAM 압박이 풀린 시점에 다시 돌리면 통하는 경우가 많아서 항상 노출.
+       - "다른 사진으로 교체": 사진 자체가 흐릿/반사 등 진짜 사진 문제일 때 file picker 로 교체. */
     const tt = (k, fb) => (typeof t === 'function') ? t(k) : fb;
     const msg = tt('readingPageError', '이 페이지의 텍스트를 추출하지 못했습니다.');
     const retryLabel = tt('readingRetryPage', '다시 시도');
     const replaceLabel = tt('readingReplacePhoto', '다른 사진으로 교체');
-    const canRetry = !!(p._image && p._image.base64Data);
+    /* base64 가 있으면 API 단계만 재시도, 없어도 file 핸들이 있으면 preprocess 부터
+       전체 파이프라인 재시도 가능 → 두 경우 모두 retry 버튼 노출. */
+    const canRetry = !!(p._image && (p._image.base64Data || p._image.file));
     /* 진단 라인 — [status] 또는 [network]/[preprocess] + 서버 메시지. 사용자가 이 줄을
        복사해 보고하면 원인 추적 가능. errorDetail 이 비어있으면 표시 생략. */
     const detailHtml = p.errorDetail
@@ -1444,27 +1450,53 @@ function setPageBusy(pageIdx, label) {
   pageEl.innerHTML = `<div class="page-error"><div>${escapeHtml(label)}</div></div>`;
 }
 
-/* 같은 사진으로 재호출 — 네트워크/일시 장애 케이스 회복용.
-   _image.base64Data 가 메모리에 살아있어야 동작 (handlePhotos 에서 캐싱). */
+/* 같은 사진으로 재호출. 두 가지 시작점 지원:
+   - base64Data 있음: API 단계만 재호출 (네트워크/서버 장애였던 케이스, 빠름)
+   - base64Data 없고 file 만 있음: preprocess 부터 전체 재실행 (preprocess OOM 케이스 회복) */
 async function retryPage(pageIdx) {
   const p = _pages[pageIdx];
-  if (!p || !p._image || !p._image.base64Data) return;
+  if (!p || !p._image || (!p._image.base64Data && !p._image.file)) return;
   const tt = (k, fb) => (typeof t === 'function') ? t(k) : fb;
   setPageBusy(pageIdx, tt('readingRetryingPage', '재시도 중...'));
   const lang = (typeof getLang === 'function') ? getLang() : 'ko';
+  let base64Data = p._image.base64Data;
+  let mimeType = p._image.mimeType;
+  /* preprocess 단계에서 막혔던 페이지 — 사용자 클릭 시점엔 RAM 회수됐을 가능성 높음 */
+  if (!base64Data && p._image.file) {
+    try {
+      const r = await fileToResizedBase64(p._image.file);
+      base64Data = r.data;
+      mimeType = r.mimeType;
+    } catch (e) {
+      console.error('retry preprocess 실패:', e);
+      _pages[pageIdx] = {
+        ...p,
+        error: 'retry failed',
+        errorDetail: `[preprocess] ${e?.message || 'image preprocessing failed'}`,
+      };
+      rerenderPage(pageIdx);
+      return;
+    }
+  }
   try {
-    const result = await extractReadingPageWithRetry(p._image.base64Data, p._image.mimeType, lang, _geScore, _meaningLang);
+    const result = await extractReadingPageWithRetry(base64Data, mimeType, lang, _geScore, _meaningLang);
     _pages[pageIdx] = {
       original: result.original || '',
       translated: result.translated || '',
       no_text: !!result.no_text,
       study_items: filterStudyItems(result.study_items),
       error: null,
-      _image: p._image,
+      /* 새로 디코딩 성공 시 base64 도 캐시에 채워 다음 재시도는 API 만 돌도록 */
+      _image: { file: p._image.file, base64Data, mimeType },
     };
   } catch (e) {
     console.error('retry 실패:', e);
-    _pages[pageIdx] = { ...p, error: 'retry failed', errorDetail: formatExtractError(e) };
+    _pages[pageIdx] = {
+      ...p,
+      error: 'retry failed',
+      errorDetail: formatExtractError(e),
+      _image: { file: p._image.file, base64Data, mimeType },
+    };
   }
   rerenderPage(pageIdx);
 }
@@ -1492,6 +1524,8 @@ async function replacePagePhoto(pageIdx) {
         ..._pages[pageIdx],
         error: 'replace failed',
         errorDetail: `[preprocess] ${e?.message || 'image preprocessing failed'}`,
+        /* 새 file 도 보관 — 다시 시도가 같은 파일로 preprocess 재시도 가능 */
+        _image: { file, base64Data: null, mimeType: null },
       };
       rerenderPage(pageIdx);
       return;
@@ -1504,7 +1538,7 @@ async function replacePagePhoto(pageIdx) {
         no_text: !!result.no_text,
         study_items: filterStudyItems(result.study_items),
         error: null,
-        _image: { base64Data, mimeType },
+        _image: { file, base64Data, mimeType },
       };
     } catch (e) {
       console.error('replace 실패:', e);
@@ -1512,7 +1546,7 @@ async function replacePagePhoto(pageIdx) {
         ..._pages[pageIdx],
         error: 'replace failed',
         errorDetail: formatExtractError(e),
-        _image: { base64Data, mimeType },
+        _image: { file, base64Data, mimeType },
       };
     }
     rerenderPage(pageIdx);
