@@ -472,42 +472,6 @@ Do NOT add commentary. Return ONLY the JSON object.`
   }
 }
 
-/* Reading Tutor: 페이지 간 단어 봉합 후 재번역 — OCR 없이 영문 → 모국어 번역만.
-   사용 시점: 프론트가 두 페이지에 걸쳐 끊어진 단어(예: "grum-" + "bled" → "grumbled")를
-   봉합한 뒤, 봉합된 영문에 맞춰 해당 페이지의 번역만 다시 받기 위해 호출.
-   reading-extract 와 분리한 이유: 재번역은 사진/OCR/study_items 가 모두 불필요하므로
-   가벼운 텍스트-only 호출로 비용·지연 모두 절감. 사용량 카운트는 증가시키지 않음
-   (이미 reading-extract 단계에서 카운트됐고, 봉합은 부수적 보정 작업이라 별도 과금 부적절). */
-async function callGeminiRetranslate(text: string, targetLang: string, apiKey: string) {
-  const langName = READING_LANG_NAMES[targetLang] || 'Korean'
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`
-
-  const prompt = `Translate the following English text into natural ${langName}. Preserve paragraph structure (line breaks between paragraphs). Do NOT add commentary, notes, transliteration, or the original English. Return ONLY the ${langName} translation.
-
-English text:
-${text}`
-
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.3,
-        maxOutputTokens: 6144,
-        thinkingConfig: { thinkingBudget: 0 },
-      },
-    }),
-  })
-  if (!res.ok) {
-    const err = await res.text()
-    throw new Error(`Gemini reading-retranslate API error ${res.status}: ${err}`)
-  }
-  const data = await res.json()
-  const translated: string = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
-  return { translated: translated.trim() }
-}
-
 /* 사용량 증가: 최초 검색 시 row 생성, 이후 검색 시 trial_count +1 */
 async function incrementTrialCount(userId: string): Promise<number> {
   const { data } = await supabase
@@ -614,23 +578,9 @@ Deno.serve(async (req) => {
         result = parsed
         break
       }
-      case "reading-retranslate": {
-        /* Reading Tutor: 페이지 간 봉합 후 영문 → 모국어 번역만. 사용량 카운트 미증가
-           (reading-extract 에서 이미 카운트됨, 봉합은 보정 작업).
-           입력: { text, targetLang } / 출력: { translated } */
-        if (!body.text || typeof body.text !== "string") {
-          return new Response(
-            JSON.stringify({ error: "text is required" }),
-            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          )
-        }
-        const targetLang: string = typeof body.targetLang === "string" ? body.targetLang : "ko"
-        result = await callGeminiRetranslate(body.text, targetLang, apiKey)
-        break
-      }
       default:
         return new Response(
-          JSON.stringify({ error: "Invalid action. Use: search, image, extract, reading-extract, reading-retranslate" }),
+          JSON.stringify({ error: "Invalid action. Use: search, image, extract, reading-extract" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         )
     }

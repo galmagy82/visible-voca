@@ -1091,31 +1091,6 @@ async function extractReadingPage(base64Data, mimeType, targetLang, geScore, mea
   return res.json();
 }
 
-/* --- Edge Function 호출: 봉합된 영문 → 모국어 번역만 (OCR/study_items 미포함)
-   페이지 간에 잘린 단어를 합친 뒤 해당 페이지의 translated 만 갱신하기 위해 호출.
-   reading-extract 와 분리한 이유: 재번역은 사진·학습단어 처리가 불필요해서
-   가벼운 텍스트-only 경로가 비용/지연 모두 유리. */
-async function retranslateReadingPage(text, targetLang) {
-  const res = await fetch(EDGE_FUNCTION_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      action: 'reading-retranslate',
-      userId: getUserId(),
-      text, targetLang,
-    }),
-  });
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    const serverMsg = data.error || data.message || `HTTP ${res.status}`;
-    const err = new Error(`[${res.status}] ${serverMsg}`);
-    err.status = res.status;
-    throw err;
-  }
-  const json = await res.json();
-  return json.translated || '';
-}
-
 /* 일시적 실패(429/5xx/네트워크) 에 대해 지수 백오프로 재시도.
    - 5회 시도(최초+4 재시도): 1s → 2.5s → 5s → 10s — 각 0~30% jitter 로 동시 재시도 충돌 회피
    - "실패 절대 금지" 요구사항: 동시성 throttle 과 결합하면 일시 장애는 거의 자동 복구
@@ -1159,85 +1134,6 @@ async function runWithConcurrency(items, limit, worker) {
   const workerCount = Math.min(limit, items.length);
   await Promise.all(Array.from({ length: workerCount }, () => loop()));
   return results;
-}
-
-/* 페이지 간 단어 조각 봉합:
-   페이지 N 의 영문이 "...some-word-" 처럼 하이픈으로 끝나고, 페이지 N+1 의 첫 단어가
-   알파벳으로 시작하면 출판물 표준 줄바꿈 하이픈으로 보고 두 조각을 합친다.
-   예) "Tom grum-" + "bled was warming..." → "Tom grumbled" + "was warming..."
-   - 영문(original)은 즉시 갱신
-   - study_items 중 surface 가 더 이상 영문에 없으면 함께 정리 (page B 첫 단어가
-     원래 study_items 에 잡혀있던 경우 등)
-   반환: 봉합 영향이 있어 재번역이 필요한 페이지 인덱스 배열. */
-function stitchPageBoundaryWords(pages) {
-  const dirty = new Set();
-  for (let i = 0; i < pages.length - 1; i++) {
-    const a = pages[i];
-    const b = pages[i + 1];
-    if (!a || !b) continue;
-    if (a.error || b.error) continue;
-    if (!a.original || !b.original) continue;
-
-    /* a 의 끝 — 알파벳/어퍼스트로피 단어 + 하이픈 + (선택적 공백/개행) */
-    const endMatch = a.original.match(/([A-Za-z][A-Za-z']*)-\s*$/);
-    if (!endMatch) continue;
-    /* b 의 시작 — 알파벳 시퀀스. 대문자로 시작하면 새 문장/고유명사일 가능성이
-       높아 봉합 대상에서 제외 (출판 관행상 줄바꿈 하이픈은 소문자 시작) */
-    const startMatch = b.original.match(/^([a-z]+)/);
-    if (!startMatch) continue;
-
-    const prefix = endMatch[1];
-    const suffix = startMatch[1];
-    const combined = prefix + suffix;
-
-    /* a 끝의 "prefix-" 를 "combined" 로 교체 */
-    pages[i].original = a.original.replace(/([A-Za-z][A-Za-z']*)-\s*$/, combined);
-    /* b 시작의 "suffix" 제거 + 뒤따르는 공백 1회 정리 */
-    pages[i + 1].original = b.original.replace(/^[a-z]+/, '').replace(/^\s+/, '');
-
-    /* study_items 정리: surface 가 갱신된 영문에 더 이상 존재하지 않으면 제거.
-       JSON 응답이 freeze 됐을 수 있으므로 새 배열로 재할당. */
-    if (Array.isArray(pages[i + 1].study_items)) {
-      pages[i + 1].study_items = pages[i + 1].study_items.filter(
-        (it) => it && it.surface && pages[i + 1].original.includes(it.surface)
-      );
-    }
-    if (Array.isArray(pages[i].study_items)) {
-      pages[i].study_items = pages[i].study_items.filter(
-        (it) => it && it.surface && pages[i].original.includes(it.surface)
-      );
-    }
-
-    dirty.add(i);
-    dirty.add(i + 1);
-  }
-  return Array.from(dirty);
-}
-
-/* 봉합된 페이지의 번역을 백그라운드에서 갱신.
-   - 영문 봉합은 동기로 끝났으므로 사용자는 봉합된 영문을 즉시 본다.
-   - 재번역은 페이지마다 독립 호출 → 빠른 페이지부터 차례로 translated 갱신.
-   - 사용자가 마침 그 페이지에 머물러 있으면 즉시 재렌더 (translation toggle 켜진 경우).
-   - 실패 무시: 봉합된 영문은 이미 반영됐고, translated 는 옛 값 유지 (사용 가능 상태). */
-function startPageBoundaryRetranslate(dirtyIndexes, targetLang) {
-  if (!dirtyIndexes || dirtyIndexes.length === 0) return;
-  /* 영어 → 영어 재번역은 의미 없음 */
-  if (targetLang === 'en') return;
-  dirtyIndexes.forEach((idx) => {
-    const page = _pages[idx];
-    if (!page || !page.original) return;
-    retranslateReadingPage(page.original, targetLang)
-      .then((translated) => {
-        if (!translated) return;
-        if (_pages[idx]) {
-          _pages[idx].translated = translated;
-          if (_currentIdx === idx) rerenderPage(idx);
-        }
-      })
-      .catch((e) => {
-        console.warn(`[stitch-retranslate] page ${idx + 1} failed:`, e);
-      });
-  });
 }
 
 /* 진단용 에러 포맷터 — 모바일 등에서 자주 떨어지는 케이스의 원인을 화면에서 즉시 식별.
@@ -1371,12 +1267,6 @@ async function handlePhotos(inputEl) {
       _image: image,
     };
   });
-
-  /* 페이지 경계 단어 조각 봉합 — "grum-" + "bled" → "grumbled".
-     영문은 즉시 갱신되어 renderBook 시 바로 반영. 봉합된 페이지의 번역만
-     백그라운드에서 재번역해 translated 를 보정 (실패해도 본문은 사용 가능). */
-  const dirtyPages = stitchPageBoundaryWords(_pages);
-  startPageBoundaryRetranslate(dirtyPages, lang);
 
   inputEl.value = '';
   _currentIdx = 0;
