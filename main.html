@@ -147,10 +147,13 @@
   .menu-card-hero {
     padding: 36px 28px;
   }
+  /* hero h2 는 일반 카드보다 한 단계 더 강조 — weight 700, 자간 좁혀 헤딩 무게감.
+     desc 와의 간격(14px)도 일반 카드(12px)보다 한 칸 넓혀 hero 위계 강조. */
   .menu-card-hero h2 {
     font-size: 1.5rem;
-    font-weight: 600;
-    margin-bottom: 10px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 14px;
   }
   .menu-card-hero p {
     font-size: 0.98rem;
@@ -184,15 +187,20 @@
     letter-spacing: -0.3px;
     line-height: 1;
   }
+  /* 카드 타이포 위계 — 제목과 설명이 한눈에 구분되도록:
+     - h2: weight 500 → 600 + 자간 살짝 좁혀 무게감 강화
+     - p: 색을 #6B6660 → #8A857F 로 한 단계 더 옅게 (보조 정보임을 명확히)
+     - 둘 사이 마진 6 → 12px 로 넓혀 "한 덩어리지만 두 영역" 시각 분리. */
   .menu-card h2 {
     font-size: 1.15rem;
-    font-weight: 500;
+    font-weight: 600;
+    letter-spacing: -0.01em;
     color: #2D2B28;
-    margin-bottom: 6px;
+    margin-bottom: 12px;
   }
   .menu-card p {
     font-size: 0.9rem;
-    color: #6B6660;
+    color: #8A857F;
   }
   /* 비활성(준비 중) 카드 — 클릭 막고 톤 다운, 우상단에 배지 노출 */
   .menu-card.disabled {
