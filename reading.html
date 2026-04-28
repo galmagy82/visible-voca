@@ -1188,12 +1188,11 @@ async function handlePhotos(inputEl) {
     return;
   }
 
-  /* 갤러리에서 다중 선택 시 OS 가 "탭 순서" 로 FileList 를 넘기는데,
-     iOS/Android 갤러리는 보통 최신순으로 정렬되어 있어 위에서부터 탭하면
-     마지막 페이지가 첫 번째로 들어오는 문제가 있음 → 촬영시각(lastModified)
-     오름차순으로 정렬해 실제 페이지 순서를 복원. 모든 파일의 timestamp 가
-     동일하면 sort 가 안정 정렬이라 picker 순서가 그대로 유지됨. */
-  files.sort((a, b) => (a.lastModified || 0) - (b.lastModified || 0));
+  /* FileList 순서를 그대로 페이지 순서로 사용 — 사용자의 "탭한 순서 = 책 페이지 순서" 의도 존중.
+     이전엔 촬영시각(lastModified) 으로 재정렬했으나, 사용자가 갤러리에서 페이지 순서대로
+     탭한 경우 (가장 흔한 워크플로우) 옛날 사진이 앞으로 밀려 순서가 망가지는 버그가 있었음.
+     Android Chrome 과 iOS Safari 14+ 는 multi-select picker 가 탭 순서 그대로 FileList 를
+     넘기므로, 별도 정렬 없이 그대로 쓰는 것이 가장 일관된 결과를 줌. */
 
   /* GE 게이트 — 미설정 시 모달 호출, 사용자가 취소하면 업로드 중단 */
   const geOk = await ensureGeOrPrompt();
