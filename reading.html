@@ -1656,13 +1656,17 @@ function renderStudyList(items, pageIdx) {
        풀이되어 있으므로 활용형(skidding)만 보여주면 사용자가 매핑하기 어려움. */
     const showLemma = lemma && lemma.toLowerCase() !== surface.toLowerCase();
     const lemmaSpan = showLemma ? `<span class="study-item-lemma">(${safeLemma})</span>` : '';
+    /* 비-단어형(idiom/phrasal_verb/collocation) 만 카테고리 라벨 표시.
+       일반 단어(word) 는 라벨이 학습 전략에 정보 추가 없는 시각 노이즈라 숨김. */
+    const typeLabel = formatStudyType(it.type);
+    const typeSpan = typeLabel ? `<span class="study-item-type">${escapeHtml(typeLabel)}</span>` : '';
     return `
     <li class="study-item-li" id="study-item-${pageIdx}-${i}">
       <div>
         <span class="study-item-surface">${safeSurface}</span>
         ${lemmaSpan}
         <button class="study-item-speak" type="button" data-word="${safeSurface}" title="${safeSpeakLabel}" aria-label="${safeSpeakLabel}">&#128264;</button>
-        <span class="study-item-type">${escapeHtml(formatStudyType(it.type))}</span>
+        ${typeSpan}
         <button class="study-item-geminary" type="button" data-word="${safeLemma}" aria-label="Geminary">
           <svg width="14" height="12" viewBox="0 0 28 24" xmlns="http://www.w3.org/2000/svg">
             <line x1="6" y1="6" x2="15" y2="6" stroke="#4A90D9" stroke-width="1.5" opacity="0.5"/>
@@ -1682,10 +1686,14 @@ function renderStudyList(items, pageIdx) {
   </details>`;
 }
 
-/* 학습 단어 타입을 보기 좋게 (원문 그대로 보여줘도 무방하지만 phrasal_verb → phrasal verb 등 정리) */
+/* 학습 단어 카테고리 라벨 가공.
+   - 'word'/'vocabulary' 는 학습 전략에 정보 추가 없는 일반 단어 → 빈 문자열 반환 (UI 에서 숨김)
+   - 그 외(idiom, phrasal_verb, collocation 등) 는 underscore → space 변환해서 그대로 노출 */
 function formatStudyType(typ) {
   if (!typ) return '';
-  return String(typ).replace(/_/g, ' ');
+  const normalized = String(typ).toLowerCase().trim();
+  if (normalized === 'word' || normalized === 'vocabulary') return '';
+  return normalized.replace(/_/g, ' ');
 }
 
 /* 본문 하이라이트 클릭 → 해당 페이지 학습 단어 항목으로 부드럽게 스크롤 + 짧게 강조 */
