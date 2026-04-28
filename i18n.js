@@ -250,7 +250,7 @@ const I18N = {
     s8PeekDesc: '문틈 사이로 몰래 살짝 들여다보는 느낌',
 
     /* 메인 메뉴 */
-    menuVocaTitle: '이미지 단어장',
+    menuVocaTitle: 'Visual Voca',
     menuVocaDesc: '저장한 단어를 그림과 함께 다시 보고, 퀴즈로 복습하세요',
     menuReadingTitle: 'Novel Reading',
     menuReadingDesc: 'Novel 사진으로 내 레벨에 맞는 학습단어를 정리하세요',
@@ -560,7 +560,7 @@ const I18N = {
     s8PeekDesc: 'Taking a sneaky glance through a gap',
 
     /* Main menu */
-    menuVocaTitle: 'Image Wordbook',
+    menuVocaTitle: 'Visual Voca',
     menuVocaDesc: 'Review your saved words with images and test yourself with quizzes',
     menuReadingTitle: 'Novel Reading',
     menuReadingDesc: 'Turn novel photos into study words tailored to your level',
@@ -866,7 +866,7 @@ const I18N = {
     s8PeekDesc: 'ドアの隙間からこっそり覗き見る感覚',
 
     /* メインメニュー */
-    menuVocaTitle: '画像単語帳',
+    menuVocaTitle: 'Visual Voca',
     menuVocaDesc: '保存した単語を画像で振り返り、クイズで復習しましょう',
     menuReadingTitle: 'Novel Reading',
     menuReadingDesc: 'Novelの写真から、自分のレベルに合った学習単語を整理しましょう',
@@ -1173,7 +1173,7 @@ const I18N = {
     s8PeekDesc: '从门缝里偷偷窥视的感觉',
 
     /* 主菜单 */
-    menuVocaTitle: '图像单词本',
+    menuVocaTitle: 'Visual Voca',
     menuVocaDesc: '用图像复习已保存的单词，并通过测验巩固',
     menuReadingTitle: 'Novel Reading',
     menuReadingDesc: '用小说照片整理符合你水平的学习单词',
@@ -1479,7 +1479,7 @@ const I18N = {
     s8PeekDesc: 'Echar un vistazo furtivo por una rendija',
 
     /* Menú principal */
-    menuVocaTitle: 'Vocabulario con imágenes',
+    menuVocaTitle: 'Visual Voca',
     menuVocaDesc: 'Revisa tus palabras guardadas con imágenes y ponte a prueba con cuestionarios',
     menuReadingTitle: 'Novel Reading',
     menuReadingDesc: 'Convierte fotos de novelas en palabras de estudio a tu nivel',
@@ -1785,7 +1785,7 @@ const I18N = {
     s8PeekDesc: 'Lén nhìn qua khe cửa',
 
     /* Menu chính */
-    menuVocaTitle: 'Sổ từ vựng có hình',
+    menuVocaTitle: 'Visual Voca',
     menuVocaDesc: 'Ôn lại từ đã lưu cùng hình ảnh và kiểm tra bằng câu đố',
     menuReadingTitle: 'Novel Reading',
     menuReadingDesc: 'Biến ảnh tiểu thuyết thành từ vựng học tập phù hợp với trình độ của bạn',
@@ -2091,7 +2091,7 @@ const I18N = {
     s8PeekDesc: 'แอบมองผ่านช่องประตูอย่างลับๆ',
 
     /* เมนูหลัก */
-    menuVocaTitle: 'คลังคำศัพท์ภาพ',
+    menuVocaTitle: 'Visual Voca',
     menuVocaDesc: 'ทบทวนคำที่บันทึกไว้พร้อมภาพและทดสอบด้วยแบบทดสอบ',
     menuReadingTitle: 'Novel Reading',
     menuReadingDesc: 'เปลี่ยนภาพนิยายเป็นคำศัพท์ที่เหมาะกับระดับของคุณ',
@@ -2397,7 +2397,7 @@ const I18N = {
     s8PeekDesc: 'Espiar por uma fresta de forma sorrateira',
 
     /* Menu principal */
-    menuVocaTitle: 'Caderno com imagens',
+    menuVocaTitle: 'Visual Voca',
     menuVocaDesc: 'Revise suas palavras salvas com imagens e teste-se com quizzes',
     menuReadingTitle: 'Novel Reading',
     menuReadingDesc: 'Transforme fotos de romances em palavras de estudo no seu nível',
