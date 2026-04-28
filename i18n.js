@@ -252,13 +252,13 @@ const I18N = {
     /* 메인 메뉴 */
     menuVocaTitle: '이미지 단어장',
     menuVocaDesc: '저장한 단어를 그림과 함께 다시 보고, 퀴즈로 복습하세요',
-    menuReadingTitle: 'Reading Tutor',
+    menuReadingTitle: 'Novel Reading',
     menuReadingDesc: 'Novel 사진으로 내 레벨에 맞는 학습단어를 정리하세요',
-    menuWritingTitle: 'Writing Tutor',
+    menuWritingTitle: 'Essay Writing',
     menuWritingDesc: '에세이를 코칭받고, 나만의 그림책으로 만들어보세요',
     menuComingSoon: '준비 중',
 
-    /* Reading Tutor */
+    /* Novel Reading */
     readingIntroDesc: '책 페이지 사진들을 올려보세요.\n내 영어 레벨에 맞는 학습 단어를 알려주고, 책으로 저장할 수 있습니다.',
     readingUploadBtn: '📂 책 사진 올리기',
     readingUploadHint: '앞페이지부터 차례로 찍은 사진을 올리세요.\n선택한 순서대로 페이지가 됩니다 (최대 30장).',
@@ -277,9 +277,9 @@ const I18N = {
     readingRetryingAll: '재시도 중...',
     readingError: '추출 중 오류가 발생했습니다. 다시 시도해 주세요.',
     readingBackToMain: '메인화면',
-    readingBackToReadingTutor: 'Reading Tutor',
+    readingBackToReadingTutor: 'Novel Reading',
     readingBackToBookList: 'My Books',
-    /* Reading Tutor — 책 저장 / 내 책 / 학습 단어 */
+    /* Novel Reading — 책 저장 / 내 책 / 학습 단어 */
     readingMyBooks: '📚 My Books',
     readingMyBooksEmpty: '아직 저장한 책이 없어요',
     readingNewBookUpload: '+ 새 책 올리기',
@@ -296,8 +296,8 @@ const I18N = {
     readingSaveError: '책 저장에 실패했어요',
     readingDeleteError: '책 삭제에 실패했어요',
     readingGeRequiredTitle: '내 영어 레벨이 필요해요',
-    readingGeRequiredDesc: 'Reading Tutor 는 내 영어 레벨에 맞는 단어를 추천하기 위해 레벨이 필요해요',
-    /* Reading Tutor — ⚙️ 설정 모달 */
+    readingGeRequiredDesc: 'Novel Reading 는 내 영어 레벨에 맞는 단어를 추천하기 위해 레벨이 필요해요',
+    /* Novel Reading — ⚙️ 설정 모달 */
     readingSettingsTitle: 'Reading 설정',
     readingMeaningLangLabel: '단어 설명 언어',
     readingMeaningLangNative: '모국어',
@@ -309,7 +309,7 @@ const I18N = {
     /* Features 요약 섹션 (s-features) — 웰컴 페이지 하단 4카드 */
     featuresTitle: 'Geminary가 다른 이유',
     featuresSubtitle: '단어를 외우는 방식을 바꾸는 4가지 핵심',
-    /* Reading Tutor 카드 — Welcome 페이지 features 섹션의 첫 번째 카드.
+    /* Novel Reading 카드 — Welcome 페이지 features 섹션의 첫 번째 카드.
        사진 업로드 → 학습 단어 자동 정리 라는 핵심 가치를 한 줄로 전달. */
     readingFeatureTitle: 'Novel 페이지가 영어 교재로',
     readingFeatureDesc: '책 사진을 올리면 AI가 내 레벨에 맞는 학습 단어를 정리해줘요',
@@ -561,13 +561,13 @@ const I18N = {
     /* Main menu */
     menuVocaTitle: 'Image Wordbook',
     menuVocaDesc: 'Review your saved words with images and test yourself with quizzes',
-    menuReadingTitle: 'Reading Tutor',
+    menuReadingTitle: 'Novel Reading',
     menuReadingDesc: 'Turn novel photos into study words tailored to your level',
-    menuWritingTitle: 'Writing Tutor',
+    menuWritingTitle: 'Essay Writing',
     menuWritingDesc: 'Get essay coaching and create your own picture book',
     menuComingSoon: 'Coming soon',
 
-    /* Reading Tutor */
+    /* Novel Reading */
     readingIntroDesc: 'Upload photos of your book pages.\nWe\'ll find study words matched to your English level and let you save them as a book.',
     readingUploadBtn: '📂 Upload book photos',
     readingUploadHint: 'Photograph pages in order.\nPages appear in the order you select them (up to 30).',
@@ -585,9 +585,9 @@ const I18N = {
     readingRetryingAll: 'Retrying...',
     readingError: 'An error occurred while extracting. Please try again.',
     readingBackToMain: 'Home',
-    readingBackToReadingTutor: 'Reading Tutor',
+    readingBackToReadingTutor: 'Novel Reading',
     readingBackToBookList: 'My Books',
-    /* Reading Tutor — book save / my books / study items */
+    /* Novel Reading — book save / my books / study items */
     readingMyBooks: '📚 My Books',
     readingMyBooksEmpty: 'No saved books yet',
     readingNewBookUpload: '+ Upload new book',
@@ -604,7 +604,7 @@ const I18N = {
     readingSaveError: 'Failed to save the book',
     readingDeleteError: 'Failed to delete the book',
     readingGeRequiredTitle: 'Your English level is needed',
-    readingGeRequiredDesc: 'Reading Tutor needs your level to recommend words tailored to you',
+    readingGeRequiredDesc: 'Novel Reading needs your level to recommend words tailored to you',
     readingSettingsTitle: 'Reading settings',
     readingMeaningLangLabel: 'Word meaning language',
     readingMeaningLangNative: 'My language',
@@ -866,13 +866,13 @@ const I18N = {
     /* メインメニュー */
     menuVocaTitle: '画像単語帳',
     menuVocaDesc: '保存した単語を画像で振り返り、クイズで復習しましょう',
-    menuReadingTitle: 'Reading Tutor',
+    menuReadingTitle: 'Novel Reading',
     menuReadingDesc: 'Novelの写真から、自分のレベルに合った学習単語を整理しましょう',
-    menuWritingTitle: 'Writing Tutor',
+    menuWritingTitle: 'Essay Writing',
     menuWritingDesc: 'エッセイのコーチングを受けて、自分だけの絵本を作りましょう',
     menuComingSoon: '準備中',
 
-    /* Reading Tutor */
+    /* Novel Reading */
     readingIntroDesc: '本のページの写真をアップロードしてください。\nあなたの英語レベルに合った学習単語を表示し、本として保存できます。',
     readingUploadBtn: '📂 本の写真をアップロード',
     readingUploadHint: 'ページ順に撮影してアップロードしてください。\n選択した順にページとして並びます（最大30枚）。',
@@ -890,9 +890,9 @@ const I18N = {
     readingRetryingAll: '再試行中...',
     readingError: '抽出中にエラーが発生しました。もう一度お試しください。',
     readingBackToMain: 'メイン',
-    readingBackToReadingTutor: 'Reading Tutor',
+    readingBackToReadingTutor: 'Novel Reading',
     readingBackToBookList: 'My Books',
-    /* Reading Tutor — 本の保存 / マイブック / 学習アイテム */
+    /* Novel Reading — 本の保存 / マイブック / 学習アイテム */
     readingMyBooks: '📚 My Books',
     readingMyBooksEmpty: 'まだ保存した本はありません',
     readingNewBookUpload: '+ 新しい本をアップロード',
@@ -909,7 +909,7 @@ const I18N = {
     readingSaveError: '本の保存に失敗しました',
     readingDeleteError: '本の削除に失敗しました',
     readingGeRequiredTitle: '英語レベルの設定が必要です',
-    readingGeRequiredDesc: 'Reading Tutor は、あなたのレベルに合った単語を提案するためにレベルが必要です',
+    readingGeRequiredDesc: 'Novel Reading は、あなたのレベルに合った単語を提案するためにレベルが必要です',
     readingSettingsTitle: 'Reading 設定',
     readingMeaningLangLabel: '単語の説明言語',
     readingMeaningLangNative: '母国語',
@@ -1172,13 +1172,13 @@ const I18N = {
     /* 主菜单 */
     menuVocaTitle: '图像单词本',
     menuVocaDesc: '用图像复习已保存的单词，并通过测验巩固',
-    menuReadingTitle: 'Reading Tutor',
+    menuReadingTitle: 'Novel Reading',
     menuReadingDesc: '用小说照片整理符合你水平的学习单词',
-    menuWritingTitle: 'Writing Tutor',
+    menuWritingTitle: 'Essay Writing',
     menuWritingDesc: '获得作文辅导，制作属于你的绘本',
     menuComingSoon: '即将推出',
 
-    /* Reading Tutor */
+    /* Novel Reading */
     readingIntroDesc: '请上传书页照片。\n我们会根据您的英语水平推荐学习词汇，并可保存为书籍。',
     readingUploadBtn: '📂 上传书页照片',
     readingUploadHint: '请按页面顺序拍照后上传。\n按选择顺序排列为页面（最多30张）。',
@@ -1196,9 +1196,9 @@ const I18N = {
     readingRetryingAll: '重试中...',
     readingError: '提取时发生错误，请重试。',
     readingBackToMain: '主页',
-    readingBackToReadingTutor: 'Reading Tutor',
+    readingBackToReadingTutor: 'Novel Reading',
     readingBackToBookList: 'My Books',
-    /* Reading Tutor — 保存书籍 / 我的书 / 学习单词 */
+    /* Novel Reading — 保存书籍 / 我的书 / 学习单词 */
     readingMyBooks: '📚 My Books',
     readingMyBooksEmpty: '还没有保存的书',
     readingNewBookUpload: '+ 上传新书',
@@ -1215,7 +1215,7 @@ const I18N = {
     readingSaveError: '保存书籍失败',
     readingDeleteError: '删除书籍失败',
     readingGeRequiredTitle: '需要设置英语水平',
-    readingGeRequiredDesc: 'Reading Tutor 需要您的水平来推荐适合您的单词',
+    readingGeRequiredDesc: 'Novel Reading 需要您的水平来推荐适合您的单词',
     readingSettingsTitle: 'Reading 设置',
     readingMeaningLangLabel: '单词解释语言',
     readingMeaningLangNative: '母语',
@@ -1477,13 +1477,13 @@ const I18N = {
     /* Menú principal */
     menuVocaTitle: 'Vocabulario con imágenes',
     menuVocaDesc: 'Revisa tus palabras guardadas con imágenes y ponte a prueba con cuestionarios',
-    menuReadingTitle: 'Reading Tutor',
+    menuReadingTitle: 'Novel Reading',
     menuReadingDesc: 'Convierte fotos de novelas en palabras de estudio a tu nivel',
-    menuWritingTitle: 'Writing Tutor',
+    menuWritingTitle: 'Essay Writing',
     menuWritingDesc: 'Recibe coaching de escritura y crea tu propio libro ilustrado',
     menuComingSoon: 'Próximamente',
 
-    /* Reading Tutor */
+    /* Novel Reading */
     readingIntroDesc: 'Sube fotos de las páginas del libro.\nTe mostraremos palabras de estudio adaptadas a tu nivel de inglés y podrás guardarlas como libro.',
     readingUploadBtn: '📂 Subir fotos del libro',
     readingUploadHint: 'Fotografía las páginas en orden y súbelas.\nLas páginas aparecen en el orden en que las seleccionas (hasta 30).',
@@ -1501,9 +1501,9 @@ const I18N = {
     readingRetryingAll: 'Reintentando...',
     readingError: 'Ocurrió un error al extraer. Inténtalo de nuevo.',
     readingBackToMain: 'Inicio',
-    readingBackToReadingTutor: 'Reading Tutor',
+    readingBackToReadingTutor: 'Novel Reading',
     readingBackToBookList: 'My Books',
-    /* Reading Tutor — guardar libro / mis libros / elementos de estudio */
+    /* Novel Reading — guardar libro / mis libros / elementos de estudio */
     readingMyBooks: '📚 My Books',
     readingMyBooksEmpty: 'Aún no hay libros guardados',
     readingNewBookUpload: '+ Subir libro nuevo',
@@ -1520,7 +1520,7 @@ const I18N = {
     readingSaveError: 'No se pudo guardar el libro',
     readingDeleteError: 'No se pudo eliminar el libro',
     readingGeRequiredTitle: 'Se necesita tu nivel de inglés',
-    readingGeRequiredDesc: 'Reading Tutor necesita tu nivel para recomendar palabras adaptadas a ti',
+    readingGeRequiredDesc: 'Novel Reading necesita tu nivel para recomendar palabras adaptadas a ti',
     readingSettingsTitle: 'Ajustes de Reading',
     readingMeaningLangLabel: 'Idioma de la definición',
     readingMeaningLangNative: 'Mi idioma',
@@ -1782,13 +1782,13 @@ const I18N = {
     /* Menu chính */
     menuVocaTitle: 'Sổ từ vựng có hình',
     menuVocaDesc: 'Ôn lại từ đã lưu cùng hình ảnh và kiểm tra bằng câu đố',
-    menuReadingTitle: 'Reading Tutor',
+    menuReadingTitle: 'Novel Reading',
     menuReadingDesc: 'Biến ảnh tiểu thuyết thành từ vựng học tập phù hợp với trình độ của bạn',
-    menuWritingTitle: 'Writing Tutor',
+    menuWritingTitle: 'Essay Writing',
     menuWritingDesc: 'Nhận hướng dẫn viết luận và tạo sách tranh của riêng bạn',
     menuComingSoon: 'Sắp ra mắt',
 
-    /* Reading Tutor */
+    /* Novel Reading */
     readingIntroDesc: 'Hãy tải lên ảnh các trang sách.\nChúng tôi sẽ gợi ý từ vựng phù hợp với trình độ tiếng Anh của bạn và có thể lưu thành sách.',
     readingUploadBtn: '📂 Tải ảnh sách lên',
     readingUploadHint: 'Hãy chụp các trang theo thứ tự rồi tải lên.\nCác trang xuất hiện theo thứ tự bạn chọn (tối đa 30 ảnh).',
@@ -1806,9 +1806,9 @@ const I18N = {
     readingRetryingAll: 'Đang thử lại...',
     readingError: 'Đã xảy ra lỗi khi trích xuất. Vui lòng thử lại.',
     readingBackToMain: 'Trang chính',
-    readingBackToReadingTutor: 'Reading Tutor',
+    readingBackToReadingTutor: 'Novel Reading',
     readingBackToBookList: 'My Books',
-    /* Reading Tutor — lưu sách / sách của tôi / mục học */
+    /* Novel Reading — lưu sách / sách của tôi / mục học */
     readingMyBooks: '📚 My Books',
     readingMyBooksEmpty: 'Chưa có sách đã lưu',
     readingNewBookUpload: '+ Tải lên sách mới',
@@ -1825,7 +1825,7 @@ const I18N = {
     readingSaveError: 'Không thể lưu sách',
     readingDeleteError: 'Không thể xóa sách',
     readingGeRequiredTitle: 'Cần biết trình độ tiếng Anh của bạn',
-    readingGeRequiredDesc: 'Reading Tutor cần trình độ của bạn để đề xuất từ phù hợp',
+    readingGeRequiredDesc: 'Novel Reading cần trình độ của bạn để đề xuất từ phù hợp',
     readingSettingsTitle: 'Cài đặt Reading',
     readingMeaningLangLabel: 'Ngôn ngữ giải nghĩa',
     readingMeaningLangNative: 'Tiếng mẹ đẻ',
@@ -2087,13 +2087,13 @@ const I18N = {
     /* เมนูหลัก */
     menuVocaTitle: 'คลังคำศัพท์ภาพ',
     menuVocaDesc: 'ทบทวนคำที่บันทึกไว้พร้อมภาพและทดสอบด้วยแบบทดสอบ',
-    menuReadingTitle: 'Reading Tutor',
+    menuReadingTitle: 'Novel Reading',
     menuReadingDesc: 'เปลี่ยนภาพนิยายเป็นคำศัพท์ที่เหมาะกับระดับของคุณ',
-    menuWritingTitle: 'Writing Tutor',
+    menuWritingTitle: 'Essay Writing',
     menuWritingDesc: 'รับการฝึกเขียนเรียงความและสร้างหนังสือภาพของคุณเอง',
     menuComingSoon: 'เร็วๆ นี้',
 
-    /* Reading Tutor */
+    /* Novel Reading */
     readingIntroDesc: 'อัปโหลดภาพหน้าหนังสือของคุณ\nเราจะแนะนำคำศัพท์ที่เหมาะกับระดับภาษาอังกฤษของคุณ และบันทึกเป็นหนังสือได้',
     readingUploadBtn: '📂 อัปโหลดภาพหนังสือ',
     readingUploadHint: 'ถ่ายภาพหน้าตามลำดับแล้วอัปโหลด\nหน้าจะเรียงตามลำดับที่คุณเลือก (สูงสุด 30 ภาพ)',
@@ -2111,9 +2111,9 @@ const I18N = {
     readingRetryingAll: 'กำลังลองอีกครั้ง...',
     readingError: 'เกิดข้อผิดพลาดขณะแยกข้อความ กรุณาลองใหม่',
     readingBackToMain: 'หน้าหลัก',
-    readingBackToReadingTutor: 'Reading Tutor',
+    readingBackToReadingTutor: 'Novel Reading',
     readingBackToBookList: 'My Books',
-    /* Reading Tutor — บันทึกหนังสือ / หนังสือของฉัน / รายการเรียน */
+    /* Novel Reading — บันทึกหนังสือ / หนังสือของฉัน / รายการเรียน */
     readingMyBooks: '📚 My Books',
     readingMyBooksEmpty: 'ยังไม่มีหนังสือที่บันทึกไว้',
     readingNewBookUpload: '+ อัปโหลดหนังสือใหม่',
@@ -2130,7 +2130,7 @@ const I18N = {
     readingSaveError: 'บันทึกหนังสือล้มเหลว',
     readingDeleteError: 'ลบหนังสือล้มเหลว',
     readingGeRequiredTitle: 'ต้องระบุระดับภาษาอังกฤษของคุณ',
-    readingGeRequiredDesc: 'Reading Tutor ต้องการระดับของคุณเพื่อแนะนำคำที่เหมาะสม',
+    readingGeRequiredDesc: 'Novel Reading ต้องการระดับของคุณเพื่อแนะนำคำที่เหมาะสม',
     readingSettingsTitle: 'การตั้งค่า Reading',
     readingMeaningLangLabel: 'ภาษาคำอธิบาย',
     readingMeaningLangNative: 'ภาษาแม่',
@@ -2392,13 +2392,13 @@ const I18N = {
     /* Menu principal */
     menuVocaTitle: 'Caderno com imagens',
     menuVocaDesc: 'Revise suas palavras salvas com imagens e teste-se com quizzes',
-    menuReadingTitle: 'Reading Tutor',
+    menuReadingTitle: 'Novel Reading',
     menuReadingDesc: 'Transforme fotos de romances em palavras de estudo no seu nível',
-    menuWritingTitle: 'Writing Tutor',
+    menuWritingTitle: 'Essay Writing',
     menuWritingDesc: 'Receba coaching de redação e crie seu próprio livro ilustrado',
     menuComingSoon: 'Em breve',
 
-    /* Reading Tutor */
+    /* Novel Reading */
     readingIntroDesc: 'Envie fotos das páginas do livro.\nMostraremos palavras de estudo adequadas ao seu nível de inglês e poderá salvá-las como livro.',
     readingUploadBtn: '📂 Enviar fotos do livro',
     readingUploadHint: 'Fotografe as páginas em ordem e envie.\nAs páginas aparecem na ordem em que você as seleciona (até 30).',
@@ -2416,9 +2416,9 @@ const I18N = {
     readingRetryingAll: 'Tentando novamente...',
     readingError: 'Ocorreu um erro ao extrair. Tente novamente.',
     readingBackToMain: 'Início',
-    readingBackToReadingTutor: 'Reading Tutor',
+    readingBackToReadingTutor: 'Novel Reading',
     readingBackToBookList: 'My Books',
-    /* Reading Tutor — salvar livro / meus livros / itens de estudo */
+    /* Novel Reading — salvar livro / meus livros / itens de estudo */
     readingMyBooks: '📚 My Books',
     readingMyBooksEmpty: 'Ainda não há livros salvos',
     readingNewBookUpload: '+ Enviar novo livro',
@@ -2435,7 +2435,7 @@ const I18N = {
     readingSaveError: 'Falha ao salvar o livro',
     readingDeleteError: 'Falha ao excluir o livro',
     readingGeRequiredTitle: 'Precisamos do seu nível de inglês',
-    readingGeRequiredDesc: 'Reading Tutor precisa do seu nível para recomendar palavras adequadas',
+    readingGeRequiredDesc: 'Novel Reading precisa do seu nível para recomendar palavras adequadas',
     readingSettingsTitle: 'Ajustes do Reading',
     readingMeaningLangLabel: 'Idioma da definição',
     readingMeaningLangNative: 'Meu idioma',

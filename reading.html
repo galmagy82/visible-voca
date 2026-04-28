@@ -17,7 +17,7 @@
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Reading Tutor — Geminary</title>
+<title>Novel Reading — Geminary</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg?v=2">
 <!-- Supabase JS — 인증 세션 확인용 (vocabulary.html 와 동일 cdn) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -133,7 +133,7 @@
     white-space: pre-line;
   }
 
-  /* Reading Tutor 첫 화면 소개 — 업로드 영역 안 버튼 위쪽에 표시.
+  /* Novel Reading 첫 화면 소개 — 업로드 영역 안 버튼 위쪽에 표시.
      uploadArea 자체가 업로드 화면에서만 보이므로 추가 노출 조건 불필요. */
   .reading-intro {
     margin-bottom: 28px;
@@ -774,13 +774,13 @@
     </div>
   </div>
   <!-- 2단: 페이지 제목 (큰 헤딩) -->
-  <h1 class="page-heading" id="readingPageHeading" data-i18n="menuReadingTitle">Reading Tutor</h1>
+  <h1 class="page-heading" id="readingPageHeading" data-i18n="menuReadingTitle">Novel Reading</h1>
 
   <!-- 업로드 영역 (초기 상태)
        업로드 버튼 클릭 시점에 GE 게이트 → 통과 시에만 파일 피커 오픈.
        (handlePhotos 안에도 동일 게이트가 있어 다른 진입 경로에서도 안전) -->
   <div class="upload-area" id="uploadArea">
-    <!-- Reading Tutor 소개: 한 줄 설명 + 좌·우 예시 이미지 2장.
+    <!-- Novel Reading 소개: 한 줄 설명 + 좌·우 예시 이미지 2장.
          업로드 화면(uploadArea)에서만 노출 — My Books / 뷰어 화면에서는 영역 자체가 hidden. -->
     <div class="reading-intro">
       <p class="reading-intro-desc" data-i18n="readingIntroDesc">책 페이지 사진들을 올려보세요.
@@ -813,7 +813,7 @@
   </div>
 
   <!-- 내 책 목록 (저장된 책 카드 그리드).
-       "+ 새 책 올리기" 버튼은 제거 — 같은 동작이 상단 뒤로가기("← Reading Tutor") 로 통일됨.
+       "+ 새 책 올리기" 버튼은 제거 — 같은 동작이 상단 뒤로가기("← Novel Reading") 로 통일됨.
        섹션 헤더("📚 My Books") 도 제거 — 동일한 화면 진입 시 상단 h1 자체가
        "📚 My Books" 로 바뀌므로 중복 표시 방지 (updateTopBackLink 참고). -->
   <div class="book-list-area" id="bookListArea" hidden>
@@ -832,7 +832,7 @@
     <div class="book-toolbar">
       <div class="toolbar-left">
         <!-- 저장된 책을 보고 있을 때만 표시되는 배지.
-             "↻ 새로 올리기" 버튼은 제거 — 같은 동작이 상단 뒤로가기("← Reading Tutor") 로 통일됨. -->
+             "↻ 새로 올리기" 버튼은 제거 — 같은 동작이 상단 뒤로가기("← Novel Reading") 로 통일됨. -->
         <span class="saved-badge" id="savedBadge" data-i18n="readingSavedIndicator" hidden>저장된 책</span>
       </div>
       <div class="toolbar-right">
@@ -910,7 +910,7 @@
 </div>
 
 <script>
-/* ===== Reading Tutor ===== */
+/* ===== Novel Reading ===== */
 
 /* --- Supabase 초기화 (vocabulary.html 와 동일 키) --- */
 const SUPABASE_URL = 'https://grdtxvpebjtfhuqdngfn.supabase.co';
@@ -1034,7 +1034,7 @@ function applyI18nForReading() {
   const lang = (typeof getLang === 'function') ? getLang() : 'ko';
   document.documentElement.lang = lang;
   if (typeof applyI18n === 'function') applyI18n();
-  document.title = ((typeof t === 'function') ? t('menuReadingTitle') : 'Reading Tutor') + ' — Geminary';
+  document.title = ((typeof t === 'function') ? t('menuReadingTitle') : 'Novel Reading') + ' — Geminary';
 }
 
 /* --- 번역 토글 초기 설정: UI 언어가 영어면 버튼 숨김 --- */
@@ -1238,7 +1238,7 @@ let _showTranslated = false;
 let _completedCount = 0;
 /* "My Books" 화면을 거쳐 책 뷰어에 진입했는지 여부 — 뒤로가기 라벨/목적지 결정 전용.
    true: 뷰어에서 뒤로가기 → "← My Books"
-   false: 뷰어에서 뒤로가기 → "← Reading Tutor" (업로드 화면)
+   false: 뷰어에서 뒤로가기 → "← Novel Reading" (업로드 화면)
    주의: "저장됐냐" 와는 별개 개념. 저장 여부는 _currentBookId !== null 로 판단.
    (예: 새로 올린 책을 저장해도 _isSavedView 는 false 유지 — 사용자는 여전히 새 업로드 세션 중) */
 let _isSavedView = false;
@@ -1380,10 +1380,10 @@ function updateBookViewerToolbar() {
 }
 
 /* 상단 뒤로가기 링크 라벨/동작 + 페이지 제목(h1) 을 현재 화면 상태에 맞춰 갱신.
-   - 업로드 화면: h1 "Reading Tutor" / 뒤로가기 "← 메인화면" → main.html
-   - 책 목록: h1 "📚 My Books" / 뒤로가기 "← Reading Tutor" → 업로드 화면
+   - 업로드 화면: h1 "Novel Reading" / 뒤로가기 "← 메인화면" → main.html
+   - 책 목록: h1 "📚 My Books" / 뒤로가기 "← Novel Reading" → 업로드 화면
    - 책 뷰어 (제목 있음): h1 = 책 제목 / 뒤로가기는 _isSavedView 에 따라
-   - 책 뷰어 (제목 없음, 새 업로드 미저장): h1 "Reading Tutor" / "← Reading Tutor" → 업로드
+   - 책 뷰어 (제목 없음, 새 업로드 미저장): h1 "Novel Reading" / "← Novel Reading" → 업로드
    화면 전환이 일어나는 모든 함수 끝에서 호출. */
 function updateTopBackLink() {
   const link = document.getElementById('topBackLink');
@@ -1397,7 +1397,7 @@ function updateTopBackLink() {
   /* 페이지 제목 — 화면별 분기:
      - 책 목록: "📚 My Books"
      - 책 뷰어 + 제목 있음: 사용자 데이터(책 제목) 표시 — data-i18n 제거해서 언어 전환에 덮어쓰기 방지
-     - 그 외 (업로드/로딩/제목 없는 새 책): "Reading Tutor" */
+     - 그 외 (업로드/로딩/제목 없는 새 책): "Novel Reading" */
   if (heading) {
     if (bookListVisible) {
       heading.setAttribute('data-i18n', 'readingMyBooks');
@@ -1407,7 +1407,7 @@ function updateTopBackLink() {
       heading.textContent = _currentBookTitle;
     } else {
       heading.setAttribute('data-i18n', 'menuReadingTitle');
-      heading.textContent = tt('menuReadingTitle', 'Reading Tutor');
+      heading.textContent = tt('menuReadingTitle', 'Novel Reading');
     }
   }
 
@@ -1415,7 +1415,7 @@ function updateTopBackLink() {
   if (bookListVisible) {
     link.href = '#';
     link.setAttribute('data-i18n', 'readingBackToReadingTutor');
-    link.textContent = tt('readingBackToReadingTutor', 'Reading Tutor');
+    link.textContent = tt('readingBackToReadingTutor', 'Novel Reading');
     link.onclick = (e) => { e.preventDefault(); backToUpload(); };
   } else if (bookViewerVisible && _isSavedView) {
     link.href = '#';
@@ -1425,7 +1425,7 @@ function updateTopBackLink() {
   } else if (bookViewerVisible) {
     link.href = '#';
     link.setAttribute('data-i18n', 'readingBackToReadingTutor');
-    link.textContent = tt('readingBackToReadingTutor', 'Reading Tutor');
+    link.textContent = tt('readingBackToReadingTutor', 'Novel Reading');
     link.onclick = (e) => { e.preventDefault(); resetReading(); };
   } else {
     /* 업로드 화면(또는 로딩 중) — 메인으로 직행 */
@@ -1435,7 +1435,7 @@ function updateTopBackLink() {
     link.onclick = null;
   }
 
-  /* 내 영어 레벨 칩 + ⚙️ 설정 — 업로드 화면(=Reading Tutor 진입 상태)에서만 노출.
+  /* 내 영어 레벨 칩 + ⚙️ 설정 — 업로드 화면(=Novel Reading 진입 상태)에서만 노출.
      이유: 둘 다 "다음에 추출할 책의 레벨/언어 설정" 도구라 이미 추출 끝난 책을 볼 때
      (My Books 목록 / 책 뷰어) 노출하면 "여기서 바꾸면 결과가 바뀌나?" 헷갈림만 만든다.
      ⚙️ 는 인증된 유저에게만 노출되는 추가 조건도 같이 충족시켜야 함. */
@@ -2081,12 +2081,12 @@ async function saveCurrentBook() {
     if (error) throw error;
     /* 저장 후: _currentBookId 만 set 해서 "이미 저장됨(=배지)" 상태로 토글.
        _isSavedView 는 false 유지 — 사용자는 책 목록을 거치지 않았으므로 뒤로가기는
-       여전히 "← Reading Tutor" 가 맞음. */
+       여전히 "← Novel Reading" 가 맞음. */
     _currentBookId = data.id;
     _currentBookTitle = title;
     closeSaveBookModal();
     updateBookViewerToolbar();
-    /* 저장 직후 상단 h1 을 "Reading Tutor" → 방금 입력한 책 제목으로 즉시 반영 */
+    /* 저장 직후 상단 h1 을 "Novel Reading" → 방금 입력한 책 제목으로 즉시 반영 */
     updateTopBackLink();
   } catch (e) {
     console.error('save book 실패:', e);
