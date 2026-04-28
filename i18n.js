@@ -261,7 +261,7 @@ const I18N = {
     /* Reading Tutor */
     readingIntroDesc: '책 페이지 사진들을 올려보세요.\n내 영어 레벨에 맞는 학습 단어를 알려주고, 책으로 저장할 수 있습니다.',
     readingUploadBtn: '📂 책 사진 올리기',
-    readingUploadHint: '앞페이지부터 차례로 찍은 사진을 올리세요.\n촬영 시각 순서대로 자동 정렬됩니다 (최대 30장).',
+    readingUploadHint: '앞페이지부터 차례로 찍은 사진을 올리세요.\n선택한 순서대로 페이지가 됩니다 (최대 30장).',
     readingExtracting: '텍스트 추출 중...',
     readingTranslate: '번역',
     readingShowOriginal: '원문',
@@ -566,7 +566,7 @@ const I18N = {
     /* Reading Tutor */
     readingIntroDesc: 'Upload photos of your book pages.\nWe\'ll find study words matched to your English level and let you save them as a book.',
     readingUploadBtn: '📂 Upload book photos',
-    readingUploadHint: 'Photograph pages in order.\nThey\'ll be auto-sorted by capture time (up to 30).',
+    readingUploadHint: 'Photograph pages in order.\nPages appear in the order you select them (up to 30).',
     readingExtracting: 'Extracting text...',
     readingTranslate: 'Translate',
     readingShowOriginal: 'Original',
@@ -868,7 +868,7 @@ const I18N = {
     /* Reading Tutor */
     readingIntroDesc: '本のページの写真をアップロードしてください。\nあなたの英語レベルに合った学習単語を表示し、本として保存できます。',
     readingUploadBtn: '📂 本の写真をアップロード',
-    readingUploadHint: 'ページ順に撮影してアップロードしてください。\n撮影時刻で自動的に並びます（最大30枚）。',
+    readingUploadHint: 'ページ順に撮影してアップロードしてください。\n選択した順にページとして並びます（最大30枚）。',
     readingExtracting: 'テキストを抽出中...',
     readingTranslate: '翻訳',
     readingShowOriginal: '原文',
@@ -1171,7 +1171,7 @@ const I18N = {
     /* Reading Tutor */
     readingIntroDesc: '请上传书页照片。\n我们会根据您的英语水平推荐学习词汇，并可保存为书籍。',
     readingUploadBtn: '📂 上传书页照片',
-    readingUploadHint: '请按页面顺序拍照后上传。\n将按拍摄时间自动排序（最多30张）。',
+    readingUploadHint: '请按页面顺序拍照后上传。\n按选择顺序排列为页面（最多30张）。',
     readingExtracting: '正在提取文本...',
     readingTranslate: '翻译',
     readingShowOriginal: '原文',
@@ -1473,7 +1473,7 @@ const I18N = {
     /* Reading Tutor */
     readingIntroDesc: 'Sube fotos de las páginas del libro.\nTe mostraremos palabras de estudio adaptadas a tu nivel de inglés y podrás guardarlas como libro.',
     readingUploadBtn: '📂 Subir fotos del libro',
-    readingUploadHint: 'Fotografía las páginas en orden y súbelas.\nSe ordenarán automáticamente por hora de captura (hasta 30).',
+    readingUploadHint: 'Fotografía las páginas en orden y súbelas.\nLas páginas aparecen en el orden en que las seleccionas (hasta 30).',
     readingExtracting: 'Extrayendo texto...',
     readingTranslate: 'Traducir',
     readingShowOriginal: 'Original',
@@ -1775,7 +1775,7 @@ const I18N = {
     /* Reading Tutor */
     readingIntroDesc: 'Hãy tải lên ảnh các trang sách.\nChúng tôi sẽ gợi ý từ vựng phù hợp với trình độ tiếng Anh của bạn và có thể lưu thành sách.',
     readingUploadBtn: '📂 Tải ảnh sách lên',
-    readingUploadHint: 'Hãy chụp các trang theo thứ tự rồi tải lên.\nẢnh sẽ được tự động sắp xếp theo thời gian chụp (tối đa 30 ảnh).',
+    readingUploadHint: 'Hãy chụp các trang theo thứ tự rồi tải lên.\nCác trang xuất hiện theo thứ tự bạn chọn (tối đa 30 ảnh).',
     readingExtracting: 'Đang trích xuất văn bản...',
     readingTranslate: 'Dịch',
     readingShowOriginal: 'Bản gốc',
@@ -2077,7 +2077,7 @@ const I18N = {
     /* Reading Tutor */
     readingIntroDesc: 'อัปโหลดภาพหน้าหนังสือของคุณ\nเราจะแนะนำคำศัพท์ที่เหมาะกับระดับภาษาอังกฤษของคุณ และบันทึกเป็นหนังสือได้',
     readingUploadBtn: '📂 อัปโหลดภาพหนังสือ',
-    readingUploadHint: 'ถ่ายภาพหน้าตามลำดับแล้วอัปโหลด\nระบบจะจัดเรียงตามเวลาถ่ายอัตโนมัติ (สูงสุด 30 ภาพ)',
+    readingUploadHint: 'ถ่ายภาพหน้าตามลำดับแล้วอัปโหลด\nหน้าจะเรียงตามลำดับที่คุณเลือก (สูงสุด 30 ภาพ)',
     readingExtracting: 'กำลังแยกข้อความ...',
     readingTranslate: 'แปล',
     readingShowOriginal: 'ต้นฉบับ',
@@ -2379,7 +2379,7 @@ const I18N = {
     /* Reading Tutor */
     readingIntroDesc: 'Envie fotos das páginas do livro.\nMostraremos palavras de estudo adequadas ao seu nível de inglês e poderá salvá-las como livro.',
     readingUploadBtn: '📂 Enviar fotos do livro',
-    readingUploadHint: 'Fotografe as páginas em ordem e envie.\nSerão ordenadas automaticamente pelo horário de captura (até 30).',
+    readingUploadHint: 'Fotografe as páginas em ordem e envie.\nAs páginas aparecem na ordem em que você as seleciona (até 30).',
     readingExtracting: 'Extraindo texto...',
     readingTranslate: 'Traduzir',
     readingShowOriginal: 'Original',
