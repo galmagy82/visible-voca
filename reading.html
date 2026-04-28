@@ -581,6 +581,18 @@
     font-size: 0.9rem;
     padding: 60px 20px;
   }
+  /* 진단 라인 — 사용자가 길게 누르면 선택·복사 가능해야 모바일에서 보고하기 편함.
+     monospace + 줄바꿈 허용으로 긴 메시지도 안 잘리게. */
+  .page-error-detail {
+    margin-top: 10px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.78rem;
+    color: #B85C5C;
+    word-break: break-all;
+    user-select: text;
+    -webkit-user-select: text;
+    padding: 0 12px;
+  }
   /* 추출 실패 페이지의 복구 버튼 영역 — 같은 사진 재시도 + 다른 사진 교체 두 가지 제공.
      "실패 0%" 요구사항: 자동 재시도가 다 떨어져도 사용자가 항상 손으로 복구할 수 있게. */
   .page-error-actions {
@@ -999,7 +1011,10 @@ async function extractReadingPage(base64Data, mimeType, targetLang, geScore, mea
   });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    const err = new Error(data.error || `reading-extract API error (${res.status})`);
+    /* 서버 에러 메시지를 그대로 노출 — 진단용. 사용자가 모바일에서 실패 패턴을
+       보고할 때 status 코드와 서버 메시지가 같이 보여야 원인 추적 가능. */
+    const serverMsg = data.error || data.message || `HTTP ${res.status}`;
+    const err = new Error(`[${res.status}] ${serverMsg}`);
     err.status = res.status;
     throw err;
   }
@@ -1049,6 +1064,17 @@ async function runWithConcurrency(items, limit, worker) {
   const workerCount = Math.min(limit, items.length);
   await Promise.all(Array.from({ length: workerCount }, () => loop()));
   return results;
+}
+
+/* 진단용 에러 포맷터 — 모바일 등에서 자주 떨어지는 케이스의 원인을 화면에서 즉시 식별.
+   - HTTP 에러: e.message 가 이미 [status] 접두사 포함 (extractReadingPage 에서 부착)
+   - 네트워크 에러: status 없음 → [network] 접두사 추가
+   - 전처리 에러: 호출 측에서 [preprocess] 접두사를 직접 부착해 전달 */
+function formatExtractError(e) {
+  if (!e) return 'unknown';
+  const msg = e.message || String(e);
+  if (e.status || /^\[/.test(msg)) return msg;
+  return `[network] ${msg}`;
 }
 
 /* ===== 메인 흐름 상태 ===== */
@@ -1127,16 +1153,17 @@ async function handlePhotos(inputEl) {
       base64Data = r.data;
       mimeType = r.mimeType;
     } catch (e) {
+      console.error('preprocess 실패:', e);
       _completedCount++;
       updateLoadingProgress(_completedCount, files.length);
-      return { ok: false, error: 'image preprocessing failed', base64Data: null, mimeType: null };
+      return { ok: false, errorDetail: `[preprocess] ${e?.message || 'image preprocessing failed'}`, base64Data: null, mimeType: null };
     }
     try {
       const result = await extractReadingPageWithRetry(base64Data, mimeType, lang, _geScore, _meaningLang);
       return { ok: true, result, base64Data, mimeType };
     } catch (e) {
       console.error('reading-extract 실패:', e);
-      return { ok: false, error: e?.message || 'extract failed', base64Data, mimeType };
+      return { ok: false, errorDetail: formatExtractError(e), base64Data, mimeType };
     } finally {
       _completedCount++;
       updateLoadingProgress(_completedCount, files.length);
@@ -1146,7 +1173,9 @@ async function handlePhotos(inputEl) {
   _pages = settled.map((r) => {
     const v = r.value;
     /* _image: 같은 사진 재시도용 캐시. 저장 시 saveBook 의 화이트리스트에서
-       제외되므로 DB 에는 안 들어감. */
+       제외되므로 DB 에는 안 들어감.
+       errorDetail: 실패 원인 진단 문자열 ([status] 또는 [network]/[preprocess]).
+       역시 화이트리스트 밖이라 DB 에는 안 들어감. */
     const image = { base64Data: v.base64Data, mimeType: v.mimeType };
     if (v.ok) {
       return {
@@ -1160,7 +1189,8 @@ async function handlePhotos(inputEl) {
     }
     return {
       original: '', translated: '', no_text: false, study_items: [],
-      error: v.error,
+      error: 'extract failed',
+      errorDetail: v.errorDetail,
       _image: image,
     };
   });
@@ -1289,8 +1319,14 @@ function renderPageContent(p, pageIdx) {
     const retryLabel = tt('readingRetryPage', '다시 시도');
     const replaceLabel = tt('readingReplacePhoto', '다른 사진으로 교체');
     const canRetry = !!(p._image && p._image.base64Data);
+    /* 진단 라인 — [status] 또는 [network]/[preprocess] + 서버 메시지. 사용자가 이 줄을
+       복사해 보고하면 원인 추적 가능. errorDetail 이 비어있으면 표시 생략. */
+    const detailHtml = p.errorDetail
+      ? `<div class="page-error-detail">${escapeHtml(p.errorDetail)}</div>`
+      : '';
     return `<div class="page-error">
       <div>${escapeHtml(msg)}</div>
+      ${detailHtml}
       <div class="page-error-actions">
         ${canRetry ? `<button class="page-retry-btn" type="button" data-page-idx="${pageIdx}">${escapeHtml(retryLabel)}</button>` : ''}
         <button class="page-replace-btn" type="button" data-page-idx="${pageIdx}">${escapeHtml(replaceLabel)}</button>
@@ -1359,7 +1395,7 @@ async function retryPage(pageIdx) {
     };
   } catch (e) {
     console.error('retry 실패:', e);
-    _pages[pageIdx] = { ...p, error: e?.message || 'retry failed' };
+    _pages[pageIdx] = { ...p, error: 'retry failed', errorDetail: formatExtractError(e) };
   }
   rerenderPage(pageIdx);
 }
@@ -1376,8 +1412,22 @@ async function replacePagePhoto(pageIdx) {
     if (!file) return;
     setPageBusy(pageIdx, tt('readingRetryingPage', '재시도 중...'));
     const lang = (typeof getLang === 'function') ? getLang() : 'ko';
+    let base64Data = null, mimeType = null;
     try {
-      const { data: base64Data, mimeType } = await fileToResizedBase64(file);
+      const r = await fileToResizedBase64(file);
+      base64Data = r.data;
+      mimeType = r.mimeType;
+    } catch (e) {
+      console.error('preprocess 실패:', e);
+      _pages[pageIdx] = {
+        ..._pages[pageIdx],
+        error: 'replace failed',
+        errorDetail: `[preprocess] ${e?.message || 'image preprocessing failed'}`,
+      };
+      rerenderPage(pageIdx);
+      return;
+    }
+    try {
       const result = await extractReadingPageWithRetry(base64Data, mimeType, lang, _geScore, _meaningLang);
       _pages[pageIdx] = {
         original: result.original || '',
@@ -1391,7 +1441,9 @@ async function replacePagePhoto(pageIdx) {
       console.error('replace 실패:', e);
       _pages[pageIdx] = {
         ..._pages[pageIdx],
-        error: e?.message || 'replace failed',
+        error: 'replace failed',
+        errorDetail: formatExtractError(e),
+        _image: { base64Data, mimeType },
       };
     }
     rerenderPage(pageIdx);
