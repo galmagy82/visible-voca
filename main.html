@@ -202,13 +202,19 @@
     font-size: 0.9rem;
     color: #8A857F;
   }
-  /* 비활성(준비 중) 카드 — 클릭 막고 톤 다운, 우상단에 배지 노출 */
+  /* 비활성(준비 중) 카드 — 클릭 막고 톤 다운.
+     opacity 페이드(밝아짐) 대신 배경/보더/텍스트를 한 단계 더 어둡게 잡아 시각적으로
+     "꺼져 있음" 을 명확히 하면서도 카드 자체는 또렷이 읽히도록.
+     pointer-events: none 으로 진입 자체를 차단. */
   .menu-card.disabled {
     cursor: not-allowed;
-    opacity: 0.55;
+    background: #EFEDE9;
+    border-color: #C9C5BF;
+    pointer-events: none;
     position: relative;
   }
-  .menu-card.disabled:hover { border-color: #D5D2CC; background: #FFFFFF; }
+  .menu-card.disabled h2 { color: #6B6660; }
+  .menu-card.disabled p { color: #9A958F; }
   .menu-card .coming-soon-badge {
     position: absolute;
     top: 12px;
@@ -438,9 +444,11 @@
     <h2 data-i18n="menuReadingTitle">Novel Reading</h2>
     <p data-i18n="menuReadingDesc">Novel 사진으로 내 레벨에 맞는 학습단어를 정리하세요</p>
   </a>
-  <a class="menu-card" href="writing.html">
+  <!-- Essay Writing — 출시 전 준비 중. disabled 클래스 + pointer-events: none 으로
+       클릭/탐색 모두 차단, 설명문구는 menuComingSoon ("준비 중") 으로 교체. -->
+  <a class="menu-card disabled" href="writing.html" aria-disabled="true">
     <h2 data-i18n="menuWritingTitle">Essay Writing</h2>
-    <p data-i18n="menuWritingDesc">에세이를 코칭받고, 나만의 그림책으로 만들어보세요</p>
+    <p data-i18n="menuComingSoon">준비 중</p>
   </a>
   <a class="menu-card" href="vocabulary.html">
     <h2 data-i18n="menuVocaTitle">Visual Voca</h2>
