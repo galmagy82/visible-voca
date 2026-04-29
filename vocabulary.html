@@ -39,6 +39,9 @@
 <!-- Supabase SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
+  /* 페이지 제목(h1) 강조용 세리프 폰트 — reading.html 의 "Geminary Novel" 과 동일 톤. */
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&display=swap');
+
   /* 공통 스타일 */
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { overflow-x: hidden; }
@@ -62,12 +65,15 @@
     max-width: 900px;
     margin-bottom: 24px;
   }
+  /* 페이지 제목 — reading.html .page-heading 과 동일 스타일.
+     DM Serif Display 폰트 + 1.8rem + weight 400 으로 "Geminary Novel" 과 톤 매칭. */
   h1 {
-    font-size: 1.7rem;
-    font-weight: 600;
-    color: #2D2B28;
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.8rem;
+    font-weight: 400;
+    color: #2A2520;
     margin: 0;
-    letter-spacing: 0.05em;
+    letter-spacing: -0.01em;
   }
   /* 단어지도 노드 아이콘 — 브랜드명 옆 장식 */
   .word-map-icon {
