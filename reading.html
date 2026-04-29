@@ -763,9 +763,10 @@
 
   <!-- 추출 중 (로딩 상태)
        progress bar 는 done/total 비율로 채워지며, 트랙 위로 shimmer 가 항상 흐름.
-       loadingProgress 텍스트는 바 아래 보조 표시 (e.g. "3 / 5"). -->
+       loadingProgress 텍스트는 바 아래 보조 표시 (e.g. "3 / 5").
+       loadingPhaseLabel 은 단계별로 텍스트가 바뀜 — phase 1 추출 → phase 2 정리 → phase 3 번역. -->
   <div class="loading-area" id="loadingArea" hidden>
-    <div data-i18n="readingExtracting">텍스트 추출 중...</div>
+    <div id="loadingPhaseLabel" data-i18n="readingPhaseExtract">텍스트 추출 중...</div>
     <div class="loading-bar" id="loadingBar">
       <div class="loading-bar-fill" id="loadingBarFill"></div>
       <div class="loading-bar-shimmer"></div>
@@ -1161,6 +1162,146 @@ async function extractReadingPageWithRetry(base64Data, mimeType, targetLang, geS
   }
 }
 
+/* === 2-phase 파이프라인 phase 1: OCR-only 호출
+   페이지별 병렬 OCR → 모든 페이지 완료 후 정규식으로 단어/문장 봉합 → phase 2(번역+학습) 호출.
+   페이지 경계에서 단어/문장이 잘려 한글 번역이 어색해지거나 학습단어로 잘못 추출되는 문제 해결용. */
+async function extractReadingPageOcr(base64Data, mimeType) {
+  const res = await fetch(EDGE_FUNCTION_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      action: 'reading-extract-ocr',
+      userId: getUserId(),
+      base64Data, mimeType,
+    }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    const serverMsg = data.error || data.message || `HTTP ${res.status}`;
+    const err = new Error(`[${res.status}] ${serverMsg}`);
+    err.status = res.status;
+    throw err;
+  }
+  return res.json();
+}
+
+async function extractReadingPageOcrWithRetry(base64Data, mimeType) {
+  const delays = [1000, 2500, 5000, 10000];
+  for (let attempt = 0; attempt <= delays.length; attempt++) {
+    try {
+      return await extractReadingPageOcr(base64Data, mimeType);
+    } catch (e) {
+      const status = e && e.status;
+      const retryable = !status || status === 429 || (status >= 500 && status < 600);
+      if (!retryable || attempt === delays.length) throw e;
+      const base = delays[attempt];
+      const wait = base + Math.random() * base * 0.3;
+      console.warn(`[reading-extract-ocr] attempt ${attempt + 1} failed (status=${status || 'network'}), retrying in ${Math.round(wait)}ms`);
+      await new Promise((r) => setTimeout(r, wait));
+    }
+  }
+}
+
+/* === 2-phase 파이프라인 phase 2: 봉합된 텍스트 → 번역 + 학습단어
+   prevTail/nextHead: 인접 페이지 boundary 문맥 — 빈 문자열이면 첫/마지막 페이지. */
+async function finalizeReadingPage(text, prevTail, nextHead, targetLang, geScore, meaningLang) {
+  const res = await fetch(EDGE_FUNCTION_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      action: 'reading-finalize',
+      userId: getUserId(),
+      text, prevTail, nextHead, targetLang, geScore, meaningLang,
+    }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    const serverMsg = data.error || data.message || `HTTP ${res.status}`;
+    const err = new Error(`[${res.status}] ${serverMsg}`);
+    err.status = res.status;
+    throw err;
+  }
+  return res.json();
+}
+
+async function finalizeReadingPageWithRetry(text, prevTail, nextHead, targetLang, geScore, meaningLang) {
+  const delays = [1000, 2500, 5000, 10000];
+  for (let attempt = 0; attempt <= delays.length; attempt++) {
+    try {
+      return await finalizeReadingPage(text, prevTail, nextHead, targetLang, geScore, meaningLang);
+    } catch (e) {
+      const status = e && e.status;
+      const retryable = !status || status === 429 || (status >= 500 && status < 600);
+      if (!retryable || attempt === delays.length) throw e;
+      const base = delays[attempt];
+      const wait = base + Math.random() * base * 0.3;
+      console.warn(`[reading-finalize] attempt ${attempt + 1} failed (status=${status || 'network'}), retrying in ${Math.round(wait)}ms`);
+      await new Promise((r) => setTimeout(r, wait));
+    }
+  }
+}
+
+/* 페이지 경계 봉합 — phase 1(OCR) 끝나고 phase 2(번역+학습) 시작 전에 한 번 호출.
+   원칙: 페이지 A 끝이 종지부호 없이 끝나면(즉 문장이 안 끝났으면) 페이지 B 의 첫 문장을
+   페이지 A 끝으로 이동시키고, 사이에 \n 을 넣어 원본 페이지 boundary 의 시각적 줄바꿈을
+   보존한다. 하이픈(-) 도 종지부호로 치지 않으므로 page-break 하이픈("grum-") 도 자연스럽게
+   같이 봉합 발동 — 결과: "...grum-\nbled Marshall." 형태로 페이지 A 에 모임.
+   단어 단위로 직접 결합("grumbled") 하지 않는 이유: 줄바꿈+하이픈 형태를 유지해도 LLM 이
+   번역·학습단어 추출에 문맥으로 자연스럽게 처리하고, 사용자도 원본 책의 줄단위 시각 매칭이
+   가능. 복합어("well-known") 가 페이지 끝에 걸리는 드문 케이스에도 텍스트가 깨지지 않음. */
+function stitchPageBoundaries(pages) {
+  for (let i = 0; i < pages.length - 1; i++) {
+    const a = pages[i];
+    const b = pages[i + 1];
+    if (!a || !b) continue;
+    if (a.error || b.error) continue;
+    if (!a.original || !b.original) continue;
+    if (a.no_text || b.no_text) continue;
+
+    /* 페이지 A 끝이 종지부호로 마무리됐으면 봉합 대상 아님.
+       종지부호: . ! ? : ; 와 닫힘 따옴표/괄호 (영문 + 곡선 따옴표 포함).
+       하이픈(-)은 의도적으로 제외 → page-break 하이픈도 봉합 트리거. */
+    const aTrim = a.original.replace(/\s+$/, '');
+    if (!aTrim) continue;
+    const lastChar = aTrim.slice(-1);
+    if (/[.!?:;'"”’\)\]]/.test(lastChar)) continue;
+
+    /* 페이지 B 가 알파벳으로 시작해야 봉합 대상 (숫자·기호 시작이면 헤딩일 가능성).
+       대문자/소문자 모두 허용 — A 가 미완성 문장이면 B 의 case 무관하게 연속 처리.
+       (예: dialogue tag 패턴 "...grum-\n" + "bled Marshall." → A 끝에 모임) */
+    const bTrim = b.original.replace(/^\s+/, '');
+    if (!bTrim) continue;
+    if (!/^[A-Za-z]/.test(bTrim)) continue;
+
+    /* 페이지 B 의 첫 문장(다음 종지부호 + 닫힘 부호까지) 을 페이지 A 끝으로 이동 */
+    const sentenceMatch = bTrim.match(/^[^.!?]*[.!?][\s'"”’\)\]]*/);
+    if (!sentenceMatch) continue;
+    const moved = sentenceMatch[0].replace(/\s+$/, '');
+    /* 줄바꿈 보존: 페이지 boundary 의 시각적 줄바꿈을 \n 으로 표현 */
+    pages[i].original = aTrim + '\n' + moved;
+    pages[i + 1].original = bTrim.slice(sentenceMatch[0].length).replace(/^\s+/, '');
+  }
+}
+
+/* finalize 호출에 동봉할 인접 페이지 boundary 문맥 추출.
+   - prevTail: 이전 페이지의 마지막 1문장 (페이지 시작이 mid-sentence 면 도움)
+   - nextHead: 다음 페이지의 첫 1문장 (페이지 끝이 mid-sentence 면 도움)
+   너무 길면 토큰 낭비, 너무 짧으면 문맥 부족 — 문장 단위가 균형. */
+function getBoundaryContext(pages, idx) {
+  const out = { prevTail: '', nextHead: '' };
+  const prev = pages[idx - 1];
+  if (prev && prev.original && !prev.error && !prev.no_text) {
+    const m = prev.original.match(/(?:^|[.!?][\s'"”’\)\]]*)([^.!?]*[.!?][\s'"”’\)\]]*)$/);
+    out.prevTail = (m && m[1] ? m[1] : prev.original).trim().slice(-200);
+  }
+  const next = pages[idx + 1];
+  if (next && next.original && !next.error && !next.no_text) {
+    const m = next.original.match(/^[^.!?]*[.!?]/);
+    out.nextHead = (m ? m[0] : next.original).trim().slice(0, 200);
+  }
+  return out;
+}
+
 /* 페이지별 호출을 N개씩 묶어 처리하는 워커 풀 — 한꺼번에 30개를 던지면
    Gemini 동시성 한계로 429/503 이 떨어지는 페이지가 생김. 6개씩 throttle 하면
    대기열이 자연스레 분산돼 실패율이 크게 줄어듦. Promise.allSettled 와 동일한
@@ -1263,13 +1404,13 @@ async function handlePhotos(inputEl) {
   document.getElementById('bookListArea').hidden = true;
   document.getElementById('loadingArea').hidden = false;
   _completedCount = 0;
+  setLoadingPhase('readingPhaseExtract');
   updateLoadingProgress(0, files.length);
 
-  /* 페이지별 호출을 PAGE_CONCURRENCY 만큼 throttle — 30장이라도 6개씩 처리.
-     워커 내부에서 catch 하므로 settled.value 는 항상 존재. 실패해도 base64Data 는
-     같이 반환해 페이지 객체에 _image 로 보관 → 사용자가 "다시 시도" 버튼으로
-     재업로드 없이 같은 사진을 재호출 가능. */
-  const settled = await runWithConcurrency(files, PAGE_CONCURRENCY, async (file) => {
+  /* === Phase 1: 페이지별 병렬 OCR (이미지 → 원문 텍스트만)
+     Edge Function 의 reading-extract-ocr 액션 호출. 번역·학습단어는 phase 3 에서.
+     PAGE_CONCURRENCY 로 동시성 제한 — Gemini 측 burst 회피. */
+  const ocrSettled = await runWithConcurrency(files, PAGE_CONCURRENCY, async (file) => {
     let base64Data = null, mimeType = null;
     try {
       const r = await fileToResizedBase64(file);
@@ -1279,15 +1420,13 @@ async function handlePhotos(inputEl) {
       console.error('preprocess 실패:', e);
       _completedCount++;
       updateLoadingProgress(_completedCount, files.length);
-      /* preprocess 실패도 file 핸들은 그대로 반환 — 사용자가 잠시 뒤 "다시 시도"
-         눌렀을 때 RAM 압박이 풀려있으면 fileToResizedBase64 가 통할 가능성이 높음. */
       return { ok: false, errorDetail: `[preprocess] ${e?.message || 'image preprocessing failed'}`, base64Data: null, mimeType: null, file };
     }
     try {
-      const result = await extractReadingPageWithRetry(base64Data, mimeType, lang, _geScore, _meaningLang);
+      const result = await extractReadingPageOcrWithRetry(base64Data, mimeType);
       return { ok: true, result, base64Data, mimeType, file };
     } catch (e) {
-      console.error('reading-extract 실패:', e);
+      console.error('reading-extract-ocr 실패:', e);
       return { ok: false, errorDetail: formatExtractError(e), base64Data, mimeType, file };
     } finally {
       _completedCount++;
@@ -1295,21 +1434,16 @@ async function handlePhotos(inputEl) {
     }
   });
 
-  _pages = settled.map((r) => {
+  /* OCR 결과를 _pages 로 변환 — 이 시점엔 translated/study_items 비어 있음, phase 3 에서 채움 */
+  _pages = ocrSettled.map((r) => {
     const v = r.value;
-    /* _image: 같은 사진 재시도용 캐시. 저장 시 saveBook 의 화이트리스트에서
-       제외되므로 DB 에는 안 들어감.
-       file: 원본 File 핸들 (OS 레벨 참조라 RAM 거의 안 씀) — base64 가 없어도
-             "다시 시도" 가 fileToResizedBase64 부터 다시 돌릴 수 있게 보관.
-       errorDetail: 실패 원인 진단 문자열 ([status] 또는 [network]/[preprocess]).
-       역시 화이트리스트 밖이라 DB 에는 안 들어감. */
     const image = { file: v.file, base64Data: v.base64Data, mimeType: v.mimeType };
     if (v.ok) {
       return {
         original: v.result.original || '',
-        translated: v.result.translated || '',
+        translated: '',
         no_text: !!v.result.no_text,
-        study_items: filterStudyItems(v.result.study_items),
+        study_items: [],
         error: null,
         _image: image,
       };
@@ -1320,6 +1454,57 @@ async function handlePhotos(inputEl) {
       errorDetail: v.errorDetail,
       _image: image,
     };
+  });
+
+  /* === Phase 2: 페이지 경계 봉합 (정규식, 클라 사이드, ~10ms)
+     - 단어 봉합: "scram-/bled" → "scrambled" (페이지 N 으로 이동, 부호도 함께)
+     - 문장 봉합: 종지부호 없이 끝난 페이지 N + 소문자 시작 페이지 N+1 → 첫 문장 페이지 N 으로 이동
+     실패 페이지는 자동 스킵. */
+  setLoadingPhase('readingPhaseStitch');
+  updateLoadingProgress(0, 0);  /* 카운트 의미 없음 — shimmer 만 흐르게 */
+  stitchPageBoundaries(_pages);
+
+  /* === Phase 3: 페이지별 병렬 finalize (봉합된 텍스트 → 번역 + 학습단어)
+     인접 페이지 boundary 문맥(prevTail/nextHead) 을 함께 보내 페이지 경계 문장의
+     자연스러운 번역 유도 + boundary fragment 가 학습단어로 잘못 추출되는 것 방지. */
+  setLoadingPhase('readingPhaseTranslate');
+  _completedCount = 0;
+  updateLoadingProgress(0, _pages.length);
+  const finalizeSettled = await runWithConcurrency(_pages, PAGE_CONCURRENCY, async (page, idx) => {
+    /* OCR 실패 / 빈 페이지는 finalize 스킵 — translation/study 비워둠 */
+    if (page.error || page.no_text || !page.original) {
+      _completedCount++;
+      updateLoadingProgress(_completedCount, _pages.length);
+      return { ok: true, skip: true, idx };
+    }
+    const { prevTail, nextHead } = getBoundaryContext(_pages, idx);
+    try {
+      const result = await finalizeReadingPageWithRetry(page.original, prevTail, nextHead, lang, _geScore, _meaningLang);
+      return { ok: true, result, idx };
+    } catch (e) {
+      console.error(`reading-finalize 실패 (page ${idx + 1}):`, e);
+      return { ok: false, errorDetail: formatExtractError(e), idx };
+    } finally {
+      _completedCount++;
+      updateLoadingProgress(_completedCount, _pages.length);
+    }
+  });
+
+  /* finalize 결과를 _pages 에 적용. OCR 단계에서 받은 original / _image 는 그대로 유지. */
+  finalizeSettled.forEach((r) => {
+    const v = r.value;
+    if (!v) return;
+    const idx = v.idx;
+    if (v.skip) return;
+    if (v.ok && v.result) {
+      _pages[idx].translated = v.result.translated || '';
+      _pages[idx].study_items = filterStudyItems(v.result.study_items);
+    } else if (!v.ok) {
+      /* finalize 실패 — 영문은 살아있으니 페이지 자체는 표시 가능, 번역만 빔.
+         error 플래그를 세우면 모달 노출 → 사용자가 재시도 가능. */
+      _pages[idx].error = 'finalize failed';
+      _pages[idx].errorDetail = v.errorDetail;
+    }
   });
 
   inputEl.value = '';
@@ -1433,6 +1618,15 @@ function updateLoadingProgress(done, total) {
   const fill = document.getElementById('loadingBarFill');
   if (text) text.textContent = total ? `${done} / ${total}` : '';
   if (fill) fill.style.width = total ? `${(done / total) * 100}%` : '0%';
+}
+
+/* 로딩 단계 라벨 변경 — 2-phase 파이프라인의 phase 별로 호출.
+   key: i18n 키 (readingPhaseExtract / readingPhaseStitch / readingPhaseTranslate). */
+function setLoadingPhase(key) {
+  const el = document.getElementById('loadingPhaseLabel');
+  if (!el) return;
+  el.setAttribute('data-i18n', key);
+  el.textContent = (typeof t === 'function') ? t(key) : el.textContent;
 }
 
 /* --- 북 뷰어 렌더 --- */

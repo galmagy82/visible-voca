@@ -471,6 +471,195 @@ Do NOT add commentary. Return ONLY the JSON object.`
   }
 }
 
+/* === 2-phase 파이프라인: OCR-only 추출 (이미지 → 원문 텍스트만)
+   기존 callGeminiReadingExtract 와 분리한 이유:
+   - 페이지별 병렬 OCR 후 클라이언트에서 페이지 경계 정규식 봉합 (단어/문장)
+   - 봉합된 텍스트를 callGeminiReadingFinalize 로 넘겨 번역+학습단어 생성
+   → 페이지 경계 단어 잘림(예: "scram-/bled") 과 문장 cross-page 번역 문제 해결.
+   기존 reading-extract 액션은 그대로 유지 (롤백 안전망 + retry/replace 단일 페이지 경로). */
+async function callGeminiReadingOcr(base64Data: string, mimeType: string, apiKey: string) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`
+
+  const prompt = `You are an OCR engine for a reading-comprehension app. The image is one page of an English book.
+
+Page boundary handling:
+- The image should show one page, but the photo may have captured fragments of the adjacent page along the edges (cut-off lines, isolated words near the binding gutter, a different page number).
+- Extract text from the PRIMARY page only — the page that fills most of the frame and is clearly the subject of the photo.
+- If two complete facing pages are both fully captured, treat them as one continuous spread and extract both.
+- Ignore faint ghosted text that bleeds through from the reverse side of the page. Such text appears noticeably lighter than the main printed text and is often mirrored or upside-down. Extract only text clearly printed on the front (current) side.
+
+Page metadata to exclude:
+- Do NOT extract page numbers or running headers/footers — these are short text fragments printed in the top or bottom MARGIN (outside the main text block), typically in a smaller font, that repeat across pages and contain the page number, book title, chapter name, or author name.
+- DO extract chapter title headings that appear as part of the body content (e.g., a prominent heading at the start of a new chapter, integrated into the main text block at normal or larger font size).
+- The key distinction is POSITION and STYLE, not content — "Chapter 5: The Mystery" in the page margin = running header (omit); the same text as a large heading at the top of the main text block = chapter title (include).
+
+Task:
+Extract the original English text exactly as it appears on the page, preserving line breaks (use \\n) and paragraph structure.
+
+If the image contains no readable text (blank page, decoration only, illegible photo), set "no_text" to true and return empty string for original.
+
+Do NOT add commentary. Return ONLY the JSON object.`
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [{
+        parts: [
+          { text: prompt },
+          { inlineData: { mimeType, data: base64Data } },
+        ],
+      }],
+      generationConfig: {
+        temperature: 0.3,
+        /* OCR-only 출력은 원문 텍스트만이라 6144→3072 로 절감 (대형 페이지도 충분) */
+        maxOutputTokens: 3072,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "OBJECT",
+          properties: {
+            original: { type: "STRING", description: "Extracted original text, preserving line breaks." },
+            no_text:  { type: "BOOLEAN", description: "True if the page has no readable text." },
+          },
+          required: ["original", "no_text"],
+        },
+        thinkingConfig: { thinkingBudget: -1 },
+      },
+    }),
+  })
+  if (!res.ok) {
+    const err = await res.text()
+    throw new Error(`Gemini reading-extract-ocr API error ${res.status}: ${err}`)
+  }
+  const data = await res.json()
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text
+  if (!text) throw new Error('Empty response from Gemini')
+  return JSON.parse(text) as { original: string; no_text: boolean }
+}
+
+/* === 2-phase 파이프라인: finalize (이미 추출된 텍스트 → 번역 + 학습단어)
+   prevTail/nextHead 인자로 인접 페이지 boundary 문맥 동봉 — 페이지 경계에서
+   문장이 넘어가는 경우 자연스러운 번역 + 학습단어 추출에서 boundary fragment 제외.
+   이미지 input 없음 → 호출당 비용/지연 작음. */
+async function callGeminiReadingFinalize(
+  text: string,
+  prevTail: string,
+  nextHead: string,
+  targetLang: string,
+  geScore: number | null,
+  meaningLang: string,
+  apiKey: string,
+) {
+  const langName = READING_LANG_NAMES[targetLang] || 'Korean'
+  const meaningLangName = (meaningLang === 'en') ? 'English' : langName
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`
+
+  /* 학습단어 지침은 reading-extract 와 동일. 향후 공통 함수로 추출 가능하지만
+     우선은 두 액션 다 살아있는 동안 변경 위험 최소화 위해 인라인 복제. */
+  let studyInstructions = ''
+  if (geScore != null) {
+    const targetMin = Math.min(13, geScore + 1.0)
+    const targetMax = Math.min(13, geScore + 2.5)
+    const bandLabel = geBandLabelEn(geScore)
+    const advancedCue = geScore >= 11
+      ? '\n  - This user is at an advanced level — prioritize sophisticated, low-frequency vocabulary, formal/literary expressions, and nuanced idioms.'
+      : ''
+    const meaningGuide = (meaningLang === 'en')
+      ? `a concise English explanation suitable for a learner at GE ${geScore.toFixed(1)} (use simpler words than the target item itself)`
+      : `a concise ${langName} explanation (1 short phrase)`
+    studyInstructions = `
+2. From the page text, pick words/idioms/expressions that this user should learn next.
+
+User profile:
+  - Reading level (Renaissance STAR Reading GE): ${geScore.toFixed(1)} (${bandLabel})
+  - Target items to pick: GE ${targetMin.toFixed(1)} ~ ${targetMax.toFixed(1)}${advancedCue}
+
+Selection rules for "study_items":
+  - Categories: "word" | "idiom" | "phrasal_verb" | "collocation"
+  - 0 to 7 items per page. NO MINIMUM. If nothing in the text falls in the target range, return an empty array.
+  - Skip items at or below GE ${geScore.toFixed(1)} (the user already knows these).
+  - Skip items above GE ${targetMax.toFixed(1)} (too hard for context-based learning at this stage).
+  - Prioritize items that expand this user's vocabulary in the next learning step.
+  - "surface" must be the EXACT substring as it appears in the page text (preserve casing/punctuation).
+  - "lemma" is the dictionary/base form of "surface" used for vocabulary lookup. Strip inflections so the result is what a learner would search a dictionary for. Lowercase. Examples: "mending a puncture" → "mend a puncture", "ran into" → "run into", "cats" → "cat", "running" → "run", "went" → "go", "better off" → "better off" (no change needed). For multi-word items, lemmatize each verb/noun while preserving the structure.
+  - For verbs, prefer extracting the verb alone. Only include a particle/preposition when the combined form is a true phrasal verb whose meaning is non-compositional (e.g. "give up", "look into", "put off", "run into" meaning to encounter). Do NOT include literal motion prepositions where the meaning is just verb + direction (e.g. "skid across", "walk through", "run past", "came across the room" → extract "skid", "walk", "run", "come" only).
+  - "meaning" should be ${meaningGuide}.
+  - Do NOT pick fragments that originate from the boundary context (prevTail/nextHead) — those belong to neighboring pages.`
+  } else {
+    studyInstructions = `
+2. Return an empty array for "study_items" (user level not provided).`
+  }
+
+  const boundarySection = (prevTail || nextHead) ? `
+
+Boundary context (for sentence flow only — do NOT translate or include in output):
+${prevTail ? `- Previous page ends with: """${prevTail}"""` : ''}
+${nextHead ? `- Next page starts with: """${nextHead}"""` : ''}
+
+If THIS page's text begins mid-sentence (continuation from previous page's tail), translate it so the ${langName} reads naturally as a continuation.
+If THIS page's text ends mid-sentence (continues onto next page), translate the partial portion so it joins grammatically with the next page's translation.
+Translate ONLY the page text. Do NOT translate or echo the boundary context.` : ''
+
+  const prompt = `You are a translator and vocabulary picker for a reading-comprehension app. The text below is the OCR result of one page of an English book (already extracted).
+
+Tasks:
+1. Translate the page text into natural ${langName}, preserving paragraph structure (line breaks between paragraphs).${studyInstructions}
+
+Page text:
+"""
+${text}
+"""${boundarySection}
+
+Do NOT add commentary. Return ONLY the JSON object.`
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.3,
+        /* 이미지가 없어 OCR 부분이 빠지므로 6144→4096 로 약간 절감 */
+        maxOutputTokens: 4096,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "OBJECT",
+          properties: {
+            translated: { type: "STRING", description: `Natural ${langName} translation, preserving paragraph breaks.` },
+            study_items: {
+              type: "ARRAY",
+              description: "Words/idioms/expressions worth learning at the user's level. Empty if none.",
+              items: {
+                type: "OBJECT",
+                properties: {
+                  surface: { type: "STRING", description: "Exact substring from the page text." },
+                  lemma:   { type: "STRING", description: "Dictionary/base form of surface for vocabulary lookup (lowercase, inflections stripped)." },
+                  type:    { type: "STRING", description: "word | idiom | phrasal_verb | collocation" },
+                  meaning: { type: "STRING", description: `Concise meaning in ${meaningLangName}.` },
+                },
+                required: ["surface", "lemma", "type", "meaning"],
+              },
+            },
+          },
+          required: ["translated", "study_items"],
+        },
+        thinkingConfig: { thinkingBudget: -1 },
+      },
+    }),
+  })
+  if (!res.ok) {
+    const err = await res.text()
+    throw new Error(`Gemini reading-finalize API error ${res.status}: ${err}`)
+  }
+  const data = await res.json()
+  const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text
+  if (!responseText) throw new Error('Empty response from Gemini')
+  return JSON.parse(responseText) as {
+    translated: string;
+    study_items: Array<{ surface: string; lemma: string; type: string; meaning: string }>;
+  }
+}
+
 /* 사용량 증가: 최초 검색 시 row 생성, 이후 검색 시 trial_count +1 */
 async function incrementTrialCount(userId: string): Promise<number> {
   const { data } = await supabase
@@ -562,7 +751,9 @@ Deno.serve(async (req) => {
       case "reading-extract": {
         /* Reading Tutor: 책 페이지 1장 → 원문 + 번역 + 학습 단어 (구조화 JSON).
            프론트엔드가 페이지별로 병렬 호출. 사용량 카운트는 별도 정책 필요시 프론트에서 처리.
-           geScore: 사용자 GE 점수. null/미지정이면 study_items 빈 배열 반환. */
+           geScore: 사용자 GE 점수. null/미지정이면 study_items 빈 배열 반환.
+           NOTE: 신규 2-phase 파이프라인(reading-extract-ocr + reading-finalize) 도입 후
+           이 액션은 단일 페이지 retry/replace 경로 + 롤백 안전망으로만 유지. */
         if (!base64Data || !mimeType) {
           return new Response(
             JSON.stringify({ error: "base64Data and mimeType are required" }),
@@ -577,9 +768,41 @@ Deno.serve(async (req) => {
         result = parsed
         break
       }
+      case "reading-extract-ocr": {
+        /* 2-phase 파이프라인 phase 1 — 이미지 → 원문 텍스트만 (번역/학습단어 미포함).
+           프론트가 페이지별 병렬 호출 후 봉합 → reading-finalize 로 phase 2 진행. */
+        if (!base64Data || !mimeType) {
+          return new Response(
+            JSON.stringify({ error: "base64Data and mimeType are required" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          )
+        }
+        const ocr = await callGeminiReadingOcr(base64Data, mimeType, apiKey)
+        result = ocr
+        break
+      }
+      case "reading-finalize": {
+        /* 2-phase 파이프라인 phase 2 — 봉합된 텍스트 → 번역 + 학습단어.
+           text: 봉합된 페이지 영문, prevTail/nextHead: 인접 페이지 boundary 문맥(짧은 문자열). */
+        const text: string = typeof body.text === "string" ? body.text : ""
+        if (!text) {
+          return new Response(
+            JSON.stringify({ error: "text is required" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          )
+        }
+        const prevTail: string = typeof body.prevTail === "string" ? body.prevTail : ""
+        const nextHead: string = typeof body.nextHead === "string" ? body.nextHead : ""
+        const targetLang: string = typeof body.targetLang === "string" ? body.targetLang : "ko"
+        const geScore: number | null = typeof body.geScore === "number" ? body.geScore : null
+        const meaningLang: string = (body.meaningLang === "en") ? "en" : "native"
+        const finalized = await callGeminiReadingFinalize(text, prevTail, nextHead, targetLang, geScore, meaningLang, apiKey)
+        result = finalized
+        break
+      }
       default:
         return new Response(
-          JSON.stringify({ error: "Invalid action. Use: search, image, extract, reading-extract" }),
+          JSON.stringify({ error: "Invalid action. Use: search, image, extract, reading-extract, reading-extract-ocr, reading-finalize" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         )
     }
