@@ -403,10 +403,9 @@ Selection rules for "study_items":
 Page boundary handling:
 - The image should show one page, but the photo may have captured fragments of the adjacent page along the edges (cut-off lines, isolated words near the binding gutter, a different page number).
 - Extract text from the PRIMARY page only — the page that fills most of the frame and is clearly the subject of the photo.
-- Ignore edge fragments that are obviously from a different page (half-cut letters at the very edge, single isolated words across a binding gutter, mismatched paragraph flow at the edge).
 - If two complete facing pages are both fully captured, treat them as one continuous spread and extract both.
 - Ignore faint ghosted text that bleeds through from the reverse side of the page. Such text appears noticeably lighter than the main printed text and is often mirrored or upside-down. Extract only text clearly printed on the front (current) side.
-- This rule applies to all three tasks below — do not include study_items whose "surface" comes from an ignored fragment or bleed-through.
+- This rule applies to all three tasks below — do not include study_items whose "surface" comes from bleed-through.
 
 Tasks:
 1. Extract the original English text exactly as it appears on the page, preserving line breaks (use \\n) and paragraph structure.
