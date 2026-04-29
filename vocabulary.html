@@ -2865,7 +2865,11 @@ async function saveToSupabase(word, parsed, imageDataUrl, existingImagePath, sce
            ?? 사용 이유: '' (Gemini 가 빈 값 반환) 와 undefined (호출 시 미전달) 를
            DB 에서 구분하기 위함. '' 는 그대로 저장, undefined 만 NULL. */
         scene_en: sceneEn ?? null,
-        discovered_by: _authUser?.email?.split('@')[0] || null
+        /* discovered_by: 이메일 local-part — DB Studio 에서 사람이 식별용.
+           discovered_by_user_id: UUID — auth.users / user_usage 와 join 키.
+           둘 다 저장하는 이유는 의도적 denormalization (사람용 vs 머신용 분리). */
+        discovered_by: _authUser?.email?.split('@')[0] || null,
+        discovered_by_user_id: _authUser?.id || null
       });
 
     if (insertErr) console.warn('DB 저장 실패:', insertErr);
