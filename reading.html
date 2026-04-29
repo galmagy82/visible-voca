@@ -493,6 +493,12 @@
     padding: 20px;
   }
   .modal-overlay[hidden] { display: none; }
+  /* 자동 저장 토스트 fade-out — showAutoSavedToast 가 끝날 때 .fading 부착 후
+     transitionend 또는 setTimeout 으로 hidden 처리. opacity 만 transition. */
+  .modal-overlay.fading { opacity: 0; transition: opacity 0.3s ease; }
+  /* 토스트 모달 카드는 일반 모달보다 살짝 더 컴팩트 + 텍스트 가운데 정렬 */
+  #autoSavedToast .modal-card { max-width: 320px; padding: 20px 24px; text-align: center; }
+  #autoSavedToast .modal-title { margin-bottom: 0; }
   .modal-card {
     background: #FFFFFF;
     border-radius: 14px;
@@ -823,16 +829,25 @@
   </div>
 </div>
 
-<!-- 책 저장 모달 (제목 입력) — 기본 hidden, openSaveBookModal() 에서 토글 -->
+<!-- 책 저장 모달 (제목 입력) — 기본 hidden, openSaveBookModal() 에서 토글.
+     자동 저장 도입 후엔 거의 항상 "이름 변경" 용도라 모달 제목/설명은 그에 맞춤. -->
 <div class="modal-overlay" id="saveBookModal" hidden>
   <div class="modal-card">
-    <div class="modal-title" data-i18n="readingSaveBookTitle">책 저장하기</div>
+    <div class="modal-title" data-i18n="readingRenameBookTitle">책 제목 붙이기</div>
     <div class="modal-desc" data-i18n="readingSaveBookDesc">이 책의 제목을 입력하세요</div>
     <input type="text" class="modal-input" id="saveBookTitleInput" maxlength="120" data-i18n="readingSaveBookPlaceholder" placeholder="예: 어린왕자 1장">
     <div class="modal-actions">
       <button class="modal-btn modal-btn-cancel" onclick="closeSaveBookModal()" data-i18n="setCancelBtn">취소</button>
       <button class="modal-btn modal-btn-primary" id="saveBookConfirmBtn" onclick="saveCurrentBook()" data-i18n="setSaveBtn">저장</button>
     </div>
+  </div>
+</div>
+
+<!-- 자동 저장 완료 토스트 — 추출 직후 1.7초 노출 후 fade-out 으로 0.3초 더 뒤 hidden.
+     기존 modal-overlay 스타일 재사용해 톤 일치. fading 클래스가 opacity transition. -->
+<div class="modal-overlay" id="autoSavedToast" hidden>
+  <div class="modal-card">
+    <div class="modal-title" data-i18n="readingAutoSavedToast">My Books에 자동저장되었어요.</div>
   </div>
 </div>
 
@@ -1523,22 +1538,37 @@ async function handlePhotos(inputEl) {
   /* 추출 실패 페이지가 있으면 자동으로 모달 노출 — 사용자가 페이지를 일일이 넘기며
      찾지 않도록. saved book 로드(openSavedBook) 에서는 호출 안 함 — 거기엔 error 가 없음. */
   maybeOpenExtractFailedModal();
+  /* 자동 저장 (fire-and-forget) — 사용자 인터랙션 차단 없이 백그라운드로 INSERT.
+     성공 시 _currentBookId set + "자동 저장 완료" 토스트, 실패 시 _currentBookId 는
+     null 유지되어 사용자가 수동 "책으로 저장" 으로 폴백 가능. */
+  autoSaveBook();
 }
 
-/* 북 뷰어 툴바: 저장 여부에 따라 저장 버튼·배지 토글.
+/* 북 뷰어 툴바: 저장 상태에 따라 버튼 텍스트 토글 + saved 배지 항상 숨김.
+   - persisted (자동 저장 성공 / 책 목록 경유): "✏️ 책 제목 붙이기" — UPDATE 모드
+   - 미저장 (자동 저장 실패 폴백): "📚 책으로 저장" — INSERT 모드
+   - 비로그인: 버튼 숨김 (저장 자체 불가)
    판정 기준은 _currentBookId — DB 에 행이 있으면 저장된 것 (책 목록 경유 여부와 무관). */
 function updateBookViewerToolbar() {
   const saveBtn = document.getElementById('saveBookBtn');
   const savedBadge = document.getElementById('savedBadge');
-  if (!saveBtn || !savedBadge) return;
-  const persisted = _currentBookId != null;
-  if (persisted) {
+  if (!saveBtn) return;
+  /* 자동 저장 도입 후 saved 배지는 더 이상 노출 안 함 — 버튼 텍스트가 상태 신호 역할.
+     기존 element 자체는 호환성 유지를 위해 hidden 처리만. */
+  if (savedBadge) savedBadge.hidden = true;
+
+  if (!_authUser) {
     saveBtn.hidden = true;
-    savedBadge.hidden = false;
+    return;
+  }
+  saveBtn.hidden = false;
+  const tt = (k, fb) => (typeof t === 'function') ? t(k) : fb;
+  if (_currentBookId != null) {
+    saveBtn.setAttribute('data-i18n', 'readingRenameBookBtn');
+    saveBtn.textContent = tt('readingRenameBookBtn', '✏️ 책 제목 붙이기');
   } else {
-    /* 비로그인(로컬 dev) 상태에서는 저장 불가 — 버튼도 숨김 */
-    saveBtn.hidden = !_authUser;
-    savedBadge.hidden = true;
+    saveBtn.setAttribute('data-i18n', 'readingSaveBookBtn');
+    saveBtn.textContent = tt('readingSaveBookBtn', '📚 책으로 저장');
   }
 }
 
@@ -2211,14 +2241,19 @@ async function deleteBook(bookId) {
   }
 }
 
-/* ===== 책으로 저장 (모달) ===== */
+/* ===== 책으로 저장 (모달) =====
+   자동 저장 도입 후 흐름:
+   - 추출 완료 → autoSaveBook() 이 timestamp 제목으로 INSERT → _currentBookId set
+   - 사용자가 "✏️ 책 제목 붙이기" 클릭 → openSaveBookModal() → saveCurrentBook() 가
+     _currentBookId 가 있으면 UPDATE, 없으면(자동 저장 실패 폴백) INSERT. */
 
 function openSaveBookModal() {
   const modal = document.getElementById('saveBookModal');
   const input = document.getElementById('saveBookTitleInput');
   input.value = _currentBookTitle || '';
   modal.hidden = false;
-  setTimeout(() => input.focus(), 0);
+  /* 자동 저장된 timestamp 제목을 사용자가 바로 덮어쓸 수 있도록 전체 선택 */
+  setTimeout(() => { input.focus(); input.select(); }, 0);
 }
 
 function closeSaveBookModal() {
@@ -2236,13 +2271,69 @@ async function saveCurrentBook() {
   const btn = document.getElementById('saveBookConfirmBtn');
   btn.disabled = true;
   try {
-    /* 페이지 jsonb: 표시·하이라이트에 필요한 필드만 저장 (error 는 제외) */
-    const pagesPayload = _pages.map((p) => ({
-      original: p.original || '',
-      translated: p.translated || '',
-      no_text: !!p.no_text,
-      study_items: Array.isArray(p.study_items) ? p.study_items : [],
-    }));
+    if (_currentBookId) {
+      /* 자동 저장 / 책 목록 진입 후 — 제목만 UPDATE (pages 미변경, 비용 0). */
+      const { error } = await supabaseClient
+        .from('reading_books')
+        .update({ title })
+        .eq('id', _currentBookId);
+      if (error) throw error;
+      _currentBookTitle = title;
+    } else {
+      /* 자동 저장 실패 폴백 — 새 row INSERT. */
+      const pagesPayload = _pages.map((p) => ({
+        original: p.original || '',
+        translated: p.translated || '',
+        no_text: !!p.no_text,
+        study_items: Array.isArray(p.study_items) ? p.study_items : [],
+      }));
+      const { data, error } = await supabaseClient
+        .from('reading_books')
+        .insert({
+          user_id: _authUser.id,
+          title,
+          pages: pagesPayload,
+        })
+        .select('id')
+        .single();
+      if (error) throw error;
+      _currentBookId = data.id;
+      _currentBookTitle = title;
+    }
+    closeSaveBookModal();
+    updateBookViewerToolbar();
+    /* 제목 변경 즉시 상단 h1 갱신 */
+    updateTopBackLink();
+  } catch (e) {
+    console.error('save book 실패:', e);
+    alert((typeof t === 'function') ? t('readingSaveError') : '책 저장에 실패했어요');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+/* ===== 자동 저장 (추출 직후 호출) =====
+   사용자가 책 제목을 부여하지 않아도 추출 결과는 즉시 reading_books 에 INSERT 되어
+   유료 결제 시점의 데이터 손실/환불 분쟁 방지. 제목은 timestamp ("2026-04-30 23:12")
+   로 자동 부여하고, 사용자는 이후 "책 제목 붙이기" 로 자유롭게 변경 가능. */
+async function autoSaveBook() {
+  /* 비로그인이면 저장 자체 불가 — 수동 폴백 경로(_currentBookId=null 상태) 유지 */
+  if (!_authUser) return;
+  /* 모든 페이지가 빈 페이지/실패면 저장할 의미 없음. 사용자가 수동으로 다시 시도하거나
+     삭제해야 할 때 _currentBookId=null 상태가 더 명확. */
+  const hasContent = Array.isArray(_pages) && _pages.some((p) => !p.error && p.original);
+  if (!hasContent) return;
+  /* timestamp 제목: YYYY-MM-DD HH:MM (로컬 타임존). 알아보기 쉽고 sort 도 자연스러움. */
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const title = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  const pagesPayload = _pages.map((p) => ({
+    original: p.original || '',
+    translated: p.translated || '',
+    no_text: !!p.no_text,
+    study_items: Array.isArray(p.study_items) ? p.study_items : [],
+  }));
+  try {
     const { data, error } = await supabaseClient
       .from('reading_books')
       .insert({
@@ -2253,21 +2344,30 @@ async function saveCurrentBook() {
       .select('id')
       .single();
     if (error) throw error;
-    /* 저장 후: _currentBookId 만 set 해서 "이미 저장됨(=배지)" 상태로 토글.
-       _isSavedView 는 false 유지 — 사용자는 책 목록을 거치지 않았으므로 뒤로가기는
-       여전히 "← Novel Reading" 가 맞음. */
     _currentBookId = data.id;
     _currentBookTitle = title;
-    closeSaveBookModal();
     updateBookViewerToolbar();
-    /* 저장 직후 상단 h1 을 "Novel Reading" → 방금 입력한 책 제목으로 즉시 반영 */
     updateTopBackLink();
+    showAutoSavedToast();
   } catch (e) {
-    console.error('save book 실패:', e);
-    alert((typeof t === 'function') ? t('readingSaveError') : '책 저장에 실패했어요');
-  } finally {
-    btn.disabled = false;
+    console.error('auto-save 실패:', e);
+    /* 실패 시 _currentBookId 는 null 그대로 → 수동 "책으로 저장" 버튼 노출되어 폴백 가능 */
   }
+}
+
+/* 자동 저장 완료 토스트 — 1.7초 노출 후 0.3초 fade-out 하고 hidden. */
+function showAutoSavedToast() {
+  const el = document.getElementById('autoSavedToast');
+  if (!el) return;
+  el.classList.remove('fading');
+  el.hidden = false;
+  setTimeout(() => {
+    el.classList.add('fading');
+    setTimeout(() => {
+      el.hidden = true;
+      el.classList.remove('fading');
+    }, 300);
+  }, 1700);
 }
 
 /* ===== Reading 설정 모달 ===== */
