@@ -410,8 +410,9 @@ Page boundary handling:
 Tasks:
 1. Extract the original English text exactly as it appears on the page, preserving line breaks (use \\n) and paragraph structure.
 2. Translate that text into natural ${langName}, preserving paragraph structure (line breaks between paragraphs).${studyInstructions}
+3. Also fill the "page_number" field per its schema description.
 
-If the image contains no readable text (blank page, decoration only, illegible photo), set "no_text" to true, return empty strings for original and translated, and empty array for study_items.
+If the image contains no readable text (blank page, decoration only, illegible photo), set "no_text" to true, return empty strings for original and translated, empty array for study_items, and null for page_number.
 
 Do NOT add commentary. Return ONLY the JSON object.`
 
@@ -435,6 +436,13 @@ Do NOT add commentary. Return ONLY the JSON object.`
             original:   { type: "STRING", description: "Extracted original text, preserving line breaks." },
             translated: { type: "STRING", description: `Natural ${langName} translation, preserving paragraph breaks.` },
             no_text:    { type: "BOOLEAN", description: "True if the page has no readable text." },
+            /* 책 페이지 번호 — 본문에서 분리된 마진 텍스트만. 본문 내 숫자(연도/챕터 번호)
+               오인 방지가 핵심이라 description 에 negative constraint 명시. */
+            page_number: {
+              type: "STRING",
+              nullable: true,
+              description: "The page number printed in the MARGIN of the page (top or bottom, smaller font, outside the main text block). Examples: '42', 'iii'. Return null if absent, illegible, or no margin number is visible. For two-page spreads, return the LEFT (lower) page's number. NEVER return numbers from body text such as chapter numbers, years, or any digits inside paragraphs.",
+            },
             study_items: {
               type: "ARRAY",
               description: "Words/idioms/expressions worth learning at the user's level. Empty if none.",
@@ -450,7 +458,7 @@ Do NOT add commentary. Return ONLY the JSON object.`
               },
             },
           },
-          required: ["original", "translated", "no_text", "study_items"],
+          required: ["original", "translated", "no_text", "page_number", "study_items"],
         },
         thinkingConfig: { thinkingBudget: -1 },
       },
@@ -467,6 +475,7 @@ Do NOT add commentary. Return ONLY the JSON object.`
     original: string;
     translated: string;
     no_text: boolean;
+    page_number: string | null;
     study_items: Array<{ surface: string; type: string; meaning: string }>;
   }
 }
@@ -493,10 +502,11 @@ Page metadata to exclude:
 - DO extract chapter title headings that appear as part of the body content (e.g., a prominent heading at the start of a new chapter, integrated into the main text block at normal or larger font size).
 - The key distinction is POSITION and STYLE, not content — "Chapter 5: The Mystery" in the page margin = running header (omit); the same text as a large heading at the top of the main text block = chapter title (include).
 
-Task:
-Extract the original English text exactly as it appears on the page, preserving line breaks (use \\n) and paragraph structure.
+Tasks:
+1. Extract the original English text exactly as it appears on the page, preserving line breaks (use \\n) and paragraph structure.
+2. Also fill the "page_number" field per its schema description.
 
-If the image contains no readable text (blank page, decoration only, illegible photo), set "no_text" to true and return empty string for original.
+If the image contains no readable text (blank page, decoration only, illegible photo), set "no_text" to true, return empty string for original, and null for page_number.
 
 Do NOT add commentary. Return ONLY the JSON object.`
 
@@ -520,8 +530,15 @@ Do NOT add commentary. Return ONLY the JSON object.`
           properties: {
             original: { type: "STRING", description: "Extracted original text, preserving line breaks." },
             no_text:  { type: "BOOLEAN", description: "True if the page has no readable text." },
+            /* 책 페이지 번호 — 본문에서 분리된 마진 텍스트만. 본문 내 숫자(연도/챕터 번호)
+               오인 방지가 핵심이라 description 에 negative constraint 명시. */
+            page_number: {
+              type: "STRING",
+              nullable: true,
+              description: "The page number printed in the MARGIN of the page (top or bottom, smaller font, outside the main text block). Examples: '42', 'iii'. Return null if absent, illegible, or no margin number is visible. For two-page spreads, return the LEFT (lower) page's number. NEVER return numbers from body text such as chapter numbers, years, or any digits inside paragraphs.",
+            },
           },
-          required: ["original", "no_text"],
+          required: ["original", "no_text", "page_number"],
         },
         thinkingConfig: { thinkingBudget: -1 },
       },
@@ -534,7 +551,7 @@ Do NOT add commentary. Return ONLY the JSON object.`
   const data = await res.json()
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text
   if (!text) throw new Error('Empty response from Gemini')
-  return JSON.parse(text) as { original: string; no_text: boolean }
+  return JSON.parse(text) as { original: string; no_text: boolean; page_number: string | null }
 }
 
 /* === 2-phase 파이프라인: finalize (이미 추출된 텍스트 → 번역 + 학습단어)

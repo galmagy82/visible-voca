@@ -581,8 +581,10 @@
     color: #5A8A42;
     background: #EAF1E2;
     border: 1px solid #C9DBB8;
-    padding: 4px 6px;
+    padding: 4px 8px;
     border-radius: 999px;
+    /* "p.42" 보조 라벨이 붙어도 한 줄 유지 */
+    white-space: nowrap;
   }
   .reorder-item-preview {
     flex: 1 1 auto;
@@ -677,6 +679,23 @@
     /* 텍스트를 가로 중앙 정렬 + 자식이 콘텐츠 너비만큼만 차지하도록 flex 사용 */
     display: flex;
     justify-content: center;
+    /* 페이지 번호 배지 absolute 기준점 */
+    position: relative;
+  }
+  /* 책 본래 페이지 번호 배지 — 우측 상단 모서리, 본문 흐름에 영향 없음.
+     OCR 마진에서 추출, 없으면 렌더 자체 안 됨. */
+  .page-num-badge {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    font-size: 0.72rem;
+    color: #9C9892;
+    background: #F5F3EE;
+    border: 1px solid #E5E2DC;
+    padding: 2px 8px;
+    border-radius: 999px;
+    pointer-events: none;
+    user-select: none;
   }
   .page-text {
     font-size: 1rem;
@@ -1452,7 +1471,8 @@ const MAX_PAGES = 30;
    준수한 throughput 을 유지하면서도 429 가 거의 안 뜸. 늘렸을 때 이득은 작고
    실패 위험만 커지므로 이 값에서 안정. */
 const PAGE_CONCURRENCY = 6;
-/* 페이지 데이터: { original, translated, no_text, error, study_items: [{surface, type, meaning, example_in_text}] } */
+/* 페이지 데이터: { original, translated, no_text, error, page_number, study_items: [{surface, type, meaning, example_in_text}] }
+   page_number: OCR 이 마진에서 추출한 책 본래 페이지 번호 (string | null). 본문에는 영향 없음, 뷰어 배지/순서 편집 모달 보조 라벨에만 사용. */
 let _pages = [];
 let _currentIdx = 0;
 let _showTranslated = false;
@@ -1555,6 +1575,7 @@ async function handlePhotos(inputEl) {
         no_text: !!v.result.no_text,
         study_items: [],
         error: null,
+        page_number: sanitizePageNumber(v.result.page_number),
         _image: image,
       };
     }
@@ -1562,6 +1583,7 @@ async function handlePhotos(inputEl) {
       original: '', translated: '', no_text: false, study_items: [],
       error: 'extract failed',
       errorDetail: v.errorDetail,
+      page_number: null,
       _image: image,
     };
   });
@@ -1763,10 +1785,18 @@ function setLoadingPhase(key) {
 /* --- 북 뷰어 렌더 --- */
 function renderBook() {
   const track = document.getElementById('pageTrack');
-  track.innerHTML = _pages.map((p, i) => `<div class="page" data-page-idx="${i}">${renderPageContent(p, i)}</div>`).join('');
+  track.innerHTML = _pages.map((p, i) => `<div class="page" data-page-idx="${i}">${renderPageNumberBadge(p)}${renderPageContent(p, i)}</div>`).join('');
   goTo(_currentIdx, /*animate*/ false);
   updateNav();
   updateTranslateBtnState();
+}
+
+/* 책 본래 페이지 번호 배지 — page_number 가 sanitizePageNumber 통과 시에만 노출.
+   본문/에러/no_text 어느 상태에서도 동일하게 우측 상단 모서리에 표시. */
+function renderPageNumberBadge(p) {
+  const pn = sanitizePageNumber(p && p.page_number);
+  if (!pn) return '';
+  return `<div class="page-num-badge">${escapeHtml(pn)}</div>`;
 }
 
 function renderPageContent(p, pageIdx) {
@@ -1825,7 +1855,7 @@ function rerenderPage(pageIdx) {
   const track = document.getElementById('pageTrack');
   if (!track) return;
   const pageEl = track.querySelector(`.page[data-page-idx="${pageIdx}"]`);
-  if (pageEl) pageEl.innerHTML = renderPageContent(_pages[pageIdx], pageIdx);
+  if (pageEl) pageEl.innerHTML = renderPageNumberBadge(_pages[pageIdx]) + renderPageContent(_pages[pageIdx], pageIdx);
 }
 
 /* 재시도/교체 진행 중 표시 — 버튼 자리에 "재시도 중..." 메시지로 잠시 대체.
@@ -1874,6 +1904,7 @@ async function retryPage(pageIdx) {
       no_text: !!result.no_text,
       study_items: filterStudyItems(result.study_items),
       error: null,
+      page_number: sanitizePageNumber(result.page_number),
       /* 새로 디코딩 성공 시 base64 도 캐시에 채워 다음 재시도는 API 만 돌도록 */
       _image: { file: p._image.file, base64Data, mimeType },
     };
@@ -1926,6 +1957,7 @@ async function replacePagePhoto(pageIdx) {
         no_text: !!result.no_text,
         study_items: filterStudyItems(result.study_items),
         error: null,
+        page_number: sanitizePageNumber(result.page_number),
         _image: { file, base64Data, mimeType },
       };
     } catch (e) {
@@ -2014,6 +2046,19 @@ function filterStudyItems(items) {
     if (!it || typeof it.surface !== 'string') return false;
     return !it.surface.trim().endsWith('-');
   });
+}
+
+/* OCR 응답 page_number 의 1차 검증 — Gemini 환각 방어선.
+   허용: 1~5자, 영숫자(아라비아/로마/소문자/대문자) + 가벼운 구분자만.
+   본문 일부가 통째로 페이지 번호로 잘못 들어오는 경우(ex. 한 문장)를 차단.
+   부적합/빈값은 null 로 통일해 호출부가 분기 단순. */
+function sanitizePageNumber(v) {
+  if (v == null) return null;
+  const s = String(v).trim();
+  if (!s) return null;
+  if (s.length > 5) return null;
+  if (!/^[A-Za-z0-9.\-]+$/.test(s)) return null;
+  return s;
 }
 
 /* 본문에서 학습 단어 surface 를 case-insensitive 로 찾아 <span class="study-highlight"> 로 감쌈.
@@ -2306,6 +2351,7 @@ async function openSavedBook(bookId) {
       no_text: !!p.no_text,
       study_items: filterStudyItems(p.study_items),
       error: null,
+      page_number: sanitizePageNumber(p.page_number),
     })) : [];
     _currentIdx = 0;
     _showTranslated = false;
@@ -2388,6 +2434,7 @@ async function saveCurrentBook() {
         translated: p.translated || '',
         no_text: !!p.no_text,
         study_items: Array.isArray(p.study_items) ? p.study_items : [],
+        page_number: sanitizePageNumber(p.page_number),
       }));
       const { data, error } = await supabaseClient
         .from('reading_books')
@@ -2458,8 +2505,11 @@ function renderReorderList() {
     const preview = reorderPreviewText(p);
     const previewClass = preview ? '' : ' empty';
     const previewLabel = preview || '—';
+    /* 책 본래 페이지 번호 — 자동 정렬 결과 검증용 보조 라벨. 없으면 표시 생략. */
+    const pn = sanitizePageNumber(p && p.page_number);
+    const numLabel = pn ? `#${i + 1} · p.${escapeHtml(pn)}` : `#${i + 1}`;
     return `<div class="reorder-item">
-      <div class="reorder-item-num">#${i + 1}</div>
+      <div class="reorder-item-num">${numLabel}</div>
       <div class="reorder-item-preview${previewClass}">${escapeHtml(previewLabel)}</div>
       <div class="reorder-item-actions">
         <button class="reorder-arrow-btn" type="button" onclick="movePageInDraft(${i}, -1)" ${i === 0 ? 'disabled' : ''} aria-label="up">▲</button>
@@ -2491,6 +2541,7 @@ async function saveReorder() {
       translated: p.translated || '',
       no_text: !!p.no_text,
       study_items: Array.isArray(p.study_items) ? p.study_items : [],
+      page_number: sanitizePageNumber(p.page_number),
     }));
     const { error } = await supabaseClient
       .from('reading_books')
@@ -2530,6 +2581,7 @@ async function autoSaveBook() {
     translated: p.translated || '',
     no_text: !!p.no_text,
     study_items: Array.isArray(p.study_items) ? p.study_items : [],
+    page_number: sanitizePageNumber(p.page_number),
   }));
   try {
     const { data, error } = await supabaseClient
