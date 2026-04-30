@@ -809,6 +809,33 @@
     border: 0;
     display: block;
   }
+  /* iframe 부트스트랩(HTML/JS/auth/i18n) 동안 빈 화면 노출 방지용 즉시 로딩 인디케이터.
+     iframe 안 vocabulary.html 이 embed 모드 init 완료 시 postMessage('embed-ready') 보내면 hide. */
+  .word-popup-loading {
+    position: absolute;
+    inset: 0;
+    background: #FAFAF7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    z-index: 1;
+  }
+  .word-popup-loading[hidden] { display: none; }
+  .word-popup-loading-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #4A90D9;
+    opacity: 0.3;
+    animation: wpLoadingPulse 1.4s ease-in-out infinite;
+  }
+  .word-popup-loading-dot:nth-child(2) { animation-delay: 0.2s; }
+  .word-popup-loading-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes wpLoadingPulse {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.4); }
+  }
   @media (max-width: 480px) {
     .word-popup-overlay { padding: 12px; }
     .word-popup { height: 92vh; }
@@ -996,6 +1023,13 @@
      overlay 빈 영역 클릭 또는 ✕ 클릭 시 닫힘. -->
 <div class="word-popup-overlay" id="wordPopupOverlay" hidden>
   <div class="word-popup">
+    <!-- 부모 측 즉시 로딩 인디케이터: iframe이 인터랙티브해질 때까지 빈 화면 가림.
+         vocabulary.html(embed mode) 가 init 완료 시 postMessage('embed-ready') 보내면 hide. -->
+    <div class="word-popup-loading" id="wordPopupLoading" hidden>
+      <div class="word-popup-loading-dot"></div>
+      <div class="word-popup-loading-dot"></div>
+      <div class="word-popup-loading-dot"></div>
+    </div>
     <iframe class="word-popup-iframe" id="wordPopupIframe" src="about:blank" title="Geminary"></iframe>
   </div>
 </div>
@@ -2727,6 +2761,9 @@ function openGeminaryPopup(word) {
   if (!word) return;
   const overlay = document.getElementById('wordPopupOverlay');
   const iframe = document.getElementById('wordPopupIframe');
+  const loading = document.getElementById('wordPopupLoading');
+  /* 부모 측 로딩 인디케이터를 iframe 보다 먼저 노출 — 흰 화면 구간 제거 */
+  if (loading) loading.hidden = false;
   iframe.src = `vocabulary.html?q=${encodeURIComponent(word)}&embed=1`;
   overlay.hidden = false;
   /* 본문 스크롤 잠금 — 팝업 뒤 페이지가 같이 스크롤되는 어색함 방지 */
@@ -2735,9 +2772,12 @@ function openGeminaryPopup(word) {
 function closeGeminaryPopup() {
   const overlay = document.getElementById('wordPopupOverlay');
   const iframe = document.getElementById('wordPopupIframe');
+  const loading = document.getElementById('wordPopupLoading');
   /* iframe src 비워서 안에서 돌던 검색·이미지 생성 즉시 중단 + 다음 열기 시 깜빡임 방지 */
   iframe.src = 'about:blank';
   overlay.hidden = true;
+  /* 다음 열기 때 다시 노출되도록 hidden 으로 리셋 */
+  if (loading) loading.hidden = true;
   document.body.style.overflow = '';
 }
 /* 발음 듣기 — 브라우저 내장 SpeechSynthesis (vocabulary.html 의 speak() 와 동일 시그니처).
@@ -2787,9 +2827,16 @@ document.addEventListener('click', (e) => {
     closeExtractFailedModal();
   }
 });
-/* iframe(vocabulary.html embed-mode) 내부 ✕ 버튼이 postMessage 로 닫기 요청 → 부모에서 닫음 */
+/* iframe(vocabulary.html embed-mode) 내부 ✕ 버튼이 postMessage 로 닫기 요청 → 부모에서 닫음.
+   embed-ready 신호는 vocabulary.html 의 init 완료 시점 — 이때 부모 로딩 인디케이터 제거하고
+   이후 검색 진행 상태는 iframe 자체 UI 가 표시한다. */
 window.addEventListener('message', (e) => {
-  if (e.data && e.data.type === 'close-word-popup') closeGeminaryPopup();
+  if (!e.data || typeof e.data !== 'object') return;
+  if (e.data.type === 'close-word-popup') closeGeminaryPopup();
+  if (e.data.type === 'embed-ready') {
+    const loading = document.getElementById('wordPopupLoading');
+    if (loading) loading.hidden = true;
+  }
 });
 /* ESC 키로도 팝업 닫기 — 키보드 사용자 편의 */
 document.addEventListener('keydown', (e) => {

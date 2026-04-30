@@ -617,6 +617,12 @@
     max-height: 400px;
     border-radius: 12px;
     border: 1px solid #D5D2CC;
+    /* Gemini imageConfig.aspectRatio 가 '4:3' 으로 고정 — 로딩 전에도 공간 예약하여
+       fetch 완료 시 layout shift / 깜빡임 제거. background 는 placeholder 색. */
+    aspect-ratio: 4 / 3;
+    background: #F5F3EE;
+    object-fit: contain;
+    width: 100%;
   }
   /* 새 단어 발견 뱃지 (화면 중앙 고정) */
   .discovery-badge {
@@ -2915,8 +2921,12 @@ async function initAuth() {
    초기화(이벤트 핸들러 바인딩 등) 가 끝난 직후 setTimeout 0 으로 한 틱 늦춤. */
 function applyEmbedAndAutoSearch() {
   const params = new URLSearchParams(location.search);
-  if (params.get('embed') === '1') {
+  const isEmbed = params.get('embed') === '1';
+  if (isEmbed) {
     document.body.classList.add('embed-mode');
+    /* 부모(reading.html) 의 로딩 인디케이터 제거 신호 — iframe 이 인터랙티브해진 시점.
+       이후 단어 검색의 로딩 상태는 vocabulary 자체 UI 가 담당. */
+    try { parent.postMessage({ type: 'embed-ready' }, '*'); } catch (_) {}
   }
   const q = params.get('q');
   if (!q) return;
@@ -3591,8 +3601,7 @@ async function lookupWord(word) {
     if (cachedObj2 && cachedObj2.html) {
       /* 이미지 생성 활성화 상태인데 캐시에 이미지가 없으면 캐시 무시하고 재검색 */
       if (!(settings.imageEnabled && !cachedObj2.html.includes('<img '))) {
-        resultSearch.innerHTML = `<div class="loading">${getRandomSearching()}</div>`;
-        await new Promise(r => setTimeout(r, 800));
+        /* 캐시 hit 는 즉시 결과 노출 — 인위적 로딩 플래시/지연 없이 자연스럽게 */
         wordResults[word] = { html: cachedObj2.html };
         if (cachedObj2.snapshot) window._lastWbData = cachedObj2.snapshot;
         showSearchResult(word);
