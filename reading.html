@@ -284,6 +284,18 @@
     transition: background 0.2s, color 0.2s;
   }
   .save-book-btn:hover { background: #5A8A42; color: #FFFFFF; }
+  /* 페이지 순서 편집 진입 버튼 — save-book-btn 과 동일 톤(중성) */
+  .reorder-pages-btn {
+    padding: 8px 14px;
+    font-size: 0.85rem;
+    border: 1px solid #D5D2CC;
+    border-radius: 10px;
+    background: #FFFFFF;
+    color: #4A4641;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .reorder-pages-btn:hover { background: #EDECEA; }
   .saved-badge {
     font-size: 0.8rem;
     color: #5A8A42;
@@ -538,6 +550,73 @@
   .modal-btn-primary { background: #5A8A42; color: #FFFFFF; }
   .modal-btn-primary:hover { background: #4A7335; }
   .modal-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* 페이지 순서 편집 모달 — 페이지 수가 많아지므로 일반 모달보다 넓고, 리스트 영역은 스크롤 */
+  .reorder-modal-card { max-width: 540px; }
+  .reorder-list {
+    max-height: 60vh;
+    overflow-y: auto;
+    border: 1px solid #E5E2DC;
+    border-radius: 10px;
+    background: #FAFAF7;
+    padding: 6px;
+  }
+  .reorder-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: #FFFFFF;
+    border: 1px solid #ECEAE4;
+    border-radius: 8px;
+    margin-bottom: 6px;
+  }
+  .reorder-item:last-child { margin-bottom: 0; }
+  .reorder-item-num {
+    flex: 0 0 auto;
+    min-width: 36px;
+    text-align: center;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #5A8A42;
+    background: #EAF1E2;
+    border: 1px solid #C9DBB8;
+    padding: 4px 6px;
+    border-radius: 999px;
+  }
+  .reorder-item-preview {
+    flex: 1 1 auto;
+    font-size: 0.85rem;
+    color: #4A4641;
+    line-height: 1.35;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    word-break: break-word;
+  }
+  .reorder-item-preview.empty { color: #9C9892; font-style: italic; }
+  .reorder-item-actions {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .reorder-arrow-btn {
+    width: 32px;
+    height: 26px;
+    border: 1px solid #D5D2CC;
+    border-radius: 6px;
+    background: #FFFFFF;
+    color: #4A4641;
+    font-size: 0.85rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.15s;
+  }
+  .reorder-arrow-btn:hover:not(:disabled) { background: #EDECEA; }
+  .reorder-arrow-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
   /* 설정 모달 — vocabulary.html 의 my-설정 그룹 스타일을 차용해 통일감 유지 */
   .rs-group-title {
@@ -798,6 +877,8 @@
       <div class="toolbar-right">
         <!-- 책으로 저장 — 새로 올린(미저장) 책일 때만 표시 -->
         <button class="save-book-btn" id="saveBookBtn" onclick="openSaveBookModal()" data-i18n="readingSaveBookBtn" hidden>📚 책으로 저장</button>
+        <!-- 페이지 순서 편집 — 저장된 책(_currentBookId 있음 + 로그인) 일 때만 표시 -->
+        <button class="reorder-pages-btn" id="reorderPagesBtn" onclick="openReorderModal()" data-i18n="readingReorderPagesBtn" hidden>🔀 순서 편집</button>
         <!-- 번역 토글 — UI 언어가 영어이면 숨김 -->
         <button class="translate-toggle" id="translateToggle" onclick="toggleTranslate()"></button>
       </div>
@@ -839,6 +920,21 @@
     <div class="modal-actions">
       <button class="modal-btn modal-btn-cancel" onclick="closeSaveBookModal()" data-i18n="setCancelBtn">취소</button>
       <button class="modal-btn modal-btn-primary" id="saveBookConfirmBtn" onclick="saveCurrentBook()" data-i18n="setSaveBtn">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 페이지 순서 편집 모달 — 저장된 책 뷰어에서 "🔀 순서 편집" 버튼으로 진입.
+     ↑↓ 버튼으로 한 칸씩 이동, 저장 시 reading_books.pages 배열을 새 순서로 UPDATE.
+     취소 시 변경 사항 폐기. 작업 내용 보호를 위해 오버레이 빈 영역 클릭으로 닫히지 않음. -->
+<div class="modal-overlay" id="reorderPagesModal" hidden>
+  <div class="modal-card reorder-modal-card">
+    <div class="modal-title" data-i18n="readingReorderModalTitle">페이지 순서 편집</div>
+    <div class="modal-desc" data-i18n="readingReorderModalDesc">↑↓ 버튼으로 페이지 순서를 바꿀 수 있어요</div>
+    <div class="reorder-list" id="reorderList"></div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-cancel" onclick="closeReorderModal()" data-i18n="setCancelBtn">취소</button>
+      <button class="modal-btn modal-btn-primary" id="reorderSaveBtn" onclick="saveReorder()" data-i18n="setSaveBtn">저장</button>
     </div>
   </div>
 </div>
@@ -1552,6 +1648,7 @@ async function handlePhotos(inputEl) {
 function updateBookViewerToolbar() {
   const saveBtn = document.getElementById('saveBookBtn');
   const savedBadge = document.getElementById('savedBadge');
+  const reorderBtn = document.getElementById('reorderPagesBtn');
   if (!saveBtn) return;
   /* 자동 저장 도입 후 saved 배지는 더 이상 노출 안 함 — 버튼 텍스트가 상태 신호 역할.
      기존 element 자체는 호환성 유지를 위해 hidden 처리만. */
@@ -1559,6 +1656,7 @@ function updateBookViewerToolbar() {
 
   if (!_authUser) {
     saveBtn.hidden = true;
+    if (reorderBtn) reorderBtn.hidden = true;
     return;
   }
   saveBtn.hidden = false;
@@ -1569,6 +1667,10 @@ function updateBookViewerToolbar() {
   } else {
     saveBtn.setAttribute('data-i18n', 'readingSaveBookBtn');
     saveBtn.textContent = tt('readingSaveBookBtn', '📚 책으로 저장');
+  }
+  /* 순서 편집 버튼 — 저장된 책(_currentBookId 있음) + 페이지 2장 이상일 때만 의미 있음 */
+  if (reorderBtn) {
+    reorderBtn.hidden = !(_currentBookId != null && Array.isArray(_pages) && _pages.length >= 2);
   }
 }
 
@@ -2307,6 +2409,102 @@ async function saveCurrentBook() {
   } catch (e) {
     console.error('save book 실패:', e);
     alert((typeof t === 'function') ? t('readingSaveError') : '책 저장에 실패했어요');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+/* ===== 페이지 순서 편집 모달 =====
+   저장된 책 뷰어에서 "🔀 순서 편집" 버튼으로 진입.
+   _reorderDraft 에 _pages 의 순서만 변경하는 작업용 복사본을 만들어 ↑↓ 로 swap,
+   "저장" 시점에만 reading_books.pages 를 새 순서로 UPDATE 하고 로컬 _pages 도 갱신.
+   "취소" 시 draft 폐기 — 작업 내용 보호 위해 오버레이 클릭으로는 닫히지 않음.
+
+   주의: pages 배열에는 페이지 본문 텍스트만 들어있고 _image (재추출용) 는 저장된 책에는
+   없음. 신규 추출 직후 _image 가 있는 상태에서도 reorder 가 가능하도록 _image 도 함께
+   순서 변경 — 단 supabase payload 에는 포함하지 않음(스키마는 텍스트 필드만). */
+let _reorderDraft = null;
+
+function openReorderModal() {
+  if (!_authUser || !_currentBookId) return;
+  if (!Array.isArray(_pages) || _pages.length < 2) return;
+  /* 얕은 복사로 충분 — 페이지 객체 자체는 swap 만 하므로 내부 필드 변형 없음 */
+  _reorderDraft = _pages.slice();
+  renderReorderList();
+  document.getElementById('reorderPagesModal').hidden = false;
+}
+
+function closeReorderModal() {
+  _reorderDraft = null;
+  document.getElementById('reorderPagesModal').hidden = true;
+}
+
+/* 미리보기 텍스트: 본문 첫 80자 정도. 줄바꿈을 공백으로 평탄화해 한 눈에 페이지 식별 가능하도록.
+   본문 없음(에러/no_text) 시 안내 라벨로 대체. */
+function reorderPreviewText(p) {
+  if (!p) return '';
+  if (p.error) return '⚠ ' + ((typeof t === 'function') ? t('readingPageError') : '추출 실패');
+  if (p.no_text) return ((typeof t === 'function') ? t('readingNoText') : '글자 없음');
+  const raw = (p.original || '').replace(/\s+/g, ' ').trim();
+  if (!raw) return '';
+  return raw.length > 80 ? raw.slice(0, 80) + '…' : raw;
+}
+
+function renderReorderList() {
+  const list = document.getElementById('reorderList');
+  if (!list || !Array.isArray(_reorderDraft)) return;
+  const last = _reorderDraft.length - 1;
+  list.innerHTML = _reorderDraft.map((p, i) => {
+    const preview = reorderPreviewText(p);
+    const previewClass = preview ? '' : ' empty';
+    const previewLabel = preview || '—';
+    return `<div class="reorder-item">
+      <div class="reorder-item-num">#${i + 1}</div>
+      <div class="reorder-item-preview${previewClass}">${escapeHtml(previewLabel)}</div>
+      <div class="reorder-item-actions">
+        <button class="reorder-arrow-btn" type="button" onclick="movePageInDraft(${i}, -1)" ${i === 0 ? 'disabled' : ''} aria-label="up">▲</button>
+        <button class="reorder-arrow-btn" type="button" onclick="movePageInDraft(${i}, 1)" ${i === last ? 'disabled' : ''} aria-label="down">▼</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* 한 칸씩 swap. dir: -1 = up, +1 = down. */
+function movePageInDraft(idx, dir) {
+  if (!Array.isArray(_reorderDraft)) return;
+  const j = idx + dir;
+  if (j < 0 || j >= _reorderDraft.length) return;
+  const tmp = _reorderDraft[idx];
+  _reorderDraft[idx] = _reorderDraft[j];
+  _reorderDraft[j] = tmp;
+  renderReorderList();
+}
+
+async function saveReorder() {
+  if (!_authUser || !_currentBookId || !Array.isArray(_reorderDraft)) return;
+  const btn = document.getElementById('reorderSaveBtn');
+  btn.disabled = true;
+  try {
+    /* supabase 에는 텍스트 필드만 — _image 등 클라이언트 전용 키는 제외 */
+    const pagesPayload = _reorderDraft.map((p) => ({
+      original: p.original || '',
+      translated: p.translated || '',
+      no_text: !!p.no_text,
+      study_items: Array.isArray(p.study_items) ? p.study_items : [],
+    }));
+    const { error } = await supabaseClient
+      .from('reading_books')
+      .update({ pages: pagesPayload })
+      .eq('id', _currentBookId);
+    if (error) throw error;
+    /* 로컬 상태 갱신 — _image 등 부가 필드까지 보존된 draft 를 그대로 사용. */
+    _pages = _reorderDraft.slice();
+    _currentIdx = 0;
+    closeReorderModal();
+    renderBook();
+  } catch (e) {
+    console.error('reorder save 실패:', e);
+    alert((typeof t === 'function') ? t('readingReorderSaveError') : '순서 변경 저장에 실패했어요');
   } finally {
     btn.disabled = false;
   }
