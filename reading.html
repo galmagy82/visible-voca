@@ -1864,10 +1864,10 @@ function renderPageContent(p, pageIdx) {
     ? highlightText(text, items, pageIdx)
     : escapeHtml(text);
 
-  /* 학습 단어 collapsible 리스트 (페이지 내 공급된 항목만) */
-  const listHtml = items.length > 0
-    ? renderStudyList(items, pageIdx)
-    : '';
+  /* 학습 단어 collapsible 리스트 — 0개 페이지도 항상 렌더해 시각적 일관성 유지.
+     0개일 때는 헤더(이 페이지의 학습 단어 (0)) + 빈 <ul> 만 표시되어 본문과 학습 영역의
+     구분선이 살아있고, 페이지가 정상 처리됐다는 종결 신호 역할을 함. */
+  const listHtml = renderStudyList(items, pageIdx);
 
   return `<div class="page-content-wrap">
     <div class="page-text">${html}</div>
