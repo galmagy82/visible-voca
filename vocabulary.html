@@ -2820,6 +2820,59 @@ async function fetchExistingImage(word) {
   }
 }
 
+/* ===== 표현 모드 전역 캐시 (expression_results) =====
+   word_results (어휘 모드 캐시) 의 사각지대를 메우는 별도 테이블.
+   대상: Gemini 응답의 pos === '' (문장·구절·idiom 등 표현 모드).
+   특히 reading 의 학습 단어 중 type=idiom/collocation 등이 여기로 모임.
+
+   캐시 키 derivation: lemma 우선, 없으면 surface — 둘 다 lowercase + trim +
+   다중 공백 → single space. 같은 표현의 활용형 변형(ran into / runs into 등) 을
+   하나의 row 로 모으기 위함. lemma 폴백은 reading.html 의 기존 패턴과 동일. */
+function deriveExpressionCacheKey(surface, lemma) {
+  const raw = (lemma && String(lemma).trim()) || (surface && String(surface).trim()) || '';
+  return raw.toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+/* (cache_key, lang) 페어 단일 row 조회. 텍스트만 있으면 hit (이미지 임계치 없음). */
+async function fetchExpressionFromSupabase(cacheKey, lang) {
+  if (!cacheKey) return null;
+  try {
+    const { data, error } = await supabaseClient
+      .from('expression_results')
+      .select('description, examples, corrected, surface, lemma')
+      .eq('cache_key', cacheKey)
+      .eq('lang', lang)
+      .maybeSingle();
+    if (error || !data || !data.description) return null;
+    return data;
+  } catch (e) {
+    console.warn('expression cache 조회 실패:', e);
+    return null;
+  }
+}
+
+/* 표현 모드 결과 저장 (텍스트만, 이미지 없음). UNIQUE (cache_key, lang) 충돌 시
+   onConflict 무시하여 동시 저장 race 안전. */
+async function saveExpressionToSupabase(cacheKey, surface, lemma, parsed, lang) {
+  if (!cacheKey || !parsed.description) return;
+  try {
+    const { error } = await supabaseClient
+      .from('expression_results')
+      .upsert({
+        cache_key: cacheKey,
+        lang,
+        surface: surface || null,
+        lemma: lemma || null,
+        corrected: parsed.corrected || null,
+        description: parsed.description,
+        examples: parsed.examples || null,
+      }, { onConflict: 'cache_key,lang', ignoreDuplicates: true });
+    if (error) console.warn('expression 저장 실패:', error);
+  } catch (e) {
+    console.warn('expression 저장 예외:', e);
+  }
+}
+
 /* Supabase에 단어 결과 저장 + 이미지 업로드
    파라미터:
    - imageDataUrl: Gemini가 새로 생성한 data:URL (있으면 Storage 업로드)
@@ -3228,6 +3281,36 @@ function buildHtmlFromDB(dbData, word, correctedOverride) {
   return html;
 }
 
+/* expression_results 캐시 hit 결과를 HTML 로 조립 — buildHtmlFromDB 의 표현 모드 버전.
+   POS/IPA/CEFR/이미지/3단변화 없음. word-title + speak + add 버튼 + corrected + desc + examples. */
+function buildHtmlFromExpression(exprData, word) {
+  const safeWord = escapeHtml(word);
+  const safeCorrected = escapeHtml(exprData.corrected || '');
+  const speakWord = (safeCorrected || safeWord).replace(/'/g, "\\'");
+  let html = `<div class="word-header">`;
+  html += `<div class="word-title">${safeCorrected || safeWord}</div>`;
+  html += `<button class="speak-btn" onclick="speak('${speakWord}')" title="${t('listenPronunciation')}">&#128264;</button>`;
+  html += `<button class="add-wordbook-btn" data-wb-word>${t('addToWordbook')}</button>`;
+  html += `</div>`;
+  if (safeCorrected && safeCorrected.toLowerCase() !== safeWord.toLowerCase()) {
+    html += `<div class="corrected">${safeWord} → <span>${safeCorrected}</span></div>`;
+  }
+  html += `<div class="feel-desc">${escapeHtml(exprData.description)}</div>`;
+  if (exprData.examples) html += `<div class="feel-examples">${stylePosLabels(escapeHtml(exprData.examples))}</div>`;
+  /* 단어장 스냅샷 — 표현 모드는 pos/ipa/cefr/verbForms 빈 문자열로 채움 */
+  window._lastWbData = {
+    word,
+    pos: '',
+    ipa: '',
+    cefr: '',
+    corrected: exprData.corrected || '',
+    description: exprData.description || '',
+    examples: exprData.examples || '',
+    verbForms: '',
+  };
+  return html;
+}
+
 // --- 공통: 단어 검색 후 결과 HTML 생성 ---
 async function fetchWordResult(word, targetEl) {
   const settings = getSettings();
@@ -3277,6 +3360,22 @@ async function fetchWordResult(word, targetEl) {
     /* buildHtmlFromDB 가 _lastWbData 를 채웠으므로 캐시에도 스냅샷 동봉 */
     saveCacheEntry(word, dbHtml, window._lastWbData);
     return dbHtml;
+  }
+
+  /* ②.5 표현 모드 캐시 조회 — word_results 가 miss 한 입력 중 표현(idiom/구절) 일 가능성.
+     hit 시 Edge Function 호출 자체를 스킵 → 사용자 간 캐시 공유. */
+  const exprKey = deriveExpressionCacheKey(lookupKey, lookupKey);
+  const exprLang = getLang();
+  const exprHit = await fetchExpressionFromSupabase(exprKey, exprLang);
+  if (exprHit) {
+    const exprHtml = buildHtmlFromExpression(exprHit, word);
+    wordResults[word] = { html: exprHtml };
+    targetEl.innerHTML = exprHtml;
+    bindWbButton(targetEl);
+    autoAddIfEnabled(targetEl);
+    addExp(10, 'search');
+    saveCacheEntry(word, exprHtml, window._lastWbData);
+    return exprHtml;
   }
 
   /* ③ Edge Function 호출 — 데이터 부족 또는 없음 */
@@ -3497,12 +3596,13 @@ async function fetchWordResult(word, targetEl) {
   if (!imagePromise) {
     /* _lastWbData 는 위에서 채워둔 상태 → 캐시에도 스냅샷 동봉 */
     saveCacheEntry(word, html, window._lastWbData);
-    /* Supabase 저장은 POS 가 있을 때만(= 단어/숙어/구동사)
-       POS 가 없는 문장·구절·단편은 word_results 캐시 구조(언어별 텍스트 + 이미지) 와 맞지 않고,
-       fetchFromSupabase 필터(cefr 필수)·hit 조건(이미지 필수)에 의해 항상 miss 되어
-       매 검색마다 중복 row 가 쌓이므로 저장 자체를 스킵한다. */
+    /* 어휘 모드(POS 있음): word_results 에 저장.
+       표현 모드(POS 없음): expression_results 에 저장 — reading 학습 단어의
+       idiom/collocation 등이 사용자 간 공유 캐시로 누적됨. */
     if (pos) {
       saveToSupabase(saveWord, { corrected, pos, ipa, cefr, description: desc, examples, verbForms }, null, null, sceneEn);
+    } else {
+      saveExpressionToSupabase(exprKey, word, lookupKey, { corrected, description: desc, examples }, exprLang);
     }
     return html;
   }
