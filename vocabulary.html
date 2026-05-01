@@ -1091,16 +1091,17 @@
     gap: 8px;
     margin-bottom: 8px;
   }
-  /* 책 본래 페이지 번호 배지 — 책 뷰어 (.page-num-badge) 와 같은 회색 톤이지만,
-     옆 초록 Page 배지와 높이를 맞추기 위해 font-size·padding 은 동기화.
-     border-radius: 999px 는 자동으로 짧은 변의 절반으로 캡되어 자릿수 늘어도 알약 모양 유지. */
+  /* 책 본래 페이지 번호 배지 — 옆 .wb-book-page-header 와 픽셀 단위로 동일한 스타일,
+     색상(글자/배경/보더) 만 회색 톤. font-weight 까지 동일해야 두 배지 높이가 정확히 매치됨. */
   .wb-book-page-num {
     font-size: 0.82rem;
+    font-weight: 600;
     color: #9C9892;
     background: #F5F3EE;
     border: 1px solid #E5E2DC;
     padding: 4px 10px;
     border-radius: 999px;
+    display: inline-block;
     user-select: none;
   }
   /* 학습 단어 출처 문장 — 본문에서 추출한 컨텍스트. 회색 인용 톤.
