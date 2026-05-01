@@ -3099,6 +3099,10 @@ function applyEmbedAndAutoSearch() {
   const isEmbed = params.get('embed') === '1';
   if (isEmbed) {
     document.body.classList.add('embed-mode');
+    /* embed 모드는 항상 검색 결과를 보여주는 용도 → tabSearch 강제 활성화.
+       메인 페이지 디폴트(tabWordbook)와 분리. #resultSearch 가 #tabSearch 내부라
+       이 토글 없이는 검색 결과가 비활성 패널에 렌더되어 보이지 않음. */
+    switchTab('search');
     /* 부모(reading.html) 의 로딩 인디케이터 제거 신호 — iframe 이 인터랙티브해진 시점.
        이후 단어 검색의 로딩 상태는 vocabulary 자체 UI 가 담당. */
     try { parent.postMessage({ type: 'embed-ready' }, '*'); } catch (_) {}
