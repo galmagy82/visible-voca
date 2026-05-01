@@ -1002,6 +1002,110 @@
   .set-detail-header {
     margin-bottom: 16px;
   }
+
+  /* === 책별 탭 — reading의 My Books 카드 톤 차용 === */
+  .wb-book-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 14px;
+  }
+  .wb-book-card {
+    background: #FFFFFF;
+    border: 1px solid #D5D2CC;
+    border-radius: 12px;
+    padding: 16px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  }
+  .wb-book-card:hover {
+    border-color: #5A8A42;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  }
+  .wb-book-card-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #2D2B28;
+    margin-bottom: 6px;
+    word-break: break-word;
+    line-height: 1.4;
+  }
+  .wb-book-card-meta {
+    font-size: 0.78rem;
+    color: #8A8078;
+  }
+  .wb-book-empty {
+    padding: 60px 20px;
+    text-align: center;
+    color: #8A8078;
+  }
+  /* 책 상세 헤더 — set-detail-header 와 동일 톤 + 뒤로가기 링크. */
+  .book-detail-header {
+    margin-bottom: 16px;
+  }
+  .book-detail-back {
+    display: inline-block;
+    font-size: 0.85rem;
+    color: #5A8A42;
+    cursor: pointer;
+    margin-bottom: 6px;
+    user-select: none;
+  }
+  .book-detail-back:hover { color: #4A7335; text-decoration: underline; }
+  .book-detail-title {
+    color: #2D2B28;
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin: 0;
+    word-break: break-word;
+  }
+  /* 책 상세 페이지 그룹 — "Page 1 (5)" 헤더 + 그 아래 학습 단어 항목들 */
+  .wb-book-page-group { margin-bottom: 22px; }
+  .wb-book-page-header {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #5A8A42;
+    background: #EAF1E2;
+    border: 1px solid #C9DBB8;
+    padding: 4px 10px;
+    border-radius: 999px;
+    display: inline-block;
+    margin-bottom: 8px;
+  }
+  .wb-book-item {
+    padding: 10px 12px;
+    border-bottom: 1px solid #ECEAE4;
+  }
+  .wb-book-item:last-child { border-bottom: none; }
+  .wb-book-item-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .wb-book-item-surface {
+    font-weight: 600;
+    color: #2D2B28;
+    font-size: 0.95rem;
+  }
+  .wb-book-item-lemma {
+    font-size: 0.82rem;
+    color: #8A8078;
+  }
+  .wb-book-item-speak {
+    border: none;
+    background: transparent;
+    color: #8A8078;
+    cursor: pointer;
+    font-size: 0.95rem;
+    padding: 0 4px;
+    line-height: 1;
+  }
+  .wb-book-item-speak:hover { color: #2D2B28; }
+  .wb-book-item-meaning {
+    margin-top: 4px;
+    font-size: 0.88rem;
+    color: #4A4641;
+  }
   .set-detail-title {
     color: #2D2B28;
     font-size: 1.15rem;
@@ -1790,6 +1894,8 @@
         <button class="wb-subtab active" onclick="switchWbMode('vocab')" id="wbTabVocab" data-i18n="wbVocab">단어 (0)</button>
         <button class="wb-subtab" onclick="switchWbMode('expr')" id="wbTabExpr" data-i18n="wbExpr">문장 (0)</button>
         <button class="wb-subtab" onclick="switchWbMode('sets')" id="wbTabSets" data-i18n="wbSets">세트 (0)</button>
+        <!-- 책별 탭 — reading_books 의 study_items 를 책 단위로 모아 보여줌. 별도 저장소 X. -->
+        <button class="wb-subtab" onclick="switchWbMode('books')" id="wbTabBooks" data-i18n="wbBooks">책별 (0)</button>
       </div>
       <!-- 검색/정렬/전체삭제 툴바 — 세트 모드에서는 숨김 -->
       <div class="wordbook-toolbar" id="wordbookToolbar">
@@ -1813,6 +1919,11 @@
           <button class="set-delete-btn" onclick="openDeleteSetModal()" data-i18n="setDeleteBtn">세트 삭제</button>
         </div>
         <div class="set-detail-meta" id="setDetailMeta"></div>
+      </div>
+      <!-- 책 상세 뷰 헤더 — 책별 탭의 책 카드 클릭 후 학습 단어 목록 볼 때만 표시 -->
+      <div class="book-detail-header" id="bookDetailHeader" hidden>
+        <a class="book-detail-back" onclick="exitBookDetail()" data-i18n="wbBooksBackToList">← 책 목록</a>
+        <h3 class="book-detail-title" id="bookDetailTitle"></h3>
       </div>
       <!-- 단어 목록 / 세트 목록 — _wbMode 와 _activeSetId 에 따라 내용 분기 렌더 -->
       <div class="wordbook-list" id="wordbookList"></div>
@@ -2548,34 +2659,42 @@ async function updateWordLevel() {
   document.getElementById('wordLevelWrap').style.display = '';
 }
 
-// --- 단어장 어휘/표현/세트 서브탭 ---
-let _wbMode = 'vocab'; // 'vocab' | 'expr' | 'sets'
+// --- 단어장 어휘/표현/세트/책별 서브탭 ---
+let _wbMode = 'vocab'; // 'vocab' | 'expr' | 'sets' | 'books'
 /* 세트 상세 뷰 진입 상태 — null = 세트 목록, uuid = 그 세트의 단어 목록 */
 let _activeSetId = null;
+/* 책별 탭의 책 상세 뷰 진입 상태 — null = 책 카드 목록, uuid = 그 책의 학습 단어 */
+let _activeBookId = null;
+/* 책 목록 캐시 — 같은 탭 안에서 카드 ↔ 상세 왕복 시 reading_books 재조회 줄임 */
+let _wbBooksCache = null;
 
 function switchWbMode(mode) {
   _wbMode = mode;
-  /* 모드 전환 시 세트 상세 뷰는 항상 초기화 — 탭을 나갔다가 돌아와도 목록부터 */
+  /* 모드 전환 시 세트/책 상세 뷰는 항상 초기화 — 탭을 나갔다가 돌아와도 목록부터 */
   _activeSetId = null;
+  _activeBookId = null;
   /* 이전 탭에서 진입한 선택삭제 모드도 해제 — 사용자가 다른 탭으로 이동할 때 상태 잔존 방지 */
   if (selectMode) exitSelectMode();
   document.querySelectorAll('.wb-subtab').forEach(t => t.classList.remove('active'));
-  const tabIdMap = { vocab: 'wbTabVocab', expr: 'wbTabExpr', sets: 'wbTabSets' };
+  const tabIdMap = { vocab: 'wbTabVocab', expr: 'wbTabExpr', sets: 'wbTabSets', books: 'wbTabBooks' };
   const activeTab = document.getElementById(tabIdMap[mode]);
   if (activeTab) activeTab.classList.add('active');
-  /* 모드별 UI 가시성 — 세트 모드는 툴바/선택삭제 숨김, 일반 모드는 노출 */
+  /* 모드별 UI 가시성 — 세트/책별 모드는 툴바/선택삭제 숨김, 일반 모드는 노출 */
   updateWbUIVisibility();
   renderWordbook();
 }
 
-/* 툴바/상세헤더 가시성 업데이트 — 모드·세트상세 여부에 따라.
-   - 툴바(검색/정렬/선택삭제): sets 모드에서만 숨김 (vocab/expr 은 노출)
-   - 세트 상세 헤더: sets 모드 + _activeSetId 가 있을 때만 노출 */
+/* 툴바/상세헤더 가시성 업데이트 — 모드·세트상세·책상세 여부에 따라.
+   - 툴바(검색/정렬/선택삭제): sets/books 모드에서 숨김 (vocab/expr 은 노출)
+   - 세트 상세 헤더: sets 모드 + _activeSetId 있을 때만
+   - 책 상세 헤더: books 모드 + _activeBookId 있을 때만 */
 function updateWbUIVisibility() {
   const toolbar = document.getElementById('wordbookToolbar');
-  const header = document.getElementById('setDetailHeader');
-  if (toolbar) toolbar.style.display = _wbMode === 'sets' ? 'none' : '';
-  if (header) header.hidden = !(_wbMode === 'sets' && _activeSetId);
+  const setHeader = document.getElementById('setDetailHeader');
+  const bookHeader = document.getElementById('bookDetailHeader');
+  if (toolbar) toolbar.style.display = (_wbMode === 'sets' || _wbMode === 'books') ? 'none' : '';
+  if (setHeader) setHeader.hidden = !(_wbMode === 'sets' && _activeSetId);
+  if (bookHeader) bookHeader.hidden = !(_wbMode === 'books' && _activeBookId);
 }
 
 // --- 발음 듣기 (브라우저 TTS) ---
@@ -4415,14 +4534,16 @@ async function deleteSelected() {
 /* 단어장 목록 렌더링 — _wbMode 에 따라 분기:
    - 'vocab'/'expr': 기존대로 단어 목록
    - 'sets' + _activeSetId=null: 세트 카드 목록
-   - 'sets' + _activeSetId 설정: 해당 세트에 속한 단어 목록 */
+   - 'sets' + _activeSetId 설정: 해당 세트에 속한 단어 목록
+   - 'books' + _activeBookId=null: 저장된 책 카드 목록
+   - 'books' + _activeBookId 설정: 그 책의 학습 단어를 페이지별 그룹으로 표시 */
 async function renderWordbook() {
   const list = await getWordbookAll();
   const filter = (document.getElementById('wordbookFilter').value || '').toLowerCase();
   const sort = document.getElementById('wordbookSort').value;
   const listEl = document.getElementById('wordbookList');
 
-  /* 어휘/표현/세트 개수 업데이트
+  /* 어휘/표현/세트/책별 개수 업데이트
      — 어휘/표현 구분은 단어에 스페이스 포함 여부로 결정.
        (세트 일괄 저장으로 스냅샷이 없는 단어도 올바르게 분류되게 하기 위함.
         기존 pos 기반 분류는 세트 스켈레톤 단어를 모두 표현으로 몰아넣어 부자연스러웠음.) */
@@ -4432,9 +4553,33 @@ async function renderWordbook() {
   const vocabTab = document.getElementById('wbTabVocab');
   const exprTab = document.getElementById('wbTabExpr');
   const setsTab = document.getElementById('wbTabSets');
+  const booksTab = document.getElementById('wbTabBooks');
   if (vocabTab) vocabTab.textContent = `${t('wbVocab')} (${vocabAll.length})`;
   if (exprTab) exprTab.textContent = `${t('wbExpr')} (${exprAll.length})`;
   if (setsTab) setsTab.textContent = `${t('wbSets')} (${sets.length})`;
+  /* 책 개수는 별도 fetch — books 모드 진입 시점에 한 번만, 캐시 재사용. */
+  if (booksTab) {
+    const cached = _wbBooksCache;
+    if (cached) {
+      booksTab.textContent = `${t('wbBooks')} (${cached.length})`;
+    } else {
+      /* 카운트만 빠르게 (lazy) — books 탭 클릭 시 본격 로드. 일단 0 으로 표시. */
+      booksTab.textContent = `${t('wbBooks')} (0)`;
+    }
+  }
+
+  /* 책별 모드 분기 */
+  if (_wbMode === 'books') {
+    updateWbUIVisibility();
+    if (!_activeBookId) {
+      /* 책 카드 목록 */
+      await renderWbBookGrid(listEl);
+      return;
+    }
+    /* 책 상세 — 그 책의 학습 단어 페이지별 표시 */
+    await renderWbBookDetail(listEl, _activeBookId);
+    return;
+  }
 
   /* 세트 모드 분기 */
   if (_wbMode === 'sets') {
@@ -4491,6 +4636,119 @@ async function renderWordbook() {
       <button class="wordbook-item-speak" onclick="event.stopPropagation(); speak('${safeWord}')" title="${t('pronunciation')}">&#128264;</button>
     </div>`;
   }).join('');
+}
+
+/* === 책별 탭 — reading_books 의 study_items 를 책 단위로 모아 보여줌 === */
+
+/* 책 목록 fetch + 캐시. study_items 는 책 카드 단계에선 합계만 필요하니
+   pages 의 길이만 추출하지만, jsonb 전체 받아 캐시해두면 상세 진입 때 재호출 없음. */
+async function loadWbBooksIfNeeded() {
+  if (_wbBooksCache) return _wbBooksCache;
+  if (!_authUser?.id) return [];
+  try {
+    const { data, error } = await supabaseClient
+      .from('reading_books')
+      .select('id, title, pages, created_at')
+      .eq('user_id', _authUser.id)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    _wbBooksCache = data || [];
+    return _wbBooksCache;
+  } catch (e) {
+    console.warn('reading_books 조회 실패:', e);
+    return [];
+  }
+}
+
+/* 책 카드 그리드 렌더 + 탭 카운터 갱신 */
+async function renderWbBookGrid(listEl) {
+  const books = await loadWbBooksIfNeeded();
+  const booksTab = document.getElementById('wbTabBooks');
+  if (booksTab) booksTab.textContent = `${t('wbBooks')} (${books.length})`;
+  if (!books || books.length === 0) {
+    listEl.innerHTML = `<div class="wb-book-empty">${escapeHtml(t('wbBooksEmpty') || '아직 저장한 책이 없어요')}</div>`;
+    return;
+  }
+  const pagesTpl = t('readingBookCardPages') || '{n}페이지';
+  const cards = books.map((b) => {
+    const pageCount = Array.isArray(b.pages) ? b.pages.length : 0;
+    const pagesText = pagesTpl.replace('{n}', pageCount);
+    const dateText = b.created_at ? new Date(b.created_at).toLocaleDateString() : '';
+    const safeId = String(b.id).replace(/'/g, "\\'");
+    return `<div class="wb-book-card" onclick="enterWbBookDetail('${safeId}')">
+      <div class="wb-book-card-title">${escapeHtml(b.title || '')}</div>
+      <div class="wb-book-card-meta">${escapeHtml(pagesText)} · ${escapeHtml(dateText)}</div>
+    </div>`;
+  }).join('');
+  listEl.innerHTML = `<div class="wb-book-grid">${cards}</div>`;
+}
+
+/* 책 카드 클릭 — 상세 진입 */
+function enterWbBookDetail(bookId) {
+  _activeBookId = bookId;
+  updateWbUIVisibility();
+  renderWordbook();
+}
+
+/* 상세 헤더의 "← 책 목록" 클릭 — 카드 목록으로 복귀 */
+function exitBookDetail() {
+  _activeBookId = null;
+  updateWbUIVisibility();
+  renderWordbook();
+}
+
+/* 책 상세 — 페이지별 그룹으로 학습 단어 표시.
+   책 데이터는 _wbBooksCache 에서 우선 조회 (이미 pages jsonb 동봉). */
+async function renderWbBookDetail(listEl, bookId) {
+  const books = await loadWbBooksIfNeeded();
+  const book = books.find(b => String(b.id) === String(bookId));
+  if (!book) {
+    listEl.innerHTML = `<div class="wb-book-empty">${escapeHtml(t('wbBooksEmpty') || '책을 찾을 수 없습니다.')}</div>`;
+    return;
+  }
+  const titleEl = document.getElementById('bookDetailTitle');
+  if (titleEl) titleEl.textContent = book.title || '';
+  const pages = Array.isArray(book.pages) ? book.pages : [];
+  /* 페이지별로 묶음 — 페이지 N (학습단어 개수) + 항목들. 빈 페이지는 헤더만 표시하지 않고 통째 스킵.
+     reading.html 의 0개 처리와 정책 다름 — 여기는 "학습 단어" 자체가 없는 페이지를 보여줄 이유 없음. */
+  const groups = [];
+  pages.forEach((p, idx) => {
+    const items = Array.isArray(p && p.study_items) ? p.study_items : [];
+    if (items.length === 0) return;
+    groups.push({ pageNum: idx + 1, items });
+  });
+  if (groups.length === 0) {
+    listEl.innerHTML = `<div class="wb-book-empty">${escapeHtml(t('wbBookNoStudyItems') || '이 책에는 학습 단어가 없어요.')}</div>`;
+    return;
+  }
+  const pageHeaderTpl = t('wbBookPageHeader') || 'Page {n} ({c})';
+  const html = groups.map(g => {
+    const headerText = pageHeaderTpl.replace('{n}', g.pageNum).replace('{c}', g.items.length);
+    const itemsHtml = g.items.map(it => {
+      const surface = it && it.surface ? String(it.surface) : '';
+      const lemma = (it && it.lemma) ? String(it.lemma) : surface;
+      const safeSurface = escapeHtml(surface);
+      const safeLemma = escapeHtml(lemma);
+      const showLemma = lemma && lemma.toLowerCase() !== surface.toLowerCase();
+      const lemmaHtml = showLemma ? `<span class="wb-book-item-lemma">(${safeLemma})</span>` : '';
+      const speakWord = surface.replace(/'/g, "\\'");
+      const meaning = (it && it.meaning) ? escapeHtml(String(it.meaning)) : '';
+      const meaningHtml = meaning ? `<div class="wb-book-item-meaning">${meaning}</div>` : '';
+      return `<div class="wb-book-item">
+        <div class="wb-book-item-head">
+          <span class="wb-book-item-surface">${safeSurface}</span>
+          ${lemmaHtml}
+          <button class="wb-book-item-speak" onclick="speak('${speakWord}')" title="${escapeHtml(t('pronunciation') || '발음')}">&#128264;</button>
+        </div>
+        ${meaningHtml}
+      </div>`;
+    }).join('');
+    return `<div class="wb-book-page-group">
+      <div class="wb-book-page-header">${escapeHtml(headerText)}</div>
+      ${itemsHtml}
+    </div>`;
+  }).join('');
+  listEl.innerHTML = html;
 }
 
 /* 단어장 상세 모달 열기 — 저장된 스냅샷으로 HTML 조립 (Edge Function 재호출 없음) */
