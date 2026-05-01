@@ -1038,7 +1038,7 @@
     text-align: center;
     color: #8A8078;
   }
-  /* 책 상세 헤더 — set-detail-header 와 동일 톤 + 뒤로가기 링크. */
+  /* 책 상세 헤더 — set-detail-header 와 동일 톤 + 뒤로가기 링크 + 우측 인쇄 버튼. */
   .book-detail-header {
     margin-bottom: 16px;
   }
@@ -1051,21 +1051,47 @@
     user-select: none;
   }
   .book-detail-back:hover { color: #4A7335; text-decoration: underline; }
+  /* 제목 + 인쇄 버튼 한 줄 정렬 — 제목 길어져도 버튼 안 밀림 (제목 flex:1) */
+  .book-detail-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
   .book-detail-title {
     color: #2D2B28;
     font-size: 1.15rem;
     font-weight: 600;
     margin: 0;
     word-break: break-word;
+    flex: 1;
+    min-width: 0;
+  }
+  .book-detail-print {
+    flex: 0 0 auto;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    border: 1px solid #D5D2CC;
+    border-radius: 8px;
+    background: #FFFFFF;
+    color: #4A4641;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .book-detail-print:hover {
+    background: #EDECEA;
+    border-color: #B8B5AF;
   }
   /* 책 상세 페이지 그룹 — "Page 1" 헤더 + 그 아래 학습 단어 항목들 */
   .wb-book-page-group { margin-bottom: 22px; }
   /* 학습 단어 출처 문장 — 본문에서 추출한 컨텍스트. 회색 인용 톤.
-     학습 단어 + 뜻 아래에 배치되어 보조 정보 역할. */
+     학습 단어 + 뜻 아래에 배치되어 보조 정보 역할.
+     좌측 보더 — 인쇄 시 배경색이 빠져도 "인용" 시각 마커가 살아남도록. */
   .wb-book-item-source {
     font-size: 0.85rem;
     color: #6B6660;
     background: #F5F3EE;
+    border-left: 3px solid #C9DBB8;
     padding: 6px 10px;
     border-radius: 6px;
     margin-top: 8px;
@@ -1087,8 +1113,11 @@
     margin-bottom: 8px;
   }
   .wb-book-item {
-    padding: 10px 12px;
-    margin-bottom: 16px;
+    background: #FFFFFF;
+    border: 1px solid #E5E2DC;
+    border-radius: 10px;
+    padding: 14px 14px;
+    margin-bottom: 12px;
   }
   .wb-book-item:last-child { margin-bottom: 0; }
   .wb-book-item-head {
@@ -1754,6 +1783,29 @@
     transition: color 0.15s;
   }
   body.embed-mode .embed-close-btn:hover { color: #2D2B28; }
+
+  /* ===== 인쇄 최적화 — 단어장 책별 탭의 학습 단어 출력 시 자동 적용.
+     window.print() / Ctrl+P 어느 쪽으로 호출돼도 동일하게 작동. ===== */
+  @media print {
+    /* 항목이 페이지 중간에서 잘리지 않도록 */
+    .wb-book-item { page-break-inside: avoid; }
+    /* 페이지 그룹은 길면 분할 허용 (여러 페이지의 단어를 한 책에서 인쇄하므로) */
+    .wb-book-page-group { page-break-inside: auto; }
+    /* 인터랙티브 UI 숨김 — 종이엔 의미 없음 */
+    .wb-book-item-speak,
+    .book-detail-back,
+    .book-detail-print,
+    .sidebar,
+    .top-header,
+    .back-link-row,
+    .top-logout,
+    .wb-subtabs { display: none !important; }
+    /* 카드 보더는 잉크선으로 출력되지만 채도 좀 떨어뜨려 잉크 절약 */
+    .wb-book-item { border-color: #999; }
+    .wb-book-item-source { background: transparent; border-left-color: #999; }
+    /* 페이지 헤더(Page 1) 도 잉크 절약 톤으로 */
+    .wb-book-page-header { background: transparent; border: 1px solid #999; color: #333; }
+  }
 </style>
 </head>
 <!-- 인증 확인 전까지 본문 숨김 (깜빡임 방지) -->
@@ -1938,7 +1990,12 @@
       <!-- 책 상세 뷰 헤더 — 책별 탭의 책 카드 클릭 후 학습 단어 목록 볼 때만 표시 -->
       <div class="book-detail-header" id="bookDetailHeader" hidden>
         <a class="book-detail-back" onclick="exitBookDetail()" data-i18n="wbBooksBackToList">← 책 목록</a>
-        <h3 class="book-detail-title" id="bookDetailTitle"></h3>
+        <div class="book-detail-title-row">
+          <h3 class="book-detail-title" id="bookDetailTitle"></h3>
+          <!-- 인쇄 버튼 — window.print() 가 Ctrl+P 와 동일한 인쇄 다이얼로그 호출.
+               @media print 규칙이 자동 적용되어 종이 친화 레이아웃으로 출력됨. -->
+          <button class="book-detail-print" onclick="window.print()" data-i18n="wbBookPrintBtn">🖨️ 인쇄</button>
+        </div>
       </div>
       <!-- 단어 목록 / 세트 목록 — _wbMode 와 _activeSetId 에 따라 내용 분기 렌더 -->
       <div class="wordbook-list" id="wordbookList"></div>
