@@ -1820,6 +1820,12 @@
     .wb-book-item { page-break-inside: avoid; }
     /* 페이지 그룹은 길면 분할 허용 (여러 페이지의 단어를 한 책에서 인쇄하므로) */
     .wb-book-page-group { page-break-inside: auto; }
+    /* "Page N" 헤더가 종이 페이지 끝에 혼자 남는 고아(orphan) 방지 —
+       헤더 직후 분할 금지 → 첫 카드가 같이 못 들어가면 헤더 자체가 다음 페이지로 이동. */
+    .wb-book-page-header {
+      page-break-after: avoid;
+      break-after: avoid;
+    }
     /* 인터랙티브 UI 숨김 — 종이엔 의미 없음 */
     .wb-book-item-speak,
     .book-detail-back,
