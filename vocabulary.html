@@ -1091,18 +1091,14 @@
     gap: 8px;
     margin-bottom: 8px;
   }
-  /* 책 본래 페이지 번호 배지 — 옆 .wb-book-page-header 와 픽셀 단위로 동일한 스타일,
-     색상(글자/배경/보더) 만 회색 톤. font-weight 까지 동일해야 두 배지 높이가 정확히 매치됨. */
-  .wb-book-page-num {
-    font-size: 0.82rem;
-    font-weight: 600;
+  /* 책 본래 페이지 번호 배지 — 같은 .wb-book-page-header 클래스를 그대로 쓰고
+     이 modifier 로 색상만 회색 톤으로 덮어씀. 박스 모델/폰트/요소 종류 모두 동일 →
+     픽셀 단위 동일 렌더링 보장. */
+  .wb-book-page-header.is-secondary {
     color: #9C9892;
     background: #F5F3EE;
-    border: 1px solid #E5E2DC;
-    padding: 4px 10px;
-    border-radius: 999px;
-    display: inline-block;
-    user-select: none;
+    border-color: #E5E2DC;
+    margin-bottom: 0;
   }
   /* 학습 단어 출처 문장 — 본문에서 추출한 컨텍스트. 회색 인용 톤.
      학습 단어 + 뜻 아래에 배치되어 보조 정보 역할.
@@ -4927,7 +4923,7 @@ async function renderWbBookDetail(listEl, bookId) {
     /* 초록 Page 배지 + (옵션) 회색 책 본래 번호 배지 — 책 뷰어와 동일 시각언어. */
     const baseHeader = pageHeaderTpl.replace('{n}', g.pageNum).replace('{c}', g.items.length);
     const bookNumBadge = g.bookPageNum
-      ? `<span class="wb-book-page-num">${escapeHtml(g.bookPageNum)}</span>`
+      ? `<div class="wb-book-page-header is-secondary">${escapeHtml(g.bookPageNum)}</div>`
       : '';
     const itemsHtml = g.items.map(it => {
       const surface = it && it.surface ? String(it.surface) : '';
