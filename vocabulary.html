@@ -4927,23 +4927,22 @@ async function renderWbBookDetail(listEl, bookId) {
       : '';
     const itemsHtml = g.items.map(it => {
       const surface = it && it.surface ? String(it.surface) : '';
-      const lemma = (it && it.lemma) ? String(it.lemma) : surface;
-      const safeSurface = escapeHtml(surface);
-      const safeLemma = escapeHtml(lemma);
-      const showLemma = lemma && lemma.toLowerCase() !== surface.toLowerCase();
-      const lemmaHtml = showLemma ? `<span class="wb-book-item-lemma">(${safeLemma})</span>` : '';
-      const speakWord = surface.replace(/'/g, "\\'");
+      /* 단어장 책별 뷰는 사전 항목처럼 원형(lemma) 만 라벨로 노출.
+         활용형(surface) 은 바로 아래 출처 문장에서 굵게 표시되어 컨텍스트로 제공.
+         lemma 가 없는 옛 데이터는 surface 폴백 (기존 정책). */
+      const display = (it && it.lemma) ? String(it.lemma) : surface;
+      const safeDisplay = escapeHtml(display);
+      const speakWord = display.replace(/'/g, "\\'");
       const meaning = (it && it.meaning) ? escapeHtml(String(it.meaning)) : '';
       const meaningHtml = meaning ? `<div class="wb-book-item-meaning">${meaning}</div>` : '';
-      /* 출처 문장 — 본문에서 추출. 못 찾히면 비표시. surface 부분만 <strong> 으로 강조. */
+      /* 출처 문장 — 본문에서 surface 로 검색. 활용형 그대로 매칭되어 사용자가 책에서 본 형태 유지. */
       const sentence = findSentenceContainingSurface(g.original, surface);
       const sourceHtml = sentence
         ? `<div class="wb-book-item-source">${highlightSurfaceInSentence(sentence, surface)}</div>`
         : '';
       return `<div class="wb-book-item">
         <div class="wb-book-item-head">
-          <span class="wb-book-item-surface">${safeSurface}</span>
-          ${lemmaHtml}
+          <span class="wb-book-item-surface">${safeDisplay}</span>
           <button class="wb-book-item-speak" onclick="speak('${speakWord}')" title="${escapeHtml(t('pronunciation') || '발음')}">&#128264;</button>
         </div>
         ${meaningHtml}
