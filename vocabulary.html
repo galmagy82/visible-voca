@@ -2011,7 +2011,9 @@
       <div class="wb-subtabs">
         <button class="wb-subtab active" onclick="switchWbMode('vocab')" id="wbTabVocab" data-i18n="wbVocab">단어 (0)</button>
         <button class="wb-subtab" onclick="switchWbMode('expr')" id="wbTabExpr" data-i18n="wbExpr">문장 (0)</button>
-        <button class="wb-subtab" onclick="switchWbMode('sets')" id="wbTabSets" data-i18n="wbSets">세트 (0)</button>
+        <!-- 세트 서브탭 — 사진 검색 흐름 숨김 후 신규 세트 생성 경로 없어 사실상 미사용.
+             코드는 유지하고 탭 버튼만 숨김 (사진 검색 다시 노출 시 즉시 복구 가능). -->
+        <button class="wb-subtab" onclick="switchWbMode('sets')" id="wbTabSets" data-i18n="wbSets" style="display:none">세트 (0)</button>
         <!-- 책별 탭 — reading_books 의 study_items 를 책 단위로 모아 보여줌. 별도 저장소 X. -->
         <button class="wb-subtab" onclick="switchWbMode('books')" id="wbTabBooks" data-i18n="wbBooks">책별 (0)</button>
       </div>
