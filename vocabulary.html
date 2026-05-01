@@ -1060,14 +1060,15 @@
   }
   /* 책 상세 페이지 그룹 — "Page 1" 헤더 + 그 아래 학습 단어 항목들 */
   .wb-book-page-group { margin-bottom: 22px; }
-  /* 학습 단어 출처 문장 — 본문에서 추출한 컨텍스트. 회색 인용 톤. */
+  /* 학습 단어 출처 문장 — 본문에서 추출한 컨텍스트. 회색 인용 톤.
+     학습 단어 + 뜻 아래에 배치되어 보조 정보 역할. */
   .wb-book-item-source {
     font-size: 0.85rem;
     color: #6B6660;
     background: #F5F3EE;
     padding: 6px 10px;
     border-radius: 6px;
-    margin-bottom: 6px;
+    margin-top: 8px;
     line-height: 1.5;
   }
   .wb-book-item-source strong {
@@ -1087,9 +1088,9 @@
   }
   .wb-book-item {
     padding: 10px 12px;
-    border-bottom: 1px solid #ECEAE4;
+    margin-bottom: 16px;
   }
-  .wb-book-item:last-child { border-bottom: none; }
+  .wb-book-item:last-child { margin-bottom: 0; }
   .wb-book-item-head {
     display: flex;
     align-items: center;
@@ -4823,13 +4824,13 @@ async function renderWbBookDetail(listEl, bookId) {
         ? `<div class="wb-book-item-source">${highlightSurfaceInSentence(sentence, surface)}</div>`
         : '';
       return `<div class="wb-book-item">
-        ${sourceHtml}
         <div class="wb-book-item-head">
           <span class="wb-book-item-surface">${safeSurface}</span>
           ${lemmaHtml}
           <button class="wb-book-item-speak" onclick="speak('${speakWord}')" title="${escapeHtml(t('pronunciation') || '발음')}">&#128264;</button>
         </div>
         ${meaningHtml}
+        ${sourceHtml}
       </div>`;
     }).join('');
     return `<div class="wb-book-page-group">
