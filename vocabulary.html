@@ -1098,7 +1098,6 @@
     color: #9C9892;
     background: #F5F3EE;
     border-color: #E5E2DC;
-    margin-bottom: 0;
   }
   /* 학습 단어 출처 문장 — 본문에서 추출한 컨텍스트. 회색 인용 톤.
      학습 단어 + 뜻 아래에 배치되어 보조 정보 역할.
@@ -1126,7 +1125,8 @@
     padding: 4px 10px;
     border-radius: 999px;
     display: inline-block;
-    margin-bottom: 8px;
+    /* margin-bottom 제거 — 부모 .wb-book-page-header-row 가 이미 margin-bottom: 8px 를 가짐.
+       자체 margin 이 있으면 옆 .is-secondary 와 flex align-items 중심이 어긋남. */
   }
   .wb-book-item {
     background: #FFFFFF;
