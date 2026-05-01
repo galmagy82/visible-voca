@@ -4720,15 +4720,11 @@ async function renderWordbook() {
     if (labelEl) labelEl.textContent = `${t('wbVocab')} (${list.length})`;
   }
   if (setsTab) setsTab.textContent = `${t('wbSets')} (${sets.length})`;
-  /* 책 개수는 별도 fetch — books 모드 진입 시점에 한 번만, 캐시 재사용. */
+  /* 책 개수 — 캐시 없으면 한 번 fetch 해 정확한 개수 표시.
+     이전엔 lazy 로 0 표시 → 사용자가 탭 누르기 전엔 (0) 으로 보이던 문제 해결. */
   if (booksTab) {
-    const cached = _wbBooksCache;
-    if (cached) {
-      booksTab.textContent = `${t('wbBooks')} (${cached.length})`;
-    } else {
-      /* 카운트만 빠르게 (lazy) — books 탭 클릭 시 본격 로드. 일단 0 으로 표시. */
-      booksTab.textContent = `${t('wbBooks')} (0)`;
-    }
+    const books = _wbBooksCache || await loadWbBooksIfNeeded();
+    booksTab.textContent = `${t('wbBooks')} (${books.length})`;
   }
 
   /* 책별 모드 분기 */
