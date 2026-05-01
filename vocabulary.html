@@ -1019,6 +1019,9 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 14px;
+    /* 부모 .wordbook-list 가 display:flex 라 width 명시 안 하면 flex item 자연 너비
+       (=콘텐츠 너비) 만큼만 차지해 그리드가 1열로 줄어듦. 100% 로 부모 폭 전체 사용. */
+    width: 100%;
   }
   .wb-book-card {
     background: #FFFFFF;
