@@ -2704,19 +2704,27 @@ async function saveReadingSettings() {
   }
 }
 
-/* --- 모바일 스와이프 (좌/우 페이지 넘김) --- */
+/* --- 모바일 스와이프 (좌/우 페이지 넘김) ---
+   수평/수직 움직임을 모두 추적해 "확실히 좌우 스와이프 의도" 일 때만 넘김.
+   단순 |dx| 만 보면 세로 스크롤 중 사선 움직임에 페이지가 의도치 않게 넘어감. */
 let _touchStartX = 0;
-let _touchEndX = 0;
+let _touchStartY = 0;
 document.addEventListener('DOMContentLoaded', () => {
   const stage = document.querySelector('.book-stage');
   if (!stage) return;
   stage.addEventListener('touchstart', (e) => {
     _touchStartX = e.changedTouches[0].screenX;
+    _touchStartY = e.changedTouches[0].screenY;
   }, { passive: true });
   stage.addEventListener('touchend', (e) => {
-    _touchEndX = e.changedTouches[0].screenX;
-    const dx = _touchEndX - _touchStartX;
-    if (Math.abs(dx) < 40) return;
+    const dx = e.changedTouches[0].screenX - _touchStartX;
+    const dy = e.changedTouches[0].screenY - _touchStartY;
+    const absDx = Math.abs(dx);
+    const absDy = Math.abs(dy);
+    /* 두 조건 모두 만족해야 페이지 넘김:
+       (a) 수평 이동 60px 이상 — 우발적 짧은 움직임 차단
+       (b) 수평 이동이 수직 이동의 1.5배 이상 — 세로 스크롤 중 사선 움직임 차단 */
+    if (absDx < 60 || absDx < absDy * 1.5) return;
     if (dx > 0) goPrev(); else goNext();
   }, { passive: true });
 });
