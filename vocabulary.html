@@ -4671,27 +4671,55 @@ async function renderWordbook() {
 /* === 책별 탭 — reading_books 의 study_items 를 책 단위로 모아 보여줌 === */
 
 /* 학습 단어 surface 가 등장한 페이지 본문 문장 1개를 추출.
-   - 알고리즘: 본문 공백 정규화 → [.!?] 기준 문장 분할 → surface 포함 첫 문장 반환
-   - 약어(Mr./Dr.) 가 들어간 문장은 살짝 짧게 잘릴 수 있음 (v1 허용)
-   - surface 가 본문에서 못 찾히면 빈 문자열 → 호출부에서 출처 표시 생략 */
+   2단계 폴백:
+   - 1차: 정확한 substring (대부분 케이스)
+   - 2차: 분리형 phrasal verb 처리 — surface 의 모든 토큰이 한 문장에 단어 경계로 등장
+     (예: "pulled out" → "pulled a slip of paper out" 처럼 분리된 케이스 매칭)
+   둘 다 실패하면 빈 문자열 → 호출부에서 출처 표시 생략. */
 function findSentenceContainingSurface(text, surface) {
   if (!text || !surface) return '';
   const flat = String(text).replace(/\s+/g, ' ').trim();
   const sentences = flat.split(/(?<=[.!?])\s+/);
-  const lowerSurface = String(surface).toLowerCase();
+  const lowerSurface = String(surface).toLowerCase().trim();
+  /* 1차: 정확한 substring */
   for (const s of sentences) {
     if (s.toLowerCase().includes(lowerSurface)) return s.trim();
+  }
+  /* 2차: 토큰 단위 매칭 — phrasal verb 의 분리/목적어 삽입 케이스 회복 */
+  const tokens = lowerSurface.split(/\s+/).filter(Boolean);
+  if (tokens.length > 1) {
+    for (const s of sentences) {
+      const slow = s.toLowerCase();
+      const allPresent = tokens.every(tok => {
+        const safeTok = tok.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return new RegExp(`\\b${safeTok}\\b`).test(slow);
+      });
+      if (allPresent) return s.trim();
+    }
   }
   return '';
 }
 
-/* 출처 문장 안에서 surface 부분만 <strong> 으로 강조해 어디인지 즉시 보이도록.
-   case-insensitive 매칭, 첫 등장만 강조. 정규식 메타문자 이스케이프 필수. */
+/* 출처 문장 안에서 surface 부분 <strong> 강조.
+   1차: surface 통째 substring 매칭 → 그 부분 강조.
+   2차: 분리된 케이스 → 각 토큰을 단어 경계로 개별 강조 (예: "pulled", "out" 따로). */
 function highlightSurfaceInSentence(sentence, surface) {
+  const sentStr = String(sentence);
   const safe = String(surface).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const re = new RegExp(`(${safe})`, 'i');
-  const parts = String(sentence).split(re);
-  return parts.map((p, i) => i % 2 === 1 ? `<strong>${escapeHtml(p)}</strong>` : escapeHtml(p)).join('');
+  const reExact = new RegExp(`(${safe})`, 'i');
+  if (reExact.test(sentStr)) {
+    const parts = sentStr.split(reExact);
+    return parts.map((p, i) => i % 2 === 1 ? `<strong>${escapeHtml(p)}</strong>` : escapeHtml(p)).join('');
+  }
+  /* 분리된 케이스 폴백 — 토큰별 강조. escapeHtml 후에도 단어 경계 정규식은 안전. */
+  const tokens = String(surface).toLowerCase().trim().split(/\s+/).filter(Boolean);
+  if (tokens.length === 0) return escapeHtml(sentStr);
+  let result = escapeHtml(sentStr);
+  for (const tok of tokens) {
+    const safeTok = tok.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    result = result.replace(new RegExp(`\\b(${safeTok})\\b`, 'gi'), '<strong>$1</strong>');
+  }
+  return result;
 }
 
 /* 책 목록 fetch + 캐시. study_items 는 책 카드 단계에선 합계만 필요하니
