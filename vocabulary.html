@@ -1797,11 +1797,21 @@
       padding: 0 !important;
       background: #FFFFFF !important;
     }
-    .main-layout, .content, .tab-content, #wordbookList {
+    .main-layout, .content, #wordbookList {
       display: block !important;
       max-width: none !important;
       max-height: none !important;
       min-height: 0 !important;
+      overflow: visible !important;
+      padding: 0 !important;
+      border: none !important;
+    }
+    /* 비활성 탭 패널은 인쇄에서도 숨김 — 안 그러면 일반검색/Quiz/My 패널까지 같이 출력됨.
+       active 패널만 펼쳐 보여주고, 그 안에서만 max-height/overflow 해제. */
+    .tab-content { display: none !important; }
+    .tab-content.active {
+      display: block !important;
+      max-height: none !important;
       overflow: visible !important;
       padding: 0 !important;
       border: none !important;
