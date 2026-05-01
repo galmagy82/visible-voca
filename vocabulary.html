@@ -1787,6 +1787,25 @@
   /* ===== 인쇄 최적화 — 단어장 책별 탭의 학습 단어 출력 시 자동 적용.
      window.print() / Ctrl+P 어느 쪽으로 호출돼도 동일하게 작동. ===== */
   @media print {
+    /* 페이지네이션 가능하도록 body/html 의 flex/min-height/overflow 제약 해제.
+       이게 없으면 body 가 100vh 에 갇혀 1페이지만 출력되고 나머지는 잘림. */
+    html, body {
+      height: auto !important;
+      min-height: 0 !important;
+      overflow: visible !important;
+      display: block !important;
+      padding: 0 !important;
+      background: #FFFFFF !important;
+    }
+    .main-layout, .content, .tab-content, #wordbookList {
+      display: block !important;
+      max-width: none !important;
+      max-height: none !important;
+      min-height: 0 !important;
+      overflow: visible !important;
+      padding: 0 !important;
+      border: none !important;
+    }
     /* 항목이 페이지 중간에서 잘리지 않도록 */
     .wb-book-item { page-break-inside: avoid; }
     /* 페이지 그룹은 길면 분할 허용 (여러 페이지의 단어를 한 책에서 인쇄하므로) */
