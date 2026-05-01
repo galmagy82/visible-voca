@@ -1058,8 +1058,22 @@
     margin: 0;
     word-break: break-word;
   }
-  /* 책 상세 페이지 그룹 — "Page 1 (5)" 헤더 + 그 아래 학습 단어 항목들 */
+  /* 책 상세 페이지 그룹 — "Page 1" 헤더 + 그 아래 학습 단어 항목들 */
   .wb-book-page-group { margin-bottom: 22px; }
+  /* 학습 단어 출처 문장 — 본문에서 추출한 컨텍스트. 회색 인용 톤. */
+  .wb-book-item-source {
+    font-size: 0.85rem;
+    color: #6B6660;
+    background: #F5F3EE;
+    padding: 6px 10px;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    line-height: 1.5;
+  }
+  .wb-book-item-source strong {
+    color: #2D2B28;
+    font-weight: 600;
+  }
   .wb-book-page-header {
     font-size: 0.82rem;
     font-weight: 600;
@@ -4656,6 +4670,30 @@ async function renderWordbook() {
 
 /* === 책별 탭 — reading_books 의 study_items 를 책 단위로 모아 보여줌 === */
 
+/* 학습 단어 surface 가 등장한 페이지 본문 문장 1개를 추출.
+   - 알고리즘: 본문 공백 정규화 → [.!?] 기준 문장 분할 → surface 포함 첫 문장 반환
+   - 약어(Mr./Dr.) 가 들어간 문장은 살짝 짧게 잘릴 수 있음 (v1 허용)
+   - surface 가 본문에서 못 찾히면 빈 문자열 → 호출부에서 출처 표시 생략 */
+function findSentenceContainingSurface(text, surface) {
+  if (!text || !surface) return '';
+  const flat = String(text).replace(/\s+/g, ' ').trim();
+  const sentences = flat.split(/(?<=[.!?])\s+/);
+  const lowerSurface = String(surface).toLowerCase();
+  for (const s of sentences) {
+    if (s.toLowerCase().includes(lowerSurface)) return s.trim();
+  }
+  return '';
+}
+
+/* 출처 문장 안에서 surface 부분만 <strong> 으로 강조해 어디인지 즉시 보이도록.
+   case-insensitive 매칭, 첫 등장만 강조. 정규식 메타문자 이스케이프 필수. */
+function highlightSurfaceInSentence(sentence, surface) {
+  const safe = String(surface).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const re = new RegExp(`(${safe})`, 'i');
+  const parts = String(sentence).split(re);
+  return parts.map((p, i) => i % 2 === 1 ? `<strong>${escapeHtml(p)}</strong>` : escapeHtml(p)).join('');
+}
+
 /* 책 목록 fetch + 캐시. study_items 는 책 카드 단계에선 합계만 필요하니
    pages 의 길이만 추출하지만, jsonb 전체 받아 캐시해두면 상세 진입 때 재호출 없음. */
 async function loadWbBooksIfNeeded() {
@@ -4731,7 +4769,8 @@ async function renderWbBookDetail(listEl, bookId) {
   pages.forEach((p, idx) => {
     const items = Array.isArray(p && p.study_items) ? p.study_items : [];
     if (items.length === 0) return;
-    groups.push({ pageNum: idx + 1, items });
+    /* original 도 같이 동봉 — 각 항목의 출처 문장 추출에 사용 */
+    groups.push({ pageNum: idx + 1, items, original: (p && p.original) || '' });
   });
   if (groups.length === 0) {
     listEl.innerHTML = `<div class="wb-book-empty">${escapeHtml(t('wbBookNoStudyItems') || '이 책에는 학습 단어가 없어요.')}</div>`;
@@ -4750,7 +4789,13 @@ async function renderWbBookDetail(listEl, bookId) {
       const speakWord = surface.replace(/'/g, "\\'");
       const meaning = (it && it.meaning) ? escapeHtml(String(it.meaning)) : '';
       const meaningHtml = meaning ? `<div class="wb-book-item-meaning">${meaning}</div>` : '';
+      /* 출처 문장 — 본문에서 추출. 못 찾히면 비표시. surface 부분만 <strong> 으로 강조. */
+      const sentence = findSentenceContainingSurface(g.original, surface);
+      const sourceHtml = sentence
+        ? `<div class="wb-book-item-source">${highlightSurfaceInSentence(sentence, surface)}</div>`
+        : '';
       return `<div class="wb-book-item">
+        ${sourceHtml}
         <div class="wb-book-item-head">
           <span class="wb-book-item-surface">${safeSurface}</span>
           ${lemmaHtml}
