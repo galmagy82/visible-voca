@@ -1979,8 +1979,10 @@
 let _authUser = null;
 
 // --- 자동 단어장 추가 설정 (localStorage) ---
+/* 기본값 ON — 사용자가 명시적으로 'false' 로 설정한 경우만 OFF.
+   localStorage 비어있음(신규 사용자) / 'true' / 비정상값 모두 ON 으로 처리. */
 function isAutoAddEnabled() {
-  return localStorage.getItem('geminary_autoAdd') === 'true';
+  return localStorage.getItem('geminary_autoAdd') !== 'false';
 }
 (function initAutoAddToggle() {
   const toggle = document.getElementById('autoAddToggle');
