@@ -3106,6 +3106,14 @@ function applyEmbedAndAutoSearch() {
     /* 부모(reading.html) 의 로딩 인디케이터 제거 신호 — iframe 이 인터랙티브해진 시점.
        이후 단어 검색의 로딩 상태는 vocabulary 자체 UI 가 담당. */
     try { parent.postMessage({ type: 'embed-ready' }, '*'); } catch (_) {}
+  } else {
+    /* 비-embed 직접 진입: HTML 디폴트 active 패널이 wordbook 이면 초기 렌더 트리거.
+       정적 active 클래스만으로는 renderWordbook 이 호출되지 않아 첫 진입 시 목록이 비어 보임 →
+       사용자가 다른 서브탭 갔다 돌아와야 단어가 나타나는 회귀 방지. */
+    const wb = document.getElementById('tabWordbook');
+    if (wb && wb.classList.contains('active')) {
+      renderWordbook();
+    }
   }
   const q = params.get('q');
   if (!q) return;
@@ -3831,6 +3839,10 @@ async function lookupWord(word) {
         wordResults[word] = { html: cachedObj2.html };
         if (cachedObj2.snapshot) window._lastWbData = cachedObj2.snapshot;
         showSearchResult(word);
+        /* fetchWordResult 의 캐시 hit 분기와 부수 효과 통일 — 자동 단어장 추가 + EXP 적립.
+           이 호출이 없으면 캐시된 단어 검색 시 자동 추가/EXP 가 누락됨. */
+        autoAddIfEnabled(resultSearch);
+        addExp(10, 'search');
         return;
       }
     }
