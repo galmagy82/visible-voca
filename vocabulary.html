@@ -825,12 +825,23 @@
     border-bottom: 2px solid transparent;
     cursor: pointer;
     transition: color 0.2s, border-color 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
   }
   .wb-subtab:hover { color: #4A4641; }
   .wb-subtab.active {
     color: #2D2B28;
     font-weight: 600;
     border-bottom-color: #2D2B28;
+  }
+  /* 단어 탭 안 Geminary 아이콘 — 학습 단어 옆 squircle 버튼과 동일 톤. */
+  .wb-subtab-icon {
+    flex-shrink: 0;
+    padding: 2px;
+    border-radius: 4px;
+    background: linear-gradient(135deg, #3E74A6 0%, #5897D0 100%);
+    box-sizing: border-box;
   }
   .wordbook-toolbar {
     display: flex;
@@ -2007,15 +2018,24 @@
 
     <!-- 탭3: 단어장 — 일반검색/사진검색 탭이 숨겨진 후의 페이지 진입 기본 패널. -->
     <div class="tab-content active" id="tabWordbook">
-      <!-- 어휘/표현/세트 서브탭 -->
+      <!-- 단어 / My Books 단어 서브탭 — 단어/문장 통합, 세트는 사진검색 숨김으로 미사용 -->
       <div class="wb-subtabs">
-        <button class="wb-subtab active" onclick="switchWbMode('vocab')" id="wbTabVocab" data-i18n="wbVocab">단어 (0)</button>
-        <button class="wb-subtab" onclick="switchWbMode('expr')" id="wbTabExpr" data-i18n="wbExpr">문장 (0)</button>
+        <!-- 단어 탭 — Geminary 검색으로 단어장에 추가한 모든 항목 (이미지 유/무 무관). -->
+        <button class="wb-subtab active" onclick="switchWbMode('vocab')" id="wbTabVocab">
+          <svg class="wb-subtab-icon" width="14" height="14" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <line x1="6" y1="6" x2="15" y2="6" stroke="#FFFFFF" stroke-width="1.5" opacity="0.65"/>
+            <line x1="6" y1="6" x2="9.3" y2="15.2" stroke="#FFFFFF" stroke-width="1.5" opacity="0.65"/>
+            <circle cx="6" cy="6" r="3" fill="#FFFFFF"/>
+            <circle cx="18" cy="6" r="3" fill="#FFFFFF" opacity="0.85"/>
+            <circle cx="10" cy="18" r="3" fill="#FFFFFF" opacity="0.7"/>
+          </svg>
+          <span data-i18n="wbVocab">단어 (0)</span>
+        </button>
         <!-- 세트 서브탭 — 사진 검색 흐름 숨김 후 신규 세트 생성 경로 없어 사실상 미사용.
              코드는 유지하고 탭 버튼만 숨김 (사진 검색 다시 노출 시 즉시 복구 가능). -->
         <button class="wb-subtab" onclick="switchWbMode('sets')" id="wbTabSets" data-i18n="wbSets" style="display:none">세트 (0)</button>
-        <!-- 책별 탭 — reading_books 의 study_items 를 책 단위로 모아 보여줌. 별도 저장소 X. -->
-        <button class="wb-subtab" onclick="switchWbMode('books')" id="wbTabBooks" data-i18n="wbBooks">책별 (0)</button>
+        <!-- My Books 단어 — reading_books 의 study_items 를 책 단위로 모아 보여줌. 별도 저장소 X. -->
+        <button class="wb-subtab" onclick="switchWbMode('books')" id="wbTabBooks" data-i18n="wbBooks">My Books 단어 (0)</button>
       </div>
       <!-- 검색/정렬/전체삭제 툴바 — 세트 모드에서는 숨김 -->
       <div class="wordbook-toolbar" id="wordbookToolbar">
@@ -2784,8 +2804,8 @@ async function updateWordLevel() {
   document.getElementById('wordLevelWrap').style.display = '';
 }
 
-// --- 단어장 어휘/표현/세트/책별 서브탭 ---
-let _wbMode = 'vocab'; // 'vocab' | 'expr' | 'sets' | 'books'
+// --- 단어장 단어/세트/책별 서브탭 — 단어/문장 통합 후 'expr' 모드 제거됨 ---
+let _wbMode = 'vocab'; // 'vocab' | 'sets' | 'books'
 /* 세트 상세 뷰 진입 상태 — null = 세트 목록, uuid = 그 세트의 단어 목록 */
 let _activeSetId = null;
 /* 책별 탭의 책 상세 뷰 진입 상태 — null = 책 카드 목록, uuid = 그 책의 학습 단어 */
@@ -2801,7 +2821,7 @@ function switchWbMode(mode) {
   /* 이전 탭에서 진입한 선택삭제 모드도 해제 — 사용자가 다른 탭으로 이동할 때 상태 잔존 방지 */
   if (selectMode) exitSelectMode();
   document.querySelectorAll('.wb-subtab').forEach(t => t.classList.remove('active'));
-  const tabIdMap = { vocab: 'wbTabVocab', expr: 'wbTabExpr', sets: 'wbTabSets', books: 'wbTabBooks' };
+  const tabIdMap = { vocab: 'wbTabVocab', sets: 'wbTabSets', books: 'wbTabBooks' };
   const activeTab = document.getElementById(tabIdMap[mode]);
   if (activeTab) activeTab.classList.add('active');
   /* 모드별 UI 가시성 — 세트/책별 모드는 툴바/선택삭제 숨김, 일반 모드는 노출 */
@@ -4673,7 +4693,7 @@ async function deleteSelected() {
 }
 
 /* 단어장 목록 렌더링 — _wbMode 에 따라 분기:
-   - 'vocab'/'expr': 기존대로 단어 목록
+   - 'vocab': 단어/문장 통합 — 단어장에 추가된 모든 항목 (이미지 유/무 무관)
    - 'sets' + _activeSetId=null: 세트 카드 목록
    - 'sets' + _activeSetId 설정: 해당 세트에 속한 단어 목록
    - 'books' + _activeBookId=null: 저장된 책 카드 목록
@@ -4684,23 +4704,18 @@ async function renderWordbook() {
   const sort = document.getElementById('wordbookSort').value;
   const listEl = document.getElementById('wordbookList');
 
-  /* 어휘/표현/세트/책별 개수 업데이트
-     — POS 가 채워져 있으면 vocab 모드 결과(이미지도 있음). 가장 정확한 신호.
-     — POS 비어있는 옛 데이터/세트 스켈레톤 폴백: 공백 없으면 단어로 추정.
-     — 일반검색·사진검색 숨김 후 신규 스켈레톤 발생 경로 없음. 폴백은 옛 데이터 안전망. */
-  const isVocabEntry = (item) => {
-    if (item.pos) return true;
-    return !item.word.includes(' ');
-  };
-  const vocabAll = list.filter(isVocabEntry);
-  const exprAll = list.filter(item => !isVocabEntry(item));
+  /* 단어 / 세트 / 책별 개수 업데이트 — 단어 탭은 단어장 전체 항목 카운트.
+     단어/문장 분리는 사용자 가치보다 내부 구현 노출이라 통합 후 제거됨. */
   const sets = await loadWordSetsIfNeeded();
   const vocabTab = document.getElementById('wbTabVocab');
-  const exprTab = document.getElementById('wbTabExpr');
   const setsTab = document.getElementById('wbTabSets');
   const booksTab = document.getElementById('wbTabBooks');
-  if (vocabTab) vocabTab.textContent = `${t('wbVocab')} (${vocabAll.length})`;
-  if (exprTab) exprTab.textContent = `${t('wbExpr')} (${exprAll.length})`;
+  /* Geminary 아이콘 SVG 가 wbTabVocab 안에 있으니 textContent 로 통째 덮어쓰면 사라짐 →
+     라벨 span 만 갱신해 아이콘 보존. */
+  if (vocabTab) {
+    const labelEl = vocabTab.querySelector('[data-i18n="wbVocab"]');
+    if (labelEl) labelEl.textContent = `${t('wbVocab')} (${list.length})`;
+  }
   if (setsTab) setsTab.textContent = `${t('wbSets')} (${sets.length})`;
   /* 책 개수는 별도 fetch — books 모드 진입 시점에 한 번만, 캐시 재사용. */
   if (booksTab) {
@@ -4755,11 +4770,8 @@ async function renderWordbook() {
     return;
   }
 
-  /* 모드 필터 — 어휘/표현 (스페이스 기준) */
-  let modeFiltered = _wbMode === 'vocab' ? vocabAll : exprAll;
-
-  /* 텍스트 필터 */
-  let filtered = modeFiltered.filter(item => item.word.toLowerCase().includes(filter));
+  /* 단어 탭 — 단어장 전체 항목 (단어/문장 통합). 텍스트 필터만 적용. */
+  let filtered = list.filter(item => item.word.toLowerCase().includes(filter));
 
   /* 정렬 — added_at 은 Supabase timestamptz(ISO 문자열), Date 변환 후 비교 */
   if (sort === 'alpha') {
