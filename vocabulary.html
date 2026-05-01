@@ -4950,7 +4950,9 @@ async function renderWbBookDetail(listEl, bookId) {
       const display = (it && it.lemma) ? String(it.lemma) : surface;
       const safeDisplay = escapeHtml(display);
       const speakWord = display.replace(/'/g, "\\'");
-      const meaning = (it && it.meaning) ? escapeHtml(String(it.meaning)) : '';
+      /* meaning 폴백 — 신규 데이터(meaning_native + meaning_en) 우선 모국어, 옛 데이터(meaning) 호환. */
+      const meaningRaw = (it && (it.meaning_native || it.meaning_en || it.meaning)) || '';
+      const meaning = meaningRaw ? escapeHtml(String(meaningRaw)) : '';
       const meaningHtml = meaning ? `<div class="wb-book-item-meaning">${meaning}</div>` : '';
       /* 출처 문장 — 본문에서 surface 로 검색. 활용형 그대로 매칭되어 사용자가 책에서 본 형태 유지. */
       const sentence = findSentenceContainingSurface(g.original, surface);

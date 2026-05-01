@@ -373,9 +373,6 @@ async function callGeminiReadingExtract(base64Data: string, mimeType: string, ta
       : ''
     /* meaningLang === 'en' 일 때는 학습자 영어 레벨에 맞춰 정의어를 가공해야 함을 명시.
        단순히 "in English" 만 두면 너무 어려운 영영 정의가 나올 수 있음. */
-    const meaningGuide = (meaningLang === 'en')
-      ? `a concise English explanation suitable for a learner at GE ${geScore.toFixed(1)} (use simpler words than the target item itself)`
-      : `a concise ${langName} explanation (1 short phrase)`
     studyInstructions = `
 3. From the extracted text, pick words/idioms/expressions that this user should learn next.
 
@@ -392,7 +389,9 @@ Selection rules for "study_items":
   - "surface" must be the EXACT substring as it appears in the text (preserve casing/punctuation).
   - "lemma" is the dictionary/base form of "surface" used for vocabulary lookup. Strip inflections so the result is what a learner would search a dictionary for. Lowercase. Examples: "mending a puncture" → "mend a puncture", "ran into" → "run into", "cats" → "cat", "running" → "run", "went" → "go", "better off" → "better off" (no change needed). For multi-word items, lemmatize each verb/noun while preserving the structure.
   - For verbs, prefer extracting the verb alone. Only include a particle/preposition when the combined form is a true phrasal verb whose meaning is non-compositional (e.g. "give up", "look into", "put off", "run into" meaning to encounter). Do NOT include literal motion prepositions where the meaning is just verb + direction (e.g. "skid across", "walk through", "run past", "came across the room" → extract "skid", "walk", "run", "come" only).
-  - "meaning" should be ${meaningGuide}.`
+  - "meaning_native" should be a concise ${langName} explanation (1 short phrase).
+  - "meaning_en" should be a concise English explanation suitable for a learner at GE ${geScore.toFixed(1)} (use simpler words than the target item itself).
+  - Both meaning fields are REQUIRED — clients toggle between them in real time.`
   } else {
     studyInstructions = `
 3. Return an empty array for "study_items" (user level not provided).`
@@ -449,12 +448,13 @@ Do NOT add commentary. Return ONLY the JSON object.`
               items: {
                 type: "OBJECT",
                 properties: {
-                  surface: { type: "STRING", description: "Exact substring from the text." },
-                  lemma:   { type: "STRING", description: "Dictionary/base form of surface for vocabulary lookup (lowercase, inflections stripped)." },
-                  type:    { type: "STRING", description: "word | idiom | phrasal_verb | collocation" },
-                  meaning: { type: "STRING", description: `Concise meaning in ${meaningLangName}.` },
+                  surface:        { type: "STRING", description: "Exact substring from the text." },
+                  lemma:          { type: "STRING", description: "Dictionary/base form of surface for vocabulary lookup (lowercase, inflections stripped)." },
+                  type:           { type: "STRING", description: "word | idiom | phrasal_verb | collocation" },
+                  meaning_native: { type: "STRING", description: `Concise meaning in ${langName}.` },
+                  meaning_en:     { type: "STRING", description: "Concise English explanation suitable for the learner's level." },
                 },
-                required: ["surface", "lemma", "type", "meaning"],
+                required: ["surface", "lemma", "type", "meaning_native", "meaning_en"],
               },
             },
           },
@@ -476,7 +476,7 @@ Do NOT add commentary. Return ONLY the JSON object.`
     translated: string;
     no_text: boolean;
     page_number: string | null;
-    study_items: Array<{ surface: string; type: string; meaning: string }>;
+    study_items: Array<{ surface: string; lemma: string; type: string; meaning_native: string; meaning_en: string }>;
   }
 }
 
@@ -568,8 +568,10 @@ async function callGeminiReadingFinalize(
   apiKey: string,
 ) {
   const langName = READING_LANG_NAMES[targetLang] || 'Korean'
-  const meaningLangName = (meaningLang === 'en') ? 'English' : langName
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`
+  /* meaningLang 파라미터는 더 이상 schema/프롬프트 분기에 쓰지 않음 — 양쪽 언어 모두 항상 생성.
+     클라이언트가 토글로 실시간 전환. 호환을 위해 시그너처는 유지. */
+  void meaningLang
 
   /* 학습단어 지침은 reading-extract 와 동일. 향후 공통 함수로 추출 가능하지만
      우선은 두 액션 다 살아있는 동안 변경 위험 최소화 위해 인라인 복제. */
@@ -581,9 +583,6 @@ async function callGeminiReadingFinalize(
     const advancedCue = geScore >= 11
       ? '\n  - This user is at an advanced level — prioritize sophisticated, low-frequency vocabulary, formal/literary expressions, and nuanced idioms.'
       : ''
-    const meaningGuide = (meaningLang === 'en')
-      ? `a concise English explanation suitable for a learner at GE ${geScore.toFixed(1)} (use simpler words than the target item itself)`
-      : `a concise ${langName} explanation (1 short phrase)`
     studyInstructions = `
 2. From the page text, pick words/idioms/expressions that this user should learn next.
 
@@ -600,7 +599,9 @@ Selection rules for "study_items":
   - "surface" must be the EXACT substring as it appears in the page text (preserve casing/punctuation).
   - "lemma" is the dictionary/base form of "surface" used for vocabulary lookup. Strip inflections so the result is what a learner would search a dictionary for. Lowercase. Examples: "mending a puncture" → "mend a puncture", "ran into" → "run into", "cats" → "cat", "running" → "run", "went" → "go", "better off" → "better off" (no change needed). For multi-word items, lemmatize each verb/noun while preserving the structure.
   - For verbs, prefer extracting the verb alone. Only include a particle/preposition when the combined form is a true phrasal verb whose meaning is non-compositional (e.g. "give up", "look into", "put off", "run into" meaning to encounter). Do NOT include literal motion prepositions where the meaning is just verb + direction (e.g. "skid across", "walk through", "run past", "came across the room" → extract "skid", "walk", "run", "come" only).
-  - "meaning" should be ${meaningGuide}.
+  - "meaning_native" should be a concise ${langName} explanation (1 short phrase).
+  - "meaning_en" should be a concise English explanation suitable for a learner at GE ${geScore.toFixed(1)} (use simpler words than the target item itself).
+  - Both meaning fields are REQUIRED — clients toggle between them in real time.
   - Do NOT pick fragments that originate from the boundary context (prevTail/nextHead) — those belong to neighboring pages.`
   } else {
     studyInstructions = `
@@ -649,12 +650,13 @@ Do NOT add commentary. Return ONLY the JSON object.`
               items: {
                 type: "OBJECT",
                 properties: {
-                  surface: { type: "STRING", description: "Exact substring from the page text." },
-                  lemma:   { type: "STRING", description: "Dictionary/base form of surface for vocabulary lookup (lowercase, inflections stripped)." },
-                  type:    { type: "STRING", description: "word | idiom | phrasal_verb | collocation" },
-                  meaning: { type: "STRING", description: `Concise meaning in ${meaningLangName}.` },
+                  surface:        { type: "STRING", description: "Exact substring from the page text." },
+                  lemma:          { type: "STRING", description: "Dictionary/base form of surface for vocabulary lookup (lowercase, inflections stripped)." },
+                  type:           { type: "STRING", description: "word | idiom | phrasal_verb | collocation" },
+                  meaning_native: { type: "STRING", description: `Concise meaning in ${langName}.` },
+                  meaning_en:     { type: "STRING", description: "Concise English explanation suitable for the learner's level." },
                 },
-                required: ["surface", "lemma", "type", "meaning"],
+                required: ["surface", "lemma", "type", "meaning_native", "meaning_en"],
               },
             },
           },
@@ -673,7 +675,7 @@ Do NOT add commentary. Return ONLY the JSON object.`
   if (!responseText) throw new Error('Empty response from Gemini')
   return JSON.parse(responseText) as {
     translated: string;
-    study_items: Array<{ surface: string; lemma: string; type: string; meaning: string }>;
+    study_items: Array<{ surface: string; lemma: string; type: string; meaning_native: string; meaning_en: string }>;
   }
 }
 
