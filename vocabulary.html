@@ -1084,6 +1084,24 @@
   }
   /* 책 상세 페이지 그룹 — "Page 1" 헤더 + 그 아래 학습 단어 항목들 */
   .wb-book-page-group { margin-bottom: 22px; }
+  /* 페이지 헤더 행 — 초록 Page 배지 + (선택) 회색 책 본래 번호 배지 가로 정렬 */
+  .wb-book-page-header-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  /* 책 본래 페이지 번호 배지 — 책 뷰어 (.page-num-badge) 와 동일 시각언어로 통일.
+     border-radius: 999px 는 자동으로 짧은 변의 절반으로 캡되어 자릿수 늘어도 알약 모양 유지. */
+  .wb-book-page-num {
+    font-size: 0.72rem;
+    color: #9C9892;
+    background: #F5F3EE;
+    border: 1px solid #E5E2DC;
+    padding: 2px 8px;
+    border-radius: 999px;
+    user-select: none;
+  }
   /* 학습 단어 출처 문장 — 본문에서 추출한 컨텍스트. 회색 인용 톤.
      학습 단어 + 뜻 아래에 배치되어 보조 정보 역할.
      좌측 보더 — 인쇄 시 배경색이 빠져도 "인용" 시각 마커가 살아남도록. */
@@ -4904,9 +4922,11 @@ async function renderWbBookDetail(listEl, bookId) {
   }
   const pageHeaderTpl = t('wbBookPageHeader') || 'Page {n} ({c})';
   const html = groups.map(g => {
-    /* 헤더 = "Page N" + (책 본래 페이지 번호 있으면 · p.번호 부가). */
+    /* 초록 Page 배지 + (옵션) 회색 책 본래 번호 배지 — 책 뷰어와 동일 시각언어. */
     const baseHeader = pageHeaderTpl.replace('{n}', g.pageNum).replace('{c}', g.items.length);
-    const headerText = g.bookPageNum ? `${baseHeader} · p.${g.bookPageNum}` : baseHeader;
+    const bookNumBadge = g.bookPageNum
+      ? `<span class="wb-book-page-num">${escapeHtml(g.bookPageNum)}</span>`
+      : '';
     const itemsHtml = g.items.map(it => {
       const surface = it && it.surface ? String(it.surface) : '';
       const lemma = (it && it.lemma) ? String(it.lemma) : surface;
@@ -4933,7 +4953,10 @@ async function renderWbBookDetail(listEl, bookId) {
       </div>`;
     }).join('');
     return `<div class="wb-book-page-group">
-      <div class="wb-book-page-header">${escapeHtml(headerText)}</div>
+      <div class="wb-book-page-header-row">
+        <div class="wb-book-page-header">${escapeHtml(baseHeader)}</div>
+        ${bookNumBadge}
+      </div>
       ${itemsHtml}
     </div>`;
   }).join('');
