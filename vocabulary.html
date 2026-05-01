@@ -4801,10 +4801,14 @@ async function renderWordbook() {
    - 1차: 정확한 substring (대부분 케이스)
    - 2차: 분리형 phrasal verb 처리 — surface 의 모든 토큰이 한 문장에 단어 경계로 등장
      (예: "pulled out" → "pulled a slip of paper out" 처럼 분리된 케이스 매칭)
-   둘 다 실패하면 빈 문자열 → 호출부에서 출처 표시 생략. */
+   둘 다 실패하면 빈 문자열 → 호출부에서 출처 표시 생략.
+
+   본문 정규화 — OCR 줄 끝 하이픈 분절("grum-\\nbled" → "grumbled") 합치기 후 공백 정규화.
+   책 뷰어는 이 변환 안 함 (사진 그대로 보존이 목적). 여기는 짧은 인용 한 줄이라 합쳐서 표시. */
 function findSentenceContainingSurface(text, surface) {
   if (!text || !surface) return '';
-  const flat = String(text).replace(/\s+/g, ' ').trim();
+  const dehyphenated = String(text).replace(/-\n/g, '');
+  const flat = dehyphenated.replace(/\s+/g, ' ').trim();
   const sentences = flat.split(/(?<=[.!?])\s+/);
   const lowerSurface = String(surface).toLowerCase().trim();
   /* 1차: 정확한 substring */
