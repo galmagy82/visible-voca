@@ -399,24 +399,33 @@
     transition: color 0.15s;
   }
   .study-item-speak:hover { color: #2D2B28; }
-  /* 학습 단어 옆 Geminary 검색 버튼 — 단어지도 미니 아이콘.
+  /* 학습 단어 옆 Geminary 검색 버튼 — squircle(둥근 사각형) 스타일.
+     iOS 앱 아이콘 톤: 그라데이션 배경 + 흰색 로고 + 살짝 떠 있는 그림자.
      클릭 시 vocabulary.html 을 iframe 임베드 모드로 띄워 해당 단어의 검색 결과 표시. */
   .study-item-geminary {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 22px;
-    height: 22px;
+    width: 26px;
+    height: 26px;
     padding: 0;
-    margin-left: 4px;
+    margin-left: 6px;
     border: none;
-    background: transparent;
-    border-radius: 4px;
+    background: linear-gradient(135deg, #6BAEE3 0%, #4A90D9 100%);
+    border-radius: 7px;
+    box-shadow: 0 1px 2px rgba(74, 144, 217, 0.25);
     cursor: pointer;
     vertical-align: middle;
-    transition: background 0.15s;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
   }
-  .study-item-geminary:hover { background: #EAF2FB; }
+  .study-item-geminary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(74, 144, 217, 0.35);
+  }
+  .study-item-geminary:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(74, 144, 217, 0.25);
+  }
   .study-item-meaning {
     margin-top: 4px;
     font-size: 0.92rem;
@@ -643,8 +652,18 @@
     align-items: center;
     gap: 6px;
   }
-  /* 라벨 내 인라인 아이콘 (Geminary 등) — 텍스트와 베이스라인 정렬, 가벼운 우측 여백 */
-  .rs-inline-icon { flex-shrink: 0; }
+  /* 라벨 내 인라인 Geminary squircle 미니 — 학습 단어 옆 버튼과 같은 시각 톤. */
+  .rs-inline-icon {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    background: linear-gradient(135deg, #6BAEE3 0%, #4A90D9 100%);
+    box-shadow: 0 1px 2px rgba(74, 144, 217, 0.2);
+  }
   /* iOS 스타일 토글 스위치 — vocabulary 의 .toggle-switch 와 동일 룩으로 통일 */
   .toggle-switch {
     position: relative;
@@ -1065,15 +1084,17 @@
     <div class="rs-group-title rs-group-gap" data-i18n="settingsWordbookGroup">단어장 설정</div>
     <div class="rs-toggle-row">
       <span class="rs-toggle-label">
-        <!-- Geminary 아이콘 인라인 — 학습 단어 옆 .study-item-geminary 와 동일 SVG.
+        <!-- Geminary squircle 미니 아이콘 — 학습 단어 옆 .study-item-geminary 버튼과 시각 통일.
              "이 아이콘을 누른 검색에 한해 자동 추가" 컨텍스트 시각 명시. -->
-        <svg class="rs-inline-icon" width="14" height="12" viewBox="0 0 28 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <line x1="6" y1="6" x2="15" y2="6" stroke="#4A90D9" stroke-width="1.5" opacity="0.5"/>
-          <line x1="6" y1="6" x2="9.3" y2="15.2" stroke="#4A90D9" stroke-width="1.5" opacity="0.5"/>
-          <circle cx="6" cy="6" r="3" fill="#4A90D9"/>
-          <circle cx="18" cy="6" r="3" fill="#5B9BD5"/>
-          <circle cx="10" cy="18" r="3" fill="#7BB3E0"/>
-        </svg>
+        <span class="rs-inline-icon" aria-hidden="true">
+          <svg width="13" height="11" viewBox="0 0 28 24" xmlns="http://www.w3.org/2000/svg">
+            <line x1="6" y1="6" x2="15" y2="6" stroke="#FFFFFF" stroke-width="1.5" opacity="0.65"/>
+            <line x1="6" y1="6" x2="9.3" y2="15.2" stroke="#FFFFFF" stroke-width="1.5" opacity="0.65"/>
+            <circle cx="6" cy="6" r="3" fill="#FFFFFF"/>
+            <circle cx="18" cy="6" r="3" fill="#FFFFFF" opacity="0.85"/>
+            <circle cx="10" cy="18" r="3" fill="#FFFFFF" opacity="0.7"/>
+          </svg>
+        </span>
         <span data-i18n="settingsAutoAdd">검색 시 단어장에 바로 추가</span>
       </span>
       <label class="toggle-switch">
@@ -2255,12 +2276,12 @@ function renderStudyList(items, pageIdx) {
         ${lemmaSpan}
         <button class="study-item-speak" type="button" data-word="${safeSurface}" title="${safeSpeakLabel}" aria-label="${safeSpeakLabel}">&#128264;</button>
         <button class="study-item-geminary" type="button" data-word="${safeLemma}" aria-label="Geminary">
-          <svg width="14" height="12" viewBox="0 0 28 24" xmlns="http://www.w3.org/2000/svg">
-            <line x1="6" y1="6" x2="15" y2="6" stroke="#4A90D9" stroke-width="1.5" opacity="0.5"/>
-            <line x1="6" y1="6" x2="9.3" y2="15.2" stroke="#4A90D9" stroke-width="1.5" opacity="0.5"/>
-            <circle cx="6" cy="6" r="3" fill="#4A90D9"/>
-            <circle cx="18" cy="6" r="3" fill="#5B9BD5"/>
-            <circle cx="10" cy="18" r="3" fill="#7BB3E0"/>
+          <svg width="15" height="13" viewBox="0 0 28 24" xmlns="http://www.w3.org/2000/svg">
+            <line x1="6" y1="6" x2="15" y2="6" stroke="#FFFFFF" stroke-width="1.5" opacity="0.65"/>
+            <line x1="6" y1="6" x2="9.3" y2="15.2" stroke="#FFFFFF" stroke-width="1.5" opacity="0.65"/>
+            <circle cx="6" cy="6" r="3" fill="#FFFFFF"/>
+            <circle cx="18" cy="6" r="3" fill="#FFFFFF" opacity="0.85"/>
+            <circle cx="10" cy="18" r="3" fill="#FFFFFF" opacity="0.7"/>
           </svg>
         </button>
       </div>
