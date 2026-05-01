@@ -4890,8 +4890,13 @@ async function renderWbBookDetail(listEl, bookId) {
   pages.forEach((p, idx) => {
     const items = Array.isArray(p && p.study_items) ? p.study_items : [];
     if (items.length === 0) return;
-    /* original 도 같이 동봉 — 각 항목의 출처 문장 추출에 사용 */
-    groups.push({ pageNum: idx + 1, items, original: (p && p.original) || '' });
+    /* original = 출처 문장 추출용. bookPageNum = OCR 이 마진에서 추출한 책 본래 페이지 번호 (없을 수 있음). */
+    groups.push({
+      pageNum: idx + 1,
+      items,
+      original: (p && p.original) || '',
+      bookPageNum: (p && p.page_number) ? String(p.page_number).trim() : '',
+    });
   });
   if (groups.length === 0) {
     listEl.innerHTML = `<div class="wb-book-empty">${escapeHtml(t('wbBookNoStudyItems') || '이 책에는 학습 단어가 없어요.')}</div>`;
@@ -4899,7 +4904,9 @@ async function renderWbBookDetail(listEl, bookId) {
   }
   const pageHeaderTpl = t('wbBookPageHeader') || 'Page {n} ({c})';
   const html = groups.map(g => {
-    const headerText = pageHeaderTpl.replace('{n}', g.pageNum).replace('{c}', g.items.length);
+    /* 헤더 = "Page N" + (책 본래 페이지 번호 있으면 · p.번호 부가). */
+    const baseHeader = pageHeaderTpl.replace('{n}', g.pageNum).replace('{c}', g.items.length);
+    const headerText = g.bookPageNum ? `${baseHeader} · p.${g.bookPageNum}` : baseHeader;
     const itemsHtml = g.items.map(it => {
       const surface = it && it.surface ? String(it.surface) : '';
       const lemma = (it && it.lemma) ? String(it.lemma) : surface;
