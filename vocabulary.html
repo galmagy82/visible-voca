@@ -4683,11 +4683,15 @@ async function renderWordbook() {
   const listEl = document.getElementById('wordbookList');
 
   /* 어휘/표현/세트/책별 개수 업데이트
-     — 어휘/표현 구분은 단어에 스페이스 포함 여부로 결정.
-       (세트 일괄 저장으로 스냅샷이 없는 단어도 올바르게 분류되게 하기 위함.
-        기존 pos 기반 분류는 세트 스켈레톤 단어를 모두 표현으로 몰아넣어 부자연스러웠음.) */
-  const vocabAll = list.filter(item => !item.word.includes(' '));
-  const exprAll = list.filter(item => item.word.includes(' '));
+     — POS 가 채워져 있으면 vocab 모드 결과(이미지도 있음). 가장 정확한 신호.
+     — POS 비어있는 옛 데이터/세트 스켈레톤 폴백: 공백 없으면 단어로 추정.
+     — 일반검색·사진검색 숨김 후 신규 스켈레톤 발생 경로 없음. 폴백은 옛 데이터 안전망. */
+  const isVocabEntry = (item) => {
+    if (item.pos) return true;
+    return !item.word.includes(' ');
+  };
+  const vocabAll = list.filter(isVocabEntry);
+  const exprAll = list.filter(item => !isVocabEntry(item));
   const sets = await loadWordSetsIfNeeded();
   const vocabTab = document.getElementById('wbTabVocab');
   const exprTab = document.getElementById('wbTabExpr');
