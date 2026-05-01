@@ -1035,19 +1035,8 @@
   <div class="modal-card">
     <div class="modal-title" data-i18n="readingSettingsTitle">Reading 설정</div>
 
-    <!-- 섹션 0: 단어장 설정 — vocabulary 의 my-설정 토글과 같은 localStorage 키
-         (geminary_autoAdd) 를 공유. 설정 저장 시점에만 반영, Cancel 시 revert. -->
-    <div class="rs-group-title" data-i18n="settingsWordbookGroup">단어장 설정</div>
-    <div class="rs-toggle-row">
-      <span class="rs-toggle-label" data-i18n="settingsAutoAdd">검색 시 단어장에 바로 추가</span>
-      <label class="toggle-switch">
-        <input type="checkbox" id="rsAutoAddToggle">
-        <span class="toggle-slider"></span>
-      </label>
-    </div>
-
     <!-- 섹션 1: 내 영어 레벨 -->
-    <div class="rs-group-title rs-group-gap" data-i18n="settingsLevelGroup">단어 레벨 설정</div>
+    <div class="rs-group-title" data-i18n="settingsLevelGroup">단어 레벨 설정</div>
     <div class="rs-group-hint" data-i18n="settingsGeHint">* Renaissance STAR Reading 의 GE 점수를 설정하면 사진 검색 AI 자동 추천이 활성화됩니다.</div>
     <!-- LevelPicker.renderSlider 로 마운트 — innerHTML 이 교체됨 -->
     <div class="rs-slider-host" id="readingSettingsSliderHost"></div>
@@ -1062,6 +1051,17 @@
       <label class="rs-radio">
         <input type="radio" name="rsMeaningLang" value="en">
         <span data-i18n="readingMeaningLangEn">영어</span>
+      </label>
+    </div>
+
+    <!-- 섹션 3: 단어장 설정 — vocabulary 의 my-설정 토글과 같은 localStorage 키
+         (geminary_autoAdd) 를 공유. 설정 저장 시점에만 반영, Cancel 시 revert. -->
+    <div class="rs-group-title rs-group-gap" data-i18n="settingsWordbookGroup">단어장 설정</div>
+    <div class="rs-toggle-row">
+      <span class="rs-toggle-label" data-i18n="settingsAutoAdd">검색 시 단어장에 바로 추가</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="rsAutoAddToggle">
+        <span class="toggle-slider"></span>
       </label>
     </div>
 
