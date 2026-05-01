@@ -1659,10 +1659,11 @@
 <div class="main-layout">
   <!-- 왼쪽 탭 사이드바 -->
   <div class="sidebar">
-    <button class="tab active" onclick="switchTab('search')" data-i18n="tabSearch">일반검색</button>
+    <!-- 일반검색 탭 — 코드는 유지하고 탭 버튼만 숨김 (reading.html 흐름으로 검색 기능 흡수). -->
+    <button class="tab" onclick="switchTab('search')" data-i18n="tabSearch" style="display:none">일반검색</button>
     <!-- 사진검색 탭 — 코드는 유지하고 탭 버튼만 숨김 (reading.html 흐름으로 사진 검색 기능 흡수). -->
     <button class="tab" onclick="switchTab('photo')" data-i18n="tabPhoto" style="display:none">사진검색</button>
-    <button class="tab" onclick="switchTab('wordbook')" data-i18n="tabWordbook">단어장</button>
+    <button class="tab active" onclick="switchTab('wordbook')" data-i18n="tabWordbook">단어장</button>
     <button class="tab" onclick="switchTab('quiz')" data-i18n="tabQuiz">Quiz</button>
     <button class="tab" onclick="switchTab('myrecord')" data-i18n="tabMyRecord">My</button>
   </div>
@@ -1670,8 +1671,8 @@
   <!-- 오른쪽 컨텐츠 -->
   <div class="content">
 
-    <!-- 탭1: 일반검색 -->
-    <div class="tab-content active" id="tabSearch">
+    <!-- 탭1: 일반검색 — 탭 버튼은 숨김 처리됨, 패널 active 도 wordbook 으로 이전. -->
+    <div class="tab-content" id="tabSearch">
       <div class="search-box">
         <input type="text" id="wordInput" data-i18n="searchPlaceholder" placeholder="단어, 숙어, 문장을 입력하세요" autofocus>
         <button onclick="lookup()" data-i18n="search">검색</button>
@@ -1782,8 +1783,8 @@
       <div class="result-area" id="resultPhoto"></div>
     </div>
 
-    <!-- 탭3: 단어장 -->
-    <div class="tab-content" id="tabWordbook">
+    <!-- 탭3: 단어장 — 일반검색/사진검색 탭이 숨겨진 후의 페이지 진입 기본 패널. -->
+    <div class="tab-content active" id="tabWordbook">
       <!-- 어휘/표현/세트 서브탭 -->
       <div class="wb-subtabs">
         <button class="wb-subtab active" onclick="switchWbMode('vocab')" id="wbTabVocab" data-i18n="wbTabVocab">단어 (0)</button>
