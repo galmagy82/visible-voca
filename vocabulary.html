@@ -3259,6 +3259,10 @@ async function initAuth() {
   }
   /* 인증 확인 후 본문 표시 */
   document.body.style.display = '';
+  /* 레벨/EXP 캐시 로드 — 이미 로그인된 사용자가 페이지 진입 시 onAuthStateChange 가 안 터지므로
+     여기서도 명시 호출. 안 그러면 _statsCache.total_exp = 0 그대로 → 퀴즈/검색으로 EXP 추가 시
+     기존 누적 EXP 가 통째 덮어쓰여 Lv.1 로 초기화되는 데이터 손실 버그 발생. */
+  initLevelUI();
   /* My Books 단어 토글 default — Reading 의 user_profile.meaning_lang 따라가기.
      fire-and-forget: 실패해도 'native' default 유지, 성공 시 세션 동안 적용. */
   loadWbStudyMeaningLang();
