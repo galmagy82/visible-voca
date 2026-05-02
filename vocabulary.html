@@ -2044,10 +2044,13 @@
 
     <!-- 탭3: 단어장 — 일반검색/사진검색 탭이 숨겨진 후의 페이지 진입 기본 패널. -->
     <div class="tab-content active" id="tabWordbook">
-      <!-- 단어 / My Books 단어 서브탭 — 단어/문장 통합, 세트는 사진검색 숨김으로 미사용 -->
+      <!-- My Books 단어 / 단어 서브탭 — 단어/문장 통합, 세트는 사진검색 숨김으로 미사용 -->
       <div class="wb-subtabs">
+        <!-- My Books 단어 — reading_books 의 study_items 를 책 단위로 모아 보여줌. 별도 저장소 X.
+             첫 번째 위치 + active default — 사용자 주된 진입점이 reading 학습 흐름이라 자연. -->
+        <button class="wb-subtab active" onclick="switchWbMode('books')" id="wbTabBooks" data-i18n="wbBooks">My Books 단어 (0)</button>
         <!-- 단어 탭 — Geminary 검색으로 단어장에 추가한 모든 항목 (이미지 유/무 무관). -->
-        <button class="wb-subtab active" onclick="switchWbMode('vocab')" id="wbTabVocab">
+        <button class="wb-subtab" onclick="switchWbMode('vocab')" id="wbTabVocab">
           <svg class="wb-subtab-icon" width="14" height="14" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <line x1="6" y1="6" x2="15" y2="6" stroke="#FFFFFF" stroke-width="1.5" opacity="0.65"/>
             <line x1="6" y1="6" x2="9.3" y2="15.2" stroke="#FFFFFF" stroke-width="1.5" opacity="0.65"/>
@@ -2060,8 +2063,6 @@
         <!-- 세트 서브탭 — 사진 검색 흐름 숨김 후 신규 세트 생성 경로 없어 사실상 미사용.
              코드는 유지하고 탭 버튼만 숨김 (사진 검색 다시 노출 시 즉시 복구 가능). -->
         <button class="wb-subtab" onclick="switchWbMode('sets')" id="wbTabSets" data-i18n="wbSets" style="display:none">세트 (0)</button>
-        <!-- My Books 단어 — reading_books 의 study_items 를 책 단위로 모아 보여줌. 별도 저장소 X. -->
-        <button class="wb-subtab" onclick="switchWbMode('books')" id="wbTabBooks" data-i18n="wbBooks">My Books 단어 (0)</button>
       </div>
       <!-- 검색/정렬/전체삭제 툴바 — 세트 모드에서는 숨김 -->
       <div class="wordbook-toolbar" id="wordbookToolbar">
@@ -2836,8 +2837,8 @@ async function updateWordLevel() {
   document.getElementById('wordLevelWrap').style.display = '';
 }
 
-// --- 단어장 단어/세트/책별 서브탭 — 단어/문장 통합 후 'expr' 모드 제거됨 ---
-let _wbMode = 'vocab'; // 'vocab' | 'sets' | 'books'
+// --- 단어장 책별/단어/세트 서브탭 — 단어/문장 통합 후 'expr' 모드 제거됨 ---
+let _wbMode = 'books'; // 'books' | 'vocab' | 'sets' — 첫 진입 default 는 책별 (HTML active 와 동기)
 /* 세트 상세 뷰 진입 상태 — null = 세트 목록, uuid = 그 세트의 단어 목록 */
 let _activeSetId = null;
 /* 책별 탭의 책 상세 뷰 진입 상태 — null = 책 카드 목록, uuid = 그 책의 학습 단어 */
