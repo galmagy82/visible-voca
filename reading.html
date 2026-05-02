@@ -354,7 +354,9 @@
     display: inline-block;
     transition: transform 0.15s;
   }
-  .study-list-title { flex: 1; }
+  /* .study-list-title — flex:1 제거 → 토글이 제목 바로 옆에 붙음.
+     이전엔 우측 끝으로 밀려있어 시각 연관성 약했음. */
+  .study-list-title { /* 자연 너비 사용 */ }
   /* 모국어/영어 토글 — pill 형 두 버튼 인접. summary 안에 있어 click 전파 방지 필요. */
   .study-meaning-toggle {
     display: inline-flex;
