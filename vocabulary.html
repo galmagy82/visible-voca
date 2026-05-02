@@ -640,7 +640,7 @@
     opacity: 0;
     z-index: 9999;
     /* 3줄(타이틀/서브/노트)로 늘어나서 읽는 시간 확보를 위해 5.5s → 7s */
-    animation: badgeShow 7s ease-out forwards;
+    animation: badgeShow 5.5s ease-out forwards;
   }
   .discovery-badge .badge-title {
     font-size: 1.1rem;
@@ -2853,7 +2853,7 @@ function showLevelUpNotification(info) {
     <div class="badge-sub">Lv.${info.lv} ${info.title}</div>
   `;
   document.body.appendChild(badge);
-  setTimeout(() => badge.remove(), 7000);
+  setTimeout(() => badge.remove(), 5500);
 }
 
 /* 페이지 초기화 시 Supabase 에서 통계 로드 후 레벨 UI 렌더링 */
@@ -3444,7 +3444,7 @@ function showDiscoveryBadge() {
   document.body.appendChild(badge);
   playDiscoverySound();
   /* 애니메이션(7s) 종료 후 뱃지 제거 — CSS animation 값과 일치해야 함 */
-  setTimeout(() => badge.remove(), 7000);
+  setTimeout(() => badge.remove(), 5500);
 }
 
 // --- 설정 (localStorage 공유) ---
