@@ -652,11 +652,13 @@
     font-size: 0.85rem;
     color: #ccc;
   }
-  /* 3번째 줄 — 기능 안내(캐싱/빠른 재검색). sub보다 한 톤 더 작고 흐리게 */
-  .discovery-badge .badge-note {
-    font-size: 0.78rem;
-    color: #999;
-    margin-top: 6px;
+  /* 3번째 줄 — 신규 이미지 생성 시 적립 보상 시각. 골드 톤 + 살짝 큰 폰트로 임팩트. */
+  .discovery-badge .badge-gem {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #FFD700;
+    margin-top: 10px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
   }
   @keyframes badgeShow {
     0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
@@ -1335,18 +1337,37 @@
   }
   .level-header {
     margin-bottom: 20px;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
   }
   .level-number {
     font-size: 1.8rem;
     font-weight: 700;
     color: #2D2B28;
-    margin-right: 10px;
   }
   .level-title {
     font-size: 1.1rem;
     font-weight: 500;
     color: #4A90D9;
+    flex: 1;
   }
+  /* 💎 gem 카운트 — 우측 정렬, 보조 통계 톤. 클릭/hover 시 툴팁(브라우저 native title) 노출. */
+  .gem-stat {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: #FAF7E8;
+    border: 1px solid #E8E0C2;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #8A7B3A;
+    cursor: default;
+  }
+  .gem-stat .gem-icon { font-size: 0.9rem; }
   .level-progress-wrap {
     margin-bottom: 24px;
   }
@@ -2165,6 +2186,8 @@
           <div class="level-header">
             <span class="level-number" id="levelNumber">Lv.1</span>
             <span class="level-title" id="levelTitle">Newcomer</span>
+            <!-- 💎 gem 카운트 — 신규 이미지 생성 시 적립. 우측에 작은 보조 통계로 표시. -->
+            <span class="gem-stat" title="신규 이미지 생성 시 적립"><span class="gem-icon">💎</span><span id="gemCount">0</span></span>
           </div>
           <div class="level-progress-wrap">
             <div class="level-progress-bar">
@@ -2703,7 +2726,7 @@ const LEVEL_TABLE = [
 ];
 
 /* 메모리 캐시 — Supabase 에서 가져온 통계를 저장해 매번 조회하지 않도록 */
-let _statsCache = { total_exp: 0, stat_searches: 0, stat_quiz: 0 };
+let _statsCache = { total_exp: 0, stat_searches: 0, stat_quiz: 0, total_gems: 0 };
 
 /* Supabase 에서 사용자 통계 로드 (없으면 행 생성) */
 async function loadStats() {
@@ -2711,20 +2734,25 @@ async function loadStats() {
   if (!userId) return _statsCache;
   const { data, error } = await supabaseClient
     .from('user_stats')
-    .select('total_exp, stat_searches, stat_quiz')
+    .select('total_exp, stat_searches, stat_quiz, total_gems')
     .eq('user_id', userId)
     .maybeSingle();
   if (error) { console.warn('user_stats 조회 실패:', error); return _statsCache; }
   if (data) {
-    _statsCache = { total_exp: data.total_exp, stat_searches: data.stat_searches, stat_quiz: data.stat_quiz };
+    _statsCache = {
+      total_exp: data.total_exp,
+      stat_searches: data.stat_searches,
+      stat_quiz: data.stat_quiz,
+      total_gems: data.total_gems || 0,
+    };
   } else {
     /* 최초 방문 — 단어장 수로 EXP 부트스트랩 */
     const list = await getWordbookAll();
     const bootstrapExp = list.length * 15;
     const bootstrapSearches = list.length;
-    const row = { user_id: userId, total_exp: bootstrapExp, stat_searches: bootstrapSearches, stat_quiz: 0 };
+    const row = { user_id: userId, total_exp: bootstrapExp, stat_searches: bootstrapSearches, stat_quiz: 0, total_gems: 0 };
     await supabaseClient.from('user_stats').insert(row);
-    _statsCache = { total_exp: bootstrapExp, stat_searches: bootstrapSearches, stat_quiz: 0 };
+    _statsCache = { total_exp: bootstrapExp, stat_searches: bootstrapSearches, stat_quiz: 0, total_gems: 0 };
   }
   return _statsCache;
 }
@@ -2772,9 +2800,37 @@ async function addExp(amount, source) {
       total_exp: _statsCache.total_exp,
       stat_searches: _statsCache.stat_searches,
       stat_quiz: _statsCache.stat_quiz,
+      total_gems: _statsCache.total_gems,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'user_id' })
     .then(({ error }) => { if (error) console.warn('user_stats 저장 실패:', error); });
+}
+
+/* 💎 gem 추가 — 신규 이미지 생성 (캐시 miss) 시 1개 적립.
+   현재 redemption 없이 표시 전용. 향후 무료 trial 추가권 등으로 확장 가능. */
+async function addGem(amount, source) {
+  const userId = _authUser?.id;
+  if (!userId) return;
+  void source; // 향후 source 별 분기 / 통계 확장용 reserved
+  _statsCache.total_gems = (_statsCache.total_gems || 0) + amount;
+  updateGemUI();
+  supabaseClient
+    .from('user_stats')
+    .upsert({
+      user_id: userId,
+      total_exp: _statsCache.total_exp,
+      stat_searches: _statsCache.stat_searches,
+      stat_quiz: _statsCache.stat_quiz,
+      total_gems: _statsCache.total_gems,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'user_id' })
+    .then(({ error }) => { if (error) console.warn('user_stats gem 저장 실패:', error); });
+}
+
+/* gem 카운트 UI 갱신 — 내 활동 패널의 gem 표시 영역. */
+function updateGemUI() {
+  const el = document.getElementById('gemCount');
+  if (el) el.textContent = String(_statsCache.total_gems || 0);
 }
 
 /* 레벨 UI 업데이트 */
@@ -2804,6 +2860,7 @@ function showLevelUpNotification(info) {
 async function initLevelUI() {
   await loadStats();
   updateLevelUI();
+  updateGemUI();
   updateWordLevel();
   /* GE 슬라이더도 인증 상태 기준으로 갱신 */
   refreshGeSliderUI();
@@ -3382,7 +3439,8 @@ function showDiscoveryBadge() {
   const username = _authUser?.email?.split('@')[0] || '';
   const badge = document.createElement('div');
   badge.className = 'discovery-badge';
-  badge.innerHTML = `<div class="badge-title">${t('discoveryTitle')}</div><div class="badge-sub">${escapeHtml(username)}${t('discoverySub')}</div><div class="badge-note">${t('discoveryNote')}</div>`;
+  /* badge-note 줄을 +1 💎 시각으로 교체 — gem 보상 즉시 인지. */
+  badge.innerHTML = `<div class="badge-title">${t('discoveryTitle')}</div><div class="badge-sub">${escapeHtml(username)}${t('discoverySub')}</div><div class="badge-gem">+1 💎</div>`;
   document.body.appendChild(badge);
   playDiscoverySound();
   /* 애니메이션(7s) 종료 후 뱃지 제거 — CSS animation 값과 일치해야 함 */
@@ -3942,8 +4000,11 @@ async function fetchWordResult(word, targetEl) {
     const container = targetEl.querySelector('.feel-image-container');
     if (container) {
       container.innerHTML = `<img src="${escapeHtml(imageUrl)}" alt="${safeWord}${t('imageAlt')}">`;
-      /* 새 이미지 생성 시 발견 뱃지 + 효과음 */
-      if (!reusedImagePath) showDiscoveryBadge();
+      /* 새 이미지 생성 시 발견 뱃지 + 효과음 + 💎 적립 */
+      if (!reusedImagePath) {
+        showDiscoveryBadge();
+        addGem(1, 'image_discovery');
+      }
     }
     const imgTag = `<img src="${escapeHtml(imageUrl)}" alt="${safeWord}${t('imageAlt')}">`;
     const imgHtml = html.replace(
