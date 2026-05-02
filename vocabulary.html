@@ -2153,7 +2153,9 @@
       <!-- 서브탭 버튼 -->
       <div class="myrecord-subtabs">
         <button class="myrecord-subtab active" onclick="switchMyRecordSub('character')" data-i18n="myrecordCharacter">내 활동</button>
-        <button class="myrecord-subtab" onclick="switchMyRecordSub('settings')" data-i18n="myrecordSettings">설정</button>
+        <!-- 설정 서브탭 — Reading 설정에 같은 항목들이 모두 있어 단일 진실원으로 통일.
+             코드는 유지, 탭 버튼만 숨김 (vocabulary 직접 검색 다시 노출 시 즉시 복구 가능). -->
+        <button class="myrecord-subtab" onclick="switchMyRecordSub('settings')" data-i18n="myrecordSettings" style="display:none">설정</button>
       </div>
 
       <!-- 서브탭1: 내 활동 -->
