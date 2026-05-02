@@ -526,12 +526,13 @@
     font-weight: 600;
     color: #2D2B28;
   }
-  /* IPA 발음기호 — 발음 버튼 옆 */
+  /* IPA 발음기호 — 헤더 밖 별도 줄 (block 컨텍스트 가정).
+     헤더에 같이 두면 좁은 폭에서 X 버튼과 충돌하던 회귀를 구조적으로 제거. */
   .word-ipa {
     font-size: 0.95rem;
     color: #6B6660;
     font-style: italic;
-    margin-right: 2px;
+    margin-bottom: 6px;
   }
   .speak-btn {
     padding: 6px 10px;
@@ -3575,10 +3576,11 @@ function buildHtmlFromDB(dbData, word, correctedOverride) {
   let html = `<div class="word-header">`;
   html += `<div class="word-title">${safeCorrected || safeWord}</div>`;
   html += `<button class="speak-btn" onclick="speak('${speakWord}')" title="${t('listenPronunciation')}">&#128264;</button>`;
-  /* IPA 발음기호를 발음 버튼 오른쪽에 표시 */
-  if (dbData.ipa) html += `<span class="word-ipa">${escapeHtml(dbData.ipa)}</span>`;
   html += `<button class="add-wordbook-btn" data-wb-word>${t('addToWordbook')}</button>`;
   html += `</div>`;
+  /* IPA 발음기호 — 헤더 밖 별도 줄 (모든 화면에서 일관 렌더). 헤더 안에 두면 폭에 따라 wrap 여부가 달라져
+     embed 모드 X 버튼과 충돌하는 회귀가 발생함. */
+  if (dbData.ipa) html += `<div class="word-ipa">${escapeHtml(dbData.ipa)}</div>`;
   /* 품사 · CEFR 난이도 표시 */
   if (dbData.pos || dbData.cefr) {
     let posLine = '';
@@ -3881,10 +3883,11 @@ async function fetchWordResult(word, targetEl) {
   let html = `<div class="word-header">`;
   html += `<div class="word-title">${safeCorrected || safeWord}</div>`;
   html += `<button class="speak-btn" onclick="speak('${speakWord}')" title="${t('listenPronunciation')}">&#128264;</button>`;
-  /* IPA 발음기호를 발음 버튼 오른쪽에 표시 */
-  if (ipa) html += `<span class="word-ipa">${escapeHtml(ipa)}</span>`;
   html += `<button class="add-wordbook-btn" data-wb-word>${t('addToWordbook')}</button>`;
   html += `</div>`;
+  /* IPA 발음기호 — 헤더 밖 별도 줄 (모든 화면에서 일관 렌더). 헤더 안에 두면 폭에 따라 wrap 여부가 달라져
+     embed 모드 X 버튼과 충돌하는 회귀가 발생함. */
+  if (ipa) html += `<div class="word-ipa">${escapeHtml(ipa)}</div>`;
   /* 품사 · CEFR 난이도 표시 */
   if (pos || cefr) {
     let posLine = '';
