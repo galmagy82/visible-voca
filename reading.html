@@ -357,12 +357,14 @@
   /* .study-list-title — flex:1 제거 → 토글이 제목 바로 옆에 붙음.
      이전엔 우측 끝으로 밀려있어 시각 연관성 약했음. */
   .study-list-title { /* 자연 너비 사용 */ }
-  /* 모국어/영어 토글 — pill 형 두 버튼 인접. summary 안에 있어 click 전파 방지 필요. */
+  /* 모국어/영어 토글 — pill 형 두 버튼 인접. summary 안에 있어 click 전파 방지 필요.
+     margin-left 로 제목과 거리 추가 확보 (summary gap 8px + margin 12px = 20px 간격). */
   .study-meaning-toggle {
     display: inline-flex;
     border: 1px solid #D5D2CC;
     border-radius: 999px;
     overflow: hidden;
+    margin-left: 12px;
   }
   .meaning-toggle-btn {
     padding: 3px 10px;
