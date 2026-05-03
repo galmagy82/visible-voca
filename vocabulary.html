@@ -658,11 +658,13 @@
     cursor: default;
     opacity: 0.3;
   }
-  /* 누른 쪽은 비활성 상태에서도 진하게 (opacity 1) — "내 의견 반영됨" 시각 신호.
-     배경 색은 입히지 않음 (고스트 톤 유지). */
+  /* 누른 쪽은 비활성 상태에서도 진하게 + 옅은 파란 배경 — "내 의견 반영됨" 시각 신호.
+     기본 알약(#F5F3EE) 에서 옅은 파란(#E3F0FA) 으로 바뀌어 즉각 알아챌 수 있다.
+     이모지 자체는 시스템 컬러라 color 속성이 안 먹어, 배경 변경만으로 표시. */
   .vote-btn.vote-clicked,
   .vote-btn:disabled.vote-clicked {
     opacity: 1;
+    background: #E3F0FA;
   }
   /* 비추천 후 띄우는 가벼운 토스트 — 화면 하단 중앙, 페이드 인/아웃.
      무거운 .discovery-badge 와 분리한 가벼운 스타일. */
@@ -3426,8 +3428,7 @@ function buildVoteButtons(rowId) {
 
 /* 추천/비추천 버튼 클릭 핸들러 — 전역 노출 (onclick 인라인에서 호출).
    RPC 호출 후 양쪽 버튼 비활성 + 클릭한 쪽에 .vote-clicked 시각 피드백.
-   비추천 케이스에만 가벼운 토스트를 띄워 "운영자에게 전달됐다" 신뢰감 제공.
-   추천은 시각 변화만으로 충분 (YouTube/Twitter 좋아요와 동일 패턴). */
+   추천/비추천 모두 토스트로 피드백 — 추천은 짧게, 비추천은 운영자 신뢰감 메시지. */
 async function handleVote(rowId, voteType, btnEl) {
   if (!rowId || isRowVoted(rowId)) return;
   const fn = voteType === 'up' ? 'increment_upvote' : 'increment_downvote';
@@ -3443,9 +3444,8 @@ async function handleVote(rowId, voteType, btnEl) {
       wrapper.querySelectorAll('.vote-btn').forEach(b => { b.disabled = true; });
       btnEl.classList.add('vote-clicked');
     }
-    if (voteType === 'down') {
-      showVoteToast(t('voteDownThanks'));
-    }
+    const toastKey = voteType === 'up' ? 'voteUpThanks' : 'voteDownThanks';
+    showVoteToast(t(toastKey));
   } catch (e) {
     console.warn('vote 호출 실패:', e);
   }
