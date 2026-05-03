@@ -632,7 +632,9 @@
     display: flex;
     gap: 4px;
     justify-content: flex-end;
-    margin: 4px 0 12px;
+    /* 위쪽 음수 margin 으로 .feel-image-container 의 margin-bottom(24px) 를 상쇄해
+       이미지에 가깝게 붙임. 버튼 자체 크기는 유지하면서 답답한 위아래 여백만 압축. */
+    margin: -16px 0 8px;
   }
   .vote-btn {
     background: #F5F3EE;
