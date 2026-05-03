@@ -660,6 +660,31 @@
     color: #fff;
     opacity: 1;
   }
+  /* 비추천 후 띄우는 가벼운 토스트 — 화면 하단 중앙, 페이드 인/아웃.
+     무거운 .discovery-badge 와 분리한 가벼운 스타일. */
+  .vote-toast {
+    position: fixed;
+    left: 50%;
+    bottom: 56px;
+    transform: translateX(-50%);
+    background: rgba(45, 43, 40, 0.92);
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 0.92rem;
+    line-height: 1.4;
+    max-width: calc(100vw - 32px);
+    text-align: center;
+    pointer-events: none;
+    z-index: 9999;
+    animation: voteToastShow 2.5s ease-out forwards;
+  }
+  @keyframes voteToastShow {
+    0%   { opacity: 0; transform: translate(-50%, 8px); }
+    12%  { opacity: 1; transform: translate(-50%, 0); }
+    85%  { opacity: 1; transform: translate(-50%, 0); }
+    100% { opacity: 0; transform: translate(-50%, 8px); }
+  }
   /* 새 단어 발견 뱃지 (화면 중앙 고정) */
   .discovery-badge {
     position: fixed;
@@ -3184,9 +3209,11 @@ async function saveTranslation(sourceWord, lang, englishWord) {
    - 텍스트 / 언어는 보지 않음 (이미지엔 텍스트가 없는 정책이라 언어 중립적). */
 async function fetchExistingImage(word) {
   try {
+    /* id 도 같이 select — 단어장 모달 / Reading iframe 등에서
+       추천/비추천 버튼의 data-row-id 로 필요. */
     const { data, error } = await supabaseClient
       .from('word_results')
-      .select('image_path')
+      .select('id, image_path')
       .eq('word', word.toLowerCase())
       .not('image_path', 'is', null)
       .limit(1)
@@ -3202,6 +3229,7 @@ async function fetchExistingImage(word) {
     if (!urlData?.publicUrl) return null;
 
     return {
+      id: data.id,
       image_path: data.image_path,
       publicUrl: urlData.publicUrl
     };
@@ -3393,7 +3421,9 @@ function buildVoteButtons(rowId) {
 }
 
 /* 추천/비추천 버튼 클릭 핸들러 — 전역 노출 (onclick 인라인에서 호출).
-   RPC 호출 후 양쪽 버튼 비활성 + 클릭한 쪽에 .vote-clicked 시각 피드백. */
+   RPC 호출 후 양쪽 버튼 비활성 + 클릭한 쪽에 .vote-clicked 시각 피드백.
+   비추천 케이스에만 가벼운 토스트를 띄워 "운영자에게 전달됐다" 신뢰감 제공.
+   추천은 시각 변화만으로 충분 (YouTube/Twitter 좋아요와 동일 패턴). */
 async function handleVote(rowId, voteType, btnEl) {
   if (!rowId || isRowVoted(rowId)) return;
   const fn = voteType === 'up' ? 'increment_upvote' : 'increment_downvote';
@@ -3409,9 +3439,26 @@ async function handleVote(rowId, voteType, btnEl) {
       wrapper.querySelectorAll('.vote-btn').forEach(b => { b.disabled = true; });
       btnEl.classList.add('vote-clicked');
     }
+    if (voteType === 'down') {
+      showVoteToast(t('voteDownThanks'));
+    }
   } catch (e) {
     console.warn('vote 호출 실패:', e);
   }
+}
+
+/* 화면 하단 가벼운 토스트 — 약 2.5초 후 자동 제거.
+   기존 .discovery-badge 와 별개 (그쪽은 사운드/gem 포함 무거운 효과). */
+function showVoteToast(message) {
+  if (!message) return;
+  /* 같은 토스트가 이미 떠 있으면 새로 만들지 않고 스킵 (연속 클릭 방어) */
+  if (document.querySelector('.vote-toast')) return;
+  const el = document.createElement('div');
+  el.className = 'vote-toast';
+  el.textContent = message;
+  document.body.appendChild(el);
+  /* CSS animation duration 과 일치해야 함 (2.5s) */
+  setTimeout(() => el.remove(), 2500);
 }
 
 /* onclick 인라인 호출용 전역 노출 (모듈 스코프 영향 없으나 명시 안전장치) */
@@ -4213,6 +4260,30 @@ function showSearchResult(word) {
   if (!cached) return;
   resultSearch.innerHTML = cached.html + buildNavBar();
   bindWbButton(resultSearch, word);
+  /* 옛 캐시 마이그레이션 — vote 기능 도입 이전에 저장된 html 은 .vote-buttons 가 없음.
+     이미지가 있는데 버튼이 빠진 경우 비동기로 imageRowId 를 조회해 동적 주입한다.
+     성공하면 wordResults / IndexedDB 캐시도 갱신해 다음부터는 즉시 표시됨. */
+  ensureVoteButtonsForCachedHtml(word, resultSearch);
+}
+
+/* 옛 캐시 hit 후처리 — vote 버튼 자리가 없으면 fetchFromSupabase 로 imageRowId 조회 후 주입.
+   캐시 갱신은 의도적으로 생략 (cached html 의 정확한 split 지점을 찾는 정규식이 위험).
+   매 hit 마다 가벼운 SELECT 한 번 추가되지만, 옛 캐시는 시간이 지나면 사라지므로 한정적 비용. */
+async function ensureVoteButtonsForCachedHtml(word, rootEl) {
+  if (!rootEl) return;
+  const imgContainer = rootEl.querySelector('.feel-image-container');
+  if (!imgContainer) return; // 이미지 없는 결과 (표현 모드 등) 는 대상 아님
+  if (rootEl.querySelector('.vote-buttons')) return; // 이미 박혀 있으면 스킵
+  try {
+    const dbResult = await fetchFromSupabase(word);
+    const rowId = dbResult?.imageRowId;
+    if (!rowId) return;
+    const voteHtml = buildVoteButtons(rowId);
+    /* 이미지 컨테이너 직후에 삽입 — buildHtmlFromDB / 새 검색 빌드와 동일한 위치 */
+    imgContainer.insertAdjacentHTML('afterend', voteHtml);
+  } catch (e) {
+    console.warn('vote 버튼 마이그레이션 실패:', e);
+  }
 }
 
 async function lookupWord(word) {
@@ -5344,6 +5415,10 @@ async function showWordbookDetail(word, itemEl) {
         description: dbResult.description,
         examples: dbResult.examples,
         imageUrl: dbResult.imageUrl || (existingImage ? existingImage.publicUrl : null),
+        /* imageRowId: imageUrl 출처와 일치시켜야 추천/비추천 카운트가 올바른 row 에 매겨짐.
+           dbResult 가 이미지를 채웠으면 dbResult.imageRowId, 폴백으로 existingImage 를
+           쓴 경우엔 existingImage.id 를 사용. */
+        imageRowId: dbResult.imageUrl ? dbResult.imageRowId : (existingImage ? existingImage.id : null),
       };
       /* user_wordbook row 백필 — 다음에 열 때부터는 스냅샷만으로 충분하도록 */
       backfillWordbookEntry(word, dbResult);
@@ -5379,6 +5454,9 @@ async function showWordbookDetail(word, itemEl) {
       description: entry.description,
       examples: entry.examples,
       imageUrl: existingImage ? existingImage.publicUrl : null,
+      /* 단어장 모달도 검색 결과와 동일하게 추천/비추천 버튼 노출.
+         existingImage 가 없으면 imageUrl 도 없어 vote 버튼 자체가 안 그려짐. */
+      imageRowId: existingImage ? existingImage.id : null,
     };
   }
   contentEl.innerHTML = buildHtmlFromDB(dbLike, word);
