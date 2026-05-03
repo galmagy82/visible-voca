@@ -625,6 +625,41 @@
     object-fit: contain;
     width: 100%;
   }
+  /* 추천/비추천 버튼 — 검색 결과 카드 이미지 바로 아래.
+     자체 평가가 끝나면 양쪽 모두 disabled 로 잠긴다. */
+  .vote-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin: 8px 0 16px;
+  }
+  .vote-btn {
+    background: #F5F3EE;
+    border: 1px solid #D5D2CC;
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 1rem;
+    cursor: pointer;
+    line-height: 1;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .vote-btn:hover:not(:disabled) {
+    background: #EDECEA;
+  }
+  .vote-btn:active:not(:disabled) {
+    transform: scale(0.95);
+  }
+  .vote-btn:disabled {
+    cursor: default;
+    opacity: 0.45;
+  }
+  /* 사용자가 방금 누른 쪽은 강조해서 "내 의견이 반영됐다" 시각 피드백 */
+  .vote-btn.vote-clicked {
+    background: #4A90D9;
+    border-color: #4A90D9;
+    color: #fff;
+    opacity: 1;
+  }
   /* 새 단어 발견 뱃지 (화면 중앙 고정) */
   .discovery-badge {
     position: fixed;
@@ -3050,6 +3085,9 @@ async function fetchFromSupabase(word) {
         description: textRow.description,
         examples: textRow.examples,
         imageUrl: urlData?.publicUrl || null,
+        /* 추천/비추천 버튼이 표를 매기는 대상은 imageRow 한 곳.
+           "그림 불만이 비추천 동기의 대부분" 가정하에 이미지 row 만 평가 대상. */
+        imageRowId: imageRow.id,
         fromDB: true
       };
     }
@@ -3262,8 +3300,11 @@ async function saveToSupabase(word, parsed, imageDataUrl, existingImagePath, sce
 
     /* DB에 텍스트 결과 저장
        lang: 검색 시점의 사용자 언어 설정(ko/en)을 함께 저장.
-       fetchFromSupabase에서 같은 언어 row만 가져오게 하여 언어 불일치 방지. */
-    const { error: insertErr } = await supabaseClient
+       fetchFromSupabase에서 같은 언어 row만 가져오게 하여 언어 불일치 방지.
+       .select('id').single() 추가: 추천/비추천 버튼의 data-row-id 로 사용하기 위해
+       삽입된 row 의 id 를 즉시 회수한다. 실패해도 화면은 정상 동작 (id 없으면
+       버튼이 표시되지 않을 뿐). */
+    const { data: inserted, error: insertErr } = await supabaseClient
       .from('word_results')
       .insert({
         word: word.toLowerCase(),
@@ -3288,13 +3329,93 @@ async function saveToSupabase(word, parsed, imageDataUrl, existingImagePath, sce
            둘 다 저장하는 이유는 의도적 denormalization (사람용 vs 머신용 분리). */
         discovered_by: _authUser?.email?.split('@')[0] || null,
         discovered_by_user_id: _authUser?.id || null
-      });
+      })
+      .select('id')
+      .single();
 
-    if (insertErr) console.warn('DB 저장 실패:', insertErr);
+    if (insertErr) {
+      console.warn('DB 저장 실패:', insertErr);
+      return null;
+    }
+    /* 새로 만든 row 의 id 반환 — 호출자가 추천/비추천 버튼에 박을 용도 */
+    return inserted?.id || null;
   } catch (e) {
     console.warn('Supabase 저장 실패:', e);
+    return null;
   }
 }
+
+/* ================================================================
+   추천/비추천 (검색 결과 카드 — word_results.imageRow 단위 평가)
+   ----------------------------------------------------------------
+   정책:
+   - 평가 대상은 그림이 표시된 imageRow 한 곳뿐. 텍스트/예문은 평가 X.
+     ("비추천 동기의 대부분이 그림 불만"이라는 가정하의 단순화.)
+   - 운영자가 DB 에서 downvote 많은 row 를 직접 모니터링 후 수동 삭제.
+     자동 캐시 무효화 없음 → 어뷰즈 동기 약함.
+   - 같은 row 1회 클릭 후 양쪽 비활성. localStorage 로 사용자 단위 제한.
+     완벽한 어뷰즈 방어는 아니지만(localStorage 클리어로 우회 가능),
+     자동 정책이 없으므로 충분.
+   ================================================================ */
+
+const VOTED_STORAGE_KEY = 'votedRowIds';
+
+/* 이 사용자가 이미 vote 한 row id 집합을 localStorage 에서 읽음 */
+function getVotedRowIds() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(VOTED_STORAGE_KEY) || '[]'));
+  } catch {
+    return new Set();
+  }
+}
+
+/* row id 를 voted 집합에 추가 — string 으로 통일 (bigint 안전) */
+function markRowVoted(rowId) {
+  const set = getVotedRowIds();
+  set.add(String(rowId));
+  localStorage.setItem(VOTED_STORAGE_KEY, JSON.stringify([...set]));
+}
+
+function isRowVoted(rowId) {
+  return getVotedRowIds().has(String(rowId));
+}
+
+/* 검색 결과 카드에 박을 추천/비추천 버튼 HTML.
+   data-row-id: 캐시 hit 경로에서도 onclick 인자로 그대로 동작.
+   이미 vote 한 row 면 처음부터 disabled. */
+function buildVoteButtons(rowId) {
+  const voted = isRowVoted(rowId);
+  const dis = voted ? 'disabled' : '';
+  return `<div class="vote-buttons" data-row-id="${rowId}">`
+       + `<button type="button" class="vote-btn vote-up" ${dis} onclick="handleVote(${rowId}, 'up', this)">👍</button>`
+       + `<button type="button" class="vote-btn vote-down" ${dis} onclick="handleVote(${rowId}, 'down', this)">👎</button>`
+       + `</div>`;
+}
+
+/* 추천/비추천 버튼 클릭 핸들러 — 전역 노출 (onclick 인라인에서 호출).
+   RPC 호출 후 양쪽 버튼 비활성 + 클릭한 쪽에 .vote-clicked 시각 피드백. */
+async function handleVote(rowId, voteType, btnEl) {
+  if (!rowId || isRowVoted(rowId)) return;
+  const fn = voteType === 'up' ? 'increment_upvote' : 'increment_downvote';
+  try {
+    const { error } = await supabaseClient.rpc(fn, { row_id: rowId });
+    if (error) {
+      console.warn('vote RPC 실패:', error);
+      return;
+    }
+    markRowVoted(rowId);
+    const wrapper = btnEl?.closest('.vote-buttons');
+    if (wrapper) {
+      wrapper.querySelectorAll('.vote-btn').forEach(b => { b.disabled = true; });
+      btnEl.classList.add('vote-clicked');
+    }
+  } catch (e) {
+    console.warn('vote 호출 실패:', e);
+  }
+}
+
+/* onclick 인라인 호출용 전역 노출 (모듈 스코프 영향 없으나 명시 안전장치) */
+window.handleVote = handleVote;
 
 // --- Edge Function 설정 ---
 const EDGE_FUNCTION_URL = 'https://grdtxvpebjtfhuqdngfn.supabase.co/functions/v1/gemini-proxy';
@@ -3653,6 +3774,11 @@ function buildHtmlFromDB(dbData, word, correctedOverride) {
   html += `<div class="feel-desc">${escapeHtml(dbData.description)}</div>`;
   if (dbData.imageUrl) {
     html += `<div class="feel-image-container"><img src="${escapeHtml(dbData.imageUrl)}" alt="${safeWord}${t('imageAlt')}"></div>`;
+    /* 추천/비추천 버튼 — 이미지가 있는 row(imageRowId) 에만 표시.
+       data-row-id 로 RPC 호출에 쓸 row id 를 박아두면 캐시 hit 경로에서도 동일 동작. */
+    if (dbData.imageRowId) {
+      html += buildVoteButtons(dbData.imageRowId);
+    }
   }
   if (dbData.examples) html += `<div class="feel-examples">${stylePosLabels(escapeHtml(dbData.examples))}</div>`;
   /* 단어장 추가 시 사용할 스냅샷 — POS 유무와 무관하게 모든 필드 보관 */
@@ -3961,6 +4087,9 @@ async function fetchWordResult(word, targetEl) {
   html += `<div class="feel-desc">${escapeHtml(desc)}</div>`;
   if (imagePromise) {
     html += `<div class="feel-image-container" id="imageContainer"><div class="feel-image-loading"><div class="stars"><span>✦</span><span>✦</span><span>✦</span></div>${t('imageLoading')}</div></div>`;
+    /* 추천/비추천 버튼 자리표시자 — saveToSupabase 가 row id 를 돌려준 뒤 vote 버튼으로 교체.
+       이미지 실패 시에는 빈 div 가 남는데 화면에 안 보여서 무해. */
+    html += `<div data-vote-placeholder></div>`;
   }
   if (examples) html += `<div class="feel-examples">${stylePosLabels(escapeHtml(examples))}</div>`;
   /* 렌더링 후 단어장 추가에 사용할 스냅샷 보관 — POS 유무와 무관하게 모든 필드 저장 */
@@ -4014,8 +4143,17 @@ async function fetchWordResult(word, targetEl) {
     wordResults[word] = { html: imgHtml };
     saveCacheEntry(word, imgHtml, window._lastWbData);
     /* Supabase에 텍스트 + 이미지 저장 (정답 단어를 키로 저장)
-       reusedImagePath 가 있으면 saveToSupabase 가 업로드 스킵하고 그 path 를 공유. */
-    saveToSupabase(saveWord, { corrected, pos, ipa, cefr, description: desc, examples, verbForms }, imageUrl, reusedImagePath, sceneEn);
+       reusedImagePath 가 있으면 saveToSupabase 가 업로드 스킵하고 그 path 를 공유.
+       반환된 row id 로 vote 버튼 placeholder 를 실제 버튼으로 교체 — DOM/캐시 모두 갱신. */
+    const newRowId = await saveToSupabase(saveWord, { corrected, pos, ipa, cefr, description: desc, examples, verbForms }, imageUrl, reusedImagePath, sceneEn);
+    if (newRowId) {
+      const voteHtml = buildVoteButtons(newRowId);
+      const ph = targetEl.querySelector('[data-vote-placeholder]');
+      if (ph) ph.outerHTML = voteHtml;
+      const finalHtml = imgHtml.replace(/<div data-vote-placeholder><\/div>/, voteHtml);
+      wordResults[word] = { html: finalHtml };
+      saveCacheEntry(word, finalHtml, window._lastWbData);
+    }
   } catch (imgErr) {
     console.error('이미지 생성 실패:', imgErr);
     /* 이미지 영역 제거 */
