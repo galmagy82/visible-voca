@@ -408,7 +408,12 @@ Page boundary handling:
 - This rule applies to all three tasks below — do not include study_items whose "surface" comes from bleed-through.
 
 Tasks:
-1. Extract the original English text exactly as it appears on the page, preserving line breaks (use \\n). DO NOT join wrapped lines into continuous prose.
+1. Extract the original English text exactly as it appears on the page, preserving line breaks (use \\n).
+   MANDATORY: every printed line in the photo must end with \\n. Treat each visually distinct line as a separate line.
+   DO NOT join wrapped lines into continuous prose.
+   DO NOT merge consecutive dialogue lines into one line.
+   DO NOT merge descriptive sentences into one line just because they belong to the same paragraph.
+   This rule applies UNIFORMLY across the entire page — dialogue-heavy sections, descriptive paragraphs, narration, every part. There must be no section where line breaks are silently dropped.
 2. Translate that text into natural ${langName}, preserving paragraph structure (line breaks between paragraphs).${studyInstructions}
 3. Also fill the "page_number" field per its schema description.
 
@@ -504,7 +509,12 @@ Page metadata to exclude:
 - The key distinction is POSITION and STYLE, not content — "Chapter 5: The Mystery" in the page margin = running header (omit); the same text as a large heading at the top of the main text block = chapter title (include).
 
 Tasks:
-1. Extract the original English text exactly as it appears on the page, preserving line breaks (use \\n). DO NOT join wrapped lines into continuous prose.
+1. Extract the original English text exactly as it appears on the page, preserving line breaks (use \\n).
+   MANDATORY: every printed line in the photo must end with \\n. Treat each visually distinct line as a separate line.
+   DO NOT join wrapped lines into continuous prose.
+   DO NOT merge consecutive dialogue lines into one line.
+   DO NOT merge descriptive sentences into one line just because they belong to the same paragraph.
+   This rule applies UNIFORMLY across the entire page — dialogue-heavy sections, descriptive paragraphs, narration, every part. There must be no section where line breaks are silently dropped.
 2. Also fill the "page_number" field per its schema description.
 
 If the image contains no readable text (blank page, decoration only, illegible photo), set "no_text" to true, return empty string for original, and null for page_number.
