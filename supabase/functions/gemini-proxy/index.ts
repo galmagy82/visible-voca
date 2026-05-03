@@ -366,7 +366,7 @@ async function callGeminiReadingExtract(base64Data: string, mimeType: string, ta
   let studyInstructions = ''
   if (geScore != null) {
     const targetMin = Math.min(13, geScore + 1.0)
-    const targetMax = Math.min(13, geScore + 2.5)
+    const targetMax = Math.min(13, geScore + 3.0)
     const bandLabel = geBandLabelEn(geScore)
     const advancedCue = geScore >= 11
       ? '\n  - This user is at an advanced level — prioritize sophisticated, low-frequency vocabulary, formal/literary expressions, and nuanced idioms.'
@@ -382,7 +382,7 @@ User profile:
 
 Selection rules for "study_items":
   - Categories: "word" | "idiom" | "phrasal_verb" | "collocation"
-  - 0 to 7 items per page. NO MINIMUM. If nothing in the text falls in the target range, return an empty array.
+  - 2 to 10 items per page. Aim for at least 2 items even when the page is short. If fewer than 2 items fall strictly inside the target GE range, broaden the search slightly (just below or just above the range) to reach the minimum — but never include items the learner clearly already knows, and never include items wildly above their level.
   - Skip items at or below GE ${geScore.toFixed(1)} (the user already knows these).
   - Skip items above GE ${targetMax.toFixed(1)} (too hard for context-based learning at this stage).
   - Prioritize items that expand this user's vocabulary in the next learning step.
@@ -589,7 +589,7 @@ async function callGeminiReadingFinalize(
   let studyInstructions = ''
   if (geScore != null) {
     const targetMin = Math.min(13, geScore + 1.0)
-    const targetMax = Math.min(13, geScore + 2.5)
+    const targetMax = Math.min(13, geScore + 3.0)
     const bandLabel = geBandLabelEn(geScore)
     const advancedCue = geScore >= 11
       ? '\n  - This user is at an advanced level — prioritize sophisticated, low-frequency vocabulary, formal/literary expressions, and nuanced idioms.'
@@ -603,7 +603,7 @@ User profile:
 
 Selection rules for "study_items":
   - Categories: "word" | "idiom" | "phrasal_verb" | "collocation"
-  - 0 to 7 items per page. NO MINIMUM. If nothing in the text falls in the target range, return an empty array.
+  - 2 to 10 items per page. Aim for at least 2 items even when the page is short. If fewer than 2 items fall strictly inside the target GE range, broaden the search slightly (just below or just above the range) to reach the minimum — but never include items the learner clearly already knows, and never include items wildly above their level.
   - Skip items at or below GE ${geScore.toFixed(1)} (the user already knows these).
   - Skip items above GE ${targetMax.toFixed(1)} (too hard for context-based learning at this stage).
   - Prioritize items that expand this user's vocabulary in the next learning step.
