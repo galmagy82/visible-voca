@@ -533,8 +533,11 @@ Do NOT add commentary. Return ONLY the JSON object.`
       }],
       generationConfig: {
         temperature: 0.3,
-        /* OCR-only 출력은 원문 텍스트만이라 6144→3072 로 절감 (대형 페이지도 충분) */
-        maxOutputTokens: 3072,
+        /* OCR-only 라도 thinkingBudget(-1) + 회전 사진 + 빽빽한 텍스트가 겹치면
+           기존 3072 가 부족해 응답이 truncate 되어 JSON 파싱 실패하는 케이스 발생.
+           10000 으로 안전 마진 대폭 확보. maxOutputTokens 는 한계만 설정하고 실제
+           사용한 토큰만 과금되므로 비용 영향 미미. */
+        maxOutputTokens: 10000,
         responseMimeType: "application/json",
         responseSchema: {
           type: "OBJECT",
