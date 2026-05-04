@@ -97,7 +97,9 @@
   }
   .settings-gear-btn:hover { background: #EDECEA; border-color: #B0ACA6; }
   /* 🪙 크레딧 잔액 배지 — Reading 헤더 우측. 차분한 알약 톤(level-chip 과 같은 위계).
-     unlimited 사용자는 ∞ 표시. 클릭 시 충전 페이지로 (단계 C 에서 추가). */
+     unlimited 사용자는 ∞ 표시. 클릭 시 충전 페이지로 (단계 C 에서 추가).
+     white-space: nowrap — 모바일 좁은 공간에서 "🪙 ∞" 가 두 줄로 줄바꿈되며
+     알약이 둥근 원으로 부풀어 보이는 문제 방지. */
   .credit-balance-chip {
     display: inline-flex;
     align-items: center;
@@ -110,12 +112,20 @@
     border: 1px solid #D5D2CC;
     border-radius: 999px;
     user-select: none;
+    white-space: nowrap;
   }
   .credit-balance-chip.is-unlimited {
-    /* 무제한 계정: 살짝 강조해 평소 잔액과 구분 */
-    background: #FAF3DC;
-    border-color: #E5D8A8;
-    color: #6F5E2A;
+    /* 무제한 계정: 살짝 강조하되 너무 도드라지지 않게 — 옅은 노란 톤 */
+    background: #FBF7E5;
+    border-color: #EFE3B8;
+    color: #7D6B30;
+  }
+  /* 모바일 좁은 화면에선 다른 헤더 요소(레벨 칩, ⚙️) 와의 공간 경쟁이 심해 살짝 더 압축 */
+  @media (max-width: 480px) {
+    .credit-balance-chip {
+      padding: 3px 8px;
+      font-size: 0.8rem;
+    }
   }
   /* 2단: 페이지 제목 — 큰 헤딩으로 단독 배치.
      Geminary 브랜드(main.html, 40px) 와 같은 DM Serif Display 폰트로 톤 일치,
