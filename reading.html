@@ -1798,6 +1798,8 @@ async function handlePhotos(inputEl) {
   document.getElementById('bookViewer').hidden = true;
   document.getElementById('bookListArea').hidden = true;
   document.getElementById('loadingArea').hidden = false;
+  /* 로딩 화면에선 크레딧 배지 숨김 — updateTopBackLink 가 화면 상태 따라 토글 */
+  updateTopBackLink();
   _completedCount = 0;
   setLoadingPhase('readingPhaseExtract');
   updateLoadingProgress(0, files.length);
@@ -1995,6 +1997,16 @@ function updateTopBackLink() {
 
   const bookListVisible = !document.getElementById('bookListArea').hidden;
   const bookViewerVisible = !document.getElementById('bookViewer').hidden;
+
+  /* 크레딧 배지 — 결제 의식이 필요한 업로드 화면에서만 표시.
+     My Books / 책 뷰어 / 로딩 화면에선 숨김 (학습 몰입 + UI 군더더기 ↓).
+     화면 전환 시점마다 updateTopBackLink 가 호출되니 여기 한 곳만 토글하면 됨. */
+  const creditHost = document.getElementById('creditBalanceHost');
+  if (creditHost) {
+    const loadingVisible = !document.getElementById('loadingArea').hidden;
+    const onUploadScreen = !bookListVisible && !bookViewerVisible && !loadingVisible;
+    creditHost.style.display = onUploadScreen ? '' : 'none';
+  }
 
   /* 페이지 제목 — 화면별 분기:
      - 책 목록: "📚 My Books"
