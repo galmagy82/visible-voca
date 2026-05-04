@@ -554,7 +554,12 @@ Do NOT add commentary. Return ONLY the JSON object.`
           },
           required: ["original", "no_text", "page_number"],
         },
-        thinkingConfig: { thinkingBudget: -1 },
+        /* thinkingBudget 을 dynamic(-1) 에서 2048 로 제한.
+           회전 사진 + 빽빽한 텍스트에서 dynamic thinking 이 폭주해 maxOutputTokens
+           안의 output 영역을 잠식 → JSON 응답이 일찍 잘림(Unterminated string in JSON
+           at position ~400) 사례 발생. 명시 한도로 제한해 OCR output 공간 확보.
+           OCR 작업 자체는 thinking 적게 써도 충분히 정확. */
+        thinkingConfig: { thinkingBudget: 2048 },
       },
     }),
   })
