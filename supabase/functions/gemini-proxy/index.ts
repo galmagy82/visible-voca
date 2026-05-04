@@ -448,7 +448,7 @@ Do NOT add commentary. Return ONLY the JSON object.`
             page_number: {
               type: "STRING",
               nullable: true,
-              description: "The page number printed in the MARGIN of the page (top or bottom, smaller font, outside the main text block). Examples: '42', 'iii'. Return null if absent, illegible, or no margin number is visible. For two-page spreads where BOTH page numbers are visible, return them joined with a hyphen (e.g. '12-13', '100-101'). If only one side's number is legible in a spread, return that one alone. NEVER return numbers from body text such as chapter numbers, years, or any digits inside paragraphs.",
+              description: "The page number is the small number in the BOTTOM margin of the page (either centered or in the outer corner — bottom-left or bottom-right). NEVER look at the top of the page — anything at the top is a chapter heading or running header, not a page number. If no bottom-margin number is visible, return null. For two-page spreads (clear central binding gutter visible) where both sides have their own bottom-margin numbers, return them joined with a hyphen (e.g. '12-13'). For single-page photos, return only one number. NEVER return numbers from body text or illustrations.",
             },
             study_items: {
               type: "ARRAY",
@@ -552,7 +552,7 @@ Do NOT add commentary. Return ONLY the JSON object.`
             page_number: {
               type: "STRING",
               nullable: true,
-              description: "The page number printed in the MARGIN of the page (top or bottom, smaller font, outside the main text block). Examples: '42', 'iii'. Return null if absent, illegible, or no margin number is visible. For two-page spreads where BOTH page numbers are visible, return them joined with a hyphen (e.g. '12-13', '100-101'). If only one side's number is legible in a spread, return that one alone. NEVER return numbers from body text such as chapter numbers, years, or any digits inside paragraphs.",
+              description: "The page number is the small number in the BOTTOM margin of the page (either centered or in the outer corner — bottom-left or bottom-right). NEVER look at the top of the page — anything at the top is a chapter heading or running header, not a page number. If no bottom-margin number is visible, return null. For two-page spreads (clear central binding gutter visible) where both sides have their own bottom-margin numbers, return them joined with a hyphen (e.g. '12-13'). For single-page photos, return only one number. NEVER return numbers from body text or illustrations.",
             },
           },
           required: ["original", "no_text", "page_number"],
