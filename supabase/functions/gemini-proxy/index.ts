@@ -382,7 +382,11 @@ User profile:
 
 Selection rules for "study_items":
   - Categories: "word" | "idiom" | "phrasal_verb" | "collocation"
-  - 2 to 10 items per page. Aim for at least 2 items even when the page is short. If fewer than 2 items fall strictly inside the target GE range, broaden the search slightly (just below or just above the range) to reach the minimum — but never include items the learner clearly already knows, and never include items wildly above their level.
+  - Item count scales with the actual text length of the page so learning value is not lost on dense pages (e.g. dual-text two-page spreads) and not inflated on sparse pages. Use the page text length as the cue:
+    · Very short text (~500 chars or less, e.g. picture-book pages): 2-5 items.
+    · Normal page (~500-1500 chars, typical novel page): 5-10 items.
+    · Long text (>1500 chars, e.g. dense pages or two-page spreads with full text on both sides): 10-18 items, scaled proportionally so dense content doesn't lose learning value.
+  - Aim for at least 2 items even when the page is short. If fewer than 2 items fall strictly inside the target GE range, broaden the search slightly (just below or just above the range) to reach the minimum — but never include items the learner clearly already knows, and never include items wildly above their level. The text-length scaling above must always respect the GE filtering rules — do NOT inflate the count by lowering the bar.
   - Skip items at or below GE ${geScore.toFixed(1)} (the user already knows these).
   - Skip items above GE ${targetMax.toFixed(1)} (too hard for context-based learning at this stage).
   - Prioritize items that expand this user's vocabulary in the next learning step.
@@ -614,7 +618,11 @@ User profile:
 
 Selection rules for "study_items":
   - Categories: "word" | "idiom" | "phrasal_verb" | "collocation"
-  - 2 to 10 items per page. Aim for at least 2 items even when the page is short. If fewer than 2 items fall strictly inside the target GE range, broaden the search slightly (just below or just above the range) to reach the minimum — but never include items the learner clearly already knows, and never include items wildly above their level.
+  - Item count scales with the actual text length of the page so learning value is not lost on dense pages (e.g. dual-text two-page spreads) and not inflated on sparse pages. Use the page text length as the cue:
+    · Very short text (~500 chars or less, e.g. picture-book pages): 2-5 items.
+    · Normal page (~500-1500 chars, typical novel page): 5-10 items.
+    · Long text (>1500 chars, e.g. dense pages or two-page spreads with full text on both sides): 10-18 items, scaled proportionally so dense content doesn't lose learning value.
+  - Aim for at least 2 items even when the page is short. If fewer than 2 items fall strictly inside the target GE range, broaden the search slightly (just below or just above the range) to reach the minimum — but never include items the learner clearly already knows, and never include items wildly above their level. The text-length scaling above must always respect the GE filtering rules — do NOT inflate the count by lowering the bar.
   - Skip items at or below GE ${geScore.toFixed(1)} (the user already knows these).
   - Skip items above GE ${targetMax.toFixed(1)} (too hard for context-based learning at this stage).
   - Prioritize items that expand this user's vocabulary in the next learning step.
