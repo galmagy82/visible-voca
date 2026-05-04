@@ -433,7 +433,9 @@ Do NOT add commentary. Return ONLY the JSON object.`
       }],
       generationConfig: {
         temperature: 0.3,
-        maxOutputTokens: 6144,
+        /* Reading 함수 3종(Ocr/Finalize/Extract) 모두 maxOutputTokens 10000 + thinkingBudget 2048 로 통일.
+           dynamic thinking 이 토큰 한도를 잠식해 응답이 잘리는 truncation 문제 방지. */
+        maxOutputTokens: 10000,
         responseMimeType: "application/json",
         responseSchema: {
           type: "OBJECT",
@@ -466,7 +468,8 @@ Do NOT add commentary. Return ONLY the JSON object.`
           },
           required: ["original", "translated", "no_text", "page_number", "study_items"],
         },
-        thinkingConfig: { thinkingBudget: -1 },
+        /* dynamic(-1) 에서 명시 한도로 — output 영역 최소 ~7950 보장. */
+        thinkingConfig: { thinkingBudget: 2048 },
       },
     }),
   })
@@ -657,8 +660,9 @@ Do NOT add commentary. Return ONLY the JSON object.`
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: {
         temperature: 0.3,
-        /* 이미지가 없어 OCR 부분이 빠지므로 6144→4096 로 약간 절감 */
-        maxOutputTokens: 4096,
+        /* dynamic thinking 이 폭주해 학습단어 생성 단계에서 응답이 잘리는 truncation 사례 발생.
+           Reading 함수 3종(Ocr/Finalize/Extract) 모두 maxOutputTokens 10000 + thinkingBudget 2048 로 통일. */
+        maxOutputTokens: 10000,
         responseMimeType: "application/json",
         responseSchema: {
           type: "OBJECT",
@@ -682,7 +686,8 @@ Do NOT add commentary. Return ONLY the JSON object.`
           },
           required: ["translated", "study_items"],
         },
-        thinkingConfig: { thinkingBudget: -1 },
+        /* dynamic(-1) 에서 명시 한도로 — output 영역 최소 ~7950 보장. */
+        thinkingConfig: { thinkingBudget: 2048 },
       },
     }),
   })
