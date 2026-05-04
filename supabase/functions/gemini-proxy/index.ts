@@ -446,7 +446,7 @@ Do NOT add commentary. Return ONLY the JSON object.`
             page_number: {
               type: "STRING",
               nullable: true,
-              description: "The page number printed in the MARGIN of the page (top or bottom, smaller font, outside the main text block). Examples: '42', 'iii'. Return null if absent, illegible, or no margin number is visible. For two-page spreads, return the LEFT (lower) page's number. NEVER return numbers from body text such as chapter numbers, years, or any digits inside paragraphs.",
+              description: "The page number printed in the MARGIN of the page (top or bottom, smaller font, outside the main text block). Examples: '42', 'iii'. Return null if absent, illegible, or no margin number is visible. For two-page spreads where BOTH page numbers are visible, return them joined with a hyphen (e.g. '12-13', '100-101'). If only one side's number is legible in a spread, return that one alone. NEVER return numbers from body text such as chapter numbers, years, or any digits inside paragraphs.",
             },
             study_items: {
               type: "ARRAY",
@@ -549,7 +549,7 @@ Do NOT add commentary. Return ONLY the JSON object.`
             page_number: {
               type: "STRING",
               nullable: true,
-              description: "The page number printed in the MARGIN of the page (top or bottom, smaller font, outside the main text block). Examples: '42', 'iii'. Return null if absent, illegible, or no margin number is visible. For two-page spreads, return the LEFT (lower) page's number. NEVER return numbers from body text such as chapter numbers, years, or any digits inside paragraphs.",
+              description: "The page number printed in the MARGIN of the page (top or bottom, smaller font, outside the main text block). Examples: '42', 'iii'. Return null if absent, illegible, or no margin number is visible. For two-page spreads where BOTH page numbers are visible, return them joined with a hyphen (e.g. '12-13', '100-101'). If only one side's number is legible in a spread, return that one alone. NEVER return numbers from body text such as chapter numbers, years, or any digits inside paragraphs.",
             },
           },
           required: ["original", "no_text", "page_number"],
