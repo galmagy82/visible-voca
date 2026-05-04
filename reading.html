@@ -1943,7 +1943,9 @@ function renderBook() {
 function renderPageNumberBadge(p) {
   const pn = sanitizePageNumber(p && p.page_number);
   if (!pn) return '';
-  return `<div class="page-num-badge">${escapeHtml(pn)}</div>`;
+  /* "p." prefix 로 페이지 번호임을 명시 — 본문 안 다른 숫자와 구분.
+     "p.10", "p.12-13" 형태. raw 값(pn)은 그대로 두고 표시 시점에만 prefix 추가. */
+  return `<div class="page-num-badge">p.${escapeHtml(pn)}</div>`;
 }
 
 function renderPageContent(p, pageIdx) {

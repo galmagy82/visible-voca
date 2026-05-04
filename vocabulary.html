@@ -5326,8 +5326,9 @@ async function renderWbBookDetail(listEl, bookId) {
   const html = groups.map(g => {
     /* 초록 Page 배지 + (옵션) 회색 책 본래 번호 배지 — 책 뷰어와 동일 시각언어. */
     const baseHeader = pageHeaderTpl.replace('{n}', g.pageNum).replace('{c}', g.items.length);
+    /* 책 본래 페이지 번호 — reading.html 의 page-num-badge 와 일관되게 "p." prefix. */
     const bookNumBadge = g.bookPageNum
-      ? `<div class="wb-book-page-header is-secondary">${escapeHtml(g.bookPageNum)}</div>`
+      ? `<div class="wb-book-page-header is-secondary">p.${escapeHtml(g.bookPageNum)}</div>`
       : '';
     const itemsHtml = g.items.map(it => {
       const surface = it && it.surface ? String(it.surface) : '';
