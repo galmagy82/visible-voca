@@ -835,7 +835,9 @@ Deno.serve(async (req) => {
       }
       case "reading-finalize": {
         /* 2-phase 파이프라인 phase 2 — 봉합된 텍스트 → 번역 + 학습단어.
-           text: 봉합된 페이지 영문, prevTail/nextHead: 인접 페이지 boundary 문맥(짧은 문자열). */
+           text: 봉합된 페이지 영문, prevTail/nextHead: 인접 페이지 boundary 문맥(짧은 문자열).
+           차감: finalize 성공 후 페이지당 2 크레딧 자동 차감 (consume_credits RPC).
+                unlimited 사용자는 RPC 가 차감 스킵. 잔액 부족이면 RPC 가 예외 → 클라이언트가 사전 체크해서 여기 도달 전에 차단. */
         const text: string = typeof body.text === "string" ? body.text : ""
         if (!text) {
           return new Response(
@@ -849,12 +851,47 @@ Deno.serve(async (req) => {
         const geScore: number | null = typeof body.geScore === "number" ? body.geScore : null
         const meaningLang: string = (body.meaningLang === "en") ? "en" : "native"
         const finalized = await callGeminiReadingFinalize(text, prevTail, nextHead, targetLang, geScore, meaningLang, apiKey)
-        result = finalized
+
+        /* 페이지당 고정 2 크레딧 차감. 추후 텍스트 양 비례로 정교화 가능 (MONETIZATION.md 차감 임계값). */
+        const CREDITS_PER_PAGE = 2
+        let creditBalance: number | null = null
+        try {
+          const { data: newBalance, error: consumeError } = await supabase.rpc('consume_credits', {
+            p_user_id: userId,
+            p_amount: CREDITS_PER_PAGE,
+            p_description: 'Reading 페이지 분석',
+          })
+          if (consumeError) {
+            console.warn('consume_credits 실패:', consumeError)
+          } else {
+            creditBalance = newBalance
+          }
+        } catch (e) {
+          console.warn('consume_credits 호출 실패:', e)
+        }
+
+        /* finalize 결과 + 새 잔액(unlimited 면 그대로, 일반은 -2) 동봉 — 클라이언트가 배지 갱신 */
+        result = { ...(finalized as Record<string, unknown>), credit_balance: creditBalance }
+        break
+      }
+      case "credit-init": {
+        /* 신규 가입 보너스(30 크레딧) 적립 + 현재 잔액 반환.
+           Reading 페이지 첫 진입 시 호출. grant_signup_bonus RPC 가 멱등이라
+           여러 번 호출돼도 한 번만 적립 (signup_bonus 거래 이력으로 체크). */
+        const { data, error } = await supabase.rpc('grant_signup_bonus', { p_user_id: userId })
+        if (error) {
+          console.error('grant_signup_bonus 실패:', error)
+          return new Response(
+            JSON.stringify({ error: error.message }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          )
+        }
+        result = { credit_balance: data }
         break
       }
       default:
         return new Response(
-          JSON.stringify({ error: "Invalid action. Use: search, image, extract, reading-extract, reading-extract-ocr, reading-finalize" }),
+          JSON.stringify({ error: "Invalid action. Use: search, image, extract, reading-extract, reading-extract-ocr, reading-finalize, credit-init" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         )
     }
