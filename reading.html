@@ -801,10 +801,6 @@
   }
   .page-track {
     display: flex;
-    /* align-items: flex-start — 기본값(stretch) 이면 가장 긴 페이지 높이로 모든 페이지가
-       강제 통일되어 학습단어 적은 페이지의 카드 아래쪽에 큰 빈 공간이 생김.
-       자기 콘텐츠 만큼만 차지하도록 위쪽 정렬 — 책 페이지마다 분량 다른 자연스러운 흐름. */
-    align-items: flex-start;
     transition: transform 0.35s ease;
     will-change: transform;
   }
@@ -815,10 +811,12 @@
     /* 텍스트를 가로 중앙 정렬 + 자식이 콘텐츠 너비만큼만 차지하도록 flex 사용 */
     display: flex;
     justify-content: center;
-    /* align-items: flex-start — 자식 .page-content-wrap 이 .page 의 height 만큼
-       stretch 되지 않고 자기 콘텐츠만큼만 차지. 학습단어 적은 페이지 빈 공간 제거.
-       (.page-track 의 flex-start 만으론 부족했던 경우 — page 자체의 cross-axis 정렬도 필요) */
-    align-items: flex-start;
+    /* [DEBUG] 임시 — 캐시 vs 실제 효과 검증용. 분홍 배경 보이면 변경 적용됨, 안 보이면 캐시 문제. 검증 후 제거. */
+    background: pink;
+  }
+  /* [DEBUG] 임시 — .page-content-wrap 영역도 시각화 (노랑). 분홍과 노랑 영역의 크기 차이로 어디서 빈 공간이 생기는지 파악. 검증 후 제거. */
+  .page-content-wrap {
+    background: yellow;
   }
   /* 책 본래 페이지 번호 배지 — 본문 텍스트 끝나고 학습단어 시작 전 가운데 위치.
      실제 책의 페이지 번호 위치(본문 끝 가운데) 메타포 + 본문/학습 영역 사이의
