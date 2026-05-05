@@ -790,7 +790,10 @@
     cursor: pointer;
   }
 
-  /* 페이지 슬라이드 컨테이너 — overflow hidden + 좌우 슬라이드 트랜스폼 */
+  /* 페이지 슬라이드 컨테이너 — overflow hidden + 좌우 슬라이드 트랜스폼.
+     height: JS updateStageHeight() 가 현재 보이는 .page 의 자연 height 로 동적 설정.
+     이렇게 안 하면 flex container 의 cross-size 가 max child(.page) 로 잡혀 짧은
+     페이지에 큰 빈 공간이 생김. transition 으로 페이지 swipe 시 부드럽게 늘어/줄어듦. */
   .book-stage {
     position: relative;
     background: #FFFFFF;
@@ -798,6 +801,7 @@
     border-radius: 14px;
     overflow: hidden;
     min-height: 320px;
+    transition: height 0.35s ease;
   }
   .page-track {
     display: flex;
@@ -2103,6 +2107,28 @@ function renderBook() {
   goTo(_currentIdx, /*animate*/ false);
   updateNav();
   updateTranslateBtnState();
+  updateStageHeight();
+}
+
+/* 현재 보이는 페이지의 자연 height 만큼 .book-stage 의 height 강제.
+   ----------------------------------------------------------------
+   왜 필요한가:
+   .page-track 이 flex container 라 cross-size(=height) 가 자식 .page 들 중 max 로 잡힘.
+   가장 긴 페이지(예: 12단어, ~1100px) 가 stage 전체 height 를 결정 → 짧은 페이지(4단어, ~500px)
+   를 봐도 stage 가 1100px 이라 카드 밑에 600px 빈 공간이 보임.
+   해결: stage height 를 현재 보이는 페이지 자연 height 로 강제. swipe 시 갱신.
+   CSS 의 transition: height 0.35s 와 결합해 부드럽게 늘어/줄어듦. */
+function updateStageHeight() {
+  const stage = document.querySelector('.book-stage');
+  if (!stage) return;
+  const visiblePage = stage.querySelector(`.page[data-page-idx="${_currentIdx}"]`);
+  if (!visiblePage) return;
+  /* offsetHeight 는 현재 콘텐츠 + padding 포함 정수 px. 이미지 로딩이 늦으면 잘못된 값일 수 있어
+     requestAnimationFrame 으로 layout 안정 후 측정. */
+  requestAnimationFrame(() => {
+    const h = visiblePage.offsetHeight;
+    if (h > 0) stage.style.height = `${h}px`;
+  });
 }
 
 /* 책 본래 페이지 번호 배지 — page_number 가 sanitizePageNumber 통과 시에만 노출.
@@ -2175,6 +2201,9 @@ function rerenderPage(pageIdx) {
   if (!track) return;
   const pageEl = track.querySelector(`.page[data-page-idx="${pageIdx}"]`);
   if (pageEl) pageEl.innerHTML = renderPageContent(_pages[pageIdx], pageIdx);
+  /* 재시도/교체로 페이지 콘텐츠 변경 시 stage 도 새 height 로 갱신.
+     보고 있는 페이지가 아니면 시각 영향 X 지만 안전하게 호출. */
+  if (pageIdx === _currentIdx) updateStageHeight();
 }
 
 /* 재시도/교체 진행 중 표시 — 버튼 자리에 "재시도 중..." 메시지로 잠시 대체.
@@ -2559,6 +2588,8 @@ function goTo(idx, animate = true) {
   }
   track.style.transform = `translateX(-${_currentIdx * 100}%)`;
   updateNav();
+  /* 새 페이지 height 에 맞춰 stage 갱신 — 짧은 페이지에 큰 빈 공간 방지 */
+  updateStageHeight();
 }
 /* 페이지 이동 시 세로 스크롤을 상단으로 원복 — 사용자가 이전 페이지를 아래까지
    읽다가 다음 페이지로 넘어가도 항상 처음부터 보이도록.
