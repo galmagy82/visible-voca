@@ -609,7 +609,10 @@
 
   /* 이미지 표시 영역 */
   .feel-image-container {
-    margin: 24px 0;
+    /* margin-bottom 24 → 8 — 이전엔 vote-buttons 의 음수 margin 으로 압축했는데,
+       신규 검색 경로에서 placeholder → vote 버튼 outerHTML 교체 시 음수 margin 이
+       이미지 영역 안쪽까지 침범하는 layout 차이가 발생. 양수 margin 으로 직접 압축. */
+    margin: 24px 0 8px;
     text-align: center;
     position: relative;
   }
@@ -632,9 +635,9 @@
     display: flex;
     gap: 4px;
     justify-content: flex-end;
-    /* 위쪽 음수 margin 으로 .feel-image-container 의 margin-bottom(24px) 를 상쇄해
-       이미지에 가깝게 붙임. 버튼 자체 크기는 유지하면서 답답한 위아래 여백만 압축. */
-    margin: -16px 0 8px;
+    /* 음수 margin 폐기 — feel-image-container 의 margin-bottom 을 직접 8 로 줄여 압축.
+       음수 margin 은 신규 검색 경로의 placeholder→vote 교체 시 이미지 영역 침범 야기. */
+    margin: 0 0 8px;
   }
   .vote-btn {
     background: #F5F3EE;
