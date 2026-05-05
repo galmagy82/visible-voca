@@ -801,6 +801,10 @@
   }
   .page-track {
     display: flex;
+    /* align-items: flex-start — 기본값(stretch) 이면 가장 긴 페이지 높이로 모든 페이지가
+       강제 통일되어 학습단어 적은 페이지의 카드 아래쪽에 큰 빈 공간이 생김.
+       자기 콘텐츠 만큼만 차지하도록 위쪽 정렬 — 책 페이지마다 분량 다른 자연스러운 흐름. */
+    align-items: flex-start;
     transition: transform 0.35s ease;
     will-change: transform;
   }
