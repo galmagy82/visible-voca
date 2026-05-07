@@ -254,6 +254,16 @@
     text-align: center;
     padding: 60px 20px;
   }
+  /* 분석 환경 한 줄 — 크레딧 / 영어 레벨 / ⚙️. reading-intro 와 업로드 버튼 사이.
+     모바일에선 자연 줄바꿈 (flex-wrap). 셋 중 일부가 비어 있어도(미인증 등) 안정. */
+  .upload-options {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 0 0 24px;
+  }
   .upload-btn {
     padding: 14px 24px;
     font-size: 1rem;
@@ -1090,22 +1100,13 @@
 <body style="display:none">
 <div class="container">
 
-  <!-- 1단: 유틸리티 (뒤로가기 + 내 영어 레벨 칩 + ⚙️ 설정) -->
+  <!-- 1단: 뒤로가기 링크만 — 크레딧/레벨/⚙️ 는 사진올리기 탭 안의 .upload-options 로 이전.
+       이유: 셋 다 "다음 분석의 환경 설정" 의미라 분석 시작 영역에 모이는 게 의미상 자연스러움.
+       또 책 뷰어/My Books 화면에선 무관해서 공통 헤더에 두면 혼란 ("여기서 바꾸면 결과 바뀌나?") -->
   <div class="top-bar">
-    <!-- 뒤로가기 링크. 화면 상태(업로드 / 책 목록 / 책 뷰어 + saved/fresh) 에 따라
-         updateTopBackLink() 가 href·라벨을 동적으로 바꿔 "직전 화면" 으로 돌아가게 함. -->
     <!-- 정적 fallback 은 # — JS updateTopBackLink 가 화면 상태별로 href·label 를 즉시 덮어씀.
          업로드 화면에선 display:none, 다른 화면에선 의미 있는 backlink 로 갱신됨. -->
     <a id="topBackLink" href="#" class="back-link" style="display:none"></a>
-    <div class="top-bar-right">
-      <!-- 🪙 크레딧 잔액 배지 — initCreditBalance() 에서 동적 렌더 (인증된 유저만).
-           Reading 만 차감 대상이므로 이 페이지에만 노출. unlimited 면 ∞ 표시. -->
-      <div class="credit-balance-host" id="creditBalanceHost"></div>
-      <!-- "내 영어 레벨" 칩 — level-picker.js 가 동적으로 렌더 (점수 빠른 확인 + 클릭 시 레벨 모달) -->
-      <div class="level-chip-host" id="levelChipHost"></div>
-      <!-- ⚙️ Reading 설정 모달 진입 (레벨 + 단어 설명 언어 등) — 인증된 유저만 노출 -->
-      <button class="settings-gear-btn" id="readingSettingsBtn" onclick="openReadingSettings()" aria-label="settings" hidden>⚙️</button>
-    </div>
   </div>
   <!-- 2단: 페이지 제목 — 책 뷰어에서 책 제목 있을 때만 표시.
        hidden 속성으로 시작 — 페이지 로드 직후 정적 마크업이 잠깐 보였다가 JS 가 숨기는
@@ -1142,6 +1143,13 @@
         <img src="assets/reading-example-1.png" alt="" class="reading-intro-img" loading="lazy">
         <img src="assets/reading-example-2.png" alt="" class="reading-intro-img" loading="lazy">
       </div>
+    </div>
+    <!-- 분석 환경 한 줄 — 크레딧 / 영어 레벨 / ⚙️ 설정. 사진 올리기 직전 한 번 환경 인지하는 흐름.
+         기존 헤더 우측에서 옮겨옴 — "이 다음 분석의 환경" 의미라 분석 시작 영역에 모임이 자연스러움. -->
+    <div class="upload-options">
+      <div class="credit-balance-host" id="creditBalanceHost"></div>
+      <div class="level-chip-host" id="levelChipHost"></div>
+      <button class="settings-gear-btn" id="readingSettingsBtn" onclick="openReadingSettings()" aria-label="settings" hidden>⚙️</button>
     </div>
     <button class="upload-btn" onclick="onUploadBtnClick()" data-i18n="readingUploadBtn">📂 책 사진 올리기</button>
     <input type="file" id="photoInput" accept="image/*" multiple style="display:none" onchange="handlePhotos(this)">
@@ -2201,15 +2209,8 @@ function updateTopBackLink() {
   const bookListVisible = !document.getElementById('bookListArea').hidden;
   const bookViewerVisible = !document.getElementById('bookViewer').hidden;
 
-  /* 크레딧 배지 — 결제 의식이 필요한 업로드 화면에서만 표시.
-     My Books / 책 뷰어 / 로딩 화면에선 숨김 (학습 몰입 + UI 군더더기 ↓).
-     화면 전환 시점마다 updateTopBackLink 가 호출되니 여기 한 곳만 토글하면 됨. */
-  const creditHost = document.getElementById('creditBalanceHost');
-  if (creditHost) {
-    const loadingVisible = !document.getElementById('loadingArea').hidden;
-    const onUploadScreen = !bookListVisible && !bookViewerVisible && !loadingVisible;
-    creditHost.style.display = onUploadScreen ? '' : 'none';
-  }
+  /* 크레딧 배지 / 영어 레벨 칩 / ⚙️ 설정 → 사진올리기 탭 안 .upload-options 로 이전됨.
+     해당 영역(uploadArea) 이 보일 때만 자동 노출되므로 여기서 별도 hide/show 분기 불필요. */
 
   /* 앱 탭 헤더 — 책 뷰어/로딩 시엔 숨기고(학습 몰입), 업로드/My Books 화면에선 보이며 active 토글 */
   updateAppTabs();
@@ -2254,15 +2255,8 @@ function updateTopBackLink() {
     link.onclick = null;
   }
 
-  /* 내 영어 레벨 칩 + ⚙️ 설정 — 업로드 화면(=Novel Reading 진입 상태)에서만 노출.
-     이유: 둘 다 "다음에 추출할 책의 레벨/언어 설정" 도구라 이미 추출 끝난 책을 볼 때
-     (My Books 목록 / 책 뷰어) 노출하면 "여기서 바꾸면 결과가 바뀌나?" 헷갈림만 만든다.
-     ⚙️ 는 인증된 유저에게만 노출되는 추가 조건도 같이 충족시켜야 함. */
-  const onUploadScreen = !bookListVisible && !bookViewerVisible;
-  const chipHost = document.getElementById('levelChipHost');
-  const settingsBtn = document.getElementById('readingSettingsBtn');
-  if (chipHost) chipHost.hidden = !onUploadScreen;
-  if (settingsBtn) settingsBtn.hidden = !(onUploadScreen && _authUser);
+  /* 영어 레벨 칩 / ⚙️ 설정 — 사진올리기 탭(.upload-area) 안 .upload-options 로 이전됨.
+     화면 전환별 hide/show 는 영역 자체 hidden 처리에 따라 자동 반영. 인증 조건은 별도 유지. */
 }
 
 /* 추출 진행 갱신 — 텍스트("3 / 5")와 progress bar 채움(width %) 모두 업데이트.
