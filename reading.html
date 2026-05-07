@@ -2209,6 +2209,13 @@ function updateTopBackLink() {
   const bookListVisible = !document.getElementById('bookListArea').hidden;
   const bookViewerVisible = !document.getElementById('bookViewer').hidden;
 
+  /* .top-bar 컨테이너 자체 — backlink 가 의미 있는 책 뷰어에서만 노출.
+     업로드/My Books 화면에선 backlink 가 없는데 컨테이너의 min-height + margin
+     이 약 48px 빈 공간으로 남아 vocabulary 페이지(탭 헤더가 즉시 시작) 와 비교 시
+     탭 위치가 미묘하게 달라 보였던 회귀를 차단. */
+  const topBar = document.querySelector('.top-bar');
+  if (topBar) topBar.style.display = bookViewerVisible ? '' : 'none';
+
   /* 크레딧 배지 / 영어 레벨 칩 / ⚙️ 설정 → 사진올리기 탭 안 .upload-options 로 이전됨.
      해당 영역(uploadArea) 이 보일 때만 자동 노출되므로 여기서 별도 hide/show 분기 불필요. */
 
