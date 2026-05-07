@@ -219,7 +219,7 @@ const I18N = {
 
     /* Welcome 페이지 */
     quickStart: '바로 시작하기 →',
-    heroTagline: 'Novel 한 권을 진짜 영어 실력으로 만들어드려요',
+    heroTagline: 'Novel 한 권을 진짜 영어 실력으로',
     heroQuestion: '단어를 외워도<br><span class="em">금방 까먹는 이유,</span><br>알고 계신가요?',
     startBtn: '시작하기',
     feedback: '의견 보내기',
