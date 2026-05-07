@@ -29,6 +29,9 @@
   /* 페이지 제목 (h1.page-heading) 강조용 세리프 폰트 — main.html 의 Geminary 와 같은 톤 */
   @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&display=swap');
   * { margin: 0; padding: 0; box-sizing: border-box; }
+  /* 스크롤바 자리 항상 예약 — 콘텐츠 길이가 화면별로 달라 스크롤바 출현/사라짐 시
+     가운데 정렬 콘텐츠가 좌우로 시프트되는 문제 방지 (사진올리기 ↔ My Books 탭 전환). */
+  html { scrollbar-gutter: stable; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     background: #F7F6F3;
