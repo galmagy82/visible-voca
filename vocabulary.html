@@ -1921,8 +1921,10 @@
 
   /* 모바일 반응형 */
   @media (max-width: 600px) {
+    /* padding-top 30 (reading.html 과 동일) — 옛 60 은 절대 위치 .top-logout 영역 확보용이었으나
+       그 버튼이 탭 헤더 안 👤 메뉴로 이전되며 30 으로 충분. 두 페이지 사이 탭 위치 통일. */
     body {
-      padding: 60px 12px 24px;
+      padding: 30px 12px 24px;
     }
     /* .main-layout / .sidebar — 기본 규칙이 이미 상단 가로 sub-tabs 라 별도 모바일 분기 불필요.
        모바일에선 sub-tab 폰트만 살짝 작게 압축. */
@@ -1930,19 +1932,7 @@
       padding: 10px 14px;
       font-size: 0.8rem;
     }
-    /* 모바일에서도 동일하게 페이지 우상단에 absolute 배치 (기존 상단 패딩 60px 안에 들어감) */
-    .top-logout {
-      top: 12px;
-      right: 12px;
-      padding: 5px 12px;
-    }
-    /* 백 링크도 모바일에서 톤다운 */
-    .back-link {
-      font-size: 0.8rem;
-    }
-    .back-link-row {
-      margin-bottom: 8px;
-    }
+    /* .top-logout / .back-link / .back-link-row — 모두 제거된 element 라 모바일 분기 불필요 (정리됨). */
     .content {
       min-height: auto;
     }
