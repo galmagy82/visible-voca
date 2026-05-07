@@ -219,7 +219,7 @@ const I18N = {
 
     /* Welcome 페이지 */
     quickStart: '바로 시작하기 →',
-    heroTagline: 'Novel 읽기, 이렇게 쉬워질 수 있어요',
+    heroTagline: 'Novel 한 권을 진짜 영어 실력으로 만들어드려요',
     heroQuestion: '단어를 외워도<br><span class="em">금방 까먹는 이유,</span><br>알고 계신가요?',
     startBtn: '시작하기',
     feedback: '의견 보내기',
@@ -325,7 +325,7 @@ const I18N = {
     readingMeaningLangEn: '영어',
 
     /* 웰컴 페이지 상단 브랜드 오리진 */
-    brandOrigin: '내 레벨에 딱 맞는 AI 영어 학습 도우미',
+    brandOrigin: '아이의 레벨에 맞는 핵심 단어와 표현을 정리해드립니다',
 
     /* Features 요약 섹션 (s-features) — 웰컴 페이지 하단 4카드 */
     featuresTitle: 'Geminary가 다른 이유',
@@ -548,7 +548,7 @@ const I18N = {
 
     /* Welcome page */
     quickStart: 'Quick Start →',
-    heroTagline: 'Reading novels can be this easy',
+    heroTagline: 'Turn one Novel into real English ability',
     heroQuestion: 'Ever wonder why<br><span class="em">you keep forgetting words</span><br>you just learned?',
     startBtn: 'Get Started',
     feedback: 'Feedback',
@@ -649,7 +649,7 @@ const I18N = {
     readingMeaningLangEn: 'English',
 
     /* Welcome page top brand origin line */
-    brandOrigin: 'AI English learning companion tailored to your level',
+    brandOrigin: 'Key words and phrases organized for your child\'s level',
 
     /* Features summary section (s-features) — 4 cards at the bottom of the welcome page */
     featuresTitle: 'Why Geminary is different',
@@ -870,7 +870,7 @@ const I18N = {
 
     /* Welcomeページ */
     quickStart: 'すぐに始める →',
-    heroTagline: 'Novel 読みがこんなに楽になる',
+    heroTagline: 'Novel 一冊を、本物の英語力に',
     heroQuestion: '単語を覚えても<br><span class="em">すぐ忘れてしまう理由、</span><br>知っていますか？',
     startBtn: '始める',
     feedback: 'フィードバック',
@@ -971,7 +971,7 @@ const I18N = {
     readingMeaningLangEn: '英語',
 
     /* ウェルカムページ上部のブランドオリジン */
-    brandOrigin: 'あなたのレベルにぴったりの AI 英語学習アシスタント',
+    brandOrigin: 'お子さまのレベルに合った単語と表現を整理します',
 
     /* Features 要約セクション (s-features) — ウェルカムページ下部 4 カード */
     featuresTitle: 'Geminary が違う理由',
@@ -1193,7 +1193,7 @@ const I18N = {
 
     /* 欢迎页面 */
     quickStart: '立即开始 →',
-    heroTagline: '读 Novel 也能这么轻松',
+    heroTagline: '把一本 Novel 变成真正的英语实力',
     heroQuestion: '背了单词<br><span class="em">却总是忘记的原因，</span><br>你知道吗？',
     startBtn: '开始',
     feedback: '意见反馈',
@@ -1294,7 +1294,7 @@ const I18N = {
     readingMeaningLangEn: '英语',
 
     /* 欢迎页顶部品牌来源行 */
-    brandOrigin: '为你的水平量身定制的 AI 英语学习助手',
+    brandOrigin: '按孩子的水平整理核心词汇和表达',
 
     /* Features 摘要部分 (s-features) — 欢迎页底部 4 张卡片 */
     featuresTitle: 'Geminary 为什么不同',
@@ -1515,7 +1515,7 @@ const I18N = {
 
     /* Página de bienvenida */
     quickStart: 'Empezar ahora →',
-    heroTagline: 'Leer novelas puede ser así de fácil',
+    heroTagline: 'Convierte una Novel en inglés real',
     heroQuestion: '¿Te preguntas por qué<br><span class="em">siempre olvidas las palabras</span><br>que acabas de aprender?',
     startBtn: 'Empezar',
     feedback: 'Comentarios',
@@ -1616,7 +1616,7 @@ const I18N = {
     readingMeaningLangEn: 'Inglés',
 
     /* Línea de origen de marca en la parte superior de la página de bienvenida */
-    brandOrigin: 'Asistente de inglés con IA adaptado a tu nivel',
+    brandOrigin: 'Palabras y expresiones clave organizadas al nivel de tu hijo',
 
     /* Sección resumen de Features (s-features) — 4 tarjetas al final de la página de bienvenida */
     featuresTitle: 'Por qué Geminary es diferente',
@@ -1837,7 +1837,7 @@ const I18N = {
 
     /* Trang chào mừng */
     quickStart: 'Bắt đầu ngay →',
-    heroTagline: 'Đọc Novel có thể dễ dàng đến vậy',
+    heroTagline: 'Biến một cuốn Novel thành năng lực tiếng Anh thực sự',
     heroQuestion: 'Bạn có thắc mắc<br><span class="em">tại sao cứ quên từ</span><br>vừa mới học không?',
     startBtn: 'Bắt đầu',
     feedback: 'Góp ý',
@@ -1938,7 +1938,7 @@ const I18N = {
     readingMeaningLangEn: 'Tiếng Anh',
 
     /* Dòng nguồn gốc thương hiệu ở đầu trang chào mừng */
-    brandOrigin: 'Trợ lý học tiếng Anh AI phù hợp với trình độ của bạn',
+    brandOrigin: 'Tổ chức từ và cụm từ cốt lõi theo trình độ của con bạn',
 
     /* Phần tóm tắt Features (s-features) — 4 thẻ ở cuối trang chào mừng */
     featuresTitle: 'Vì sao Geminary khác biệt',
@@ -2159,7 +2159,7 @@ const I18N = {
 
     /* หน้าต้อนรับ */
     quickStart: 'เริ่มเลย →',
-    heroTagline: 'อ่าน Novel ง่ายแบบนี้ได้เลย',
+    heroTagline: 'เปลี่ยน Novel หนึ่งเล่มให้เป็นทักษะภาษาอังกฤษจริง',
     heroQuestion: 'เคยสงสัยไหมว่าทำไม<br><span class="em">คำที่เพิ่งท่องจำ</span><br>ถึงลืมเร็วนัก?',
     startBtn: 'เริ่มต้น',
     feedback: 'ส่งความคิดเห็น',
@@ -2260,7 +2260,7 @@ const I18N = {
     readingMeaningLangEn: 'อังกฤษ',
 
     /* บรรทัดที่มาของแบรนด์ที่ด้านบนของหน้าต้อนรับ */
-    brandOrigin: 'ผู้ช่วยเรียนภาษาอังกฤษด้วย AI ที่เหมาะกับระดับของคุณ',
+    brandOrigin: 'จัดระเบียบคำศัพท์และสำนวนหลักให้เหมาะกับระดับของลูก',
 
     /* ส่วนสรุป Features (s-features) — การ์ด 4 ใบท้ายหน้าต้อนรับ */
     featuresTitle: 'ทำไม Geminary จึงแตกต่าง',
@@ -2481,7 +2481,7 @@ const I18N = {
 
     /* Página de boas-vindas */
     quickStart: 'Começar agora →',
-    heroTagline: 'Ler novels pode ser assim de fácil',
+    heroTagline: 'Transforme uma Novel em inglês de verdade',
     heroQuestion: 'Já se perguntou por que<br><span class="em">sempre esquece as palavras</span><br>que acabou de aprender?',
     startBtn: 'Começar',
     feedback: 'Feedback',
@@ -2582,7 +2582,7 @@ const I18N = {
     readingMeaningLangEn: 'Inglês',
 
     /* Linha de origem da marca no topo da página de boas-vindas */
-    brandOrigin: 'Assistente de inglês com IA adaptado ao seu nível',
+    brandOrigin: 'Palavras e expressões-chave organizadas para o nível da sua criança',
 
     /* Seção resumo de Features (s-features) — 4 cartões ao final da página de boas-vindas */
     featuresTitle: 'Por que Geminary é diferente',
