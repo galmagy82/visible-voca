@@ -2111,16 +2111,11 @@ function updateTopBackLink() {
   /* 앱 탭 헤더 — 책 뷰어/로딩 시엔 숨기고(학습 몰입), 업로드/My Books 화면에선 보이며 active 토글 */
   updateAppTabs();
 
-  /* 페이지 제목 — 화면별 분기:
-     - 책 목록: "📚 My Books"
-     - 책 뷰어 + 제목 있음: 사용자 데이터(책 제목) 표시 — data-i18n 제거해서 언어 전환에 덮어쓰기 방지
-     - 그 외 (업로드/로딩/제목 없는 새 책): 헤딩 자체 숨김 — 탭 헤더가 위치 정보 제공하니 군더더기. */
+  /* 페이지 제목 — 책 뷰어에서 사용자 책 제목이 있을 때만 표시.
+     업로드 / My Books / 로딩 / 제목 없는 새 책 — 모두 숨김.
+     이유: 탭 헤더가 위치 정보 제공하니 추가 헤딩은 시각 군더더기. 책 제목만 의미 있음. */
   if (heading) {
-    if (bookListVisible) {
-      heading.hidden = false;
-      heading.setAttribute('data-i18n', 'readingMyBooks');
-      heading.textContent = tt('readingMyBooks', '📚 My Books');
-    } else if (bookViewerVisible && _currentBookTitle) {
+    if (bookViewerVisible && _currentBookTitle) {
       heading.hidden = false;
       heading.removeAttribute('data-i18n');
       heading.textContent = _currentBookTitle;
