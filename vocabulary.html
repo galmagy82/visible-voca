@@ -66,16 +66,24 @@
     margin-bottom: 24px;
   }
 
-  /* 앱 탭 헤더 — reading.html 과 동일 스타일. 사진올리기/My Books 는 reading 페이지 이동, My Words 는 현재 페이지 active. */
+  /* 앱 탭 헤더 — reading.html 과 동일 스타일. 사진올리기/My Books 는 reading 페이지 이동, My Words 는 현재 페이지 active.
+     우측 끝 👤 — 이메일 표시 + 로그아웃 드롭다운. */
   .app-tabs {
     display: flex;
+    align-items: center;
     gap: 4px;
-    justify-content: center;
-    flex-wrap: wrap;
     width: 100%;
     max-width: 900px;
     margin: 0 auto 24px;
     border-bottom: 1px solid #D5D2CC;
+    position: relative;
+  }
+  .app-tabs-main {
+    display: flex;
+    gap: 4px;
+    flex: 1;
+    justify-content: center;
+    flex-wrap: wrap;
   }
   .app-tab {
     display: inline-block;
@@ -96,8 +104,58 @@
     font-weight: 600;
     border-bottom-color: #5A8A42;
   }
+  .app-user-btn {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    margin-left: auto;
+    margin-bottom: 4px;
+    padding: 0;
+    border: 1px solid #D5D2CC;
+    border-radius: 50%;
+    background: #FFFFFF;
+    color: #4A4641;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .app-user-btn:hover { background: #EDECEA; border-color: #B0ACA6; }
+  .app-user-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    min-width: 180px;
+    padding: 6px 0;
+    background: #FFFFFF;
+    border: 1px solid #D5D2CC;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    z-index: 1000;
+  }
+  .app-user-menu[hidden] { display: none; }
+  .app-user-menu-email {
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    color: #8A8078;
+    word-break: break-all;
+    border-bottom: 1px solid #EDECEA;
+    margin-bottom: 4px;
+  }
+  .app-user-menu-item {
+    display: block;
+    width: 100%;
+    padding: 8px 14px;
+    font-size: 0.88rem;
+    color: #4A4641;
+    background: none;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+  }
+  .app-user-menu-item:hover { background: #F5F3EE; }
   @media (max-width: 480px) {
     .app-tab { padding: 8px 12px; font-size: 0.88rem; }
+    .app-user-btn { width: 28px; height: 28px; font-size: 0.88rem; }
   }
   /* 페이지 제목 — reading.html .page-heading 과 동일 스타일.
      DM Serif Display 폰트 + 1.8rem + weight 400 으로 "Geminary Novel" 과 톤 매칭. */
@@ -2031,19 +2089,24 @@
 <!-- 백 링크 제거 — 메뉴 허브(main.html) 폐지로 갈 곳 없음. 탭 헤더가 위치 정보 제공. -->
 
 
-<!-- 우상단 고정 로그아웃 버튼 — 사이드바에서 분리해 화면 우상단에 고정 -->
-<button class="top-logout" id="vocabLogoutBtn" data-i18n="logout">로그아웃</button>
-
-<!-- 페이지 제목("Geminary Word") 은 탭 헤더가 위치 정보 제공하므로 제거됨.
-     기존 .top-header div 도 빈 컨테이너라 같이 제거. -->
+<!-- 페이지 제목("Geminary Word") + 기존 우상단 로그아웃 버튼 모두 제거.
+     로그아웃은 탭 헤더 우측 👤 메뉴 안으로 통합됨. -->
 
 <!-- 앱 탭 헤더 — reading.html 과 동일 컴포넌트.
      사진올리기 / My Books → reading.html 페이지 이동 (?screen=upload|books).
-     My Words → 현재 페이지 (active). embed 모드(@media print) 에선 별도 처리 없음 — 인쇄 영향 X. -->
+     My Words → 현재 페이지 (active). 우측 👤 — 이메일 + 로그아웃 드롭다운.
+     embed 모드(@media print) 에선 별도 처리 없음 — 인쇄 영향 X. -->
 <nav class="app-tabs" id="appTabs">
-  <a class="app-tab" href="reading.html" data-app-tab="upload" data-i18n="appTabUpload">사진올리기</a>
-  <a class="app-tab" href="reading.html?screen=books" data-app-tab="books" data-i18n="appTabMyBooks">My Books</a>
-  <button type="button" class="app-tab active" data-app-tab="words" data-i18n="appTabMyWords">My Words</button>
+  <div class="app-tabs-main">
+    <a class="app-tab" href="reading.html" data-app-tab="upload" data-i18n="appTabUpload">사진올리기</a>
+    <a class="app-tab" href="reading.html?screen=books" data-app-tab="books" data-i18n="appTabMyBooks">My Books</a>
+    <button type="button" class="app-tab active" data-app-tab="words" data-i18n="appTabMyWords">My Words</button>
+  </div>
+  <button type="button" class="app-user-btn" id="appUserBtn" onclick="toggleAppUserMenu(event)" aria-label="user menu">👤</button>
+  <div class="app-user-menu" id="appUserMenu" hidden>
+    <div class="app-user-menu-email" id="appUserMenuEmail"></div>
+    <button type="button" class="app-user-menu-item" onclick="appUserSignOut()" data-i18n="logout">로그아웃</button>
+  </div>
 </nav>
 
 <div class="main-layout">
@@ -3600,11 +3663,34 @@ function getUserId() {
   return id;
 }
 
-/* 로그아웃 → Welcome 페이지로 이동 */
-document.getElementById('vocabLogoutBtn').addEventListener('click', async () => {
-  await supabaseClient.auth.signOut();
-  location.href = 'index.html';
+/* 사용자 메뉴 (👤) — 탭 헤더 우측. 이메일 표시 + 로그아웃 드롭다운.
+   기존 .top-logout 버튼 대체 (탭 헤더 라인 정렬 일관성 위해 통합). */
+function toggleAppUserMenu(e) {
+  if (e) e.stopPropagation();
+  const menu = document.getElementById('appUserMenu');
+  const emailEl = document.getElementById('appUserMenuEmail');
+  if (!menu) return;
+  if (emailEl && _authUser) emailEl.textContent = _authUser.email || '';
+  menu.hidden = !menu.hidden;
+}
+window.toggleAppUserMenu = toggleAppUserMenu;
+
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('appUserMenu');
+  if (!menu || menu.hidden) return;
+  if (e.target.closest('#appUserMenu') || e.target.closest('#appUserBtn')) return;
+  menu.hidden = true;
 });
+
+async function appUserSignOut() {
+  try {
+    await supabaseClient.auth.signOut();
+  } catch (e) {
+    console.warn('signOut 실패:', e);
+  }
+  location.href = 'index.html';
+}
+window.appUserSignOut = appUserSignOut;
 
 /* 인증 상태 변경 감지 */
 supabaseClient.auth.onAuthStateChange((event, session) => {

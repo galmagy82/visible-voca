@@ -152,14 +152,22 @@
 
   /* 페이지 탭 헤더 — 사진올리기(현재 페이지) / My Books / My Words(vocabulary.html).
      reading.html 과 vocabulary.html 양쪽에 동일 마크업으로 두어 어디서든 일관 진입.
-     같은 페이지 안 영역 전환은 즉시(스크립트 토글), 페이지 이동은 a href. */
+     같은 페이지 안 영역 전환은 즉시(스크립트 토글), 페이지 이동은 a href.
+     우측 끝에 👤 사용자 아이콘 — 클릭 시 이메일 + 로그아웃 드롭다운. */
   .app-tabs {
     display: flex;
+    align-items: center;
     gap: 4px;
-    justify-content: center;
-    flex-wrap: wrap;
     margin: 0 0 24px;
     border-bottom: 1px solid #D5D2CC;
+    position: relative;
+  }
+  .app-tabs-main {
+    display: flex;
+    gap: 4px;
+    flex: 1;
+    justify-content: center;
+    flex-wrap: wrap;
   }
   .app-tab {
     display: inline-block;
@@ -180,8 +188,60 @@
     font-weight: 600;
     border-bottom-color: #5A8A42;
   }
+  /* 우측 사용자 아이콘 — 동그라미 안 👤 */
+  .app-user-btn {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    margin-left: auto;
+    margin-bottom: 4px;  /* 탭 텍스트와 시각 정렬 */
+    padding: 0;
+    border: 1px solid #D5D2CC;
+    border-radius: 50%;
+    background: #FFFFFF;
+    color: #4A4641;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .app-user-btn:hover { background: #EDECEA; border-color: #B0ACA6; }
+  /* 드롭다운 — 우상단 기준 absolute. 외부 클릭 시 JS 가 hidden 토글. */
+  .app-user-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    min-width: 180px;
+    padding: 6px 0;
+    background: #FFFFFF;
+    border: 1px solid #D5D2CC;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    z-index: 1000;
+  }
+  .app-user-menu[hidden] { display: none; }
+  .app-user-menu-email {
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    color: #8A8078;
+    word-break: break-all;
+    border-bottom: 1px solid #EDECEA;
+    margin-bottom: 4px;
+  }
+  .app-user-menu-item {
+    display: block;
+    width: 100%;
+    padding: 8px 14px;
+    font-size: 0.88rem;
+    color: #4A4641;
+    background: none;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+  }
+  .app-user-menu-item:hover { background: #F5F3EE; }
   @media (max-width: 480px) {
     .app-tab { padding: 8px 12px; font-size: 0.88rem; }
+    .app-user-btn { width: 28px; height: 28px; font-size: 0.88rem; }
   }
 
   /* 업로드 영역 */
@@ -1047,11 +1107,19 @@
 
   <!-- 앱 탭 헤더 — 사진올리기(reading 업로드) / My Books(reading 책목록) / My Words(vocabulary 단어장).
        앞 두 개는 같은 페이지 안 영역 토글, 마지막은 vocabulary.html 페이지 이동.
-       updateAppTabs() 가 현재 보이는 영역에 따라 active 클래스 토글. -->
+       updateAppTabs() 가 현재 보이는 영역에 따라 active 클래스 토글.
+       우측 끝 👤 — 이메일 표시 + 로그아웃 드롭다운. -->
   <nav class="app-tabs" id="appTabs">
-    <button type="button" class="app-tab" data-app-tab="upload" onclick="selectAppTab('upload')" data-i18n="appTabUpload">사진올리기</button>
-    <button type="button" class="app-tab" data-app-tab="books" onclick="selectAppTab('books')" data-i18n="appTabMyBooks">My Books</button>
-    <a class="app-tab" href="vocabulary.html" data-app-tab="words" data-i18n="appTabMyWords">My Words</a>
+    <div class="app-tabs-main">
+      <button type="button" class="app-tab" data-app-tab="upload" onclick="selectAppTab('upload')" data-i18n="appTabUpload">사진올리기</button>
+      <button type="button" class="app-tab" data-app-tab="books" onclick="selectAppTab('books')" data-i18n="appTabMyBooks">My Books</button>
+      <a class="app-tab" href="vocabulary.html" data-app-tab="words" data-i18n="appTabMyWords">My Words</a>
+    </div>
+    <button type="button" class="app-user-btn" id="appUserBtn" onclick="toggleAppUserMenu(event)" aria-label="user menu">👤</button>
+    <div class="app-user-menu" id="appUserMenu" hidden>
+      <div class="app-user-menu-email" id="appUserMenuEmail"></div>
+      <button type="button" class="app-user-menu-item" onclick="appUserSignOut()" data-i18n="logout">로그아웃</button>
+    </div>
   </nav>
 
   <!-- 업로드 영역 (초기 상태)
@@ -2071,6 +2139,37 @@ function selectAppTab(name) {
   }
 }
 window.selectAppTab = selectAppTab;
+
+/* 사용자 메뉴 (👤) — 이메일 표시 + 로그아웃 드롭다운.
+   첫 클릭에 이메일 텍스트 채움(반복 채워도 무해). 외부 클릭 시 자동 닫힘. */
+function toggleAppUserMenu(e) {
+  if (e) e.stopPropagation();
+  const menu = document.getElementById('appUserMenu');
+  const emailEl = document.getElementById('appUserMenuEmail');
+  if (!menu) return;
+  if (emailEl && _authUser) emailEl.textContent = _authUser.email || '';
+  menu.hidden = !menu.hidden;
+}
+window.toggleAppUserMenu = toggleAppUserMenu;
+
+/* 외부 클릭 시 메뉴 닫기 */
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('appUserMenu');
+  if (!menu || menu.hidden) return;
+  if (e.target.closest('#appUserMenu') || e.target.closest('#appUserBtn')) return;
+  menu.hidden = true;
+});
+
+/* 로그아웃 — Supabase 세션 종료 후 index 로 이동. */
+async function appUserSignOut() {
+  try {
+    await supabaseClient.auth.signOut();
+  } catch (e) {
+    console.warn('signOut 실패:', e);
+  }
+  location.href = 'index.html';
+}
+window.appUserSignOut = appUserSignOut;
 
 /* 앱 탭 active 토글 + 책 뷰어/로딩 화면에선 헤더 자체 숨김.
    updateTopBackLink 끝에서 호출되어 모든 화면 전환에 자동 반영. */
