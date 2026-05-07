@@ -1105,8 +1105,10 @@
 
   <!-- 1단: 뒤로가기 링크만 — 크레딧/레벨/⚙️ 는 사진올리기 탭 안의 .upload-options 로 이전.
        이유: 셋 다 "다음 분석의 환경 설정" 의미라 분석 시작 영역에 모이는 게 의미상 자연스러움.
-       또 책 뷰어/My Books 화면에선 무관해서 공통 헤더에 두면 혼란 ("여기서 바꾸면 결과 바뀌나?") -->
-  <div class="top-bar">
+       또 책 뷰어/My Books 화면에선 무관해서 공통 헤더에 두면 혼란 ("여기서 바꾸면 결과 바뀌나?")
+       style="display:none" 으로 시작 — 페이지 로드 직후 JS 가 숨기기 전에 잠깐 보이며
+       콘텐츠를 ~48px 아래로 밀어내던 깜빡임 차단. updateTopBackLink 가 책 뷰어 진입 시 풀어줌. -->
+  <div class="top-bar" style="display:none">
     <!-- 정적 fallback 은 # — JS updateTopBackLink 가 화면 상태별로 href·label 를 즉시 덮어씀.
          업로드 화면에선 display:none, 다른 화면에선 의미 있는 backlink 로 갱신됨. -->
     <a id="topBackLink" href="#" class="back-link" style="display:none"></a>
