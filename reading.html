@@ -1102,8 +1102,10 @@
       <button class="settings-gear-btn" id="readingSettingsBtn" onclick="openReadingSettings()" aria-label="settings" hidden>⚙️</button>
     </div>
   </div>
-  <!-- 2단: 페이지 제목 (큰 헤딩) -->
-  <h1 class="page-heading" id="readingPageHeading" data-i18n="menuReadingTitle">Novel Reading</h1>
+  <!-- 2단: 페이지 제목 — 책 뷰어에서 책 제목 있을 때만 표시.
+       hidden 속성으로 시작 — 페이지 로드 직후 정적 마크업이 잠깐 보였다가 JS 가 숨기는
+       깜빡임 방지. updateTopBackLink() 가 책 뷰어 진입 시 hidden = false 로 풀어줌. -->
+  <h1 class="page-heading" id="readingPageHeading" data-i18n="menuReadingTitle" hidden>Novel Reading</h1>
 
   <!-- 앱 탭 헤더 — 사진올리기(reading 업로드) / My Books(reading 책목록) / My Words(vocabulary 단어장).
        앞 두 개는 같은 페이지 안 영역 토글, 마지막은 vocabulary.html 페이지 이동.
