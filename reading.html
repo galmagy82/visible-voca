@@ -255,7 +255,8 @@
   /* 업로드 영역 */
   .upload-area {
     text-align: center;
-    padding: 60px 20px;
+    /* padding-top 60 → 20 — 탭 헤더가 이미 영역 컨텍스트 제공해 큰 위쪽 여백 불필요. */
+    padding: 20px 20px 40px;
   }
   /* 분석 환경 한 줄 — 크레딧 / 영어 레벨 / ⚙️. reading-intro 와 업로드 버튼 사이.
      모바일에선 자연 줄바꿈 (flex-wrap). 셋 중 일부가 비어 있어도(미인증 등) 안정. */
