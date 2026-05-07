@@ -96,6 +96,7 @@
     background: none;
     border: none;
     border-bottom: 2px solid transparent;
+    border-radius: 0;  /* 전역 button { border-radius: 12px } 가 .app-tab 에 새어들어와 active 언더라인이 둥글게 휘던 회귀 차단 */
     cursor: pointer;
     text-decoration: none;
     transition: color 0.15s, border-color 0.15s;
