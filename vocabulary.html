@@ -54,7 +54,10 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 60px 20px 40px;
+    /* padding-top 60 → 30 (reading.html 과 통일). 60 이었던 이유는 예전 우상단
+       absolute .top-logout 영역 확보였는데, 그 버튼이 탭 헤더 우측 👤 안으로
+       이동하면서 30 으로 충분해짐. 두 페이지 사이 탭 헤더 위치 불일치도 해결. */
+    padding: 30px 20px 40px;
   }
   /* 상단 헤더: 로고 중앙 */
   .top-header {
