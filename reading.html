@@ -2126,11 +2126,11 @@ function updateTopBackLink() {
 
   /* 폴백 문자열에는 화살표 미포함 — 셰브론은 .back-link::before 가 그려줌 */
   if (bookListVisible) {
-    link.style.display = '';
-    link.href = '#';
-    link.setAttribute('data-i18n', 'readingBackToReadingTutor');
-    link.textContent = tt('readingBackToReadingTutor', 'Geminary Novel');
-    link.onclick = (e) => { e.preventDefault(); backToUpload(); };
+    /* My Books 화면 — 탭 헤더의 "사진올리기" 탭이 같은 역할 (업로드로 복귀) 하니
+       backlink 는 시각 군더더기. 숨김. */
+    link.style.display = 'none';
+    link.removeAttribute('data-i18n');
+    link.onclick = null;
   } else if (bookViewerVisible && _isSavedView) {
     link.style.display = '';
     link.href = '#';
