@@ -1169,11 +1169,11 @@ setTimeout(() => {
 }, 300);
 
 /* ===== 시작하기 버튼 — 로그인 상태에서만 노출되므로 바로 이동.
-   진입 목적지는 main.html (서비스 메뉴 허브). vocabulary.html 직행은 카드/브랜드
-   위계와 맞지 않아 중단됨 — 사용자는 항상 main 을 거쳐 원하는 도구를 선택. */
+   진입 목적지는 reading.html (사진올리기 탭이 기본). reading.html 상단의 앱 탭에서
+   My Books / My Words 로 즉시 전환 가능 — main.html 의 메뉴 허브 단계 폐지. */
 document.getElementById('startBtn').addEventListener('click', function(e) {
   e.preventDefault();
-  location.href = 'main.html';
+  location.href = 'reading.html';
 });
 
 /* 다국어 적용 — 최초 방문 시 getLang()이 navigator.language로 자동 감지 */

@@ -150,6 +150,40 @@
     letter-spacing: -0.01em;
   }
 
+  /* 페이지 탭 헤더 — 사진올리기(현재 페이지) / My Books / My Words(vocabulary.html).
+     reading.html 과 vocabulary.html 양쪽에 동일 마크업으로 두어 어디서든 일관 진입.
+     같은 페이지 안 영역 전환은 즉시(스크립트 토글), 페이지 이동은 a href. */
+  .app-tabs {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 0 0 24px;
+    border-bottom: 1px solid #D5D2CC;
+  }
+  .app-tab {
+    display: inline-block;
+    padding: 10px 16px;
+    font-size: 0.95rem;
+    color: #6B6660;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    transition: color 0.15s, border-color 0.15s;
+    margin-bottom: -1px;  /* 컨테이너 border-bottom 과 정렬 */
+  }
+  .app-tab:hover { color: #2D2B28; }
+  .app-tab.active {
+    color: #2A2520;
+    font-weight: 600;
+    border-bottom-color: #5A8A42;
+  }
+  @media (max-width: 480px) {
+    .app-tab { padding: 8px 12px; font-size: 0.88rem; }
+  }
+
   /* 업로드 영역 */
   .upload-area {
     text-align: center;
@@ -995,7 +1029,9 @@
   <div class="top-bar">
     <!-- 뒤로가기 링크. 화면 상태(업로드 / 책 목록 / 책 뷰어 + saved/fresh) 에 따라
          updateTopBackLink() 가 href·라벨을 동적으로 바꿔 "직전 화면" 으로 돌아가게 함. -->
-    <a id="topBackLink" href="main.html" class="back-link" data-i18n="readingBackToMain">메인화면</a>
+    <!-- 정적 fallback 은 # — JS updateTopBackLink 가 화면 상태별로 href·label 를 즉시 덮어씀.
+         업로드 화면에선 display:none, 다른 화면에선 의미 있는 backlink 로 갱신됨. -->
+    <a id="topBackLink" href="#" class="back-link" style="display:none"></a>
     <div class="top-bar-right">
       <!-- 🪙 크레딧 잔액 배지 — initCreditBalance() 에서 동적 렌더 (인증된 유저만).
            Reading 만 차감 대상이므로 이 페이지에만 노출. unlimited 면 ∞ 표시. -->
@@ -1008,6 +1044,15 @@
   </div>
   <!-- 2단: 페이지 제목 (큰 헤딩) -->
   <h1 class="page-heading" id="readingPageHeading" data-i18n="menuReadingTitle">Novel Reading</h1>
+
+  <!-- 앱 탭 헤더 — 사진올리기(reading 업로드) / My Books(reading 책목록) / My Words(vocabulary 단어장).
+       앞 두 개는 같은 페이지 안 영역 토글, 마지막은 vocabulary.html 페이지 이동.
+       updateAppTabs() 가 현재 보이는 영역에 따라 active 클래스 토글. -->
+  <nav class="app-tabs" id="appTabs">
+    <button type="button" class="app-tab" data-app-tab="upload" onclick="selectAppTab('upload')" data-i18n="appTabUpload">사진올리기</button>
+    <button type="button" class="app-tab" data-app-tab="books" onclick="selectAppTab('books')" data-i18n="appTabMyBooks">My Books</button>
+    <a class="app-tab" href="vocabulary.html" data-app-tab="words" data-i18n="appTabMyWords">My Words</a>
+  </nav>
 
   <!-- 업로드 영역 (초기 상태)
        업로드 버튼 클릭 시점에 GE 게이트 → 통과 시에만 파일 피커 오픈.
@@ -1249,6 +1294,13 @@ async function initAuth() {
   if (_authUser) {
     document.getElementById('myBooksBtn').hidden = false;
     document.getElementById('readingSettingsBtn').hidden = false;
+  }
+  /* URL 쿼리 ?screen=books → 진입 즉시 My Books 탭으로 진입 (vocabulary 등 다른 페이지에서 탭 클릭 진입용) */
+  if (_authUser) {
+    const params = new URLSearchParams(location.search);
+    if (params.get('screen') === 'books') {
+      showBookList();
+    }
   }
   /* 초기 뒤로가기 라벨 — 업로드 화면이므로 "← 메인으로" 로 시작 */
   updateTopBackLink();
@@ -2009,6 +2061,34 @@ function updateBookViewerToolbar() {
    - 책 뷰어 (제목 있음): h1 = 책 제목 / 뒤로가기는 _isSavedView 에 따라
    - 책 뷰어 (제목 없음, 새 업로드 미저장): h1 "Novel Reading" / "← Novel Reading" → 업로드
    화면 전환이 일어나는 모든 함수 끝에서 호출. */
+/* 앱 탭 헤더 클릭 핸들러 — 사진올리기 / My Books 영역 토글.
+   My Words 는 a href 라 스크립트 호출 X. */
+function selectAppTab(name) {
+  if (name === 'upload') {
+    backToUpload();
+  } else if (name === 'books') {
+    showBookList();
+  }
+}
+window.selectAppTab = selectAppTab;
+
+/* 앱 탭 active 토글 + 책 뷰어/로딩 화면에선 헤더 자체 숨김.
+   updateTopBackLink 끝에서 호출되어 모든 화면 전환에 자동 반영. */
+function updateAppTabs() {
+  const tabsEl = document.getElementById('appTabs');
+  if (!tabsEl) return;
+  const bookViewerVisible = !document.getElementById('bookViewer').hidden;
+  const loadingVisible = !document.getElementById('loadingArea').hidden;
+  /* 책 읽는 동안에는 탭 헤더가 시각 군더더기 — 숨김. 업로드/My Books 에선 노출. */
+  tabsEl.style.display = (bookViewerVisible || loadingVisible) ? 'none' : '';
+  if (tabsEl.style.display === 'none') return;
+  const bookListVisible = !document.getElementById('bookListArea').hidden;
+  const activeName = bookListVisible ? 'books' : 'upload';
+  tabsEl.querySelectorAll('.app-tab').forEach(el => {
+    el.classList.toggle('active', el.dataset.appTab === activeName);
+  });
+}
+
 function updateTopBackLink() {
   const link = document.getElementById('topBackLink');
   const heading = document.getElementById('readingPageHeading');
@@ -2028,44 +2108,51 @@ function updateTopBackLink() {
     creditHost.style.display = onUploadScreen ? '' : 'none';
   }
 
+  /* 앱 탭 헤더 — 책 뷰어/로딩 시엔 숨기고(학습 몰입), 업로드/My Books 화면에선 보이며 active 토글 */
+  updateAppTabs();
+
   /* 페이지 제목 — 화면별 분기:
      - 책 목록: "📚 My Books"
      - 책 뷰어 + 제목 있음: 사용자 데이터(책 제목) 표시 — data-i18n 제거해서 언어 전환에 덮어쓰기 방지
-     - 그 외 (업로드/로딩/제목 없는 새 책): "Novel Reading" */
+     - 그 외 (업로드/로딩/제목 없는 새 책): 헤딩 자체 숨김 — 탭 헤더가 위치 정보 제공하니 군더더기. */
   if (heading) {
     if (bookListVisible) {
+      heading.hidden = false;
       heading.setAttribute('data-i18n', 'readingMyBooks');
       heading.textContent = tt('readingMyBooks', '📚 My Books');
     } else if (bookViewerVisible && _currentBookTitle) {
+      heading.hidden = false;
       heading.removeAttribute('data-i18n');
       heading.textContent = _currentBookTitle;
     } else {
-      heading.setAttribute('data-i18n', 'menuReadingTitle');
-      heading.textContent = tt('menuReadingTitle', 'Geminary Novel');
+      heading.hidden = true;
     }
   }
 
   /* 폴백 문자열에는 화살표 미포함 — 셰브론은 .back-link::before 가 그려줌 */
   if (bookListVisible) {
+    link.style.display = '';
     link.href = '#';
     link.setAttribute('data-i18n', 'readingBackToReadingTutor');
     link.textContent = tt('readingBackToReadingTutor', 'Geminary Novel');
     link.onclick = (e) => { e.preventDefault(); backToUpload(); };
   } else if (bookViewerVisible && _isSavedView) {
+    link.style.display = '';
     link.href = '#';
     link.setAttribute('data-i18n', 'readingBackToBookList');
     link.textContent = tt('readingBackToBookList', 'My Books');
     link.onclick = (e) => { e.preventDefault(); showBookList(); };
   } else if (bookViewerVisible) {
+    link.style.display = '';
     link.href = '#';
     link.setAttribute('data-i18n', 'readingBackToReadingTutor');
     link.textContent = tt('readingBackToReadingTutor', 'Geminary Novel');
     link.onclick = (e) => { e.preventDefault(); resetReading(); };
   } else {
-    /* 업로드 화면(또는 로딩 중) — 메인으로 직행 */
-    link.href = 'main.html';
-    link.setAttribute('data-i18n', 'readingBackToMain');
-    link.textContent = tt('readingBackToMain', '메인화면');
+    /* 업로드 화면(또는 로딩 중) — 갈 곳 없음 (메뉴 허브 폐지). backlink 숨김.
+       탭 헤더가 위치 정보 제공하므로 시각 군더더기 제거. */
+    link.style.display = 'none';
+    link.removeAttribute('data-i18n');
     link.onclick = null;
   }
 

@@ -258,6 +258,11 @@ const I18N = {
     menuReadingDesc: '페이지 사진만 찍으세요<br>핵심표현, 한글번역까지! 엄마표 영어를 더 단단하게!',
     menuWritingTitle: 'Essay Writing',
     menuWritingDesc: '에세이를 코칭받고, 나만의 그림책으로 만들어보세요',
+
+    /* 앱 탭 헤더 (reading.html / vocabulary.html 공통) */
+    appTabUpload: '사진올리기',
+    appTabMyBooks: 'My Books',
+    appTabMyWords: 'My Words',
     menuComingSoon: '준비 중',
 
     /* Novel Reading */
@@ -584,6 +589,11 @@ const I18N = {
     menuWritingDesc: 'Get essay coaching and create your own picture book',
     menuComingSoon: 'Coming soon',
 
+    /* App tab header (shared by reading.html / vocabulary.html) */
+    appTabUpload: 'Upload',
+    appTabMyBooks: 'My Books',
+    appTabMyWords: 'My Words',
+
     /* Novel Reading */
     readingIntroDesc: 'Upload photos of your book pages.\nWe\'ll find study words matched to your English level and let you save them as a book.',
     readingUploadBtn: '📂 Upload book photos',
@@ -900,6 +910,11 @@ const I18N = {
     menuWritingTitle: 'Essay Writing',
     menuWritingDesc: 'エッセイのコーチングを受けて、自分だけの絵本を作りましょう',
     menuComingSoon: '準備中',
+
+    /* アプリタブヘッダー (reading.html / vocabulary.html 共通) */
+    appTabUpload: '写真アップロード',
+    appTabMyBooks: 'My Books',
+    appTabMyWords: 'My Words',
 
     /* Novel Reading */
     readingIntroDesc: '本のページの写真をアップロードしてください。\nあなたの英語レベルに合った学習単語を表示し、本として保存できます。',
@@ -1219,6 +1234,11 @@ const I18N = {
     menuWritingDesc: '获得作文辅导，制作属于你的绘本',
     menuComingSoon: '即将推出',
 
+    /* 应用标签页头部 */
+    appTabUpload: '上传照片',
+    appTabMyBooks: 'My Books',
+    appTabMyWords: 'My Words',
+
     /* Novel Reading */
     readingIntroDesc: '请上传书页照片。\n我们会根据您的英语水平推荐学习词汇，并可保存为书籍。',
     readingUploadBtn: '📂 上传书页照片',
@@ -1535,6 +1555,11 @@ const I18N = {
     menuWritingTitle: 'Essay Writing',
     menuWritingDesc: 'Recibe coaching de escritura y crea tu propio libro ilustrado',
     menuComingSoon: 'Próximamente',
+
+    /* Pestañas de la aplicación */
+    appTabUpload: 'Subir fotos',
+    appTabMyBooks: 'My Books',
+    appTabMyWords: 'My Words',
 
     /* Novel Reading */
     readingIntroDesc: 'Sube fotos de las páginas del libro.\nTe mostraremos palabras de estudio adaptadas a tu nivel de inglés y podrás guardarlas como libro.',
@@ -1853,6 +1878,11 @@ const I18N = {
     menuWritingDesc: 'Nhận hướng dẫn viết luận và tạo sách tranh của riêng bạn',
     menuComingSoon: 'Sắp ra mắt',
 
+    /* Tab ứng dụng */
+    appTabUpload: 'Tải ảnh lên',
+    appTabMyBooks: 'My Books',
+    appTabMyWords: 'My Words',
+
     /* Novel Reading */
     readingIntroDesc: 'Hãy tải lên ảnh các trang sách.\nChúng tôi sẽ gợi ý từ vựng phù hợp với trình độ tiếng Anh của bạn và có thể lưu thành sách.',
     readingUploadBtn: '📂 Tải ảnh sách lên',
@@ -2170,6 +2200,11 @@ const I18N = {
     menuWritingDesc: 'รับการฝึกเขียนเรียงความและสร้างหนังสือภาพของคุณเอง',
     menuComingSoon: 'เร็วๆ นี้',
 
+    /* แท็บแอป */
+    appTabUpload: 'อัปโหลดรูป',
+    appTabMyBooks: 'My Books',
+    appTabMyWords: 'My Words',
+
     /* Novel Reading */
     readingIntroDesc: 'อัปโหลดภาพหน้าหนังสือของคุณ\nเราจะแนะนำคำศัพท์ที่เหมาะกับระดับภาษาอังกฤษของคุณ และบันทึกเป็นหนังสือได้',
     readingUploadBtn: '📂 อัปโหลดภาพหนังสือ',
@@ -2486,6 +2521,11 @@ const I18N = {
     menuWritingTitle: 'Essay Writing',
     menuWritingDesc: 'Receba coaching de redação e crie seu próprio livro ilustrado',
     menuComingSoon: 'Em breve',
+
+    /* Abas do aplicativo */
+    appTabUpload: 'Enviar fotos',
+    appTabMyBooks: 'My Books',
+    appTabMyWords: 'My Words',
 
     /* Novel Reading */
     readingIntroDesc: 'Envie fotos das páginas do livro.\nMostraremos palavras de estudo adequadas ao seu nível de inglês e poderá salvá-las como livro.',

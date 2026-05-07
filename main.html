@@ -475,6 +475,10 @@ const isLocalDev = ['localhost', '127.0.0.1', ''].includes(location.hostname)
     location.replace('index.html');
     return;
   }
+  /* main.html 은 메뉴 허브 단계 폐지 후 reading.html 의 앱 탭으로 통합됨.
+     기존 즐겨찾기·외부 링크 호환을 위해 페이지 자체는 유지하되 즉시 reading 으로 리다이렉트. */
+  location.replace('reading.html');
+  return;
   /* 통과 → 본문 노출 + 다국어 적용 */
   document.body.style.display = '';
   document.documentElement.lang = getLang();

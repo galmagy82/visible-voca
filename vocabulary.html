@@ -65,6 +65,40 @@
     max-width: 900px;
     margin-bottom: 24px;
   }
+
+  /* 앱 탭 헤더 — reading.html 과 동일 스타일. 사진올리기/My Books 는 reading 페이지 이동, My Words 는 현재 페이지 active. */
+  .app-tabs {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    flex-wrap: wrap;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto 24px;
+    border-bottom: 1px solid #D5D2CC;
+  }
+  .app-tab {
+    display: inline-block;
+    padding: 10px 16px;
+    font-size: 0.95rem;
+    color: #6B6660;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    transition: color 0.15s, border-color 0.15s;
+    margin-bottom: -1px;
+  }
+  .app-tab:hover { color: #2D2B28; }
+  .app-tab.active {
+    color: #2A2520;
+    font-weight: 600;
+    border-bottom-color: #5A8A42;
+  }
+  @media (max-width: 480px) {
+    .app-tab { padding: 8px 12px; font-size: 0.88rem; }
+  }
   /* 페이지 제목 — reading.html .page-heading 과 동일 스타일.
      DM Serif Display 폰트 + 1.8rem + weight 400 으로 "Geminary Novel" 과 톤 매칭. */
   h1 {
@@ -1994,17 +2028,23 @@
      일반 모드에서는 CSS 로 숨김(.embed-close-btn { display:none }) 처리. -->
 <button class="embed-close-btn" type="button" onclick="window.parent.postMessage({type:'close-word-popup'}, '*')" aria-label="close">&#10005;</button>
 
-<!-- 백 링크 — main.html 허브로 복귀. 로고 위, 탭 라인 위쪽에 배치 (본문 좌측 정렬과 일치). -->
-<div class="back-link-row">
-  <a class="back-link" href="main.html" data-i18n="readingBackToMain">메인화면</a>
-</div>
+<!-- 백 링크 제거 — 메뉴 허브(main.html) 폐지로 갈 곳 없음. 탭 헤더가 위치 정보 제공. -->
+
 
 <!-- 우상단 고정 로그아웃 버튼 — 사이드바에서 분리해 화면 우상단에 고정 -->
 <button class="top-logout" id="vocabLogoutBtn" data-i18n="logout">로그아웃</button>
 
-<div class="top-header">
-  <h1 data-i18n="menuVocaTitle">Visual Voca</h1>
-</div>
+<!-- 페이지 제목("Geminary Word") 은 탭 헤더가 위치 정보 제공하므로 제거됨.
+     기존 .top-header div 도 빈 컨테이너라 같이 제거. -->
+
+<!-- 앱 탭 헤더 — reading.html 과 동일 컴포넌트.
+     사진올리기 / My Books → reading.html 페이지 이동 (?screen=upload|books).
+     My Words → 현재 페이지 (active). embed 모드(@media print) 에선 별도 처리 없음 — 인쇄 영향 X. -->
+<nav class="app-tabs" id="appTabs">
+  <a class="app-tab" href="reading.html" data-app-tab="upload" data-i18n="appTabUpload">사진올리기</a>
+  <a class="app-tab" href="reading.html?screen=books" data-app-tab="books" data-i18n="appTabMyBooks">My Books</a>
+  <button type="button" class="app-tab active" data-app-tab="words" data-i18n="appTabMyWords">My Words</button>
+</nav>
 
 <div class="main-layout">
   <!-- 왼쪽 탭 사이드바 -->
