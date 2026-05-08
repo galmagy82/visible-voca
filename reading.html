@@ -302,7 +302,7 @@
     white-space: pre-line;
   }
   /* 사진 가이드 — 책 펼침면 + 왼쪽 페이지 카메라 뷰파인더 오버레이.
-     img 와 svg 가 같은 박스를 채우도록 aspect-ratio 로 컨테이너 비율 고정(원본 1408×768).
+     img 와 svg 가 같은 박스를 채우도록 aspect-ratio 로 컨테이너 비율 고정(원본 1140×714).
      SVG preserveAspectRatio="none" 이라 viewBox 좌표가 컨테이너에 1:1 매핑됨. */
   .reading-photo-guide {
     margin: 0 auto;
@@ -312,7 +312,7 @@
   .reading-photo-frame {
     position: relative;
     width: 100%;
-    aspect-ratio: 1408 / 768;
+    aspect-ratio: 1140 / 714;
     border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 1px 0 rgba(0,0,0,.04), 0 6px 18px rgba(31,38,26,.10);
@@ -331,9 +331,15 @@
     height: 100%;
     pointer-events: none;
   }
-  /* 코너 마커 미세 펄스 — 셔터 대기 느낌. transform 대신 opacity 만 변화시켜 좌표 안정. */
+  /* 코너 마커 미세 펄스 — 셔터 대기 느낌. transform 대신 opacity 만 변화시켜 좌표 안정.
+     drop-shadow 는 종이 위·dim 위 어느 쪽에서도 흰 코너가 떠 보이게 하는 가독성 보강. */
   .reading-photo-vf .vf-corners {
     animation: vfCornerPulse 2s ease-in-out infinite;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+  }
+  /* 카메라 아이콘 — 펄스 X (지속 표시), 그림자만 */
+  .reading-photo-vf .vf-camera-icon {
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
   }
   @keyframes vfCornerPulse {
     0%, 100% { opacity: 1; }
@@ -1177,25 +1183,32 @@
       <figure class="reading-photo-guide">
         <div class="reading-photo-frame">
           <img src="assets/reading-page-frame.png" alt="" loading="lazy">
-          <svg class="reading-photo-vf" viewBox="0 0 1408 768" preserveAspectRatio="none" aria-hidden="true">
+          <svg class="reading-photo-vf" viewBox="0 0 1140 714" preserveAspectRatio="none" aria-hidden="true">
             <defs>
               <mask id="vfMask">
-                <rect width="1408" height="768" fill="white"/>
-                <rect x="335" y="140" width="405" height="475" rx="4" fill="black"/>
+                <rect width="1140" height="714" fill="white"/>
+                <rect x="152" y="110" width="423" height="482" rx="4" fill="black"/>
               </mask>
             </defs>
             <!-- 바깥쪽 dim — 왼쪽 페이지 사각형만 빠짐 -->
-            <rect width="1408" height="768" fill="rgba(0,0,0,0.22)" mask="url(#vfMask)"/>
+            <rect width="1140" height="714" fill="rgba(0,0,0,0.45)" mask="url(#vfMask)"/>
             <!-- L자 4코너 + 황동 점 액센트 -->
             <g class="vf-corners">
-              <path d="M335 175 L335 140 L370 140" stroke="#FFFFFF" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M705 140 L740 140 L740 175" stroke="#FFFFFF" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M335 580 L335 615 L370 615" stroke="#FFFFFF" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M705 615 L740 615 L740 580" stroke="#FFFFFF" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-              <circle cx="348" cy="153" r="3" fill="#C8A24A"/>
-              <circle cx="727" cy="153" r="3" fill="#C8A24A"/>
-              <circle cx="348" cy="602" r="3" fill="#C8A24A"/>
-              <circle cx="727" cy="602" r="3" fill="#C8A24A"/>
+              <path d="M152 145 L152 110 L187 110" stroke="#FFFFFF" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M540 110 L575 110 L575 145" stroke="#FFFFFF" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M152 557 L152 592 L187 592" stroke="#FFFFFF" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M540 592 L575 592 L575 557" stroke="#FFFFFF" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="165" cy="123" r="3" fill="#C8A24A"/>
+              <circle cx="562" cy="123" r="3" fill="#C8A24A"/>
+              <circle cx="165" cy="579" r="3" fill="#C8A24A"/>
+              <circle cx="562" cy="579" r="3" fill="#C8A24A"/>
+            </g>
+            <!-- 사진촬영 아이콘 — 뷰파인더 상단 바깥(dim 영역) 중앙. 펄스에서 분리해 지속 표시. -->
+            <g class="vf-camera-icon" transform="translate(363, 78)">
+              <rect x="-24" y="-13" width="48" height="30" rx="3" stroke="#FFFFFF" stroke-width="2.5" fill="none"/>
+              <path d="M-9 -13 L-6 -20 L6 -20 L9 -13" stroke="#FFFFFF" stroke-width="2.5" fill="none" stroke-linejoin="round"/>
+              <circle cx="0" cy="3" r="7" stroke="#FFFFFF" stroke-width="2.5" fill="none"/>
+              <circle cx="16" cy="-6" r="1.6" fill="#FFFFFF"/>
             </g>
           </svg>
         </div>
