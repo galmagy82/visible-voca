@@ -2323,7 +2323,7 @@ function updateTopBackLink() {
     link.style.display = '';
     link.href = '#';
     link.setAttribute('data-i18n', 'readingBackToReadingTutor');
-    link.textContent = tt('readingBackToReadingTutor', 'Geminary Novel');
+    link.textContent = tt('readingBackToReadingTutor', 'Back');
     link.onclick = (e) => { e.preventDefault(); resetReading(); };
   } else {
     /* 업로드 화면(또는 로딩 중) — 갈 곳 없음 (메뉴 허브 폐지). backlink 숨김.

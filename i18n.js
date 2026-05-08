@@ -292,7 +292,7 @@ const I18N = {
     readingRetryingAll: '재시도 중...',
     readingError: '추출 중 오류가 발생했습니다. 다시 시도해 주세요.',
     readingBackToMain: '메인화면',
-    readingBackToReadingTutor: 'Geminary Novel',
+    readingBackToReadingTutor: '뒤로',
     readingBackToBookList: 'My Books',
     /* Novel Reading — 책 저장 / 내 책 / 학습 단어 */
     readingMyBooks: '📚 My Books',
@@ -619,7 +619,7 @@ const I18N = {
     readingRetryingAll: 'Retrying...',
     readingError: 'An error occurred while extracting. Please try again.',
     readingBackToMain: 'Home',
-    readingBackToReadingTutor: 'Geminary Novel',
+    readingBackToReadingTutor: 'Back',
     readingBackToBookList: 'My Books',
     /* Novel Reading — book save / my books / study items */
     readingMyBooks: '📚 My Books',
@@ -942,7 +942,7 @@ const I18N = {
     readingRetryingAll: '再試行中...',
     readingError: '抽出中にエラーが発生しました。もう一度お試しください。',
     readingBackToMain: 'メイン',
-    readingBackToReadingTutor: 'Geminary Novel',
+    readingBackToReadingTutor: '戻る',
     readingBackToBookList: 'My Books',
     /* Novel Reading — 本の保存 / マイブック / 学習アイテム */
     readingMyBooks: '📚 My Books',
@@ -1266,7 +1266,7 @@ const I18N = {
     readingRetryingAll: '重试中...',
     readingError: '提取时发生错误，请重试。',
     readingBackToMain: '主页',
-    readingBackToReadingTutor: 'Geminary Novel',
+    readingBackToReadingTutor: '返回',
     readingBackToBookList: 'My Books',
     /* Novel Reading — 保存书籍 / 我的书 / 学习单词 */
     readingMyBooks: '📚 My Books',
@@ -1589,7 +1589,7 @@ const I18N = {
     readingRetryingAll: 'Reintentando...',
     readingError: 'Ocurrió un error al extraer. Inténtalo de nuevo.',
     readingBackToMain: 'Inicio',
-    readingBackToReadingTutor: 'Geminary Novel',
+    readingBackToReadingTutor: 'Atrás',
     readingBackToBookList: 'My Books',
     /* Novel Reading — guardar libro / mis libros / elementos de estudio */
     readingMyBooks: '📚 My Books',
@@ -1912,7 +1912,7 @@ const I18N = {
     readingRetryingAll: 'Đang thử lại...',
     readingError: 'Đã xảy ra lỗi khi trích xuất. Vui lòng thử lại.',
     readingBackToMain: 'Trang chính',
-    readingBackToReadingTutor: 'Geminary Novel',
+    readingBackToReadingTutor: 'Quay lại',
     readingBackToBookList: 'My Books',
     /* Novel Reading — lưu sách / sách của tôi / mục học */
     readingMyBooks: '📚 My Books',
@@ -2235,7 +2235,7 @@ const I18N = {
     readingRetryingAll: 'กำลังลองอีกครั้ง...',
     readingError: 'เกิดข้อผิดพลาดขณะแยกข้อความ กรุณาลองใหม่',
     readingBackToMain: 'หน้าหลัก',
-    readingBackToReadingTutor: 'Geminary Novel',
+    readingBackToReadingTutor: 'ย้อนกลับ',
     readingBackToBookList: 'My Books',
     /* Novel Reading — บันทึกหนังสือ / หนังสือของฉัน / รายการเรียน */
     readingMyBooks: '📚 My Books',
@@ -2558,7 +2558,7 @@ const I18N = {
     readingRetryingAll: 'Tentando novamente...',
     readingError: 'Ocorreu um erro ao extrair. Tente novamente.',
     readingBackToMain: 'Início',
-    readingBackToReadingTutor: 'Geminary Novel',
+    readingBackToReadingTutor: 'Voltar',
     readingBackToBookList: 'My Books',
     /* Novel Reading — salvar livro / meus livros / itens de estudo */
     readingMyBooks: '📚 My Books',
