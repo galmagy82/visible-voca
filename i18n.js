@@ -267,6 +267,7 @@ const I18N = {
 
     /* Novel Reading */
     readingIntroDesc: '책 페이지 사진을 올려보세요.\n그냥 지나치던 단어와 표현까지 놓치지 않게, 내 레벨에 맞춰 정리해드립니다.',
+    readingPhotoCaption: '한 페이지씩 찍어주세요',
     readingUploadBtn: '📂 책 사진 올리기',
     readingUploadHint: '앞페이지부터 차례로 찍은 사진을 올리세요.\n선택한 순서대로 페이지가 됩니다.',
     readingExtracting: '텍스트 추출 중...',
@@ -596,6 +597,7 @@ const I18N = {
 
     /* Novel Reading */
     readingIntroDesc: 'Upload photos of your book pages.\nCatch every word and phrase you\'d skim past — organized at your level.',
+    readingPhotoCaption: 'Photograph one page at a time',
     readingUploadBtn: '📂 Upload book photos',
     readingUploadHint: 'Photograph pages in order.\nPages appear in the order you select them.',
     readingExtracting: 'Extracting text...',
@@ -918,6 +920,7 @@ const I18N = {
 
     /* Novel Reading */
     readingIntroDesc: '本のページの写真をアップロードしてください。\nつい読み流していた単語や表現まで見逃さないよう、レベルに合わせて整理します。',
+    readingPhotoCaption: '1ページずつ撮影してください',
     readingUploadBtn: '📂 本の写真をアップロード',
     readingUploadHint: 'ページ順に撮影してアップロードしてください。\n選択した順にページとして並びます。',
     readingExtracting: 'テキストを抽出中...',
@@ -1241,6 +1244,7 @@ const I18N = {
 
     /* Novel Reading */
     readingIntroDesc: '请上传书页照片。\n不放过任何容易略过的单词和表达，按你的水平整理。',
+    readingPhotoCaption: '请一次拍一页',
     readingUploadBtn: '📂 上传书页照片',
     readingUploadHint: '请按页面顺序拍照后上传。\n按选择顺序排列为页面。',
     readingExtracting: '正在提取文本...',
@@ -1563,6 +1567,7 @@ const I18N = {
 
     /* Novel Reading */
     readingIntroDesc: 'Sube fotos de las páginas del libro.\nNo dejes pasar ninguna palabra ni expresión, organizadas a tu nivel.',
+    readingPhotoCaption: 'Fotografía una página a la vez',
     readingUploadBtn: '📂 Subir fotos del libro',
     readingUploadHint: 'Fotografía las páginas en orden y súbelas.\nLas páginas aparecen en el orden en que las seleccionas.',
     readingExtracting: 'Extrayendo texto...',
@@ -1885,6 +1890,7 @@ const I18N = {
 
     /* Novel Reading */
     readingIntroDesc: 'Hãy tải lên ảnh các trang sách.\nKhông bỏ sót từ và cụm từ thường lướt qua, được tổ chức theo trình độ của bạn.',
+    readingPhotoCaption: 'Hãy chụp từng trang một',
     readingUploadBtn: '📂 Tải ảnh sách lên',
     readingUploadHint: 'Hãy chụp các trang theo thứ tự rồi tải lên.\nCác trang xuất hiện theo thứ tự bạn chọn.',
     readingExtracting: 'Đang trích xuất văn bản...',
@@ -2207,6 +2213,7 @@ const I18N = {
 
     /* Novel Reading */
     readingIntroDesc: 'อัปโหลดภาพหน้าหนังสือของคุณ\nไม่พลาดแม้แต่คำและสำนวนที่มักจะผ่านไป จัดระเบียบตามระดับของคุณ',
+    readingPhotoCaption: 'ถ่ายภาพทีละหน้า',
     readingUploadBtn: '📂 อัปโหลดภาพหนังสือ',
     readingUploadHint: 'ถ่ายภาพหน้าตามลำดับแล้วอัปโหลด\nหน้าจะเรียงตามลำดับที่คุณเลือก',
     readingExtracting: 'กำลังแยกข้อความ...',
@@ -2529,6 +2536,7 @@ const I18N = {
 
     /* Novel Reading */
     readingIntroDesc: 'Envie fotos das páginas do livro.\nSem deixar escapar nenhuma palavra ou expressão — organizadas no seu nível.',
+    readingPhotoCaption: 'Fotografe uma página por vez',
     readingUploadBtn: '📂 Enviar fotos do livro',
     readingUploadHint: 'Fotografe as páginas em ordem e envie.\nAs páginas aparecem na ordem em que você as seleciona.',
     readingExtracting: 'Extraindo texto...',

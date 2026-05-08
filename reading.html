@@ -301,9 +301,55 @@
     /* i18n 문자열의 \n 을 줄바꿈으로 표시 */
     white-space: pre-line;
   }
+  /* 사진 가이드 — 책 펼침면 + 왼쪽 페이지 카메라 뷰파인더 오버레이.
+     img 와 svg 가 같은 박스를 채우도록 aspect-ratio 로 컨테이너 비율 고정(원본 1408×768).
+     SVG preserveAspectRatio="none" 이라 viewBox 좌표가 컨테이너에 1:1 매핑됨. */
+  .reading-photo-guide {
+    margin: 0 auto;
+    max-width: 560px;
+    text-align: center;
+  }
+  .reading-photo-frame {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1408 / 768;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 0 rgba(0,0,0,.04), 0 6px 18px rgba(31,38,26,.10);
+    line-height: 0;
+  }
+  .reading-photo-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .reading-photo-vf {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+  /* 코너 마커 미세 펄스 — 셔터 대기 느낌. transform 대신 opacity 만 변화시켜 좌표 안정. */
+  .reading-photo-vf .vf-corners {
+    animation: vfCornerPulse 2s ease-in-out infinite;
+  }
+  @keyframes vfCornerPulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.55; }
+  }
+  .reading-photo-caption {
+    margin-top: 10px;
+    font-size: 0.85rem;
+    color: #6B6660;
+    letter-spacing: 0.01em;
+  }
   @media (max-width: 480px) {
     .reading-intro { margin-bottom: 20px; }
     .reading-intro-desc { font-size: 0.9rem; }
+    .reading-photo-guide { max-width: 320px; }
+    .reading-photo-caption { font-size: 0.8rem; }
   }
 
   /* 추출 진행 상태 */
@@ -1119,11 +1165,42 @@
        업로드 버튼 클릭 시점에 GE 게이트 → 통과 시에만 파일 피커 오픈.
        (handlePhotos 안에도 동일 게이트가 있어 다른 진입 경로에서도 안전) -->
   <div class="upload-area" id="uploadArea">
-    <!-- Novel Reading 소개: 한 줄 안내 문구.
+    <!-- Novel Reading 소개: 한 줄 안내 문구 + 책 펼침면 사진(왼쪽 페이지에 카메라 뷰파인더 오버레이).
          업로드 화면(uploadArea)에서만 노출 — My Books / 뷰어 화면에서는 영역 자체가 hidden. -->
     <div class="reading-intro">
       <p class="reading-intro-desc" data-i18n="readingIntroDesc">책 페이지 사진을 올려보세요.
 그냥 지나치던 단어와 표현까지 놓치지 않게, 내 레벨에 맞춰 정리해드립니다.</p>
+      <!-- 사진 가이드: 책 펼침면 사진 + 왼쪽 페이지에 카메라 뷰파인더(L자 4코너 + 바깥쪽 dim).
+           "이렇게 한 페이지씩 찍어 올려주세요" 메시지를 시각으로 전달.
+           SVG viewBox 는 이미지 픽셀 좌표(1408×768)에 1:1 매핑(preserveAspectRatio=none + aspect-ratio CSS).
+           좌표는 책의 왼쪽 페이지 영역 — 보면서 미세 조정 가능. -->
+      <figure class="reading-photo-guide">
+        <div class="reading-photo-frame">
+          <img src="assets/reading-page-frame.png" alt="" loading="lazy">
+          <svg class="reading-photo-vf" viewBox="0 0 1408 768" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <mask id="vfMask">
+                <rect width="1408" height="768" fill="white"/>
+                <rect x="335" y="140" width="405" height="475" rx="4" fill="black"/>
+              </mask>
+            </defs>
+            <!-- 바깥쪽 dim — 왼쪽 페이지 사각형만 빠짐 -->
+            <rect width="1408" height="768" fill="rgba(0,0,0,0.22)" mask="url(#vfMask)"/>
+            <!-- L자 4코너 + 황동 점 액센트 -->
+            <g class="vf-corners">
+              <path d="M335 175 L335 140 L370 140" stroke="#FFFFFF" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M705 140 L740 140 L740 175" stroke="#FFFFFF" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M335 580 L335 615 L370 615" stroke="#FFFFFF" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M705 615 L740 615 L740 580" stroke="#FFFFFF" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="348" cy="153" r="3" fill="#C8A24A"/>
+              <circle cx="727" cy="153" r="3" fill="#C8A24A"/>
+              <circle cx="348" cy="602" r="3" fill="#C8A24A"/>
+              <circle cx="727" cy="602" r="3" fill="#C8A24A"/>
+            </g>
+          </svg>
+        </div>
+        <figcaption class="reading-photo-caption" data-i18n="readingPhotoCaption">한 페이지씩 찍어주세요</figcaption>
+      </figure>
     </div>
     <!-- 분석 환경 한 줄 — 크레딧 / 영어 레벨 / ⚙️ 설정. 사진 올리기 직전 한 번 환경 인지하는 흐름.
          기존 헤더 우측에서 옮겨옴 — "이 다음 분석의 환경" 의미라 분석 시작 영역에 모임이 자연스러움. -->
