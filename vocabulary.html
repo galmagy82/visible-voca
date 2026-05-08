@@ -3220,6 +3220,10 @@ async function fetchFromSupabase(word) {
         .from('word-images')
         .getPublicUrl(imageRow.image_path);
 
+      /* 캐시 hit — 노출된 텍스트 row 의 hit_count +1 (fire-and-forget, 사용자 흐름 비차단).
+         마이그레이션 20260408010000 / 20260408020000 의 비활성 인프라 활성화. */
+      supabaseClient.rpc('increment_hit_count', { row_id: textRow.id }).catch(() => {});
+
       return {
         word: textRow.word,
         corrected: textRow.corrected,
