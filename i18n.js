@@ -266,7 +266,7 @@ const I18N = {
     menuComingSoon: '준비 중',
 
     /* Novel Reading */
-    readingIntroDesc: '책 페이지 사진들을 올려보세요.\n내 영어 레벨에 맞는 학습 단어를 알려주고, 책으로 저장할 수 있습니다.',
+    readingIntroDesc: '그냥 지나치던 단어와 표현까지 놓치지 않게, 내 레벨에 맞춰 정리해드립니다',
     readingUploadBtn: '📂 책 사진 올리기',
     readingUploadHint: '앞페이지부터 차례로 찍은 사진을 올리세요.\n선택한 순서대로 페이지가 됩니다 (최대 30장).',
     readingExtracting: '텍스트 추출 중...',
@@ -595,7 +595,7 @@ const I18N = {
     appTabMyWords: 'My Words',
 
     /* Novel Reading */
-    readingIntroDesc: 'Upload photos of your book pages.\nWe\'ll find study words matched to your English level and let you save them as a book.',
+    readingIntroDesc: 'Catch every word and phrase you\'d skim past — organized at your level',
     readingUploadBtn: '📂 Upload book photos',
     readingUploadHint: 'Photograph pages in order.\nPages appear in the order you select them (up to 30).',
     readingExtracting: 'Extracting text...',
@@ -917,7 +917,7 @@ const I18N = {
     appTabMyWords: 'My Words',
 
     /* Novel Reading */
-    readingIntroDesc: '本のページの写真をアップロードしてください。\nあなたの英語レベルに合った学習単語を表示し、本として保存できます。',
+    readingIntroDesc: 'つい読み流していた単語や表現まで見逃さないよう、レベルに合わせて整理します',
     readingUploadBtn: '📂 本の写真をアップロード',
     readingUploadHint: 'ページ順に撮影してアップロードしてください。\n選択した順にページとして並びます（最大30枚）。',
     readingExtracting: 'テキストを抽出中...',
@@ -1240,7 +1240,7 @@ const I18N = {
     appTabMyWords: 'My Words',
 
     /* Novel Reading */
-    readingIntroDesc: '请上传书页照片。\n我们会根据您的英语水平推荐学习词汇，并可保存为书籍。',
+    readingIntroDesc: '不放过任何容易略过的单词和表达，按你的水平整理',
     readingUploadBtn: '📂 上传书页照片',
     readingUploadHint: '请按页面顺序拍照后上传。\n按选择顺序排列为页面（最多30张）。',
     readingExtracting: '正在提取文本...',
@@ -1562,7 +1562,7 @@ const I18N = {
     appTabMyWords: 'My Words',
 
     /* Novel Reading */
-    readingIntroDesc: 'Sube fotos de las páginas del libro.\nTe mostraremos palabras de estudio adaptadas a tu nivel de inglés y podrás guardarlas como libro.',
+    readingIntroDesc: 'No dejes pasar ninguna palabra ni expresión, organizadas a tu nivel',
     readingUploadBtn: '📂 Subir fotos del libro',
     readingUploadHint: 'Fotografía las páginas en orden y súbelas.\nLas páginas aparecen en el orden en que las seleccionas (hasta 30).',
     readingExtracting: 'Extrayendo texto...',
@@ -1884,7 +1884,7 @@ const I18N = {
     appTabMyWords: 'My Words',
 
     /* Novel Reading */
-    readingIntroDesc: 'Hãy tải lên ảnh các trang sách.\nChúng tôi sẽ gợi ý từ vựng phù hợp với trình độ tiếng Anh của bạn và có thể lưu thành sách.',
+    readingIntroDesc: 'Không bỏ sót từ và cụm từ thường lướt qua, được tổ chức theo trình độ của bạn',
     readingUploadBtn: '📂 Tải ảnh sách lên',
     readingUploadHint: 'Hãy chụp các trang theo thứ tự rồi tải lên.\nCác trang xuất hiện theo thứ tự bạn chọn (tối đa 30 ảnh).',
     readingExtracting: 'Đang trích xuất văn bản...',
@@ -2206,7 +2206,7 @@ const I18N = {
     appTabMyWords: 'My Words',
 
     /* Novel Reading */
-    readingIntroDesc: 'อัปโหลดภาพหน้าหนังสือของคุณ\nเราจะแนะนำคำศัพท์ที่เหมาะกับระดับภาษาอังกฤษของคุณ และบันทึกเป็นหนังสือได้',
+    readingIntroDesc: 'ไม่พลาดแม้แต่คำและสำนวนที่มักจะผ่านไป จัดระเบียบตามระดับของคุณ',
     readingUploadBtn: '📂 อัปโหลดภาพหนังสือ',
     readingUploadHint: 'ถ่ายภาพหน้าตามลำดับแล้วอัปโหลด\nหน้าจะเรียงตามลำดับที่คุณเลือก (สูงสุด 30 ภาพ)',
     readingExtracting: 'กำลังแยกข้อความ...',
@@ -2528,7 +2528,7 @@ const I18N = {
     appTabMyWords: 'My Words',
 
     /* Novel Reading */
-    readingIntroDesc: 'Envie fotos das páginas do livro.\nMostraremos palavras de estudo adequadas ao seu nível de inglês e poderá salvá-las como livro.',
+    readingIntroDesc: 'Sem deixar escapar nenhuma palavra ou expressão — organizadas no seu nível',
     readingUploadBtn: '📂 Enviar fotos do livro',
     readingUploadHint: 'Fotografe as páginas em ordem e envie.\nAs páginas aparecem na ordem em que você as seleciona (até 30).',
     readingExtracting: 'Extraindo texto...',
