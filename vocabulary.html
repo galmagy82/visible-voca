@@ -1921,10 +1921,11 @@
 
   /* 모바일 반응형 */
   @media (max-width: 600px) {
-    /* padding-top 30 (reading.html 과 동일) — 옛 60 은 절대 위치 .top-logout 영역 확보용이었으나
-       그 버튼이 탭 헤더 안 👤 메뉴로 이전되며 30 으로 충분. 두 페이지 사이 탭 위치 통일. */
+    /* padding 30 20 24 — reading.html 의 데스크톱 body padding (30 20 60) 좌우 값과 동일.
+       이전엔 12 였는데 reading 은 모바일 override 없이 좌우 20 그대로라 vocabulary 만 16px
+       더 넓어 탭 라인·👤 위치가 어긋났던 회귀 차단. */
     body {
-      padding: 30px 12px 24px;
+      padding: 30px 20px 24px;
     }
     /* .main-layout / .sidebar — 기본 규칙이 이미 상단 가로 sub-tabs 라 별도 모바일 분기 불필요.
        모바일에선 sub-tab 폰트만 살짝 작게 압축. */
