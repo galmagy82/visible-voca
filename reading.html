@@ -17,6 +17,14 @@
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- ?screen=books 진입 시 첫 페인트 전에 사진올리기 가이드 영역을 숨겨 깜빡임 방지.
+     loadAndRenderLevelChip() await 뒤에 showBookList() 가 호출되는 흐름이라
+     그 사이에 uploadArea 가 첫 페인트로 잠깐 보이는 문제를 차단. -->
+<script>
+  if (new URLSearchParams(location.search).get('screen') === 'books') {
+    document.documentElement.classList.add('startup-books');
+  }
+</script>
 <title>Geminary Novel</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg?v=2">
 <!-- Supabase JS — 인증 세션 확인용 (vocabulary.html 와 동일 cdn) -->
@@ -32,6 +40,8 @@
   /* 스크롤바 자리 항상 예약 — 콘텐츠 길이가 화면별로 달라 스크롤바 출현/사라짐 시
      가운데 정렬 콘텐츠가 좌우로 시프트되는 문제 방지 (사진올리기 ↔ My Books 탭 전환). */
   html { scrollbar-gutter: stable; }
+  /* ?screen=books 로 진입한 첫 페인트에서 업로드 가이드 깜빡임 차단 (head 의 인라인 스크립트가 클래스 부여). */
+  html.startup-books .upload-area { display: none; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     background: #F7F6F3;
