@@ -325,7 +325,7 @@ const I18N = {
     readingMeaningLangEn: '영어',
 
     /* 웰컴 페이지 상단 브랜드 오리진 */
-    brandOrigin: '아이의 레벨에 맞는 핵심 단어와 표현을 정리해드립니다',
+    brandOrigin: '원서 읽는 우리 아이를 위한 AI 영어 학습 앱',
 
     /* Features 요약 섹션 (s-features) — 웰컴 페이지 하단 4카드 */
     featuresTitle: 'Geminary가 다른 이유',
@@ -649,7 +649,7 @@ const I18N = {
     readingMeaningLangEn: 'English',
 
     /* Welcome page top brand origin line */
-    brandOrigin: 'Key words and phrases organized for your child\'s level',
+    brandOrigin: 'An AI English app for kids reading novels',
 
     /* Features summary section (s-features) — 4 cards at the bottom of the welcome page */
     featuresTitle: 'Why Geminary is different',
@@ -971,7 +971,7 @@ const I18N = {
     readingMeaningLangEn: '英語',
 
     /* ウェルカムページ上部のブランドオリジン */
-    brandOrigin: 'お子さまのレベルに合った単語と表現を整理します',
+    brandOrigin: '原書を読むお子さまのための AI 英語学習アプリ',
 
     /* Features 要約セクション (s-features) — ウェルカムページ下部 4 カード */
     featuresTitle: 'Geminary が違う理由',
@@ -1294,7 +1294,7 @@ const I18N = {
     readingMeaningLangEn: '英语',
 
     /* 欢迎页顶部品牌来源行 */
-    brandOrigin: '按孩子的水平整理核心词汇和表达',
+    brandOrigin: '为读原版书的孩子打造的 AI 英语学习应用',
 
     /* Features 摘要部分 (s-features) — 欢迎页底部 4 张卡片 */
     featuresTitle: 'Geminary 为什么不同',
@@ -1616,7 +1616,7 @@ const I18N = {
     readingMeaningLangEn: 'Inglés',
 
     /* Línea de origen de marca en la parte superior de la página de bienvenida */
-    brandOrigin: 'Palabras y expresiones clave organizadas al nivel de tu hijo',
+    brandOrigin: 'App de inglés con IA para niños que leen novelas',
 
     /* Sección resumen de Features (s-features) — 4 tarjetas al final de la página de bienvenida */
     featuresTitle: 'Por qué Geminary es diferente',
@@ -1938,7 +1938,7 @@ const I18N = {
     readingMeaningLangEn: 'Tiếng Anh',
 
     /* Dòng nguồn gốc thương hiệu ở đầu trang chào mừng */
-    brandOrigin: 'Tổ chức từ và cụm từ cốt lõi theo trình độ của con bạn',
+    brandOrigin: 'Ứng dụng học tiếng Anh AI cho trẻ em đọc Novel',
 
     /* Phần tóm tắt Features (s-features) — 4 thẻ ở cuối trang chào mừng */
     featuresTitle: 'Vì sao Geminary khác biệt',
@@ -2260,7 +2260,7 @@ const I18N = {
     readingMeaningLangEn: 'อังกฤษ',
 
     /* บรรทัดที่มาของแบรนด์ที่ด้านบนของหน้าต้อนรับ */
-    brandOrigin: 'จัดระเบียบคำศัพท์และสำนวนหลักให้เหมาะกับระดับของลูก',
+    brandOrigin: 'แอปเรียนภาษาอังกฤษ AI สำหรับเด็กที่อ่าน Novel',
 
     /* ส่วนสรุป Features (s-features) — การ์ด 4 ใบท้ายหน้าต้อนรับ */
     featuresTitle: 'ทำไม Geminary จึงแตกต่าง',
@@ -2582,7 +2582,7 @@ const I18N = {
     readingMeaningLangEn: 'Inglês',
 
     /* Linha de origem da marca no topo da página de boas-vindas */
-    brandOrigin: 'Palavras e expressões-chave organizadas para o nível da sua criança',
+    brandOrigin: 'App de inglês com IA para crianças que leem novels',
 
     /* Seção resumo de Features (s-features) — 4 cartões ao final da página de boas-vindas */
     featuresTitle: 'Por que Geminary é diferente',
