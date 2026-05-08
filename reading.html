@@ -2901,6 +2901,8 @@ function resetReading() {
   document.getElementById('loadingArea').hidden = true;
   document.getElementById('bookListArea').hidden = true;
   document.getElementById('uploadArea').hidden = false;
+  /* 첫 페인트 깜빡임 차단용 startup-books 클래스 — 사진올리기 화면 노출 시점에 해제. */
+  document.documentElement.classList.remove('startup-books');
   updateTopBackLink();
 }
 
@@ -2911,6 +2913,8 @@ function backToUpload() {
   document.getElementById('bookViewer').hidden = true;
   document.getElementById('loadingArea').hidden = true;
   document.getElementById('uploadArea').hidden = false;
+  /* 첫 페인트 깜빡임 차단용 startup-books 클래스 — 사진올리기 화면 노출 시점에 해제. */
+  document.documentElement.classList.remove('startup-books');
   updateTopBackLink();
 }
 
