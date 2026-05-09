@@ -6258,7 +6258,11 @@ function onSelectQuizPool(scope, scopeId) {
 }
 window.onSelectQuizPool = onSelectQuizPool;
 
-/* 폴더 또는 책 단위 단어 수집 — _wbBooksCache 의 pages.study_items 를 합쳐 단어 배열 반환. */
+/* 폴더 또는 책 단위 단어 수집 — _wbBooksCache 의 pages.study_items 를 합쳐 단어 배열 반환.
+   study_items 의 실제 구조: { surface, lemma, type, meaning(_native|_en), ... }.
+   - 단어 표시: lemma 우선, 없으면 surface (원형 사전 매칭이 학습에 자연스러움)
+   - 의미: pickWbStudyMeaning 가 토글 언어/legacy 폴백 처리
+   - 예문: page.original 에서 surface(또는 lemma) 매칭 문장 추출 */
 function collectMyBooksQuizWords(scope, scopeId) {
   const books = _wbBooksCache || [];
   let target = [];
@@ -6272,18 +6276,25 @@ function collectMyBooksQuizWords(scope, scopeId) {
   for (const b of target) {
     if (!Array.isArray(b.pages)) continue;
     for (const p of b.pages) {
-      if (!Array.isArray(p.study_items)) continue;
-      for (const it of p.study_items) {
-        const w = (it.word || '').trim();
-        if (!w) continue;
-        const key = w.toLowerCase();
+      const items = Array.isArray(p && p.study_items) ? p.study_items : [];
+      const original = (p && p.original) || '';
+      for (const it of items) {
+        const surface = it && it.surface ? String(it.surface).trim() : '';
+        const lemma = it && it.lemma ? String(it.lemma).trim() : '';
+        const display = lemma || surface;
+        if (!display) continue;
+        const key = display.toLowerCase();
         if (seen.has(key)) continue;
         seen.add(key);
+        const meaning = pickWbStudyMeaning(it, _wbStudyMeaningLang) || '';
+        const sentence = (typeof findSentenceContainingSurface === 'function')
+          ? (findSentenceContainingSurface(original, surface, lemma) || '')
+          : '';
         out.push({
-          word: w,
-          meaning_native: it.meaning_native || it.meaning || '',
-          meaning_en: it.meaning_en || it.description || '',
-          example: it.example || it.sentence || '',
+          word: display,
+          surface,
+          meaning: String(meaning),
+          example: sentence,
         });
       }
     }
