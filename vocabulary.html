@@ -1152,11 +1152,11 @@
   }
 
   /* === Geminary 단어 카드 그리드 — vocab 모드 전용 ===
-     사진올리기·세트·책별 모드는 그대로 칩 형태 유지. vocab 모드에서만
-     listEl 에 .word-grid-mode 클래스가 추가되어 그리드로 전환. */
+     이미지가 카드 전체를 채우고, 단어 텍스트는 이미지 위 하단 오버레이.
+     이미지 가로폭을 텍스트가 풀 활용해 줄바꿈을 최소화. fallback 아바타에선 어두운 글씨로 자동 전환. */
   .wordbook-list.word-grid-mode {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
     gap: 12px;
     max-height: 70vh;
   }
@@ -1177,7 +1177,7 @@
     box-shadow: 0 6px 16px rgba(31,38,26,0.10);
     border-color: #D5D2CC;
   }
-  /* 이미지 영역 — 정사각, shimmer placeholder 가 background, 실제 img 가 위에 fade in */
+  /* 이미지 영역 — 카드 전체 채움(정사각). shimmer placeholder, 로드 후 fade in. */
   .word-card-image {
     position: relative;
     width: 100%;
@@ -1209,7 +1209,7 @@
     align-items: center;
     justify-content: center;
     font-family: 'DM Serif Display', serif;
-    font-size: 32px;
+    font-size: 36px;
     color: #B0ACA6;
     pointer-events: none;
   }
@@ -1218,29 +1218,43 @@
     display: flex;
   }
   .word-card-image.img-failed img { display: none; }
-  /* 본문 — 단어 + CEFR 배지 */
+  /* 본문 — 이미지 위 하단 그라데이션 오버레이 + 흰 글씨 단어. 가로폭은 카드 풀폭. */
   .word-card-body {
-    padding: 8px 10px 10px;
-    position: relative;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 18px 10px 8px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0.78) 100%);
+    pointer-events: none;
   }
   .word-card-text {
-    display: block;
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: #2D2B28;
-    line-height: 1.3;
-    word-break: break-word;
-  }
-  .word-card-cefr {
-    display: inline-block;
-    margin-top: 4px;
-    padding: 1px 6px;
-    border-radius: 4px;
-    background: #EFF4E9;
-    color: #5A8A42;
-    font-size: 0.65rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    color: #FFFFFF;
+    font-size: 0.9rem;
     font-weight: 600;
-    letter-spacing: 0.02em;
+    line-height: 1.25;
+    text-align: center;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.45);
+    /* 영어 단어가 한 글자 단위로 끊기지 않도록. 컨테이너 넘치는 경우만 break. */
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+  /* fallback 아바타(이미지 없음/실패) — 흰 글씨가 회색 배경 위에선 안 보임 → 어두운 글씨로 자동 전환. */
+  .word-card-image.no-image ~ .word-card-body,
+  .word-card-image.img-failed ~ .word-card-body,
+  .word-card-image.no-image .word-card-body,
+  .word-card-image.img-failed .word-card-body {
+    background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(248,246,242,0.85) 60%, rgba(248,246,242,0.95) 100%);
+  }
+  .word-card-image.no-image .word-card-text,
+  .word-card-image.img-failed .word-card-text {
+    color: #2D2B28;
+    text-shadow: none;
   }
   /* 발음 버튼 — 호버 시에만 노출 (시각 군더더기 줄이기) */
   .word-card-speak {
@@ -1259,6 +1273,7 @@
     opacity: 0;
     transition: opacity 0.18s ease;
     box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    z-index: 3;
   }
   .word-card:hover .word-card-speak { opacity: 1; }
   /* 선택삭제 모드 — 카드 좌상단 체크박스, 발음 버튼은 숨김 */
@@ -1272,7 +1287,7 @@
     border: 2px solid #FFFFFF;
     border-radius: 5px;
     background: rgba(0,0,0,0.35);
-    z-index: 2;
+    z-index: 3;
     box-shadow: 0 1px 2px rgba(0,0,0,0.2);
   }
   .wordbook-list.select-mode .word-card .wordbook-item-check { display: block; }
@@ -1287,11 +1302,11 @@
   }
   @media (max-width: 480px) {
     .wordbook-list.word-grid-mode {
-      grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
       gap: 10px;
     }
-    .word-card-fallback { font-size: 28px; }
-    .word-card-text { font-size: 0.8rem; }
+    .word-card-fallback { font-size: 30px; }
+    .word-card-text { font-size: 0.82rem; }
   }
 
   /* === 세트 서브탭 === */
@@ -5438,22 +5453,21 @@ async function renderWordbook() {
     const lower = item.word.toLowerCase();
     const imageUrl = imageMap.get(lower);
     const initial = (item.word[0] || '?').toUpperCase();
-    const cefrBadge = item.cefr ? `<span class="word-card-cefr">${item.cefr}</span>` : '';
     const imgClass = imageUrl ? 'word-card-image' : 'word-card-image no-image';
     const imgEl = imageUrl
       ? `<img src="${imageUrl}" loading="lazy" alt="" onload="this.classList.add('loaded'); this.parentNode.classList.add('loaded');" onerror="this.parentNode.classList.add('img-failed')">`
       : '';
+    /* 텍스트가 이미지 위 하단 오버레이로 들어가는 구조. 발음 버튼은 우상단 호버 노출. */
     return `<div class="word-card wordbook-item" data-word="${item.word}" onclick="onWordbookItemClick('${safeWord}', this)">
       <span class="wordbook-item-check"></span>
       <div class="${imgClass}">
         ${imgEl}
         <div class="word-card-fallback">${initial}</div>
+        <div class="word-card-body">
+          <span class="word-card-text">${item.word}</span>
+        </div>
       </div>
-      <div class="word-card-body">
-        <span class="word-card-text">${item.word}</span>
-        ${cefrBadge}
-        <button class="word-card-speak wordbook-item-speak" onclick="event.stopPropagation(); speak('${safeWord}')" title="${t('pronunciation')}">&#128264;</button>
-      </div>
+      <button class="word-card-speak wordbook-item-speak" onclick="event.stopPropagation(); speak('${safeWord}')" title="${t('pronunciation')}">&#128264;</button>
     </div>`;
   }).join('');
 }
