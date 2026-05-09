@@ -1505,9 +1505,15 @@ async function refreshCreditBadge() {
 function renderCreditBadge(balance, unlimited) {
   const host = document.getElementById('creditBalanceHost');
   if (!host) return;
-  const cls = unlimited ? 'credit-balance-chip is-unlimited' : 'credit-balance-chip';
-  const text = unlimited ? '🪙 ∞' : `🪙 ${balance ?? 0}`;
-  host.innerHTML = `<div class="${cls}">${text}</div>`;
+  /* 베타 무제한 모드(2026-05-08~) — unlimited 사용자에겐 배지 숨김.
+     "🪙 ∞" 가 노출되면 "언젠가 유료 전환되는 앱" 신호로 진입 마찰을 만든다는 판단.
+     Stage C 결제 도입 후 일반 사용자(unlimited=false)에겐 자동 노출됨. */
+  if (unlimited) {
+    host.innerHTML = '';
+    return;
+  }
+  const text = `🪙 ${balance ?? 0}`;
+  host.innerHTML = `<div class="credit-balance-chip">${text}</div>`;
 }
 
 /* 크레딧 사전 체크 — 사진 N장 업로드 시 N × 2 크레딧 필요. 잔액 부족이면 안내 + false 반환.
