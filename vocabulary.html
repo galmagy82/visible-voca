@@ -1396,6 +1396,65 @@
     text-align: center;
     color: #8A8078;
   }
+  /* 폴더 카드 — 책 카드와 같은 그리드, 다른 톤(베이지 + 폴더 아이콘). reading.html 과 같은 패턴. */
+  .wb-folder-card {
+    background: #F4EFE3;
+    border: 1px solid #DDD3BD;
+    border-radius: 12px;
+    padding: 16px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .wb-folder-card:hover {
+    border-color: #C8A24A;
+    background: #EFE8D4;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  }
+  .wb-folder-card-icon {
+    flex-shrink: 0;
+    font-size: 1.3rem;
+    line-height: 1.2;
+    color: #8A7838;
+  }
+  .wb-folder-card-body { flex: 1; min-width: 0; }
+  .wb-folder-card-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #2D2B28;
+    margin-bottom: 4px;
+    word-break: break-word;
+    line-height: 1.35;
+  }
+  .wb-folder-card-meta {
+    font-size: 0.78rem;
+    color: #8A8078;
+  }
+  /* 폴더 진입 화면 헤더 — 2줄 구조: 위 작은 백 링크, 아래 폴더 이름 가운데 헤딩. */
+  .wb-folder-detail-header { margin-bottom: 18px; }
+  .wb-folder-detail-back {
+    display: inline-block;
+    background: transparent;
+    border: none;
+    color: #6B6660;
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 4px 6px;
+    margin: 0 0 6px -6px;
+    border-radius: 6px;
+  }
+  .wb-folder-detail-back:hover { background: #EDECEA; color: #2D2B28; }
+  .wb-folder-detail-title {
+    display: block;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #2D2B28;
+    line-height: 1.3;
+    word-break: break-word;
+    text-align: center;
+  }
   /* 책 상세 헤더 — set-detail-header 와 동일 톤 + 뒤로가기 링크 + 우측 인쇄 버튼. */
   .book-detail-header {
     margin-bottom: 16px;
@@ -3250,6 +3309,11 @@ let _activeSetId = null;
 let _activeBookId = null;
 /* 책 목록 캐시 — 같은 탭 안에서 카드 ↔ 상세 왕복 시 reading_books 재조회 줄임 */
 let _wbBooksCache = null;
+/* 책별 탭 안에서 진입한 폴더 id — null = 메인(폴더 카드 + 폴더 없는 책 혼합).
+   값이 있으면 그 폴더의 책만 표시. 책 상세 진입과는 독립 (둘 다 set 가능: 폴더 안 책 상세). */
+let _activeFolderIdWb = null;
+/* 폴더 목록 캐시 — book_folders 본인 row */
+let _wbFoldersCache = null;
 /* My Books 단어 책 상세 — 학습 단어 의미 토글 현재 선택. Reading 의 user_profile.meaning_lang 따라감.
    초기값은 'native'. initAuth 후 fetch 결과로 갱신. 토글 변경은 세션 한정 (영구 default 는 Reading 설정으로). */
 let _wbStudyMeaningLang = 'native';
@@ -5610,14 +5674,15 @@ function highlightSurfaceInSentence(sentence, surface) {
 }
 
 /* 책 목록 fetch + 캐시. study_items 는 책 카드 단계에선 합계만 필요하니
-   pages 의 길이만 추출하지만, jsonb 전체 받아 캐시해두면 상세 진입 때 재호출 없음. */
+   pages 의 길이만 추출하지만, jsonb 전체 받아 캐시해두면 상세 진입 때 재호출 없음.
+   folder_id 도 SELECT — 폴더 그룹핑/필터링에 활용. */
 async function loadWbBooksIfNeeded() {
   if (_wbBooksCache) return _wbBooksCache;
   if (!_authUser?.id) return [];
   try {
     const { data, error } = await supabaseClient
       .from('reading_books')
-      .select('id, title, pages, created_at')
+      .select('id, title, pages, created_at, folder_id')
       .eq('user_id', _authUser.id)
       .order('created_at', { ascending: false });
     if (error) throw error;
@@ -5629,27 +5694,107 @@ async function loadWbBooksIfNeeded() {
   }
 }
 
-/* 책 카드 그리드 렌더 + 탭 카운터 갱신 */
+/* 폴더 목록 fetch + 캐시 — vocabulary 의 책별 탭에서 폴더 카드 노출용. */
+async function loadWbFoldersIfNeeded() {
+  if (_wbFoldersCache) return _wbFoldersCache;
+  if (!_authUser?.id) return [];
+  try {
+    const { data, error } = await supabaseClient
+      .from('book_folders')
+      .select('id, name, created_at')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    _wbFoldersCache = data || [];
+    return _wbFoldersCache;
+  } catch (e) {
+    console.warn('book_folders 조회 실패:', e);
+    return [];
+  }
+}
+
+/* 책 카드 그리드 렌더 + 탭 카운터 갱신.
+   - _activeFolderIdWb 가 있으면 폴더 진입 화면 (← 백 링크 + 폴더 이름 + 그 폴더 책만)
+   - 없으면 메인 (폴더 카드 + 폴더 없는 책 카드 혼합) */
 async function renderWbBookGrid(listEl) {
-  const books = await loadWbBooksIfNeeded();
+  const [books, folders] = await Promise.all([loadWbBooksIfNeeded(), loadWbFoldersIfNeeded()]);
   const booksTab = document.getElementById('wbTabBooks');
   if (booksTab) booksTab.textContent = `${t('wbBooks')} (${books.length})`;
-  if (!books || books.length === 0) {
+  /* 폴더 진입 모드 */
+  if (_activeFolderIdWb) {
+    renderWbFolderDetail(listEl, folders, books);
+    return;
+  }
+  /* 메인 — 빈 상태 */
+  if ((!books || books.length === 0) && (!folders || folders.length === 0)) {
     listEl.innerHTML = `<div class="wb-book-empty">${escapeHtml(t('wbBooksEmpty') || '아직 저장한 책이 없어요')}</div>`;
     return;
   }
-  const pagesTpl = t('readingBookCardPages') || '{n}페이지';
-  const cards = books.map((b) => {
-    const pageCount = Array.isArray(b.pages) ? b.pages.length : 0;
-    const pagesText = pagesTpl.replace('{n}', pageCount);
-    const dateText = b.created_at ? new Date(b.created_at).toLocaleDateString() : '';
-    const safeId = String(b.id).replace(/'/g, "\\'");
-    return `<div class="wb-book-card" onclick="enterWbBookDetail('${safeId}')">
-      <div class="wb-book-card-title">${escapeHtml(b.title || '')}</div>
-      <div class="wb-book-card-meta">${escapeHtml(pagesText)} · ${escapeHtml(dateText)}</div>
+  /* 폴더 카드 + 폴더 없는 책 카드 혼합 */
+  const folderCount = new Map();
+  for (const b of books) {
+    if (!b.folder_id) continue;
+    folderCount.set(b.folder_id, (folderCount.get(b.folder_id) || 0) + 1);
+  }
+  const folderCountTpl = t('readingFolderBookCount') || '{n}권';
+  const folderCards = (folders || []).map((f) => {
+    const count = folderCount.get(f.id) || 0;
+    const countText = folderCountTpl.replace('{n}', count);
+    const safeId = String(f.id).replace(/'/g, "\\'");
+    return `<div class="wb-folder-card" onclick="enterFolderWb('${safeId}')">
+      <div class="wb-folder-card-icon">📁</div>
+      <div class="wb-folder-card-body">
+        <div class="wb-folder-card-title">${escapeHtml(f.name || '')}</div>
+        <div class="wb-folder-card-meta">${escapeHtml(countText)}</div>
+      </div>
     </div>`;
   }).join('');
-  listEl.innerHTML = `<div class="wb-book-grid">${cards}</div>`;
+  const looseBooks = books.filter(b => !b.folder_id);
+  const bookCards = looseBooks.map(b => wbBookCardHtml(b)).join('');
+  listEl.innerHTML = `<div class="wb-book-grid">${folderCards}${bookCards}</div>`;
+}
+
+/* 폴더 진입 화면 — ← My Books 백 링크 + 폴더 이름 + 그 폴더 책 카드만 */
+function renderWbFolderDetail(listEl, folders, books) {
+  const folder = (folders || []).find(f => f.id === _activeFolderIdWb);
+  const folderName = folder ? folder.name : '';
+  const tBack = t('readingFolderBack') || '← My Books';
+  const folderBooks = (books || []).filter(b => b.folder_id === _activeFolderIdWb);
+  const headerHtml = `<div class="wb-folder-detail-header">
+    <button class="wb-folder-detail-back" onclick="exitFolderWb()">${escapeHtml(tBack)}</button>
+    <span class="wb-folder-detail-title">${escapeHtml(folderName)}</span>
+  </div>`;
+  if (folderBooks.length === 0) {
+    const tEmpty = t('readingFolderEmpty') || '이 폴더에 아직 책이 없어요';
+    listEl.innerHTML = `${headerHtml}<div class="wb-book-empty">${escapeHtml(tEmpty)}</div>`;
+    return;
+  }
+  const cards = folderBooks.map(b => wbBookCardHtml(b)).join('');
+  listEl.innerHTML = `${headerHtml}<div class="wb-book-grid">${cards}</div>`;
+}
+
+/* 책 카드 한 장 — 메인/폴더 진입 둘 다 같은 형태. */
+function wbBookCardHtml(b) {
+  const pagesTpl = t('readingBookCardPages') || '{n}페이지';
+  const pageCount = Array.isArray(b.pages) ? b.pages.length : 0;
+  const pagesText = pagesTpl.replace('{n}', pageCount);
+  const dateText = b.created_at ? new Date(b.created_at).toLocaleDateString() : '';
+  const safeId = String(b.id).replace(/'/g, "\\'");
+  return `<div class="wb-book-card" onclick="enterWbBookDetail('${safeId}')">
+    <div class="wb-book-card-title">${escapeHtml(b.title || '')}</div>
+    <div class="wb-book-card-meta">${escapeHtml(pagesText)} · ${escapeHtml(dateText)}</div>
+  </div>`;
+}
+
+/* 폴더 카드 클릭 — 그 폴더 진입. 캐시 그대로 사용해 추가 fetch 없이 즉시 렌더. */
+function enterFolderWb(folderId) {
+  _activeFolderIdWb = folderId;
+  renderWordbook();
+}
+
+/* 폴더 안에서 ← My Books — 메인 그리드 복귀. */
+function exitFolderWb() {
+  _activeFolderIdWb = null;
+  renderWordbook();
 }
 
 /* 책 카드 클릭 — 상세 진입 */
@@ -5659,7 +5804,7 @@ function enterWbBookDetail(bookId) {
   renderWordbook();
 }
 
-/* 상세 헤더의 "← 책 목록" 클릭 — 카드 목록으로 복귀 */
+/* 상세 헤더의 "← 책 목록" 클릭 — 카드 목록으로 복귀 (폴더 진입 상태 유지). */
 function exitBookDetail() {
   _activeBookId = null;
   updateWbUIVisibility();
