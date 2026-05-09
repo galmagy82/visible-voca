@@ -5586,6 +5586,9 @@ async function renderWordbook() {
      - image_path 있음 → 썸네일 이미지 (lazy load + fade in)
      - image_path 없음 / 로드 실패 → 단어 첫 글자 fallback 아바타
      - shimmer 는 CSS 가 처리 (img.loaded 클래스 부여 시 정지) */
+  /* await 전에 이전 모드(My Books 책 카드 등) 잔존 컨텐츠 즉시 비움 — 비동기 fetch 동안
+     이전 카드가 .word-grid-mode 클래스 적용되어 세로 나열로 깜빡 보이는 문제 방지. */
+  listEl.innerHTML = '';
   listEl.classList.add('word-grid-mode');
   const wordKeys = filtered.map(it => it.word.toLowerCase());
   const imageMap = await fetchWordImages(wordKeys);
