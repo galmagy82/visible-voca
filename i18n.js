@@ -146,6 +146,11 @@ const I18N = {
 
     /* 퀴즈 */
     quizSetup: '퀴즈 설정',
+    quizModeGeminaryTitle: 'Geminary 퀴즈',
+    quizModeGeminaryDesc: '이미지·느낌으로 단어 맞추기',
+    quizModeMyBooksTitle: 'My Books 퀴즈',
+    quizModeMyBooksDesc: '정의·예문으로 단어 맞추기',
+    quizModeMyBooksComingSoon: 'My Books 퀴즈는 곧 추가됩니다',
     quizType: '유형',
     quizTypeFeel: '느낌 맞추기',
     quizTypeImage: '이미지 보고 맞추기',
@@ -485,6 +490,11 @@ const I18N = {
 
     /* Quiz */
     quizSetup: 'Quiz Setup',
+    quizModeGeminaryTitle: 'Geminary Quiz',
+    quizModeGeminaryDesc: 'Match words by image and feel',
+    quizModeMyBooksTitle: 'My Books Quiz',
+    quizModeMyBooksDesc: 'Match words by definition and example',
+    quizModeMyBooksComingSoon: 'My Books quiz is coming soon',
     quizType: 'Type',
     quizTypeFeel: 'Match the feel',
     quizTypeImage: 'Match the image',
@@ -817,6 +827,11 @@ const I18N = {
 
     /* クイズ */
     quizSetup: 'クイズ設定',
+    quizModeGeminaryTitle: 'Geminary クイズ',
+    quizModeGeminaryDesc: '画像・フィーリングで単語当て',
+    quizModeMyBooksTitle: 'My Books クイズ',
+    quizModeMyBooksDesc: '定義・例文で単語当て',
+    quizModeMyBooksComingSoon: 'My Books クイズは近日公開',
     quizType: 'タイプ',
     quizTypeFeel: '感覚当て',
     quizTypeImage: '画像当て',
@@ -1149,6 +1164,11 @@ const I18N = {
 
     /* 测验 */
     quizSetup: '测验设置',
+    quizModeGeminaryTitle: 'Geminary 测验',
+    quizModeGeminaryDesc: '用图像和感觉猜单词',
+    quizModeMyBooksTitle: 'My Books 测验',
+    quizModeMyBooksDesc: '用定义和例句猜单词',
+    quizModeMyBooksComingSoon: 'My Books 测验即将推出',
     quizType: '类型',
     quizTypeFeel: '猜感觉',
     quizTypeImage: '看图猜词',
@@ -1482,6 +1502,11 @@ const I18N = {
 
     /* Quiz */
     quizSetup: 'Configuración del quiz',
+    quizModeGeminaryTitle: 'Quiz Geminary',
+    quizModeGeminaryDesc: 'Adivina palabras por imagen y sensación',
+    quizModeMyBooksTitle: 'Quiz My Books',
+    quizModeMyBooksDesc: 'Adivina palabras por definición y ejemplo',
+    quizModeMyBooksComingSoon: 'El quiz de My Books estará disponible pronto',
     quizType: 'Tipo',
     quizTypeFeel: 'Adivina la sensación',
     quizTypeImage: 'Adivina por imagen',
@@ -1814,6 +1839,11 @@ const I18N = {
 
     /* Trắc nghiệm */
     quizSetup: 'Cài đặt trắc nghiệm',
+    quizModeGeminaryTitle: 'Trắc nghiệm Geminary',
+    quizModeGeminaryDesc: 'Đoán từ qua hình ảnh và cảm nhận',
+    quizModeMyBooksTitle: 'Trắc nghiệm My Books',
+    quizModeMyBooksDesc: 'Đoán từ qua định nghĩa và ví dụ',
+    quizModeMyBooksComingSoon: 'Trắc nghiệm My Books sẽ sớm có',
     quizType: 'Loại',
     quizTypeFeel: 'Đoán cảm giác',
     quizTypeImage: 'Đoán theo hình',
@@ -2146,6 +2176,11 @@ const I18N = {
 
     /* แบบทดสอบ */
     quizSetup: 'ตั้งค่าแบบทดสอบ',
+    quizModeGeminaryTitle: 'แบบทดสอบ Geminary',
+    quizModeGeminaryDesc: 'ทายคำจากภาพและความรู้สึก',
+    quizModeMyBooksTitle: 'แบบทดสอบ My Books',
+    quizModeMyBooksDesc: 'ทายคำจากความหมายและตัวอย่าง',
+    quizModeMyBooksComingSoon: 'แบบทดสอบ My Books กำลังจะมา',
     quizType: 'ประเภท',
     quizTypeFeel: 'ทายความรู้สึก',
     quizTypeImage: 'ทายจากภาพ',
@@ -2478,6 +2513,11 @@ const I18N = {
 
     /* Quiz */
     quizSetup: 'Configuração do quiz',
+    quizModeGeminaryTitle: 'Quiz Geminary',
+    quizModeGeminaryDesc: 'Adivinhe palavras por imagem e sensação',
+    quizModeMyBooksTitle: 'Quiz My Books',
+    quizModeMyBooksDesc: 'Adivinhe palavras por definição e exemplo',
+    quizModeMyBooksComingSoon: 'O quiz de My Books chegará em breve',
     quizType: 'Tipo',
     quizTypeFeel: 'Adivinhe a sensação',
     quizTypeImage: 'Adivinhe pela imagem',

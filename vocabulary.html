@@ -1983,6 +1983,49 @@
     transform: translateX(20px);
   }
 
+  /* 퀴즈 모드 선택 — Geminary 단어 / My Books 단어 두 카드 진입점 */
+  .quiz-mode-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    max-width: 540px;
+    margin: 24px auto 0;
+  }
+  .quiz-mode-card {
+    background: #FFFFFF;
+    border: 1px solid #D5D2CC;
+    border-radius: 14px;
+    padding: 28px 20px;
+    cursor: pointer;
+    text-align: center;
+    color: #2D2B28;
+    font-family: inherit;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+  }
+  .quiz-mode-card:hover {
+    border-color: #5A8A42;
+    box-shadow: 0 6px 16px rgba(31,38,26,0.10);
+    transform: translateY(-1px);
+  }
+  .quiz-mode-card-icon {
+    font-size: 1.9rem;
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+  .quiz-mode-card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .quiz-mode-card-desc {
+    font-size: 0.82rem;
+    color: #6B6660;
+    line-height: 1.4;
+  }
+  @media (max-width: 480px) {
+    .quiz-mode-cards { grid-template-columns: 1fr; gap: 12px; max-width: 320px; }
+    .quiz-mode-card { padding: 20px 16px; }
+  }
   /* 퀴즈 설정 화면 */
   /* 옵션 행 래퍼: fit-content 너비로 블록 레벨 중앙 배치(내부는 앞정렬) */
   .quiz-options-wrap {
@@ -2534,8 +2577,24 @@
 
     <!-- 탭4: Quiz -->
     <div class="tab-content" id="tabQuiz">
-      <!-- 퀴즈 설정 화면 -->
-      <div id="quizSetup">
+      <!-- 퀴즈 모드 선택 화면 — Geminary 단어 / My Books 단어 두 카드 진입점.
+           카드 클릭 시 quizModeSelect 숨기고 해당 모드의 setup 화면 표시. -->
+      <div id="quizModeSelect">
+        <div class="quiz-mode-cards">
+          <button class="quiz-mode-card" onclick="selectQuizMode('geminary')">
+            <div class="quiz-mode-card-icon">🎴</div>
+            <div class="quiz-mode-card-title" data-i18n="quizModeGeminaryTitle">Geminary 퀴즈</div>
+            <div class="quiz-mode-card-desc" data-i18n="quizModeGeminaryDesc">이미지·느낌으로 단어 맞추기</div>
+          </button>
+          <button class="quiz-mode-card" onclick="selectQuizMode('mybooks')">
+            <div class="quiz-mode-card-icon">📕</div>
+            <div class="quiz-mode-card-title" data-i18n="quizModeMyBooksTitle">My Books 퀴즈</div>
+            <div class="quiz-mode-card-desc" data-i18n="quizModeMyBooksDesc">정의·예문으로 단어 맞추기</div>
+          </button>
+        </div>
+      </div>
+      <!-- 퀴즈 설정 화면 — Geminary 모드 진입 시 노출 -->
+      <div id="quizSetup" style="display:none;">
         <div class="quiz-options-wrap">
           <div class="quiz-option">
             <label data-i18n="quizType">유형</label>
@@ -6059,13 +6118,29 @@ let quizIndex = 0;
 let quizCorrect = 0;
 let quizWrongs = [];
 
-/* 퀴즈 설정 화면으로 초기화 */
+/* 퀴즈 모드 선택 화면으로 초기화 — 두 카드(Geminary / My Books) 진입점 노출. */
 function resetQuiz() {
-  document.getElementById('quizSetup').style.display = 'block';
+  document.getElementById('quizModeSelect').style.display = 'block';
+  document.getElementById('quizSetup').style.display = 'none';
   document.getElementById('quizPlay').style.display = 'none';
   document.getElementById('quizResult').style.display = 'none';
   document.getElementById('quizMsg').textContent = '';
 }
+
+/* 퀴즈 모드 카드 클릭 → 해당 모드 setup 화면으로 진입.
+   Step 1: Geminary 는 기존 quizSetup 흐름. My Books 는 임시 placeholder. */
+function selectQuizMode(mode) {
+  document.getElementById('quizModeSelect').style.display = 'none';
+  if (mode === 'geminary') {
+    document.getElementById('quizSetup').style.display = 'block';
+  } else if (mode === 'mybooks') {
+    /* Step 2 에서 My Books 퀴즈 setup 화면 추가 예정. 지금은 임시 안내 + 모드 선택으로 복귀. */
+    const tComing = (typeof t === 'function') ? t('quizModeMyBooksComingSoon') : 'My Books 퀴즈는 곧 추가됩니다';
+    alert(tComing);
+    document.getElementById('quizModeSelect').style.display = 'block';
+  }
+}
+window.selectQuizMode = selectQuizMode;
 
 /* 퀴즈 시작
    데이터 소스(기기 무관, 계정 기반):
