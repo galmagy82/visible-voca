@@ -2012,6 +2012,13 @@
     line-height: 1;
     margin-bottom: 12px;
   }
+  /* Geminary 브랜드 아이콘 큰 버전 — wb-subtab-icon 와 동일 패턴, 모드 카드 톤 맞춰 패딩·radius 키움. */
+  .quiz-mode-card-icon-brand {
+    display: block;
+    margin: 0 auto;
+    padding: 5px;
+    border-radius: 7px;
+  }
   .quiz-mode-card-title {
     font-size: 1rem;
     font-weight: 600;
@@ -2637,15 +2644,24 @@
            카드 클릭 시 quizModeSelect 숨기고 해당 모드의 setup 화면 표시. -->
       <div id="quizModeSelect">
         <div class="quiz-mode-cards">
-          <button class="quiz-mode-card" onclick="selectQuizMode('geminary')">
-            <div class="quiz-mode-card-icon">🎴</div>
-            <div class="quiz-mode-card-title" data-i18n="quizModeGeminaryTitle">Geminary 퀴즈</div>
-            <div class="quiz-mode-card-desc" data-i18n="quizModeGeminaryDesc">이미지·느낌으로 단어 맞추기</div>
-          </button>
           <button class="quiz-mode-card" onclick="selectQuizMode('mybooks')">
             <div class="quiz-mode-card-icon">📕</div>
             <div class="quiz-mode-card-title" data-i18n="quizModeMyBooksTitle">My Books 퀴즈</div>
             <div class="quiz-mode-card-desc" data-i18n="quizModeMyBooksDesc">정의·예문으로 단어 맞추기</div>
+          </button>
+          <button class="quiz-mode-card" onclick="selectQuizMode('geminary')">
+            <!-- Geminary 브랜드 아이콘 (파란 박스 + 흰 노드) — 단어 검색 탭/단어장 Geminary 서브탭과 통일. -->
+            <div class="quiz-mode-card-icon">
+              <svg class="wb-subtab-icon quiz-mode-card-icon-brand" width="32" height="32" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <line x1="6" y1="6" x2="15" y2="6" stroke="#FFFFFF" stroke-width="1.5" opacity="0.65"/>
+                <line x1="6" y1="6" x2="9.3" y2="15.2" stroke="#FFFFFF" stroke-width="1.5" opacity="0.65"/>
+                <circle cx="6" cy="6" r="3" fill="#FFFFFF"/>
+                <circle cx="18" cy="6" r="3" fill="#FFFFFF" opacity="0.85"/>
+                <circle cx="10" cy="18" r="3" fill="#FFFFFF" opacity="0.7"/>
+              </svg>
+            </div>
+            <div class="quiz-mode-card-title" data-i18n="quizModeGeminaryTitle">Geminary 퀴즈</div>
+            <div class="quiz-mode-card-desc" data-i18n="quizModeGeminaryDesc">이미지·느낌으로 단어 맞추기</div>
           </button>
         </div>
       </div>
