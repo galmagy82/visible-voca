@@ -2413,9 +2413,8 @@
              코드는 유지하고 탭 버튼만 숨김 (사진 검색 다시 노출 시 즉시 복구 가능). -->
         <button class="wb-subtab" onclick="switchWbMode('sets')" id="wbTabSets" data-i18n="wbSets" style="display:none">세트 (0)</button>
       </div>
-      <!-- 검색/정렬/전체삭제 툴바 — 세트 모드에서는 숨김 -->
+      <!-- 정렬/전체삭제 툴바 — 세트 모드에서는 숨김. 단어 검색 입력창은 시각 스캔이 더 빨라 제거됨. -->
       <div class="wordbook-toolbar" id="wordbookToolbar">
-        <input type="text" id="wordbookFilter" data-i18n="wordbookFilterPlaceholder" placeholder="단어 검색..." oninput="renderWordbook()">
         <select id="wordbookSort" onchange="renderWordbook()">
           <option value="recent" data-i18n="sortRecent">최근 추가순</option>
           <option value="alpha" data-i18n="sortAlpha">알파벳순</option>
@@ -5356,7 +5355,8 @@ async function deleteSelected() {
    - 'books' + _activeBookId 설정: 그 책의 학습 단어를 페이지별 그룹으로 표시 */
 async function renderWordbook() {
   const list = await getWordbookAll();
-  const filter = (document.getElementById('wordbookFilter').value || '').toLowerCase();
+  /* 검색 입력창은 제거됨 — filter 는 빈 문자열로 고정. 향후 필터 도입 시 이 값에 정책 매핑. */
+  const filter = '';
   const sort = document.getElementById('wordbookSort').value;
   const listEl = document.getElementById('wordbookList');
   /* 다른 모드(책별/세트) 진입 시 vocab 카드 그리드 클래스 잔존 방지 — 매 렌더 시 reset 후
