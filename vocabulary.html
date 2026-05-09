@@ -2119,6 +2119,36 @@
     border-radius: 12px;
     border: 1px solid #D5D2CC;
   }
+  /* My Books 퀴즈 — 정의 + 빈칸 예문 */
+  .quiz-mb-meaning {
+    font-size: 1rem;
+    line-height: 1.55;
+    color: #2D2B28;
+    padding: 14px 16px;
+    background: #F4EFE3;
+    border-left: 3px solid #5A8A42;
+    border-radius: 6px;
+    text-align: left;
+    margin-bottom: 12px;
+  }
+  .quiz-mb-example {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #4A4641;
+    font-style: italic;
+    padding: 8px 16px;
+    text-align: left;
+  }
+  .quiz-mb-blank {
+    display: inline-block;
+    min-width: 70px;
+    padding: 0 4px;
+    border-bottom: 2px solid #5A8A42;
+    color: #5A8A42;
+    font-weight: 600;
+    text-align: center;
+    font-style: normal;
+  }
   .quiz-choices {
     display: flex;
     flex-direction: column;
@@ -6242,21 +6272,72 @@ async function renderQuizMyBooksSetup() {
 }
 
 /* 폴더 또는 책 카드 클릭 — 그 풀의 단어 수집 후 출제 시작.
-   Step 2 에서는 단어 수집까지만 + 임시 안내. Step 3 에서 본격 출제. */
+   4지선다 최소 4개 필요. 그 미만이면 안내. */
 function onSelectQuizPool(scope, scopeId) {
   const words = collectMyBooksQuizWords(scope, scopeId);
   const count = parseInt(document.getElementById('quizMyBooksCount').value, 10) || 10;
   const msgEl = document.getElementById('quizMyBooksMsg');
   if (words.length < 4) {
-    /* 4지선다 최소 4개 필요. 그 미만이면 안내. */
     msgEl.textContent = (typeof t === 'function') ? t('quizMyBooksTooFew') : '단어가 너무 적어요 (4개 이상 필요)';
     return;
   }
-  /* Step 3 에서 startQuizMyBooksRun(words, count) 으로 본격 출제 시작 예정.
-     현재는 단어 수집 검증 후 임시 안내. */
-  msgEl.textContent = `${words.length} words → quiz of ${Math.min(count, words.length)} (Step 3 에서 출제)`;
+  msgEl.textContent = '';
+  startQuizMyBooks(words, count);
 }
 window.onSelectQuizPool = onSelectQuizPool;
+
+/* My Books 퀴즈 시작 — 정의(meaning) + 예문(빈칸 처리) → 단어 4지선다.
+   기존 quizPlay/quizResult/showQuestion/nextQuestion 인프라 그대로 재사용. */
+function startQuizMyBooks(words, count) {
+  /* 셔플 + 상위 N개 — 같은 풀 내 중복 단어는 collectMyBooksQuizWords 가 이미 제거. */
+  const shuffled = words.slice().sort(() => Math.random() - 0.5);
+  const selected = shuffled.slice(0, Math.min(count, words.length));
+  const allWords = words.map(x => x.word);
+
+  quizQuestions = [];
+  for (const w of selected) {
+    /* 보기: 정답 + 오답 3 (같은 풀에서 우선, 부족하면 DECOY_WORDS 폴백) */
+    const decoys = getDecoys(w.word, allWords, 3);
+    const choices = [w.word, ...decoys].sort(() => Math.random() - 0.5);
+    /* 정의 + 빈칸 예문 HTML — 답이 노출되지 않도록 surface(또는 word)를 _____ 로 마스킹.
+       정의가 비어 있는 항목은 정의 영역 생략. */
+    const meaningHtml = w.meaning
+      ? `<div class="quiz-mb-meaning">${escapeHtml(w.meaning)}</div>` : '';
+    const exampleMasked = w.example ? maskAnswerInSentence(w.example, w.surface || w.word) : '';
+    const exampleHtml = exampleMasked
+      ? `<div class="quiz-mb-example">${exampleMasked}</div>` : '';
+    const questionData = `${meaningHtml}${exampleHtml}`
+      || `<div class="quiz-mb-meaning">${escapeHtml(t('quizMyBooksGuess') || '단어를 맞춰보세요')}</div>`;
+    quizQuestions.push({ word: w.word, type: 'mybooks', questionData, choices });
+  }
+
+  quizIndex = 0;
+  quizCorrect = 0;
+  quizWrongs = [];
+
+  document.getElementById('quizMyBooksSetup').style.display = 'none';
+  document.getElementById('quizPlay').style.display = 'block';
+  document.getElementById('quizResult').style.display = 'none';
+
+  showQuestion();
+}
+
+/* 예문 안 정답 단어 부분을 _____ 로 가림. surface(활용형) 우선, 없으면 lemma/word 시도.
+   대소문자 무시 + word boundary 비슷한 매칭. 매칭 실패 시 원문 그대로(escape). */
+function maskAnswerInSentence(sentence, target) {
+  const safeSentence = escapeHtml(sentence);
+  if (!target) return safeSentence;
+  const safeTarget = escapeHtml(target);
+  const escaped = safeTarget.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  /* 단어 경계 \b 가 영어 letters 외 케이스에 약하지만, 일반 영어 문장엔 충분. */
+  const re = new RegExp(`\\b${escaped}\\b`, 'gi');
+  if (!re.test(safeSentence)) {
+    /* word boundary 매칭 실패 시(굴절형 차이 등) 그냥 부분문자 매칭으로 재시도 */
+    const re2 = new RegExp(escaped, 'gi');
+    return safeSentence.replace(re2, '<span class="quiz-mb-blank">_____</span>');
+  }
+  return safeSentence.replace(re, '<span class="quiz-mb-blank">_____</span>');
+}
 
 /* 폴더 또는 책 단위 단어 수집 — _wbBooksCache 의 pages.study_items 를 합쳐 단어 배열 반환.
    study_items 의 실제 구조: { surface, lemma, type, meaning(_native|_en), ... }.
