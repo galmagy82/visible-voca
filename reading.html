@@ -711,6 +711,65 @@
     transition: background 0.15s, color 0.15s;
   }
   .book-card-delete:hover { background: #F2D5D5; color: #B85C5C; }
+  /* 폴더 카드 — 책 카드와 같은 그리드, 다른 톤(베이지 배경 + 폴더 아이콘) */
+  .folder-card {
+    position: relative;
+    background: #F4EFE3;
+    border: 1px solid #DDD3BD;
+    border-radius: 12px;
+    padding: 16px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .folder-card:hover {
+    border-color: #C8A24A;
+    background: #EFE8D4;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  }
+  .folder-card-icon {
+    flex-shrink: 0;
+    font-size: 1.3rem;
+    line-height: 1.2;
+    color: #8A7838;
+  }
+  .folder-card-body { flex: 1; min-width: 0; }
+  .folder-card-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #2D2B28;
+    margin-bottom: 4px;
+    word-break: break-word;
+    line-height: 1.35;
+  }
+  .folder-card-meta {
+    font-size: 0.78rem;
+    color: #8A8078;
+  }
+  /* 폴더 진입 화면 헤더 — ← My Books 백 링크 + 폴더 이름 */
+  .folder-detail-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .folder-detail-back {
+    background: transparent;
+    border: none;
+    color: #6B6660;
+    font-size: 0.88rem;
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 6px;
+  }
+  .folder-detail-back:hover { background: #EDECEA; color: #2D2B28; }
+  .folder-detail-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #2D2B28;
+  }
   .book-list-empty {
     padding: 60px 20px;
     text-align: center;
@@ -2013,6 +2072,12 @@ let _currentBookId = null;
 let _currentBookTitle = '';
 /* 현재 책이 속한 폴더 id — 저장 모달의 폴더 select 자동 선택용. 폴더 없으면 null. */
 let _currentFolderId = null;
+/* My Books 화면에서 진입한 폴더 id — null 이면 메인 그리드(폴더 + 폴더 없는 책 혼합).
+   값이 있으면 그 폴더 안 화면(그 폴더 책만 표시 + ← My Books 백 링크). */
+let _activeFolderId = null;
+/* showBookList 가 채우는 폴더·책 캐시 — 폴더 진입/탈출 시 재 fetch 없이 즉시 렌더. */
+let _folderListCache = null;
+let _bookListCache = null;
 
 /* 업로드 버튼 클릭 진입점.
    파일 피커를 열기 전에 GE 게이트를 통과시켜야 함 — 사용자가 사진 고른 뒤에야
@@ -2958,18 +3023,23 @@ function backToUpload() {
 
 /* ===== 내 책 (저장된 reading_books) ===== */
 
-/* "📚 내 책" 버튼 → 책 목록 화면으로 전환 + 데이터 로드 */
+/* "📚 내 책" 버튼 → 책 목록 화면으로 전환 + 폴더/책 데이터 로드.
+   폴더 진입 상태(_activeFolderId) 는 매 진입마다 reset — 사용자가 다른 탭 갔다 다시 들어오면 메인 그리드로. */
 async function showBookList() {
   if (!_authUser) return;
   document.getElementById('uploadArea').hidden = true;
   document.getElementById('bookViewer').hidden = true;
   document.getElementById('loadingArea').hidden = true;
   document.getElementById('bookListArea').hidden = false;
+  _activeFolderId = null;
   updateTopBackLink();
   const content = document.getElementById('bookListContent');
   content.innerHTML = `<div class="book-list-empty">${escapeHtml((typeof t === 'function') ? t('readingLoadingBooks') : '책 목록을 불러오는 중...')}</div>`;
   try {
-    const books = await loadBookList();
+    /* 폴더와 책을 병렬 fetch — 두 SELECT 의존 없음. */
+    const [folders, books] = await Promise.all([loadFolderList(), loadBookList()]);
+    _folderListCache = folders;
+    _bookListCache = books;
     renderBookList(books);
   } catch (e) {
     console.error('book list load 실패:', e);
@@ -2978,34 +3048,107 @@ async function showBookList() {
 }
 
 async function loadBookList() {
-  /* 본인 행만 조회 (RLS) — 최신순 */
+  /* 본인 행만 조회 (RLS) — 최신순. folder_id 포함하여 폴더 그룹핑·필터링에 활용. */
   const { data, error } = await supabaseClient
     .from('reading_books')
-    .select('id, title, pages, created_at')
+    .select('id, title, pages, created_at, folder_id')
     .eq('user_id', _authUser.id)
     .order('created_at', { ascending: false });
   if (error) throw error;
   return data || [];
 }
 
+/* 사용자 폴더 목록 fetch — My Books 메인 그리드의 폴더 카드 표시용. */
+async function loadFolderList() {
+  const { data, error } = await supabaseClient
+    .from('book_folders')
+    .select('id, name, created_at')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+/* My Books 메인 그리드 — 폴더 카드 + 폴더 없는 책 카드 혼합.
+   폴더 클릭 시 enterFolder(id) → 같은 영역을 폴더 안 화면으로 갱신. */
 function renderBookList(books) {
   const content = document.getElementById('bookListContent');
-  if (!books || books.length === 0) {
+  /* 폴더 진입 모드 — 그 폴더 책만 보여주고 위에 ← My Books 백 링크. */
+  if (_activeFolderId) {
+    renderFolderDetail(content, books);
+    return;
+  }
+  /* 메인 그리드 — 폴더 카드 + 폴더 없는 책 카드 */
+  if ((!books || books.length === 0) && (!_folderListCache || _folderListCache.length === 0)) {
     content.innerHTML = `<div class="book-list-empty">${escapeHtml((typeof t === 'function') ? t('readingMyBooksEmpty') : '아직 저장한 책이 없어요')}</div>`;
     return;
   }
-  const pagesTpl = (typeof t === 'function') ? t('readingBookCardPages') : '{n}페이지';
-  const cards = books.map((b) => {
-    const pageCount = Array.isArray(b.pages) ? b.pages.length : 0;
-    const pagesText = pagesTpl.replace('{n}', pageCount);
-    const dateText = b.created_at ? new Date(b.created_at).toLocaleDateString() : '';
-    return `<div class="book-card" onclick="openSavedBook('${b.id}')">
-      <button class="book-card-delete" onclick="event.stopPropagation(); deleteBook('${b.id}')" aria-label="delete">×</button>
-      <div class="book-card-title">${escapeHtml(b.title || '')}</div>
-      <div class="book-card-meta">${escapeHtml(pagesText)} · ${escapeHtml(dateText)}</div>
+  const folders = _folderListCache || [];
+  /* 폴더당 책 수 매핑 — 클라이언트에서 group by */
+  const folderCount = new Map();
+  for (const b of books) {
+    if (!b.folder_id) continue;
+    folderCount.set(b.folder_id, (folderCount.get(b.folder_id) || 0) + 1);
+  }
+  const folderCountTpl = (typeof t === 'function') ? t('readingFolderBookCount') : '{n}권';
+  const folderCards = folders.map((f) => {
+    const count = folderCount.get(f.id) || 0;
+    const countText = folderCountTpl.replace('{n}', count);
+    return `<div class="folder-card" onclick="enterFolder('${f.id}')">
+      <div class="folder-card-icon">📁</div>
+      <div class="folder-card-body">
+        <div class="folder-card-title">${escapeHtml(f.name || '')}</div>
+        <div class="folder-card-meta">${escapeHtml(countText)}</div>
+      </div>
     </div>`;
   }).join('');
-  content.innerHTML = `<div class="book-grid">${cards}</div>`;
+  /* 폴더 없는 책만 메인 그리드에 (폴더 안 책은 폴더 카드 안에 카운트로 표시되므로 메인엔 X) */
+  const looseBooks = books.filter(b => !b.folder_id);
+  const bookCards = looseBooks.map(b => bookCardHtml(b)).join('');
+  content.innerHTML = `<div class="book-grid">${folderCards}${bookCards}</div>`;
+}
+
+/* 폴더 진입 화면 — ← My Books 백 링크 + 폴더 이름 + 그 폴더 책 카드 그리드 */
+function renderFolderDetail(content, books) {
+  const folder = (_folderListCache || []).find(f => f.id === _activeFolderId);
+  const folderName = folder ? folder.name : '';
+  const tBack = (typeof t === 'function') ? t('readingFolderBack') : '← My Books';
+  const folderBooks = books.filter(b => b.folder_id === _activeFolderId);
+  const headerHtml = `<div class="folder-detail-header">
+    <button class="folder-detail-back" onclick="exitFolder()">${escapeHtml(tBack)}</button>
+    <span class="folder-detail-title">${escapeHtml(folderName)}</span>
+  </div>`;
+  if (folderBooks.length === 0) {
+    const tEmpty = (typeof t === 'function') ? t('readingFolderEmpty') : '이 폴더에 아직 책이 없어요';
+    content.innerHTML = `${headerHtml}<div class="book-list-empty">${escapeHtml(tEmpty)}</div>`;
+    return;
+  }
+  const cards = folderBooks.map(b => bookCardHtml(b)).join('');
+  content.innerHTML = `${headerHtml}<div class="book-grid">${cards}</div>`;
+}
+
+/* 책 카드 HTML 한 장 생성 — 메인 그리드/폴더 진입 둘 다 같은 형태로 재사용. */
+function bookCardHtml(b) {
+  const pagesTpl = (typeof t === 'function') ? t('readingBookCardPages') : '{n}페이지';
+  const pageCount = Array.isArray(b.pages) ? b.pages.length : 0;
+  const pagesText = pagesTpl.replace('{n}', pageCount);
+  const dateText = b.created_at ? new Date(b.created_at).toLocaleDateString() : '';
+  return `<div class="book-card" onclick="openSavedBook('${b.id}')">
+    <button class="book-card-delete" onclick="event.stopPropagation(); deleteBook('${b.id}')" aria-label="delete">×</button>
+    <div class="book-card-title">${escapeHtml(b.title || '')}</div>
+    <div class="book-card-meta">${escapeHtml(pagesText)} · ${escapeHtml(dateText)}</div>
+  </div>`;
+}
+
+/* 폴더 카드 클릭 — 그 폴더 안으로 진입. 책 목록은 이미 메모리에 있어 재 fetch 불필요. */
+function enterFolder(folderId) {
+  _activeFolderId = folderId;
+  renderBookList(_bookListCache || []);
+}
+
+/* 폴더 안에서 ← My Books 클릭 — 메인 그리드로 복귀. */
+function exitFolder() {
+  _activeFolderId = null;
+  renderBookList(_bookListCache || []);
 }
 
 /* 저장된 책 카드 클릭 → 해당 책 페이지 데이터를 로드해 북 뷰어로 표시 */
@@ -3123,12 +3266,6 @@ function onSaveBookFolderChange() {
   }
 }
 
-/* HTML escape — 폴더 이름이 < > & 등을 포함할 가능성 대비 */
-function escapeHtml(s) {
-  return String(s || '').replace(/[&<>"']/g, c => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-  }[c]));
-}
 
 function openSaveBookModal() {
   const modal = document.getElementById('saveBookModal');
