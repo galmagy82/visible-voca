@@ -2694,6 +2694,7 @@
       </div>
       <!-- 퀴즈 설정 화면 — Geminary 모드 진입 시 노출 -->
       <div id="quizSetup" style="display:none;">
+        <button class="quiz-mybooks-back" onclick="quizMyBooksBack()" data-i18n="quizMyBooksBackToMode">← 모드 선택</button>
         <div class="quiz-options-wrap">
           <div class="quiz-option">
             <label data-i18n="quizType">유형</label>
@@ -6408,10 +6409,16 @@ function collectMyBooksQuizWords(scope, scopeId) {
   return out;
 }
 
-/* My Books 설정 화면 ← 모드 선택 백 링크. */
+/* ← 모드 선택 백 링크 — Geminary 설정 화면(quizSetup) 과 My Books 설정 화면(quizMyBooksSetup)
+   둘 다에서 호출. 양쪽 다 숨기고 모드 선택 카드 화면으로 돌아간다. */
 function quizMyBooksBack() {
+  document.getElementById('quizSetup').style.display = 'none';
   document.getElementById('quizMyBooksSetup').style.display = 'none';
   document.getElementById('quizModeSelect').style.display = 'block';
+  const msg = document.getElementById('quizMsg');
+  if (msg) msg.textContent = '';
+  const myBooksMsg = document.getElementById('quizMyBooksMsg');
+  if (myBooksMsg) myBooksMsg.textContent = '';
 }
 window.quizMyBooksBack = quizMyBooksBack;
 
