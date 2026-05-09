@@ -730,6 +730,10 @@
   }
   .book-card:hover .book-card-move { opacity: 1; }
   .book-card-move:hover { background: #EFE8D4; color: #8A7838; }
+  /* 모바일은 호버가 없어 호버 노출 패턴이면 발견 불가능 → 항상 노출. */
+  @media (max-width: 480px) {
+    .book-card-move { opacity: 1; }
+  }
   /* 폴더 카드 — 책 카드와 같은 그리드, 다른 톤(베이지 배경 + 폴더 아이콘) */
   .folder-card {
     position: relative;
