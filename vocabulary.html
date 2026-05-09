@@ -2019,6 +2019,11 @@
     padding: 5px;
     border-radius: 7px;
   }
+  /* Twemoji img — block + auto 가운데 정렬 (이모지 inline 의 baseline 오프셋 회피) */
+  .quiz-mode-card-icon-img {
+    display: block;
+    margin: 0 auto;
+  }
   .quiz-mode-card-title {
     font-size: 1rem;
     font-weight: 600;
@@ -2645,7 +2650,11 @@
       <div id="quizModeSelect">
         <div class="quiz-mode-cards">
           <button class="quiz-mode-card" onclick="selectQuizMode('mybooks')">
-            <div class="quiz-mode-card-icon">📕</div>
+            <!-- 책 더미(📚) Twemoji SVG — OS 별 이모지 차이 회피, PC·모바일 모두 같은 디자인.
+                 jsdelivr CDN 의존 — 한국·글로벌 안정적, 일부 회사망/중국 환경에선 안 보일 수 있음. -->
+            <div class="quiz-mode-card-icon">
+              <img class="quiz-mode-card-icon-img" src="https://cdn.jsdelivr.net/gh/twitter/twemoji@latest/assets/svg/1f4da.svg" width="32" height="32" alt="" aria-hidden="true">
+            </div>
             <div class="quiz-mode-card-title" data-i18n="quizModeMyBooksTitle">My Books 퀴즈</div>
             <div class="quiz-mode-card-desc" data-i18n="quizModeMyBooksDesc">정의·예문으로 단어 맞추기</div>
           </button>
