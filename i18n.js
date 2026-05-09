@@ -41,7 +41,7 @@ const I18N = {
     search: '검색',
 
     /* 탭 */
-    tabSearch: '일반검색',
+    tabSearch: '단어 검색',
     tabPhoto: '사진검색',
     tabWordbook: '단어장',
     tabQuiz: '퀴즈',
@@ -698,7 +698,7 @@ const I18N = {
     search: '検索',
 
     /* タブ */
-    tabSearch: '検索',
+    tabSearch: '単語検索',
     tabPhoto: '写真から検索',
     tabWordbook: '単語帳',
     tabQuiz: 'クイズ',
@@ -1021,7 +1021,7 @@ const I18N = {
     search: '搜索',
 
     /* 标签 */
-    tabSearch: '搜索',
+    tabSearch: '搜索单词',
     tabPhoto: '拍照搜索',
     tabWordbook: '单词本',
     tabQuiz: '测验',
@@ -1345,7 +1345,7 @@ const I18N = {
     search: 'Buscar',
 
     /* Pestañas */
-    tabSearch: 'Buscar',
+    tabSearch: 'Buscar palabra',
     tabPhoto: 'Buscar con foto',
     tabWordbook: 'Vocabulario',
     tabQuiz: 'Quiz',
@@ -1668,7 +1668,7 @@ const I18N = {
     search: 'Tìm kiếm',
 
     /* Tab */
-    tabSearch: 'Tìm kiếm',
+    tabSearch: 'Tra từ',
     tabPhoto: 'Tìm từ ảnh',
     tabWordbook: 'Sổ từ vựng',
     tabQuiz: 'Trắc nghiệm',
@@ -1991,7 +1991,7 @@ const I18N = {
     search: 'ค้นหา',
 
     /* แท็บ */
-    tabSearch: 'ค้นหา',
+    tabSearch: 'ค้นหาคำ',
     tabPhoto: 'ค้นจากรูป',
     tabWordbook: 'สมุดคำศัพท์',
     tabQuiz: 'แบบทดสอบ',
@@ -2314,7 +2314,7 @@ const I18N = {
     search: 'Buscar',
 
     /* Abas */
-    tabSearch: 'Buscar',
+    tabSearch: 'Buscar palavra',
     tabPhoto: 'Buscar por foto',
     tabWordbook: 'Caderno',
     tabQuiz: 'Quiz',
