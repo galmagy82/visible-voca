@@ -2276,13 +2276,13 @@
   <!-- 왼쪽 탭 사이드바 -->
   <div class="sidebar">
     <!-- 사진검색 탭 — 코드는 유지하고 탭 버튼만 숨김 (reading.html 흐름으로 사진 검색 기능 흡수). -->
-    <button class="tab" onclick="switchTab('photo')" data-i18n="tabPhoto" style="display:none">사진검색</button>
-    <button class="tab active" onclick="switchTab('wordbook')" data-i18n="tabWordbook">단어장</button>
-    <button class="tab" onclick="switchTab('quiz')" data-i18n="tabQuiz">Quiz</button>
-    <button class="tab" onclick="switchTab('myrecord')" data-i18n="tabMyRecord">My</button>
+    <button class="tab" data-tab="photo" onclick="switchTab('photo')" data-i18n="tabPhoto" style="display:none">사진검색</button>
+    <button class="tab active" data-tab="wordbook" onclick="switchTab('wordbook')" data-i18n="tabWordbook">단어장</button>
+    <button class="tab" data-tab="quiz" onclick="switchTab('quiz')" data-i18n="tabQuiz">Quiz</button>
+    <button class="tab" data-tab="myrecord" onclick="switchTab('myrecord')" data-i18n="tabMyRecord">My</button>
     <!-- 단어 검색 탭 — Geminary 시그니처 행동(능동 검색). 다른 탭(소비)과 시각 분리하기 위해
          가장 우측에 spacer 두고 배치. 디자인은 다른 탭과 동일(차분한 톤). -->
-    <button class="tab tab-search" onclick="switchTab('search')">
+    <button class="tab tab-search" data-tab="search" onclick="switchTab('search')">
       <svg class="wb-subtab-icon" width="14" height="14" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <line x1="6" y1="6" x2="15" y2="6" stroke="#FFFFFF" stroke-width="1.5" opacity="0.65"/>
         <line x1="6" y1="6" x2="9.3" y2="15.2" stroke="#FFFFFF" stroke-width="1.5" opacity="0.65"/>
@@ -3312,13 +3312,14 @@ function switchMyRecordSub(sub) {
 
 // --- 탭 전환 ---
 function switchTab(tab) {
-  /* 사이드바 탭 활성화 */
+  /* 사이드바 탭 활성화 — data-tab 속성 기반(셀렉터)이라 HTML 순서 바뀌어도 영향 없음. */
   document.querySelectorAll('.sidebar .tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  const map = { search: 0, photo: 1, wordbook: 2, quiz: 3, myrecord: 4 };
-  document.querySelectorAll('.sidebar .tab')[map[tab]].classList.add('active');
+  const tabBtn = document.querySelector(`.sidebar .tab[data-tab="${tab}"]`);
+  if (tabBtn) tabBtn.classList.add('active');
   const panels = { search: 'tabSearch', photo: 'tabPhoto', wordbook: 'tabWordbook', quiz: 'tabQuiz', myrecord: 'tabMyRecord' };
-  document.getElementById(panels[tab]).classList.add('active');
+  const panel = document.getElementById(panels[tab]);
+  if (panel) panel.classList.add('active');
 }
 
 // --- HTML 이스케이프 (XSS 방지) ---
