@@ -2059,6 +2059,10 @@
     margin-bottom: 16px;
   }
   /* 그리드 — 폴더/책 카드는 기존 .wb-folder-card / .wb-book-card 클래스 재사용. */
+  /* My Books 퀴즈 설정 화면만 폭 확장 — 기본 #tabQuiz>div 의 400px 캡으로는 파일 그리드가 2열에 묶여,
+     단어장 My Books 의 3열 그리드와 시각 불일치. 720px 이면 minmax(180px,1fr) 가 자연스럽게 3열로 떨어진다.
+     옵션 행(quiz-options-wrap) 은 자체 fit-content 라 영향 없음. */
+  #tabQuiz > div#quizMyBooksSetup { max-width: 720px; }
   #quizMyBooksGrid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
