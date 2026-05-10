@@ -2228,6 +2228,11 @@
     margin-bottom: 24px;
   }
   .quiz-wrong-item {
+    /* 단어 좌측 + Geminary 결과 보기 버튼 우측 정렬 — flex 로 양 끝 배치 */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
     padding: 8px 0;
     font-size: 0.9rem;
     color: #6B6660;
@@ -2236,6 +2241,27 @@
   .quiz-wrong-item span {
     color: #C45C5C;
     font-weight: 500;
+  }
+  /* 결과창 안의 '틀린 단어' 옆 Geminary 결과 열기 버튼 — 사이드바 단어검색 탭의 squircle 아이콘과 동일 톤. */
+  .quiz-wrong-open {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .quiz-wrong-open:hover { background: rgba(62, 116, 166, 0.10); }
+  .quiz-wrong-open .wb-subtab-icon {
+    width: 18px;
+    height: 18px;
+    padding: 3px;
+    border-radius: 5px;
   }
 
   /* 홈 버튼 */
@@ -6607,9 +6633,25 @@ function showQuizResult() {
   document.getElementById('quizScore').textContent = t('quizScoreText').replace('{total}', total).replace('{correct}', quizCorrect);
 
   if (quizWrongs.length > 0) {
+    /* 현재 퀴즈 모드 판별 — Geminary 퀴즈(image/feel) 의 단어만 결과창(이미지 포함) 으로 다시 열 수 있음.
+       My Books 퀴즈 단어는 책 본문에서 나온 것이라 Geminary 이미지가 없을 수 있어 버튼 미노출. */
+    const isGeminaryQuiz = quizQuestions.length > 0 && quizQuestions[0].type !== 'mybooks';
+    const geminaryIconSvg = '<svg class="wb-subtab-icon" width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
+      + '<line x1="6" y1="6" x2="15" y2="6" stroke="#FFFFFF" stroke-width="1.5" opacity="0.65"/>'
+      + '<line x1="6" y1="6" x2="9.3" y2="15.2" stroke="#FFFFFF" stroke-width="1.5" opacity="0.65"/>'
+      + '<circle cx="6" cy="6" r="3" fill="#FFFFFF"/>'
+      + '<circle cx="18" cy="6" r="3" fill="#FFFFFF" opacity="0.85"/>'
+      + '<circle cx="10" cy="18" r="3" fill="#FFFFFF" opacity="0.7"/>'
+      + '</svg>';
     document.getElementById('quizWrongList').innerHTML =
       `<div style="font-size:0.9rem;color:#6B6660;margin-bottom:8px;">${t('quizWrongLabel')}</div>` +
-      quizWrongs.map(w => `<div class="quiz-wrong-item"><span>${w}</span></div>`).join('');
+      quizWrongs.map(w => {
+        const safe = String(w).replace(/'/g, "\\'");
+        const openBtn = isGeminaryQuiz
+          ? `<button class="quiz-wrong-open" onclick="showWordbookDetail('${safe}')" title="${t('tabSearch')}" aria-label="${t('tabSearch')}">${geminaryIconSvg}</button>`
+          : '';
+        return `<div class="quiz-wrong-item"><span>${w}</span>${openBtn}</div>`;
+      }).join('');
   } else {
     document.getElementById('quizWrongList').innerHTML =
       `<div style="font-size:0.9rem;color:#5A8A42;">${t('quizAllCorrect')}</div>`;
