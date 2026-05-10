@@ -2715,6 +2715,7 @@
               <option value="10" selected>10</option>
               <option value="20">20</option>
               <option value="50">50</option>
+              <option value="all" data-i18n="quizCountAll">전체</option>
             </select>
           </div>
         </div>
@@ -2747,6 +2748,7 @@
               <option value="10" selected>10</option>
               <option value="20">20</option>
               <option value="50">50</option>
+              <option value="all" data-i18n="quizCountAll">전체</option>
             </select>
           </div>
         </div>
@@ -6339,7 +6341,9 @@ async function renderQuizMyBooksSetup() {
    4지선다 최소 4개 필요. 그 미만이면 안내. */
 function onSelectQuizPool(scope, scopeId) {
   const words = collectMyBooksQuizWords(scope, scopeId);
-  const count = parseInt(document.getElementById('quizMyBooksCount').value, 10) || 10;
+  /* 문제 수 — 'all' 이면 Infinity 로 전달, 아래 startQuizMyBooks 의 Math.min 이 풀 사이즈로 캡한다. */
+  const countRaw = document.getElementById('quizMyBooksCount').value;
+  const count = (countRaw === 'all') ? Infinity : (parseInt(countRaw, 10) || 10);
   const msgEl = document.getElementById('quizMyBooksMsg');
   if (words.length < 4) {
     msgEl.textContent = (typeof t === 'function') ? t('quizMyBooksTooFew') : '단어가 너무 적어요 (4개 이상 필요)';
@@ -6468,7 +6472,9 @@ window.quizMyBooksBack = quizMyBooksBack;
    불가능했기 때문에 계정 기반 소스로 재작성. */
 async function startQuiz() {
   const type = document.getElementById('quizType').value;
-  const count = parseInt(document.getElementById('quizCount').value);
+  /* 문제 수 — 'all' 이면 풀 사이즈 전체. 그 외에는 정수 파싱(10/20/50). 실제 적용 N 은 아래 selected slice 에서 한 번 더 캡. */
+  const countRaw = document.getElementById('quizCount').value;
+  const count = (countRaw === 'all') ? Infinity : parseInt(countRaw, 10);
   /* 출제 범위 — added_at 기준 시간 필터 (전체/7d/30d). 단어장이 커질수록 "최근 학습 단어 복습" 수요가 커지는 점을 반영. */
   const scope = document.getElementById('quizScope').value;
   const msgEl = document.getElementById('quizMsg');
