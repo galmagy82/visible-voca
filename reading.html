@@ -3899,6 +3899,13 @@ window.addEventListener('message', (e) => {
     const loading = document.getElementById('wordPopupLoading');
     if (loading) loading.hidden = true;
   }
+  /* [save-trace] iframe 안의 word_results 저장 단계 로그를 메인 콘솔로 재출력.
+     사용자가 DevTools 컨텍스트 전환 없이 한 콘솔에서 ENTRY/UPLOAD/INSERT/CATCH 흐름 볼 수 있게.
+     문제 해결되면 이 if 블록 + vocabulary.html 의 trace 헬퍼 함께 제거. */
+  if (e.data.type === 'save-trace') {
+    const fn = e.data.level === 'warn' ? console.warn : console.log;
+    fn(e.data.tag, e.data.label, e.data.data);
+  }
 });
 /* ESC 키로도 팝업 닫기 — 키보드 사용자 편의 */
 document.addEventListener('keydown', (e) => {
