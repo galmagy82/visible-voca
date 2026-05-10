@@ -3889,6 +3889,16 @@ async function saveToSupabase(word, parsed, imageDataUrl, existingImagePath, sce
       }
     } catch (_) { /* 다른 origin 등 무시 */ }
   };
+  /* save-done: 저장 종료를 부모(reading)에 알림. 부모는 이걸 받으면 지연 중이던 iframe blank 를 즉시 실행.
+     성공/실패/취소 어떤 결과든 한 번만 보내야 하므로 finally 에 모음. status 는 진단용. */
+  let _doneStatus = 'unknown';
+  const notifyDone = () => {
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'save-done', word, status: _doneStatus }, '*');
+      }
+    } catch (_) {}
+  };
   trace('log', 'ENTRY', {
     hasImageDataUrl: !!imageDataUrl,
     hasExistingPath: !!existingImagePath,
@@ -3957,16 +3967,21 @@ async function saveToSupabase(word, parsed, imageDataUrl, existingImagePath, sce
 
     if (insertErr) {
       trace('warn', 'INSERT fail', { msg: insertErr?.message, code: insertErr?.code, err: insertErr });
+      _doneStatus = 'insert-fail';
       return null;
     }
     trace('log', 'INSERT ok', { id: inserted?.id, totalMs: Date.now() - traceStart });
+    _doneStatus = 'ok';
     /* 새로 만든 row 의 id 반환 — 호출자가 추천/비추천 버튼에 박을 용도 */
     return inserted?.id || null;
   } catch (e) {
     /* AbortError / NetworkError 등 in-flight 취소도 여기로 떨어진다.
        e.name 까지 함께 찍어야 'iframe 언로드로 인한 취소' 인지 'RLS/네트워크 거부' 인지 구분 가능. */
     trace('warn', 'CATCH', { name: e?.name, message: e?.message, totalMs: Date.now() - traceStart });
+    _doneStatus = 'catch';
     return null;
+  } finally {
+    notifyDone();
   }
 }
 

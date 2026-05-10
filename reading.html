@@ -3824,6 +3824,14 @@ function openGeminaryPopup(word) {
   const overlay = document.getElementById('wordPopupOverlay');
   const iframe = document.getElementById('wordPopupIframe');
   const loading = document.getElementById('wordPopupLoading');
+  /* 이전에 닫은 팝업의 저장이 아직 진행 중이라 iframe blank 이 지연돼 있다면,
+     새 팝업으로 같은 iframe 을 재사용해야 하므로 강제로 blank → 이전 저장은 abort.
+     드문 케이스(사용자가 1~2초 안에 다른 단어로 빠르게 전환). 현재는 단순화. */
+  if (_pendingBlankTimer) {
+    clearTimeout(_pendingBlankTimer);
+    _pendingBlankTimer = null;
+    iframe.src = 'about:blank';
+  }
   /* 부모 측 로딩 인디케이터를 iframe 보다 먼저 노출 — 흰 화면 구간 제거 */
   if (loading) loading.hidden = false;
   iframe.src = `vocabulary.html?q=${encodeURIComponent(word)}&embed=1`;
@@ -3831,16 +3839,27 @@ function openGeminaryPopup(word) {
   /* 본문 스크롤 잠금 — 팝업 뒤 페이지가 같이 스크롤되는 어색함 방지 */
   document.body.style.overflow = 'hidden';
 }
+/* 닫기 시 iframe blank 를 지연시키는 타이머 — 진행 중인 저장이 끝날 때까지 iframe 을 살려둠.
+   - save-done 메시지 도착 → 즉시 blank
+   - 30초 경과 → 안전장치로 강제 blank
+   - 새 팝업 열기 → 강제 blank (위 openGeminaryPopup 분기) */
+let _pendingBlankTimer = null;
+const _BLANK_DELAY_MS = 30000;
 function closeGeminaryPopup() {
   const overlay = document.getElementById('wordPopupOverlay');
   const iframe = document.getElementById('wordPopupIframe');
   const loading = document.getElementById('wordPopupLoading');
-  /* iframe src 비워서 안에서 돌던 검색·이미지 생성 즉시 중단 + 다음 열기 시 깜빡임 방지 */
-  iframe.src = 'about:blank';
+  /* overlay 만 즉시 숨김 — 사용자에게는 닫힌 듯 보임. iframe 은 백그라운드에 살려둬
+     안에서 이미지 생성·저장이 끝까지 진행되도록 함 (A+ 정책). */
   overlay.hidden = true;
-  /* 다음 열기 때 다시 노출되도록 hidden 으로 리셋 */
   if (loading) loading.hidden = true;
   document.body.style.overflow = '';
+  /* 기존 타이머가 남아 있으면 정리 후 새로 설정 */
+  if (_pendingBlankTimer) clearTimeout(_pendingBlankTimer);
+  _pendingBlankTimer = setTimeout(() => {
+    iframe.src = 'about:blank';
+    _pendingBlankTimer = null;
+  }, _BLANK_DELAY_MS);
 }
 /* 발음 듣기 — 브라우저 내장 SpeechSynthesis (vocabulary.html 의 speak() 와 동일 시그니처).
    책 본문 단어는 영어이므로 lang='en-US' 고정. 추가 API 비용 0, 오프라인 동작. */
@@ -3905,6 +3924,17 @@ window.addEventListener('message', (e) => {
   if (e.data.type === 'save-trace') {
     const fn = e.data.level === 'warn' ? console.warn : console.log;
     fn(e.data.tag, e.data.label, e.data.data);
+  }
+  /* save-done: iframe 안에서 saveToSupabase 가 어떤 결과로든(성공/실패/취소) 종료됐음을 알림.
+     pendingBlank 타이머가 살아있다 = 사용자가 닫기 눌렀고 저장 끝나길 기다리는 중.
+     이 메시지 받으면 즉시 iframe blank 해서 백그라운드 자원 회수. */
+  if (e.data.type === 'save-done') {
+    if (_pendingBlankTimer) {
+      clearTimeout(_pendingBlankTimer);
+      _pendingBlankTimer = null;
+      const iframe = document.getElementById('wordPopupIframe');
+      if (iframe) iframe.src = 'about:blank';
+    }
   }
 });
 /* ESC 키로도 팝업 닫기 — 키보드 사용자 편의 */
