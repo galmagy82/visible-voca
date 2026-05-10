@@ -2729,7 +2729,16 @@
             <label data-i18n="quizType">유형</label>
             <select id="quizType">
               <option value="feel" data-i18n="quizTypeFeel">느낌 맞추기</option>
-              <option value="image" data-i18n="quizTypeImage" selected>이미지 보��� 맞추기</option>
+              <option value="image" data-i18n="quizTypeImage" selected>이미지 보고 맞추기</option>
+            </select>
+          </div>
+          <!-- 출제 범위: 단어장 전체 vs 최근 추가분만. user_wordbook.added_at 기준 필터. -->
+          <div class="quiz-option">
+            <label data-i18n="quizScope">출제 범위</label>
+            <select id="quizScope">
+              <option value="all" data-i18n="quizScopeAll" selected>전체</option>
+              <option value="7d" data-i18n="quizScopeRecent7">최근 7일</option>
+              <option value="30d" data-i18n="quizScopeRecent30">최근 30일</option>
             </select>
           </div>
           <div class="quiz-option">
@@ -6460,14 +6469,31 @@ window.quizMyBooksBack = quizMyBooksBack;
 async function startQuiz() {
   const type = document.getElementById('quizType').value;
   const count = parseInt(document.getElementById('quizCount').value);
+  /* 출제 범위 — added_at 기준 시간 필터 (전체/7d/30d). 단어장이 커질수록 "최근 학습 단어 복습" 수요가 커지는 점을 반영. */
+  const scope = document.getElementById('quizScope').value;
   const msgEl = document.getElementById('quizMsg');
 
-  /* 단어장에서 단어 가져오기 (전체 범위) */
+  /* 단어장에서 단어 가져오기 */
   let words = await getWordbookAll();
 
   if (words.length === 0) {
     msgEl.textContent = t('quizNoWords');
     return;
+  }
+
+  /* 범위 필터 — 'all' 외에는 added_at 이 cutoff 이후인 단어만. added_at 누락 row 는 안전하게 제외(시간 지정 모드일 때만). */
+  if (scope === '7d' || scope === '30d') {
+    const days = scope === '7d' ? 7 : 30;
+    const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+    words = words.filter(w => {
+      if (!w.added_at) return false;
+      const ts = Date.parse(w.added_at);
+      return Number.isFinite(ts) && ts >= cutoff;
+    });
+    if (words.length === 0) {
+      msgEl.textContent = t('quizNoWords');
+      return;
+    }
   }
 
   /* 퀴즈 유형별 필요 데이터 확보 */
