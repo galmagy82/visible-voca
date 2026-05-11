@@ -3664,8 +3664,12 @@ async function fetchFromSupabase(word) {
         .getPublicUrl(imageRow.image_path);
 
       /* 캐시 hit — 노출된 텍스트 row 의 hit_count +1 (fire-and-forget, 사용자 흐름 비차단).
-         마이그레이션 20260408010000 / 20260408020000 의 비활성 인프라 활성화. */
-      supabaseClient.rpc('increment_hit_count', { row_id: textRow.id }).catch(() => {});
+         마이그레이션 20260408010000 / 20260408020000 의 비활성 인프라 활성화.
+         주의: supabase-js v2 의 rpc() 는 PostgrestBuilder(thenable) 를 반환해서 .catch 메서드가 없음.
+         .catch 를 직접 부르면 동기적으로 TypeError 가 throw 되어 외부 try/catch 에 잡히고,
+         fetchFromSupabase 가 null 을 리턴하게 되어 — 모든 캐시 히트가 미스로 둔갑하던 버그가 있었음.
+         .then(undefined, ...) 로 reject 핸들러를 직접 전달해서 silent fire-and-forget 보장. */
+      supabaseClient.rpc('increment_hit_count', { row_id: textRow.id }).then(undefined, () => {});
 
       return {
         word: textRow.word,
