@@ -789,6 +789,15 @@
     border-radius: 6px;
   }
   .folder-detail-back:hover { background: #EDECEA; color: #2D2B28; }
+  /* 폴더 이름 + 삭제 버튼을 한 줄에 — 이름은 중앙, 삭제는 우측 끝 absolute.
+     position:relative 안에 absolute 로 띄워 제목 중앙 정렬을 깨지 않게 한다. */
+  .folder-detail-title-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 32px;
+  }
   .folder-detail-title {
     display: block;
     font-size: 1.4rem;
@@ -798,6 +807,28 @@
     word-break: break-word;
     text-align: center;
   }
+  /* 폴더 삭제 — ghost 톤, 위험 동작이라 텍스트만 #C45C5C, hover 시 반전 */
+  .folder-detail-delete {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: 1px solid #D5D2CC;
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-size: 0.8rem;
+    color: #C45C5C;
+    cursor: pointer;
+  }
+  .folder-detail-delete:hover {
+    background: #C45C5C;
+    color: #FFFFFF;
+    border-color: #C45C5C;
+  }
+  /* 위험 동작 버튼 — 책도 함께 삭제 같은 경우 */
+  .modal-btn-danger { background: #C45C5C; color: #FFFFFF; }
+  .modal-btn-danger:hover { background: #A94545; }
   .book-list-empty {
     padding: 60px 20px;
     text-align: center;
@@ -1450,6 +1481,22 @@
     <div class="modal-actions">
       <button class="modal-btn modal-btn-cancel" onclick="closeMoveToFolderModal()" data-i18n="setCancelBtn">취소</button>
       <button class="modal-btn modal-btn-primary" id="moveToFolderConfirmBtn" onclick="confirmMoveToFolder()" data-i18n="readingMoveBookBtn">이동</button>
+    </div>
+  </div>
+</div>
+
+<!-- 폴더 삭제 모달 — 폴더 진입 화면 헤더의 "삭제" 버튼에서 진입.
+     - 빈 폴더: "취소 / 삭제" 두 버튼
+     - 책 있는 폴더: "취소 / 폴더만 삭제(책 보존) / 책도 함께 삭제" 세 버튼
+       openDeleteFolderModal() 가 책 수에 따라 버튼 노출 결정. -->
+<div class="modal-overlay" id="deleteFolderModal" hidden>
+  <div class="modal-card">
+    <div class="modal-title" data-i18n="readingDeleteFolderTitle">폴더 삭제</div>
+    <div class="modal-desc" id="deleteFolderDesc"></div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-cancel" onclick="closeDeleteFolderModal()" data-i18n="setCancelBtn">취소</button>
+      <button class="modal-btn modal-btn-primary" id="deleteFolderKeepBtn" onclick="confirmDeleteFolder(false)" data-i18n="readingDeleteFolderKeepBooks">폴더만 삭제</button>
+      <button class="modal-btn modal-btn-danger" id="deleteFolderWithBooksBtn" onclick="confirmDeleteFolder(true)" data-i18n="readingDeleteFolderWithBooks">책도 함께 삭제</button>
     </div>
   </div>
 </div>
@@ -3172,9 +3219,13 @@ function renderFolderDetail(content, books) {
   const folderName = folder ? folder.name : '';
   const tBack = (typeof t === 'function') ? t('readingFolderBack') : '← My Books';
   const folderBooks = books.filter(b => b.folder_id === _activeFolderId);
+  const tDelete = (typeof t === 'function') ? t('readingDeleteFolderBtn') : '삭제';
   const headerHtml = `<div class="folder-detail-header">
     <button class="folder-detail-back" onclick="exitFolder()">${escapeHtml(tBack)}</button>
-    <span class="folder-detail-title">${escapeHtml(folderName)}</span>
+    <div class="folder-detail-title-row">
+      <span class="folder-detail-title">${escapeHtml(folderName)}</span>
+      <button class="folder-detail-delete" onclick="openDeleteFolderModal('${_activeFolderId}')" data-i18n="readingDeleteFolderBtn">${escapeHtml(tDelete)}</button>
+    </div>
   </div>`;
   if (folderBooks.length === 0) {
     const tEmpty = (typeof t === 'function') ? t('readingFolderEmpty') : '이 폴더에 아직 책이 없어요';
@@ -3370,6 +3421,86 @@ async function deleteBook(bookId) {
     alert((typeof t === 'function') ? t('readingDeleteError') : '책 삭제에 실패했어요');
   }
 }
+
+/* ===== 폴더 삭제 모달 =====
+   진입: 폴더 진입 화면 헤더의 "삭제" 버튼.
+   분기:
+     - 빈 폴더: "폴더만 삭제" 버튼 1개 (책도 함께 삭제 버튼 숨김)
+     - 책 있는 폴더: "폴더만 삭제(책 보존)" + "책도 함께 삭제" 2개
+   DB 동작:
+     - 폴더만 삭제: book_folders DELETE → FK ON DELETE SET NULL 로 책의 folder_id 자동 NULL
+     - 책도 삭제: 책 먼저 DELETE → 폴더 DELETE (순서 무관하나 명시적으로 책부터) */
+let _deletingFolderId = null;
+
+function openDeleteFolderModal(folderId) {
+  _deletingFolderId = folderId;
+  const folder = (_folderListCache || []).find(f => f.id === folderId);
+  const folderName = folder ? folder.name : '';
+  const bookCount = (_bookListCache || []).filter(b => b.folder_id === folderId).length;
+  const desc = document.getElementById('deleteFolderDesc');
+  const keepBtn = document.getElementById('deleteFolderKeepBtn');
+  const withBooksBtn = document.getElementById('deleteFolderWithBooksBtn');
+  /* 설명문 — 빈 폴더 vs 책 있는 폴더 분기. {name}/{n} 치환. */
+  if (bookCount === 0) {
+    const tpl = (typeof t === 'function') ? t('readingDeleteFolderEmptyDesc') : '폴더 "{name}" 을(를) 삭제할까요?';
+    desc.textContent = tpl.replace('{name}', folderName);
+    /* 빈 폴더는 '폴더만 삭제' 버튼만 노출 (= 그냥 삭제), 위험 버튼 숨김 */
+    keepBtn.hidden = false;
+    keepBtn.textContent = (typeof t === 'function') ? t('readingDeleteFolderBtn') : '삭제';
+    withBooksBtn.hidden = true;
+  } else {
+    const tpl = (typeof t === 'function') ? t('readingDeleteFolderHasBooksDesc') : '폴더 "{name}" 에 책 {n}권이 있어요. 어떻게 할까요?';
+    desc.textContent = tpl.replace('{name}', folderName).replace('{n}', bookCount);
+    keepBtn.hidden = false;
+    keepBtn.textContent = (typeof t === 'function') ? t('readingDeleteFolderKeepBooks') : '폴더만 삭제';
+    withBooksBtn.hidden = false;
+    withBooksBtn.textContent = (typeof t === 'function') ? t('readingDeleteFolderWithBooks') : '책도 함께 삭제';
+  }
+  document.getElementById('deleteFolderModal').hidden = false;
+}
+
+function closeDeleteFolderModal() {
+  document.getElementById('deleteFolderModal').hidden = true;
+  _deletingFolderId = null;
+}
+
+async function confirmDeleteFolder(deleteBooks) {
+  const folderId = _deletingFolderId;
+  if (!folderId) return;
+  /* 중복 클릭 방지 — 진행 중 버튼 disable */
+  const keepBtn = document.getElementById('deleteFolderKeepBtn');
+  const withBooksBtn = document.getElementById('deleteFolderWithBooksBtn');
+  keepBtn.disabled = true;
+  withBooksBtn.disabled = true;
+  try {
+    if (deleteBooks) {
+      /* 폴더 안 책 먼저 일괄 DELETE — 폴더 DELETE 보다 먼저 해야 RLS owner 체크가 단순 */
+      const { error: bookErr } = await supabaseClient
+        .from('reading_books')
+        .delete()
+        .eq('folder_id', folderId);
+      if (bookErr) throw bookErr;
+    }
+    /* 폴더 자체 DELETE — deleteBooks=false 면 ON DELETE SET NULL 로 책의 folder_id 만 NULL */
+    const { error: folderErr } = await supabaseClient
+      .from('book_folders')
+      .delete()
+      .eq('id', folderId);
+    if (folderErr) throw folderErr;
+    /* 폴더 화면 빠져나가서 목록 갱신 — _activeFolderId 가 더 이상 유효하지 않으므로 */
+    _activeFolderId = null;
+    closeDeleteFolderModal();
+    await showBookList();
+  } catch (e) {
+    console.error('delete folder 실패:', e);
+    alert((typeof t === 'function') ? t('readingDeleteFolderError') : '폴더 삭제에 실패했어요');
+    keepBtn.disabled = false;
+    withBooksBtn.disabled = false;
+  }
+}
+window.openDeleteFolderModal = openDeleteFolderModal;
+window.closeDeleteFolderModal = closeDeleteFolderModal;
+window.confirmDeleteFolder = confirmDeleteFolder;
 
 /* ===== 책으로 저장 (모달) =====
    자동 저장 도입 후 흐름:
