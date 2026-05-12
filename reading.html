@@ -915,6 +915,14 @@
   .modal-btn-primary { background: #5A8A42; color: #FFFFFF; }
   .modal-btn-primary:hover { background: #4A7335; }
   .modal-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  /* 확인 다이얼로그 변형 — 폼 모달과 달리 제목·설명·버튼 모두 중앙 정렬.
+     iOS/안드로이드 native alert 와 같은 톤. 폼 입력 없는 단순 결정 모달에만 적용.
+     좁은 폭에서 버튼이 줄바꿈될 수 있게 flex-wrap 도 활성. */
+  .modal-card.modal-confirm { text-align: center; }
+  .modal-card.modal-confirm .modal-actions {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
 
   /* 페이지 순서 편집 모달 — 페이지 수가 많아지므로 일반 모달보다 넓고, 리스트 영역은 스크롤 */
   .reorder-modal-card { max-width: 540px; }
@@ -1435,7 +1443,7 @@
      "재시도 중..." 라벨. 재시도 완료 후 전부 성공이면 자동 닫힘, 일부만 성공이면
      남은 실패 페이지로 모달 갱신. -->
 <div class="modal-overlay" id="extractFailedModal" hidden>
-  <div class="modal-card">
+  <div class="modal-card modal-confirm">
     <div class="modal-title" data-i18n="readingExtractFailedTitle">추출 실패</div>
     <div class="modal-desc" id="extractFailedDesc"></div>
     <div class="modal-actions">
@@ -1490,7 +1498,7 @@
      - 책 있는 폴더: "취소 / 폴더만 삭제(책 보존) / 책도 함께 삭제" 세 버튼
        openDeleteFolderModal() 가 책 수에 따라 버튼 노출 결정. -->
 <div class="modal-overlay" id="deleteFolderModal" hidden>
-  <div class="modal-card">
+  <div class="modal-card modal-confirm">
     <div class="modal-title" data-i18n="readingDeleteFolderTitle">폴더 삭제</div>
     <div class="modal-desc" id="deleteFolderDesc"></div>
     <div class="modal-actions">
