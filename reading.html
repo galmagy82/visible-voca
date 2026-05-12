@@ -3440,6 +3440,10 @@ function openDeleteFolderModal(folderId) {
   const desc = document.getElementById('deleteFolderDesc');
   const keepBtn = document.getElementById('deleteFolderKeepBtn');
   const withBooksBtn = document.getElementById('deleteFolderWithBooksBtn');
+  /* 이전 삭제 진행 중 잠갔던 disabled 상태가 DOM 에 남아 있을 수 있음 — 매 진입마다 초기화.
+     성공 시 closeDeleteFolderModal 이 모달만 숨기고 버튼 상태는 건드리지 않기 때문. */
+  keepBtn.disabled = false;
+  withBooksBtn.disabled = false;
   /* 설명문 — 빈 폴더 vs 책 있는 폴더 분기. {name}/{n} 치환. */
   if (bookCount === 0) {
     const tpl = (typeof t === 'function') ? t('readingDeleteFolderEmptyDesc') : '폴더 "{name}" 을(를) 삭제할까요?';
