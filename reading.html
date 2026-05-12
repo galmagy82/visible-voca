@@ -2984,7 +2984,17 @@ function scrollToStudyItem(pageIdx, itemIdx) {
   /* details 가 닫혀있으면 펼침 */
   const details = el.closest('details');
   if (details && !details.open) details.open = true;
-  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  /* scrollIntoView({block:'center'}) 대신 window 만 직접 스크롤.
+     다중 페이지 책에서 .book-stage 는 가로로 넓은 .page-track 을 overflow:hidden 으로 클립하는데,
+     이 때문에 브라우저가 stage 를 "스크롤 가능 컨테이너" 로 인식해서 scrollIntoView 가
+     stage 자체에도 세로 scrollTop 을 적용한다. 결과: 본문이 stage 위로 잘리고 학습단어 아래
+     빈 공간이 노출됨. window 만 스크롤하면 stage 내부 스크롤이 발생하지 않아 두 증상 모두 사라짐.
+     RAF 로 한 틱 늦춰 details.open 변경 후의 layout 재계산을 보장. */
+  requestAnimationFrame(() => {
+    const rect = el.getBoundingClientRect();
+    const targetY = window.scrollY + rect.top - (window.innerHeight / 2) + (rect.height / 2);
+    window.scrollTo({ top: targetY, behavior: 'smooth' });
+  });
   el.classList.add('flash');
   /* 1.2s 동안 진한 배경 유지 후 transition(0.6s) 으로 부드럽게 페이드아웃 */
   setTimeout(() => el.classList.remove('flash'), 1200);
