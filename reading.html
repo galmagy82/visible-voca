@@ -570,6 +570,13 @@
     margin-left: 12px;
   }
   .meaning-toggle-btn {
+    /* user-agent 기본 스타일 제거 + 콘텐츠 강제 중앙 정렬 — iOS Safari 의 native 버튼 padding 비대칭 등 우회.
+       text-align 대신 inline-flex + justify-content 로 텍스트 노드를 가운데로 강제. */
+    -webkit-appearance: none;
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     padding: 3px 10px;
     font-size: 0.75rem;
     border: none;
@@ -577,9 +584,9 @@
     color: #6B6660;
     cursor: pointer;
     transition: background 0.15s, color 0.15s;
-    /* 두 버튼 너비 동일 보장 — min-width 가 더 짧은 라벨 쪽도 같은 너비로 패딩 */
-    min-width: 4.5em;
-    text-align: center;
+    /* 두 버튼 너비 동일 보장 — "My Lang"(자연 너비 ~5.8em) 보다 크게 잡아야 양쪽이 같은 너비로 통일됨.
+       4.5em 이면 My Lang 은 자연 너비, Eng 만 padding 되어 비대칭 발생. */
+    min-width: 6em;
     box-sizing: border-box;
   }
   .meaning-toggle-btn:hover:not(.active) { background: #EDECEA; color: #4A4641; }
