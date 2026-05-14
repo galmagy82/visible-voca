@@ -560,10 +560,10 @@
   /* 모국어/영어 토글 — pill 형 두 버튼 인접. summary 안에 있어 click 전파 방지 필요.
      margin-left 로 제목과 거리 추가 확보 (summary gap 8px + margin 12px = 20px 간격). */
   .study-meaning-toggle {
-    /* inline-grid + 1fr 1fr 로 두 버튼 너비 동일하게 — 라벨 폭이 언어별로 달라도(예: "My Lang" vs "English")
-       양쪽 칸이 max 자연 너비로 균일해진다. inline-flex 였을 때는 각자 자연 너비라 시각 균형 깨짐. */
-    display: inline-grid;
-    grid-template-columns: 1fr 1fr;
+    /* inline-flex + 각 버튼 min-width 로 두 칸 너비 동일하게 강제.
+       이전 inline-grid + 1fr 1fr 방식은 일부 모바일 브라우저에서 트랙 균등 계산이 불안정.
+       min-width 4.5em(0.75rem × 4.5 ≈ 54px) 가 다국어 라벨 ("My Lang"/"English"/"모국어"/"영어" 등) 모두 수용. */
+    display: inline-flex;
     border: 1px solid #D5D2CC;
     border-radius: 999px;
     overflow: hidden;
@@ -577,8 +577,10 @@
     color: #6B6660;
     cursor: pointer;
     transition: background 0.15s, color 0.15s;
-    /* grid 칸 안에서 중앙 정렬 — 두 버튼 시각 정돈 */
+    /* 두 버튼 너비 동일 보장 — min-width 가 더 짧은 라벨 쪽도 같은 너비로 패딩 */
+    min-width: 4.5em;
     text-align: center;
+    box-sizing: border-box;
   }
   .meaning-toggle-btn:hover:not(.active) { background: #EDECEA; color: #4A4641; }
   .meaning-toggle-btn.active {
