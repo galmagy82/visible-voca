@@ -708,7 +708,7 @@ const I18N = {
     readingGeRequiredDesc: 'Novel Reading needs your level to recommend words tailored to you',
     readingMeaningLangLabel: 'Word meaning language',
     readingMeaningLangNative: 'My Lang',
-    readingMeaningLangEn: 'English',
+    readingMeaningLangEn: 'Eng',
 
     /* Welcome page top brand origin line */
     brandOrigin: 'An AI English app for kids reading novels',
