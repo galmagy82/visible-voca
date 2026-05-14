@@ -548,6 +548,8 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    /* 모바일 좁은 폭에서 토글이 다음 줄로 자연스럽게 떨어지게 — PC 는 한 줄에 다 들어가서 wrap 발생 안 함. */
+    flex-wrap: wrap;
   }
   .study-list-summary::before {
     content: '▸';
