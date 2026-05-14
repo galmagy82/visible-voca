@@ -22,17 +22,36 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 }
 
+/* feeling 필드 description — 언어별로 분기.
+   원래 한국어 description 만 있어서 영어 UI 사용자가 영어 프롬프트를 보내도
+   스키마의 한국어 가이드("~예요", "~다") 가 system instruction 처럼 작용해
+   한국어 응답이 섞이는 버그가 있었음 (id 1013 dictionary 등 다수 사례 확인).
+   각 언어가 자기 언어의 자연스러운 종결·예시로 가이드받게 분리.
+   lang 미전송(undefined) 시 'ko' 로 폴백 — 구버전 프론트 호환·롤백 안전. */
+const FEELING_DESCRIPTIONS: Record<string, string> = {
+  ko: `문장 단위 배열. 어휘 모드: 정확히 2개 원소. [0]="큰따옴표로 감싼 핵심 느낌" + 자연스러운 서술어로 완결된 문장. [1]=비유나 구체적 장면 묘사 문장. 각 원소는 완결된 종결어미(~다/~예요/~해요 등)로 끝낼 것. "~는", "~ㄴ" 같은 수식어 형태로 끝나는 미완성 문장 금지. 예: ["\"하나였던 것이 딱 갈라지는\" 이미지예요.", "나무를 도끼로 쪼개는 장면을 떠올려보세요."] 표현 모드: 입력의 자연스러운 한국어 번역 1-2개 원소 배열, 구어체.`,
+  en: `Array of complete sentences in English. Vocab mode: exactly 2 elements. [0]="core feeling in double quotes" + a complete sentence with a natural predicate. [1]=an analogy or concrete scene description as a complete sentence. Each element must be a grammatically complete English sentence ending with proper punctuation. No fragments or trailing modifiers. Example: ["The image of \"something splitting cleanly in two.\"", "Picture cracking a log with an axe."] Expression mode: natural English paraphrase of the input, 1-2 element array, conversational tone. Always write in English.`,
+  ja: `文単位の配列(日本語)。語彙モード: 正確に2要素。[0]="二重引用符で囲んだ核心の感覚" + 自然な述語で完結した文。[1]=比喩や具体的な場面描写の文。各要素は完結した終止形(~です/~ます/~でしょう など)で終わること。連体形のような未完成形は禁止。例: ["\"ひとつだったものがすっぱり割れる\"イメージです。", "木を斧で割る場面を思い浮かべてください。"] 表現モード: 入力の自然な日本語訳、1-2要素の配列、会話調。必ず日本語で書くこと。`,
+  zh: `完整句子的数组(中文)。词汇模式: 正好2个元素。[0]="用双引号包围的核心感觉" + 一个自然完整的句子。[1]=比喻或具体场景描写的完整句子。每个元素必须以完整的句子结尾,有适当标点。禁止以"的"、"地"等修饰语形式结尾。示例: ["\"原本一体的东西干净利落地分开\"的画面。", "想象用斧头劈开一根原木的场景。"] 表达模式: 输入的自然中文翻译, 1-2个元素的数组, 口语化。务必用中文书写。`,
+  es: `Array de oraciones completas en español. Modo Vocab: exactamente 2 elementos. [0]="sensación central entre comillas" + una oración natural completa. [1]=una analogía o descripción de escena concreta como oración completa. Cada elemento debe ser una oración gramaticalmente completa terminada con puntuación adecuada. Sin fragmentos. Ejemplo: ["La imagen de \"algo separándose limpiamente.\"", "Imagina partir un tronco con un hacha."] Modo Expression: paráfrasis natural en español del input, array de 1-2 elementos, tono conversacional. Escribir siempre en español.`,
+  vi: `Mảng các câu hoàn chỉnh tiếng Việt. Chế độ Vocab: chính xác 2 phần tử. [0]="cảm giác cốt lõi trong dấu ngoặc kép" + một câu hoàn chỉnh tự nhiên. [1]=một so sánh hoặc mô tả cảnh cụ thể dưới dạng câu hoàn chỉnh. Mỗi phần tử phải là câu ngữ pháp hoàn chỉnh có dấu câu. Không có cụm từ chưa hoàn chỉnh. Ví dụ: ["Hình ảnh của \"thứ tách rời gọn gàng.\"", "Hãy tưởng tượng cảnh bổ một khúc gỗ bằng rìu."] Chế độ Expression: bản dịch tự nhiên sang tiếng Việt của input, mảng 1-2 phần tử, văn nói. Luôn viết bằng tiếng Việt.`,
+  th: `อาร์เรย์ของประโยคที่สมบูรณ์ภาษาไทย โหมด Vocab: ต้องมี 2 องค์ประกอบเท่านั้น [0]="ความรู้สึกหลักในเครื่องหมายคำพูด" + ประโยคที่สมบูรณ์เป็นธรรมชาติ [1]=การเปรียบเทียบหรือคำอธิบายฉากที่เป็นรูปธรรมในรูปประโยคสมบูรณ์ แต่ละองค์ประกอบต้องเป็นประโยคที่สมบูรณ์ ห้ามใช้วลีที่ไม่สมบูรณ์ ตัวอย่าง: ["ภาพของ\"สิ่งที่แยกออกจากกันอย่างสะอาด\"", "นึกถึงการผ่าท่อนไม้ด้วยขวาน"] โหมด Expression: คำแปลภาษาไทยที่เป็นธรรมชาติของ input อาร์เรย์ 1-2 องค์ประกอบ น้ำเสียงสนทนา ต้องเขียนเป็นภาษาไทยเสมอ`,
+  pt: `Array de frases completas em português. Modo Vocab: exatamente 2 elementos. [0]="sensação central entre aspas" + uma frase natural completa. [1]=uma analogia ou descrição de cena concreta como frase completa. Cada elemento deve ser uma frase gramaticalmente completa terminada com pontuação adequada. Sem fragmentos. Exemplo: ["A imagem de \"algo se separando limpamente.\"", "Imagine rachar um tronco com um machado."] Modo Expression: paráfrase natural em português do input, array de 1-2 elementos, tom conversacional. Sempre escrever em português.`,
+}
+
 /* Gemini 텍스트 생성 호출
    jsonMode: true 이면 responseSchema 를 포함해 구조화 JSON 응답을 강제한다.
-   현재 한국어 프롬프트에서만 사용. 롤백: 프론트에서 jsonMode 를 보내지 않으면
-   기존 태그 방식으로 자동 폴백 (이 함수 변경 없이 복구 가능). */
-async function callGeminiText(prompt: string, apiKey: string, jsonMode?: boolean) {
+   lang: UI 언어 — feeling description 을 해당 언어로 분기. 미전송 시 한국어 폴백.
+   롤백: 프론트에서 jsonMode 를 보내지 않으면 기존 태그 방식으로 자동 폴백.
+        프론트에서 lang 만 빠지면 한국어 description 사용 (즉시 롤백 안전망). */
+async function callGeminiText(prompt: string, apiKey: string, jsonMode?: boolean, lang?: string) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`
   const generationConfig: Record<string, unknown> = { temperature: 0.7, maxOutputTokens: 8192 }
 
   /* JSON 구조화 출력 — 모든 필드를 required 로 선언해 Gemini 가 누락할 수 없게 강제.
      어휘 모드가 아닌 필드(pos, ipa 등)는 빈 문자열("")로 채워진다. */
   if (jsonMode) {
+    const feelingDesc = FEELING_DESCRIPTIONS[lang || 'ko'] || FEELING_DESCRIPTIONS.ko
     generationConfig.responseMimeType = "application/json"
     generationConfig.responseSchema = {
       type: "OBJECT",
@@ -46,8 +65,8 @@ async function callGeminiText(prompt: string, apiKey: string, jsonMode?: boolean
         scene_en:    { type: "STRING", description: "이미지 생성용 영어 장면 묘사. 어휘 모드만" },
         // feeling: 문장 단위 배열로 반환하여 프론트에서 줄바꿈 렌더링에 사용
         // - 어휘 모드: [핵심 느낌 문장, 비유/장면 묘사 문장] (정확히 2개 원소)
-        // - 표현 모드: 입력의 자연스러운 한국어 번역 (1-2개 원소)
-        feeling:     { type: "ARRAY", items: { type: "STRING" }, description: `문장 단위 배열. 어휘 모드: 정확히 2개 원소. [0]="큰따옴표로 감싼 핵심 느낌" + 자연스러운 서술어로 완결된 문장. [1]=비유나 구체적 장면 묘사 문장. 각 원소는 완결된 종결어미(~다/~예요/~해요 등)로 끝낼 것. "~는", "~ㄴ" 같은 수식어 형태로 끝나는 미완성 문장 금지. 예: ["\"하나였던 것이 딱 갈라지는\" 이미지예요.", "나무를 도끼로 쪼개는 장면을 떠올려보세요."] 표현 모드: 입력의 자연스러운 한국어 번역 1-2개 원소 배열, 구어체.` },
+        // - 표현 모드: 입력의 자연스러운 모국어 번역 (1-2개 원소)
+        feeling:     { type: "ARRAY", items: { type: "STRING" }, description: feelingDesc },
         examples:    { type: "ARRAY", description: "예문/풀이 블록. 한 줄 = 한 원소. [noun] 등 품사 라벨, 빈 줄(\"\")도 각각 원소로.", items: { type: "STRING" } },
       },
       required: ["corrected", "source_lang", "pos", "ipa", "cefr", "verb_forms", "scene_en", "feeling", "examples"],
@@ -766,9 +785,10 @@ Deno.serve(async (req) => {
           )
         }
         /* 텍스트 생성과 사용량 카운트를 병렬 실행
-           jsonMode: 프론트가 true 를 보내면 Gemini JSON 구조화 응답 활성화 */
+           jsonMode: 프론트가 true 를 보내면 Gemini JSON 구조화 응답 활성화
+           lang: feeling description 을 UI 언어로 분기 (미전송 시 ko 폴백) */
         const [text] = await Promise.all([
-          callGeminiText(prompt, apiKey, body.jsonMode),
+          callGeminiText(prompt, apiKey, body.jsonMode, body.lang),
           incrementTrialCount(userId)
         ])
         result = { text }

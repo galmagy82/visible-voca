@@ -4392,10 +4392,12 @@ input.addEventListener('keydown', e => {
 
 // --- API 호출 (Edge Function 경유) ---
 /* jsonMode: true 이면 Edge Function 이 Gemini responseSchema 를 활성화해
-   구조화 JSON 응답을 강제한다. 현재 한국어(ko)에서만 사용.
+   구조화 JSON 응답을 강제한다.
+   lang: Edge Function 의 feeling description 을 UI 언어로 분기시키기 위해 전달.
+         미전송 시 엣지 함수가 'ko' 로 폴백 — 옛 프론트 호환·롤백 안전망.
    롤백: isJsonMode() 가 false 를 반환하면 자동으로 기존 태그 방식 폴백. */
 async function callSearch(prompt, jsonMode) {
-  const payload = { action: 'search', userId: getUserId(), prompt };
+  const payload = { action: 'search', userId: getUserId(), prompt, lang: getLang() };
   if (jsonMode) payload.jsonMode = true;
   const res = await fetch(EDGE_FUNCTION_URL, {
     method: 'POST',
