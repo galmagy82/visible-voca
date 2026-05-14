@@ -707,7 +707,7 @@ const I18N = {
     readingGeRequiredTitle: 'Your English level is needed',
     readingGeRequiredDesc: 'Novel Reading needs your level to recommend words tailored to you',
     readingMeaningLangLabel: 'Word meaning language',
-    readingMeaningLangNative: 'My language',
+    readingMeaningLangNative: 'My Lang',
     readingMeaningLangEn: 'English',
 
     /* Welcome page top brand origin line */
