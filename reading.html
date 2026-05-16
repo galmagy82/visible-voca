@@ -415,6 +415,19 @@
     0%   { transform: translateX(0); }
     100% { transform: translateX(400%); }
   }
+  /* 로딩 화면 광고 슬롯 — 진행 바 아래 ~48px 여백. 반응형 광고가 자동으로 크기 결정.
+     "광고" 라벨은 AdSense 정책상 콘텐츠와 광고를 명확히 구분하기 위한 표기. */
+  .loading-ad-slot {
+    max-width: 336px;
+    margin: 48px auto 0;
+  }
+  .loading-ad-label {
+    font-size: 0.7rem;
+    color: #B0AAA3;
+    margin-bottom: 6px;
+    text-align: center;
+    letter-spacing: 0.04em;
+  }
   .loading-progress {
     margin-top: 8px;
     font-size: 0.85rem;
@@ -1418,6 +1431,17 @@
       <div class="loading-bar-fill" id="loadingBarFill"></div>
       <div class="loading-bar-shimmer"></div>
     </div>
+    <!-- AdSense 디스플레이 광고 슬롯 — 승인 후 data-ad-slot 에 슬롯 ID 채워 활성화.
+         슬롯 ID 비어 있는 동안은 pushLoadingAdOnce 가 push 호출 자체를 스킵해 빈 자리만 유지. -->
+    <div class="loading-ad-slot">
+      <div class="loading-ad-label" data-i18n="adLabel">광고</div>
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-1958636192282049"
+           data-ad-slot=""
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+    </div>
   </div>
 
   <!-- 내 책 목록 (저장된 책 카드 그리드).
@@ -2256,6 +2280,7 @@ async function handlePhotos(inputEl) {
   document.getElementById('bookViewer').hidden = true;
   document.getElementById('bookListArea').hidden = true;
   document.getElementById('loadingArea').hidden = false;
+  pushLoadingAdOnce();
   /* 로딩 화면에선 크레딧 배지 숨김 — updateTopBackLink 가 화면 상태 따라 토글 */
   updateTopBackLink();
   _completedCount = 0;
@@ -2581,6 +2606,23 @@ function updateLoadingProgress(done, total) {
   const fill = document.getElementById('loadingBarFill');
   if (text) text.textContent = total ? `${done} / ${total}` : '';
   if (fill) fill.style.width = total ? `${(done / total) * 100}%` : '0%';
+}
+
+/* AdSense 로딩 화면 광고 1회 push — loadingArea 가 처음 보일 때 호출.
+   data-ad-slot 이 비어 있는 동안엔 (승인 전) push 자체를 skip 해 콘솔 에러 방지.
+   AdSense 승인 후 광고 단위 만들면 발급되는 슬롯 ID 를 .loading-ad-slot 의 ins 의
+   data-ad-slot 속성에 채우면 자동으로 게재 시작. */
+let _loadingAdPushed = false;
+function pushLoadingAdOnce() {
+  if (_loadingAdPushed) return;
+  const ins = document.querySelector('.loading-ad-slot .adsbygoogle');
+  if (!ins || !ins.getAttribute('data-ad-slot')) return;
+  try {
+    (window.adsbygoogle = window.adsbygoogle || []).push({});
+    _loadingAdPushed = true;
+  } catch (e) {
+    console.warn('AdSense push 실패:', e);
+  }
 }
 
 /* 로딩 단계 라벨 변경 — 2-phase 파이프라인의 phase 별로 호출.
@@ -3398,6 +3440,7 @@ async function openSavedBook(bookId) {
      진행률 의미 없으므로 shimmer 만 흐르도록 (0/0). */
   updateLoadingProgress(0, 0);
   document.getElementById('loadingArea').hidden = false;
+  pushLoadingAdOnce();
   try {
     const { data, error } = await supabaseClient
       .from('reading_books')

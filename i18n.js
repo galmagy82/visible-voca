@@ -238,6 +238,7 @@ const I18N = {
     startBtn: '시작하기',
     feedback: '의견 보내기',
     aboutLink: '소개',
+    adLabel: '광고',
     apiModalTitle: 'API 키 등록',
     saveAndStart: '저장 후 시작',
 
@@ -599,6 +600,7 @@ const I18N = {
     startBtn: 'Get Started',
     feedback: 'Feedback',
     aboutLink: 'About',
+    adLabel: 'Advertisement',
     apiModalTitle: 'Register API Key',
     saveAndStart: 'Save & Start',
 
@@ -953,6 +955,7 @@ const I18N = {
     startBtn: '始める',
     feedback: 'フィードバック',
     aboutLink: '紹介',
+    adLabel: '広告',
     apiModalTitle: 'APIキー登録',
     saveAndStart: '保存して開始',
 
@@ -1308,6 +1311,7 @@ const I18N = {
     startBtn: '开始',
     feedback: '意见反馈',
     aboutLink: '关于',
+    adLabel: '广告',
     apiModalTitle: 'API密钥注册',
     saveAndStart: '保存并开始',
 
@@ -1662,6 +1666,7 @@ const I18N = {
     startBtn: 'Empezar',
     feedback: 'Comentarios',
     aboutLink: 'Acerca de',
+    adLabel: 'Publicidad',
     apiModalTitle: 'Registrar clave API',
     saveAndStart: 'Guardar e iniciar',
 
@@ -2016,6 +2021,7 @@ const I18N = {
     startBtn: 'Bắt đầu',
     feedback: 'Góp ý',
     aboutLink: 'Giới thiệu',
+    adLabel: 'Quảng cáo',
     apiModalTitle: 'Đăng ký khóa API',
     saveAndStart: 'Lưu & bắt đầu',
 
@@ -2370,6 +2376,7 @@ const I18N = {
     startBtn: 'เริ่มต้น',
     feedback: 'ส่งความคิดเห็น',
     aboutLink: 'เกี่ยวกับ',
+    adLabel: 'โฆษณา',
     apiModalTitle: 'ลงทะเบียนคีย์ API',
     saveAndStart: 'บันทึกและเริ่ม',
 
@@ -2724,6 +2731,7 @@ const I18N = {
     startBtn: 'Começar',
     feedback: 'Feedback',
     aboutLink: 'Sobre',
+    adLabel: 'Publicidade',
     apiModalTitle: 'Registrar chave API',
     saveAndStart: 'Salvar e iniciar',
 
