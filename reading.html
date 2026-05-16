@@ -421,6 +421,9 @@
     max-width: 336px;
     margin: 48px auto 0;
   }
+  /* 슬롯 ID 비어 있는 동안 (AdSense 승인 전) 광고 영역 전체 숨김 — "광고" 라벨만 덩그러니 보이는 어색함 방지.
+     승인 후 data-ad-slot 채워 넣으면 조건 깨져 자동 노출. */
+  .loading-ad-slot:has(.adsbygoogle[data-ad-slot=""]) { display: none; }
   .loading-ad-label {
     font-size: 0.7rem;
     color: #B0AAA3;
