@@ -1,0 +1,249 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>소개 · Geminary</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg?v=3">
+<!-- SEO 메타태그 -->
+<meta name="description" content="Geminary 소개 — AI 이미지로 영어 단어를 학습하는 다국어 어휘 서비스. 개발자·연락처·서비스 가치 안내.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://geminary.app/about.html">
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Geminary">
+<meta property="og:title" content="소개 · Geminary">
+<meta property="og:description" content="Geminary 는 AI 이미지로 영어 단어를 시각·문맥과 함께 학습하는 서비스입니다.">
+<meta property="og:url" content="https://geminary.app/about.html">
+<meta property="og:image" content="https://geminary.app/favicon.svg?v=3">
+<meta property="og:locale" content="ko_KR">
+<!-- 다국어 지원 (getLang()만 사용) -->
+<script src="i18n.js?v=20260514a"></script>
+<style>
+  /* privacy.html 과 동일한 톤 — 톤·구조 통일성 유지 */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif;
+    background: #F7F6F3;
+    color: #2D2B28;
+    min-height: 100vh;
+    padding: 40px 20px 80px;
+    line-height: 1.7;
+  }
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #6B6660;
+    text-decoration: none;
+    font-size: 0.9rem;
+    margin-bottom: 32px;
+    transition: color 0.2s;
+  }
+  .back-link:hover { color: #2D2B28; }
+  h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+  }
+  .tagline {
+    color: #8A8078;
+    font-size: 0.9rem;
+    margin-bottom: 32px;
+  }
+  .intro {
+    background: #FFFFFF;
+    border: 1px solid #E5E2DE;
+    border-radius: 12px;
+    padding: 20px 22px;
+    margin-bottom: 28px;
+    color: #4A4641;
+  }
+  section { margin-bottom: 28px; }
+  h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #2D2B28;
+  }
+  p { margin-bottom: 10px; color: #4A4641; }
+  ul {
+    margin-left: 20px;
+    margin-bottom: 10px;
+    color: #4A4641;
+  }
+  li { margin-bottom: 6px; }
+  a { color: #5A8A42; }
+  /* 우상단 언어 토글 */
+  .lang-toggle {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    display: flex;
+    gap: 12px;
+    font-size: 0.85rem;
+  }
+  .lang-toggle a {
+    color: #8A8078;
+    text-decoration: none;
+    padding: 4px 8px;
+    border-radius: 6px;
+  }
+  .lang-toggle a.active {
+    color: #2D2B28;
+    background: #EDECEA;
+    font-weight: 600;
+  }
+  .lang-section { display: none; }
+  .lang-section.active { display: block; }
+</style>
+
+<!-- Google AdSense — 사이트 검증 + 광고 로딩. 모든 페이지 head 에 동일하게 삽입 (publisher ID 공통). -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1958636192282049"
+     crossorigin="anonymous"></script>
+</head>
+<body>
+
+<!-- 우상단 언어 토글: KO / EN -->
+<div class="lang-toggle">
+  <a href="#" data-lang="ko" id="langKo">한국어</a>
+  <a href="#" data-lang="en" id="langEn">English</a>
+</div>
+
+<div class="container">
+  <a href="index.html" class="back-link">← <span id="backLabel">돌아가기</span></a>
+
+  <!-- ===== 한국어 ===== -->
+  <div class="lang-section" id="section-ko">
+    <h1>Geminary 소개</h1>
+    <div class="tagline">AI 이미지와 함께 배우는 영어 어휘</div>
+
+    <div class="intro">
+      Geminary 는 영어 단어를 텍스트뿐 아니라 <strong>AI 가 생성한 이미지</strong> 와 함께 학습할 수 있는 무료 어휘 서비스입니다.
+      단어의 의미·발음·예문에 시각적 맥락을 더해, 학습한 단어가 더 오래 기억에 남도록 돕습니다.
+    </div>
+
+    <section>
+      <h2>주요 기능</h2>
+      <ul>
+        <li><strong>이미지 단어 검색</strong> — 단어를 검색하면 AI 가 그 단어의 느낌·장면을 일러스트로 생성</li>
+        <li><strong>책 사진 학습</strong> — 영어 책 페이지를 사진으로 업로드하면 OCR + AI 분석으로 학습 단어 자동 추출</li>
+        <li><strong>개인 단어장</strong> — 검색·학습한 단어를 모아 두고 자유롭게 다시 보기</li>
+        <li><strong>퀴즈</strong> — 이미지로 또는 예문으로 단어 4지선다 퀴즈 풀이</li>
+        <li><strong>8개 언어 지원</strong> — 한국어·영어·일본어·중국어·스페인어·베트남어·태국어·포르투갈어</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>개발 배경</h2>
+      <p>
+        영어 단어를 사전 정의만 보고 외우면 잊기 쉽지만, 그 단어가 어떤 장면·느낌과 연결되어 있는지 시각화하면 기억에 오래 남습니다.
+        Geminary 는 이 학습 원리를 실제 도구로 구현해, 학습자가 한 단어를 깊이 이해할 수 있게 설계했습니다.
+      </p>
+    </section>
+
+    <section>
+      <h2>운영자</h2>
+      <ul>
+        <li>개발자: 정연성</li>
+        <li>이메일: <a href="mailto:galmagy82@gmail.com">galmagy82@gmail.com</a></li>
+        <li>문의 채널: <a href="https://open.kakao.com/o/pgDSZSoi" target="_blank">Kakao 오픈채팅</a></li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>운영 방식</h2>
+      <p>
+        Geminary 는 개인 개발자가 운영하는 무료 서비스로, 운영 비용은 광고를 통해 충당합니다.
+        사용자에게 별도 결제·구독을 요구하지 않으며, 모든 핵심 기능은 무료로 제공됩니다.
+      </p>
+    </section>
+
+    <section>
+      <h2>관련 안내</h2>
+      <ul>
+        <li><a href="privacy.html">개인정보처리방침</a></li>
+      </ul>
+    </section>
+  </div>
+
+  <!-- ===== English ===== -->
+  <div class="lang-section" id="section-en">
+    <h1>About Geminary</h1>
+    <div class="tagline">Learn English vocabulary with AI-generated images</div>
+
+    <div class="intro">
+      Geminary is a free vocabulary service that lets you learn English words together with <strong>AI-generated images</strong>.
+      By pairing each word's meaning, pronunciation, and examples with a visual context, the words you study stay in memory longer.
+    </div>
+
+    <section>
+      <h2>Key Features</h2>
+      <ul>
+        <li><strong>Image word search</strong> — Search a word and the AI generates an illustration that captures its feel</li>
+        <li><strong>Book photo learning</strong> — Upload photos of an English book and OCR + AI extracts study words automatically</li>
+        <li><strong>Personal wordbook</strong> — Save and revisit the words you've searched or studied</li>
+        <li><strong>Quiz</strong> — Multiple-choice quizzes using either images or example sentences</li>
+        <li><strong>8 languages supported</strong> — Korean, English, Japanese, Chinese, Spanish, Vietnamese, Thai, Portuguese</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Why We Built This</h2>
+      <p>
+        Memorizing English words from dictionary definitions alone is fragile. When a word is linked to a scene or feeling, it stays in memory far longer.
+        Geminary turns that learning principle into a practical tool so learners can understand each word more deeply.
+      </p>
+    </section>
+
+    <section>
+      <h2>Operator</h2>
+      <ul>
+        <li>Developer: Yeonseong Jeong</li>
+        <li>Email: <a href="mailto:galmagy82@gmail.com">galmagy82@gmail.com</a></li>
+        <li>Chat: <a href="https://open.kakao.com/o/pgDSZSoi" target="_blank">Kakao Open Chat</a></li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>How the Service Operates</h2>
+      <p>
+        Geminary is a free service run by an independent developer. Operating costs are covered by advertising —
+        users are not asked to pay or subscribe, and all core features are free.
+      </p>
+    </section>
+
+    <section>
+      <h2>Related Pages</h2>
+      <ul>
+        <li><a href="privacy.html">Privacy Policy</a></li>
+      </ul>
+    </section>
+  </div>
+</div>
+
+<script>
+/* 현재 언어 감지 — i18n.js의 getLang() 사용. 지원: ko/en. 그 외 → en 폴백. */
+function showLang(lang) {
+  const supported = ['ko', 'en'];
+  const target = supported.includes(lang) ? lang : 'en';
+  document.querySelectorAll('.lang-section').forEach(el => el.classList.remove('active'));
+  document.getElementById('section-' + target).classList.add('active');
+  document.querySelectorAll('.lang-toggle a').forEach(a => a.classList.toggle('active', a.dataset.lang === target));
+  document.getElementById('backLabel').textContent = (target === 'ko') ? '돌아가기' : 'Back';
+  document.documentElement.lang = target;
+}
+const initialLang = (typeof getLang === 'function') ? getLang() : 'ko';
+showLang(initialLang);
+document.querySelectorAll('.lang-toggle a').forEach(a => {
+  a.addEventListener('click', (e) => { e.preventDefault(); showLang(a.dataset.lang); });
+});
+</script>
+</body>
+</html>

@@ -237,6 +237,7 @@ const I18N = {
     heroQuestion: '단어를 외워도<br><span class="em">금방 까먹는 이유,</span><br>알고 계신가요?',
     startBtn: '시작하기',
     feedback: '의견 보내기',
+    aboutLink: '소개',
     apiModalTitle: 'API 키 등록',
     saveAndStart: '저장 후 시작',
 
@@ -597,6 +598,7 @@ const I18N = {
     heroQuestion: 'Ever wonder why<br><span class="em">you keep forgetting words</span><br>you just learned?',
     startBtn: 'Get Started',
     feedback: 'Feedback',
+    aboutLink: 'About',
     apiModalTitle: 'Register API Key',
     saveAndStart: 'Save & Start',
 
@@ -950,6 +952,7 @@ const I18N = {
     heroQuestion: '単語を覚えても<br><span class="em">すぐ忘れてしまう理由、</span><br>知っていますか？',
     startBtn: '始める',
     feedback: 'フィードバック',
+    aboutLink: '紹介',
     apiModalTitle: 'APIキー登録',
     saveAndStart: '保存して開始',
 
@@ -1304,6 +1307,7 @@ const I18N = {
     heroQuestion: '背了单词<br><span class="em">却总是忘记的原因，</span><br>你知道吗？',
     startBtn: '开始',
     feedback: '意见反馈',
+    aboutLink: '关于',
     apiModalTitle: 'API密钥注册',
     saveAndStart: '保存并开始',
 
@@ -1657,6 +1661,7 @@ const I18N = {
     heroQuestion: '¿Te preguntas por qué<br><span class="em">siempre olvidas las palabras</span><br>que acabas de aprender?',
     startBtn: 'Empezar',
     feedback: 'Comentarios',
+    aboutLink: 'Acerca de',
     apiModalTitle: 'Registrar clave API',
     saveAndStart: 'Guardar e iniciar',
 
@@ -2010,6 +2015,7 @@ const I18N = {
     heroQuestion: 'Bạn có thắc mắc<br><span class="em">tại sao cứ quên từ</span><br>vừa mới học không?',
     startBtn: 'Bắt đầu',
     feedback: 'Góp ý',
+    aboutLink: 'Giới thiệu',
     apiModalTitle: 'Đăng ký khóa API',
     saveAndStart: 'Lưu & bắt đầu',
 
@@ -2363,6 +2369,7 @@ const I18N = {
     heroQuestion: 'เคยสงสัยไหมว่าทำไม<br><span class="em">คำที่เพิ่งท่องจำ</span><br>ถึงลืมเร็วนัก?',
     startBtn: 'เริ่มต้น',
     feedback: 'ส่งความคิดเห็น',
+    aboutLink: 'เกี่ยวกับ',
     apiModalTitle: 'ลงทะเบียนคีย์ API',
     saveAndStart: 'บันทึกและเริ่ม',
 
@@ -2716,6 +2723,7 @@ const I18N = {
     heroQuestion: 'Já se perguntou por que<br><span class="em">sempre esquece as palavras</span><br>que acabou de aprender?',
     startBtn: 'Começar',
     feedback: 'Feedback',
+    aboutLink: 'Sobre',
     apiModalTitle: 'Registrar chave API',
     saveAndStart: 'Salvar e iniciar',
 
