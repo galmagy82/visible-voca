@@ -416,6 +416,15 @@
     0%   { transform: translateX(0); }
     100% { transform: translateX(400%); }
   }
+  /* 진행 중 화면 이탈 안내 — 작업 도중 다른 탭으로 이동 시 처리 중단되는 회귀 방지용 가이드.
+     부드러운 톤(회색 작은 글씨) 으로 비차단. 사용자가 의도적으로 빠져나가는 건 막지 않음. */
+  .loading-guide {
+    margin-top: 16px;
+    font-size: 0.8rem;
+    color: #8A8078;
+    line-height: 1.5;
+    padding: 0 20px;
+  }
   /* 로딩 화면 광고 슬롯 — 진행 바 아래 ~48px 여백. 반응형 광고가 자동으로 크기 결정.
      "광고" 라벨은 AdSense 정책상 콘텐츠와 광고를 명확히 구분하기 위한 표기.
      폭은 사진올리기 가이드 이미지(.reading-photo-guide) 와 동일 — 시각 일관성. */
@@ -1436,6 +1445,8 @@
       <div class="loading-bar-fill" id="loadingBarFill"></div>
       <div class="loading-bar-shimmer"></div>
     </div>
+    <!-- 진행 중 다른 화면 이동 시 작업이 중단되는 문제 방지 — 부드러운 안내 한 줄. -->
+    <div class="loading-guide" data-i18n="readingLoadingGuide">처리가 끝날 때까지 다른 화면으로 이동하지 마세요</div>
     <!-- AdSense 디스플레이 광고 슬롯 — 승인 후 data-ad-slot 에 슬롯 ID 채워 활성화.
          슬롯 ID 비어 있는 동안은 pushLoadingAdOnce 가 push 호출 자체를 스킵해 빈 자리만 유지. -->
     <div class="loading-ad-slot">
