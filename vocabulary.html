@@ -1016,7 +1016,10 @@
     align-items: center;
     gap: 6px;
   }
-  .wb-subtab:hover { color: #4A4641; }
+  /* 전역 button:hover 의 회색 배경(#E0DEDA) 이 specificity(0,1,1) 우위로 새어들어와
+     이 라인만 회색이 표시되던 비일관성 차단 — background:transparent 명시로 덮어쓴다.
+     다른 두 탭 라인(.app-tab=<a>, .sidebar .tab=specificity 0,2,0) 은 영향 없음. */
+  .wb-subtab:hover { color: #4A4641; background: transparent; }
   .wb-subtab.active {
     color: #2D2B28;
     font-weight: 600;
