@@ -1078,6 +1078,11 @@ body {
       <span class="user-email" id="userEmail"></span>
       <span class="logout-link" id="logoutBtn" data-i18n="logout">로그아웃</span>
     </div>
+    <!-- Guest 둘러보기 — 로그인 없이 임시 익명 세션으로 앱 체험.
+         보조 CTA 톤(작고 차분) — Google 로그인이 메인. 로그인 상태에선 자동 숨김. -->
+    <div id="guestArea" style="margin-top:14px;">
+      <a href="#" id="guestEntryLink" style="font-size:0.85rem; color:var(--muted); text-decoration:none; border-bottom:1px solid var(--muted); padding-bottom:2px;" data-i18n="guestEntry">Guest 로 둘러보기 →</a>
+    </div>
   </div>
   <!-- 시작하기 버튼: 로그인 상태에서만 표시 (updateAuthUI 에서 토글) -->
   <button class="cta-btn" id="startBtn" style="display:none;" data-i18n="startBtn">시작하기</button>
@@ -1108,13 +1113,20 @@ async function updateAuthUI() {
   const userEmail = document.getElementById('userEmail');
   const startBtn = document.getElementById('startBtn');
   const consentNotice = document.getElementById('consentNotice');
+  const guestArea = document.getElementById('guestArea');
 
-  if (session && session.user) {
+  /* 익명(Guest) 사용자는 UI 상 비로그인과 동일하게 취급 — Google 로그인·Guest 둘러보기 둘 다 노출.
+     이렇게 해야 Guest 사용자가 welcome 으로 돌아왔을 때 (1) 진짜 로그인 또는 (2) 새 Guest 세션 시작
+     양쪽 선택지를 다 가질 수 있다. */
+  const isRealLoggedIn = session && session.user && !session.user.is_anonymous;
+
+  if (isRealLoggedIn) {
     loginBtn.style.display = 'none';
     authStatus.style.display = 'block';
     userEmail.textContent = session.user.email;
     startBtn.style.display = 'inline-block';
     consentNotice.style.display = 'none';
+    if (guestArea) guestArea.style.display = 'none';
     /* 로그인 후 복귀 시 저장된 스크롤 위치 복원 */
     const savedY = localStorage.getItem('geminary_scrollY');
     if (savedY) {
@@ -1126,6 +1138,7 @@ async function updateAuthUI() {
     authStatus.style.display = 'none';
     startBtn.style.display = 'none';
     consentNotice.style.display = 'block';
+    if (guestArea) guestArea.style.display = 'block';
   }
 }
 
@@ -1147,6 +1160,29 @@ document.getElementById('googleLoginBtn').addEventListener('click', async () => 
 document.getElementById('logoutBtn').addEventListener('click', async () => {
   await supabaseClient.auth.signOut();
   updateAuthUI();
+});
+
+/* Guest 둘러보기 — 매 클릭마다 새 익명 세션 발급. 이전 세션(익명·실계정 모두) 은 먼저 signOut.
+   이렇게 해야 사용자 직관 ("매번 새 체험으로 시작") 과 일치하고, 이전 Guest 데이터가
+   잔존해 혼란이 생기는 일이 없다. 안내 정책: 익명 데이터는 보존되지 않음(Q2 결정 a 안). */
+document.getElementById('guestEntryLink').addEventListener('click', async (e) => {
+  e.preventDefault();
+  const btn = e.currentTarget;
+  if (btn.dataset.busy === '1') return;
+  btn.dataset.busy = '1';
+  btn.style.pointerEvents = 'none';
+  try {
+    /* 기존 세션 제거 — 익명·실계정 모두 깨끗이 정리. signOut 실패해도 다음 단계 진행. */
+    await supabaseClient.auth.signOut().catch(() => {});
+    const { error } = await supabaseClient.auth.signInAnonymously();
+    if (error) throw error;
+    window.location.href = 'main.html';
+  } catch (err) {
+    console.warn('Guest 세션 시작 실패:', err);
+    btn.dataset.busy = '';
+    btn.style.pointerEvents = '';
+    alert((typeof t === 'function' ? t('guestStartFailed') : 'Guest 체험 시작에 실패했어요. 잠시 후 다시 시도해 주세요.'));
+  }
 });
 
 /* 페이지 로드 시 + 인증 상태 변경 시 UI 업데이트 */
