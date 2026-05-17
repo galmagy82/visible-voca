@@ -448,6 +448,28 @@
     color: #8A8078;
   }
 
+  /* Guest 체험용 사진 다운로드 — 사진올리기 안내문(.upload-hint) 아래 작은 텍스트 줄.
+     사진이 없어도 흐름을 체험할 수 있도록 미리 준비된 책 페이지 2장 다운로드 링크 제공.
+     setupGuestSampleLinks() 가 is_anonymous 인 경우에만 hidden 해제. */
+  .guest-samples {
+    margin-top: 14px;
+    font-size: 0.85rem;
+    color: #8A8078;
+    text-align: center;
+  }
+  .guest-samples a {
+    display: inline-block;
+    margin: 0 6px;
+    color: #5A8A42;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(90, 138, 66, 0.3);
+    padding-bottom: 1px;
+  }
+  .guest-samples a:hover {
+    color: #4A7335;
+    border-bottom-color: #4A7335;
+  }
+
   /* 업로드 영역 보조 진입점 — "📚 My Books" 텍스트 링크.
      업로드(메인 CTA) 와 시각 위계를 분리하기 위해 버튼 박스 대신 작은 텍스트 링크로 표현.
      hover 시 ::after 화살표가 살짝 오른쪽으로 슬라이드 — back-link 의 chevron 과 대칭. */
@@ -1431,6 +1453,13 @@
     <input type="file" id="photoInput" accept="image/*" multiple style="display:none" onchange="handlePhotos(this)">
     <div class="upload-hint" data-i18n="readingUploadHint">앞페이지부터 차례로 찍은 사진을 올리세요.
 선택한 순서대로 페이지가 됩니다.</div>
+    <!-- Guest 전용 체험용 사진 다운로드 — 사진 없는 게스트가 곧바로 업로드 흐름 체험 가능하도록.
+         로그인 사용자에겐 setupGuestSampleLinks() 가 자동 숨김. -->
+    <div class="guest-samples" id="guestSamples" hidden>
+      <span data-i18n="readingGuestSampleIntro">처음이세요?</span>
+      <a href="assets/sample-page-1.jpg" download="sample-page-1.jpg" data-i18n="readingGuestSample1">📥 체험용 사진 1</a>
+      <a href="assets/sample-page-2.jpg" download="sample-page-2.jpg" data-i18n="readingGuestSample2">📥 체험용 사진 2</a>
+    </div>
     <!-- 기존 "📚 My Books →" 진입 버튼은 제거 — 상단 앱 탭의 "My Books" 탭이 같은 역할.
          두 컨트롤이 같은 동작이라 시각 군더더기. -->
   </div>
@@ -1706,6 +1735,11 @@ async function initAuth() {
      기존 myBooksBtn 은 상단 앱 탭의 My Books 로 통합되어 제거됨. */
   if (_authUser) {
     document.getElementById('readingSettingsBtn').hidden = false;
+  }
+  /* Guest 전용 체험용 사진 다운로드 링크 노출 — 익명 사용자만 표시. */
+  const guestSamplesEl = document.getElementById('guestSamples');
+  if (guestSamplesEl && _authUser?.is_anonymous === true) {
+    guestSamplesEl.hidden = false;
   }
   /* URL 쿼리 ?screen=books → 진입 즉시 My Books 탭으로 진입 (vocabulary 등 다른 페이지에서 탭 클릭 진입용) */
   if (_authUser) {
