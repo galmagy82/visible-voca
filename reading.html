@@ -1367,7 +1367,7 @@
     <button type="button" class="app-user-btn" id="appUserBtn" onclick="toggleAppUserMenu(event)" aria-label="user menu">👤</button>
     <div class="app-user-menu" id="appUserMenu" hidden>
       <div class="app-user-menu-email" id="appUserMenuEmail"></div>
-      <button type="button" class="app-user-menu-item" onclick="appUserSignOut()" data-i18n="logout">로그아웃</button>
+      <button type="button" class="app-user-menu-item" id="appUserMenuAction" onclick="appUserMenuAction()" data-i18n="logout">로그아웃</button>
     </div>
   </nav>
 
@@ -2506,11 +2506,39 @@ function toggleAppUserMenu(e) {
   if (e) e.stopPropagation();
   const menu = document.getElementById('appUserMenu');
   const emailEl = document.getElementById('appUserMenuEmail');
+  const actionBtn = document.getElementById('appUserMenuAction');
   if (!menu) return;
-  if (emailEl && _authUser) emailEl.textContent = _authUser.email || '';
+  /* 익명(Guest) 사용자는 이메일 빈 값 → "체험 중" 라벨 표시 + 액션 버튼은 "로그인" 으로 전환.
+     실 사용자: 이메일 표시 + "로그아웃" 버튼 (기존 동작). */
+  const isAnon = _authUser?.is_anonymous === true;
+  if (emailEl && _authUser) {
+    emailEl.textContent = isAnon
+      ? (typeof t === 'function' ? t('guestLabel') : '체험 중')
+      : (_authUser.email || '');
+  }
+  if (actionBtn) {
+    actionBtn.textContent = isAnon
+      ? (typeof t === 'function' ? t('loginAction') : '로그인')
+      : (typeof t === 'function' ? t('logout') : '로그아웃');
+  }
   menu.hidden = !menu.hidden;
 }
 window.toggleAppUserMenu = toggleAppUserMenu;
+
+/* 메뉴 액션 버튼 — 로그인 사용자면 로그아웃, 익명 사용자면 welcome 으로 (로그인 유도). */
+async function appUserMenuAction() {
+  const isAnon = _authUser?.is_anonymous === true;
+  if (isAnon) {
+    /* 익명 → welcome 으로. 익명 세션은 그대로 유지(자동 정리는 시간 지나면) — 다시 Guest 누르면 새 세션 */
+    location.href = 'index.html';
+    return;
+  }
+  /* 실 사용자 → 로그아웃 후 welcome */
+  try { await supabaseClient.auth.signOut(); }
+  catch (e) { console.warn('signOut 실패:', e); }
+  location.href = 'index.html';
+}
+window.appUserMenuAction = appUserMenuAction;
 
 /* 외부 클릭 시 메뉴 닫기 */
 document.addEventListener('click', (e) => {

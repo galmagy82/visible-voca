@@ -2478,7 +2478,7 @@
   <button type="button" class="app-user-btn" id="appUserBtn" onclick="toggleAppUserMenu(event)" aria-label="user menu">👤</button>
   <div class="app-user-menu" id="appUserMenu" hidden>
     <div class="app-user-menu-email" id="appUserMenuEmail"></div>
-    <button type="button" class="app-user-menu-item" onclick="appUserSignOut()" data-i18n="logout">로그아웃</button>
+    <button type="button" class="app-user-menu-item" id="appUserMenuAction" onclick="appUserMenuAction()" data-i18n="logout">로그아웃</button>
   </div>
 </nav>
 
@@ -4224,8 +4224,21 @@ function toggleAppUserMenu(e) {
   if (e) e.stopPropagation();
   const menu = document.getElementById('appUserMenu');
   const emailEl = document.getElementById('appUserMenuEmail');
+  const actionBtn = document.getElementById('appUserMenuAction');
   if (!menu) return;
-  if (emailEl && _authUser) emailEl.textContent = _authUser.email || '';
+  /* 익명(Guest) 사용자는 이메일 빈 값 → "체험 중" 라벨 + 액션 버튼 "로그인" 으로 전환.
+     실 사용자: 이메일 + "로그아웃" (기존). */
+  const isAnon = _authUser?.is_anonymous === true;
+  if (emailEl && _authUser) {
+    emailEl.textContent = isAnon
+      ? (typeof t === 'function' ? t('guestLabel') : '체험 중')
+      : (_authUser.email || '');
+  }
+  if (actionBtn) {
+    actionBtn.textContent = isAnon
+      ? (typeof t === 'function' ? t('loginAction') : '로그인')
+      : (typeof t === 'function' ? t('logout') : '로그아웃');
+  }
   menu.hidden = !menu.hidden;
 }
 window.toggleAppUserMenu = toggleAppUserMenu;
@@ -4246,6 +4259,17 @@ async function appUserSignOut() {
   location.href = 'index.html';
 }
 window.appUserSignOut = appUserSignOut;
+
+/* 메뉴 액션 — 익명 사용자는 로그아웃 없이 welcome 으로 (로그인 유도), 실 사용자는 기존 signOut 흐름. */
+async function appUserMenuAction() {
+  const isAnon = _authUser?.is_anonymous === true;
+  if (isAnon) {
+    location.href = 'index.html';
+    return;
+  }
+  await appUserSignOut();
+}
+window.appUserMenuAction = appUserMenuAction;
 
 /* 인증 상태 변경 감지 */
 supabaseClient.auth.onAuthStateChange((event, session) => {

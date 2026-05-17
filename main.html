@@ -489,11 +489,28 @@ const isLocalDev = ['localhost', '127.0.0.1', ''].includes(location.hostname)
   applyI18n();
 })();
 
-/* 우상단 로그아웃 — Supabase 세션 종료 후 index 로 이동 (vocabulary.html 와 동일 흐름) */
-document.getElementById('mainLogoutBtn').addEventListener('click', async () => {
-  await supabaseClient.auth.signOut();
-  location.href = 'index.html';
-});
+/* 우상단 로그아웃 — Supabase 세션 종료 후 index 로 이동 (vocabulary.html 와 동일 흐름).
+   익명(Guest) 사용자는 라벨을 "로그인" 으로 바꾸고 signOut 없이 welcome 으로 이동 (로그인 유도). */
+(async function setupTopAuthBtn() {
+  const btn = document.getElementById('mainLogoutBtn');
+  if (!btn) return;
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    const isAnon = session?.user?.is_anonymous === true;
+    if (isAnon) {
+      btn.textContent = (typeof t === 'function' ? t('loginAction') : '로그인');
+      btn.setAttribute('data-i18n', 'loginAction');
+    }
+  } catch (_) {}
+  btn.addEventListener('click', async () => {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    const isAnon = session?.user?.is_anonymous === true;
+    if (!isAnon) {
+      try { await supabaseClient.auth.signOut(); } catch (_) {}
+    }
+    location.href = 'index.html';
+  });
+})();
 </script>
 
 </body>
