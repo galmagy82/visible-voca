@@ -428,6 +428,11 @@ Page boundary handling:
 - Extract text from the PRIMARY page only — the page that fills most of the frame and is clearly the subject of the photo.
 - If two complete facing pages are both fully captured, treat them as one continuous spread and extract both.
 - Ignore faint ghosted text that bleeds through from the reverse side of the page. Such text appears noticeably lighter than the main printed text and is often mirrored or upside-down. Extract only text clearly printed on the front (current) side.
+- CRITICAL RULE — Reverse-side text exclusion:
+  - ANY text that is mirrored, reversed, upside-down, or rotated beyond normal reading orientation MUST be excluded, regardless of brightness.
+  - Examples: letters that appear backwards as if seen in a mirror, lines that read right-to-left, or text that is rotated 90/180 degrees from the main page text.
+  - Such text comes from the reverse side of the page (bleed-through) and is NOT part of the front-side content. NEVER include it.
+  - Even if the bleed-through is dark and clear, it is still bleed-through if its orientation is wrong. Brightness is not the criterion — orientation is.
 - This rule applies to all three tasks below — do not include study_items whose "surface" comes from bleed-through.
 
 Tasks:
@@ -528,6 +533,11 @@ Page boundary handling:
 - Extract text from the PRIMARY page only — the page that fills most of the frame and is clearly the subject of the photo.
 - If two complete facing pages are both fully captured, treat them as one continuous spread and extract both.
 - Ignore faint ghosted text that bleeds through from the reverse side of the page. Such text appears noticeably lighter than the main printed text and is often mirrored or upside-down. Extract only text clearly printed on the front (current) side.
+- CRITICAL RULE — Reverse-side text exclusion:
+  - ANY text that is mirrored, reversed, upside-down, or rotated beyond normal reading orientation MUST be excluded, regardless of brightness.
+  - Examples: letters that appear backwards as if seen in a mirror, lines that read right-to-left, or text that is rotated 90/180 degrees from the main page text.
+  - Such text comes from the reverse side of the page (bleed-through) and is NOT part of the front-side content. NEVER include it.
+  - Even if the bleed-through is dark and clear, it is still bleed-through if its orientation is wrong. Brightness is not the criterion — orientation is.
 
 Page metadata to exclude:
 - Do NOT extract page numbers or running headers/footers — these are short text fragments printed in the top or bottom MARGIN (outside the main text block), typically in a smaller font, that repeat across pages and contain the page number, book title, chapter name, or author name.
