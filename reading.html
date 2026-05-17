@@ -469,6 +469,15 @@
     color: #4A7335;
     border-bottom-color: #4A7335;
   }
+  /* 모바일 좁은 폭에선 질문·링크 각각 한 줄씩 — "책사진이 없으세요?" 질문 1줄,
+     "체험용 사진 1" 1줄, "체험용 사진 2" 1줄. PC 는 한 줄에 모두 표시(기본). */
+  @media (max-width: 480px) {
+    .guest-samples span,
+    .guest-samples a {
+      display: block;
+      margin: 4px 0;
+    }
+  }
 
   /* 업로드 영역 보조 진입점 — "📚 My Books" 텍스트 링크.
      업로드(메인 CTA) 와 시각 위계를 분리하기 위해 버튼 박스 대신 작은 텍스트 링크로 표현.
