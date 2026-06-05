@@ -424,6 +424,14 @@ Selection rules for "study_items":
 3. Return an empty array for "study_items" (user level not provided).`
   }
 
+  /* 한국어 번역 문체 통일 규칙 — Gemini 가 페이지마다 평서체/경어체를 자유 선택해
+     같은 책 안에서 문체가 섞이는 문제 방지. 대사는 화자 말투 보존, 그 외는 평서체로 고정.
+     한국어가 아닌 경우 빈 문자열이라 다른 언어에는 영향 없음. */
+  const koreanStyleRule = targetLang === 'ko' ? `
+   Korean style rule:
+   - Character dialogue inside quotes ("..."): preserve each speaker's natural register (formal or informal as the character would speak).
+   - All other text (narration, description, author's address to reader): use plain declarative endings (~다, ~었다, ~했다). Never use polite endings (~습니다, ~했습니다) outside of dialogue.` : ''
+
   const prompt = `You are an OCR + translation + vocabulary picker for a reading-comprehension app. The image is one page of an English book.
 
 Page boundary handling:
@@ -445,7 +453,7 @@ Tasks:
    DO NOT merge consecutive dialogue lines into one line.
    DO NOT merge descriptive sentences into one line just because they belong to the same paragraph.
    This rule applies UNIFORMLY across the entire page — dialogue-heavy sections, descriptive paragraphs, narration, every part. There must be no section where line breaks are silently dropped.
-2. Translate that text into natural ${langName}, preserving paragraph structure (line breaks between paragraphs).${studyInstructions}
+2. Translate that text into natural ${langName}, preserving paragraph structure (line breaks between paragraphs).${koreanStyleRule}${studyInstructions}
 3. Also fill the "page_number" field per its schema description.
 
 If the image contains no readable text (blank page, decoration only, illegible photo), set "no_text" to true, return empty strings for original and translated, empty array for study_items, and null for page_number.
@@ -674,6 +682,14 @@ Selection rules for "study_items":
 2. Return an empty array for "study_items" (user level not provided).`
   }
 
+  /* 한국어 번역 문체 통일 규칙 — Gemini 가 페이지마다 평서체/경어체를 자유 선택해
+     같은 책 안에서 문체가 섞이는 문제 방지. 대사는 화자 말투 보존, 그 외는 평서체로 고정.
+     한국어가 아닌 경우 빈 문자열이라 다른 언어에는 영향 없음. */
+  const koreanStyleRule = targetLang === 'ko' ? `
+   Korean style rule:
+   - Character dialogue inside quotes ("..."): preserve each speaker's natural register (formal or informal as the character would speak).
+   - All other text (narration, description, author's address to reader): use plain declarative endings (~다, ~었다, ~했다). Never use polite endings (~습니다, ~했습니다) outside of dialogue.` : ''
+
   const boundarySection = (prevTail || nextHead) ? `
 
 Boundary context (for sentence flow only — do NOT translate or include in output):
@@ -687,7 +703,7 @@ Translate ONLY the page text. Do NOT translate or echo the boundary context.` : 
   const prompt = `You are a translator and vocabulary picker for a reading-comprehension app. The text below is the OCR result of one page of an English book (already extracted).
 
 Tasks:
-1. Translate the page text into natural ${langName}, preserving paragraph structure (line breaks between paragraphs).${studyInstructions}
+1. Translate the page text into natural ${langName}, preserving paragraph structure (line breaks between paragraphs).${koreanStyleRule}${studyInstructions}
 
 Page text:
 """
