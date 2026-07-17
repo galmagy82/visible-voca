@@ -472,9 +472,11 @@ Do NOT add commentary. Return ONLY the JSON object.`
       }],
       generationConfig: {
         temperature: 0.3,
-        /* Reading 함수 3종(Ocr/Finalize/Extract) 모두 maxOutputTokens 10000 + thinkingBudget 2048 로 통일.
-           dynamic thinking 이 토큰 한도를 잠식해 응답이 잘리는 truncation 문제 방지. */
-        maxOutputTokens: 10000,
+        /* Reading 함수 3종(Ocr/Finalize/Extract) 모두 maxOutputTokens 32000 + thinkingBudget 2048 로 통일.
+           dynamic thinking 이 토큰 한도를 잠식해 응답이 잘리는 truncation 문제 방지.
+           밀도 높은 양면 스프레드 페이지에서 번역 전문 + 학습단어(최대 18개)가 10000 한도를
+           초과해 번역이 페이지 중간에 잘리던 문제 해결 — 32000 으로 상향(실사용 토큰만 과금). */
+        maxOutputTokens: 32000,
         responseMimeType: "application/json",
         responseSchema: {
           type: "OBJECT",
@@ -507,7 +509,7 @@ Do NOT add commentary. Return ONLY the JSON object.`
           },
           required: ["original", "translated", "no_text", "page_number", "study_items"],
         },
-        /* dynamic(-1) 에서 명시 한도로 — output 영역 최소 ~7950 보장. */
+        /* dynamic(-1) 에서 명시 한도로 — output 영역 최소 ~29950 보장. */
         thinkingConfig: { thinkingBudget: 2048 },
       },
     }),
@@ -582,9 +584,9 @@ Do NOT add commentary. Return ONLY the JSON object.`
         temperature: 0.3,
         /* OCR-only 라도 thinkingBudget(-1) + 회전 사진 + 빽빽한 텍스트가 겹치면
            기존 3072 가 부족해 응답이 truncate 되어 JSON 파싱 실패하는 케이스 발생.
-           10000 으로 안전 마진 대폭 확보. maxOutputTokens 는 한계만 설정하고 실제
+           32000 으로 안전 마진 대폭 확보. maxOutputTokens 는 한계만 설정하고 실제
            사용한 토큰만 과금되므로 비용 영향 미미. */
-        maxOutputTokens: 10000,
+        maxOutputTokens: 32000,
         responseMimeType: "application/json",
         responseSchema: {
           type: "OBJECT",
@@ -720,8 +722,10 @@ Do NOT add commentary. Return ONLY the JSON object.`
       generationConfig: {
         temperature: 0.3,
         /* dynamic thinking 이 폭주해 학습단어 생성 단계에서 응답이 잘리는 truncation 사례 발생.
-           Reading 함수 3종(Ocr/Finalize/Extract) 모두 maxOutputTokens 10000 + thinkingBudget 2048 로 통일. */
-        maxOutputTokens: 10000,
+           Reading 함수 3종(Ocr/Finalize/Extract) 모두 maxOutputTokens 32000 + thinkingBudget 2048 로 통일.
+           밀도 높은 페이지에서 번역 전문 + 학습단어(최대 18개)가 기존 10000 을 초과해 번역이
+           페이지 중간에 잘리던 문제 해결용 상향. */
+        maxOutputTokens: 32000,
         responseMimeType: "application/json",
         responseSchema: {
           type: "OBJECT",
@@ -745,7 +749,7 @@ Do NOT add commentary. Return ONLY the JSON object.`
           },
           required: ["translated", "study_items"],
         },
-        /* dynamic(-1) 에서 명시 한도로 — output 영역 최소 ~7950 보장. */
+        /* dynamic(-1) 에서 명시 한도로 — output 영역 최소 ~29950 보장. */
         thinkingConfig: { thinkingBudget: 2048 },
       },
     }),
