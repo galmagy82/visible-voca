@@ -629,6 +629,8 @@
   .tts-radios { display: inline-flex; gap: 18px; }
   .tts-radio { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; color: #4A4844; cursor: pointer; }
   .tts-radio input { accent-color: #5A8A42; cursor: pointer; margin: 0; }
+  /* 목소리 그룹과 언어 사이 간격 */
+  .tts-setting-gap { margin-top: 8px; }
   .saved-badge {
     font-size: 0.8rem;
     color: #5A8A42;
@@ -1606,15 +1608,8 @@
     <!-- 읽어주기 플레이어 바 — 3단계: ① 설정 → ② 생성중 → ③ 재생 (닫기는 툴바 🔊 로) -->
     <div class="tts-player-bar" id="ttsPlayerBar" hidden>
 
-      <!-- ① 설정: 라디오 옵션 + 음성 만들기(전체 너비) -->
+      <!-- ① 설정: 목소리 2개(위) → 간격 → 언어(아래) + 음성 만들기 -->
       <div class="tts-state" id="ttsSetup">
-        <div class="tts-row tts-setting">
-          <span class="tts-setting-label">단어설명 언어</span>
-          <span class="tts-radios">
-            <label class="tts-radio"><input type="radio" name="ttsLang" value="native" onclick="ttsSetMeaningLang('native')"> 한국어</label>
-            <label class="tts-radio"><input type="radio" name="ttsLang" value="en" onclick="ttsSetMeaningLang('en')"> English</label>
-          </span>
-        </div>
         <div class="tts-row tts-setting">
           <span class="tts-setting-label">낭독 목소리</span>
           <span class="tts-radios">
@@ -1627,6 +1622,13 @@
           <span class="tts-radios">
             <label class="tts-radio"><input type="radio" name="ttsTeacher" value="female" onclick="ttsSetGender('teacher','female')"> 여</label>
             <label class="tts-radio"><input type="radio" name="ttsTeacher" value="male" onclick="ttsSetGender('teacher','male')"> 남</label>
+          </span>
+        </div>
+        <div class="tts-row tts-setting tts-setting-gap">
+          <span class="tts-setting-label">단어설명 언어</span>
+          <span class="tts-radios">
+            <label class="tts-radio"><input type="radio" name="ttsLang" value="native" onclick="ttsSetMeaningLang('native')"> 한국어</label>
+            <label class="tts-radio"><input type="radio" name="ttsLang" value="en" onclick="ttsSetMeaningLang('en')"> English</label>
           </span>
         </div>
         <button class="tts-make-btn" id="ttsMakeBtn" onclick="ttsMakeAudio()">🎧 음성 만들기</button>
