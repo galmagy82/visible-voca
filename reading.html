@@ -2861,9 +2861,8 @@ function setLoadingPhase(key) {
 
 /* --- 북 뷰어 렌더 --- */
 function renderBook() {
-  /* 다른 책/새 책을 그릴 때 이전 읽어주기 재생을 정지·바 닫음·생성상태 리셋.
-     단어설명 언어 토글 등 "같은 책 재렌더"에서는 _ttsPreserveBar 로 이 정리를 건너뛴다. */
-  if (typeof ttsStop === 'function' && !_ttsPreserveBar) { ttsStop(); ttsShowBar(false); _tts.made = false; ttsSetUiState('setup'); }
+  /* 다른 책/새 책을 그릴 때 이전 읽어주기 재생을 정지·바 닫음·생성상태 리셋 */
+  if (typeof ttsStop === 'function') { ttsStop(); ttsShowBar(false); _tts.made = false; ttsSetUiState('setup'); }
   /* 이미 만든 책이면 미리 감지 → 듣기 열 때 곧바로 재생 단계로 (음성 만들기 건너뜀) */
   if (typeof ttsCheckMade === 'function') ttsCheckMade().then((ok) => { if (ok) _tts.made = true; });
   const track = document.getElementById('pageTrack');
@@ -3412,6 +3411,7 @@ const _tts = {
   mode: 'both',         // 'both' | 'body' | 'vocab' — 재생 필터(모든 클립은 미리 생성됨)
   narratorGender: 'female',  // 낭독 목소리
   teacherGender: 'male',     // 단어설명 목소리
+  vocabLang: 'native',       // TTS 단어설명 언어(화면 표기 _studyMeaningLang 과 분리)
   speed: 1.0,
   clips: [],            // 재생용 클립 배열(현재 모드/설정 기준)
   pos: 0,               // 현재 재생 중 클립 인덱스
@@ -3422,8 +3422,6 @@ const _tts = {
   makeCancel: false,    // 생성 취소 플래그
 };
 /* TTS 성별 → 프리셋 음성(엣지 함수와 동일). 표시용으로만 사용, 실제 매핑은 서버가 수행. */
-/* 언어 토글 등으로 renderBook 재렌더가 일어날 때 플레이어 바를 닫지 않도록 하는 가드 */
-let _ttsPreserveBar = false;
 const TTS_DB_NAME = 'wordfeel-tts';
 const TTS_STORE = 'clips';
 /* 캐시 버전 — 오디오 생성 방식(무음 트림/발화 검사 등)이 바뀌면 올려서 기존 캐시 무효화.
@@ -3536,9 +3534,9 @@ function ttsChunkText(text, maxLen) {
 
 /* 클립 배열 생성. modeOverride 미지정 시 현재 재생 모드(_tts.mode) 기준.
    생성 단계에서는 'both' 로 호출해 본문+단어 전체를 만든다. */
-function ttsBuildClips(modeOverride) {
+function ttsBuildClips(modeOverride, langOverride) {
   const clips = [];
-  const lang = _studyMeaningLang;
+  const lang = langOverride || _tts.vocabLang;
   const mode = modeOverride || _tts.mode;
   _pages.forEach((p, pi) => {
     if (!p || p.error || p.no_text || !p.original) return;
@@ -3716,32 +3714,35 @@ function ttsToolbarToggle() {
 
 /* 현재 설정으로 책 전체(both) 클립이 모두 캐시돼 있으면 true(=이미 만든 책).
    한 트랜잭션에서 count 로 가볍게 확인(블롭 역직렬화 없음). */
-async function ttsCheckMade() {
-  const clips = ttsBuildClips('both');
-  if (clips.length === 0) { console.log('[tts-diag] ttsCheckMade: 클립 0개 (페이지 없음)'); return false; }
+/* clips 전부가 캐시돼 있으면 true (한 트랜잭션에서 count) */
+async function ttsAllCached(clips) {
+  if (!clips.length) return false;
   try {
     const db = await ttsOpenDB();
     return await new Promise((resolve) => {
       const store = db.transaction(TTS_STORE, 'readonly').objectStore(TTS_STORE);
-      let remaining = clips.length;
-      let cached = 0;
-      const finish = () => {
-        const allHit = (cached === clips.length);
-        /* 진단 로그: 캐시된 개수/전체 + 현재 설정. 원인(실패 몇 개 / 설정 불일치 / 저장 실패) 구분용 */
-        console.log(`[tts-diag] ttsCheckMade: 캐시 ${cached}/${clips.length}  설정(낭독=${_tts.narratorGender}, 단어=${_tts.teacherGender}, 언어=${_studyMeaningLang}, v=${TTS_CACHE_VERSION}) → made=${allHit}`);
-        if (!allHit) {
-          const missing = clips.filter((c) => !c._cachedFlag).slice(0, 5).map((c) => `${c.kind}:${c.cacheKey}`);
-          console.log('[tts-diag] 누락 클립 예시(최대5):', missing);
-        }
-        resolve(allHit);
-      };
+      let remaining = clips.length, cached = 0;
       clips.forEach((c) => {
         const r = store.count(c.cacheKey);
-        r.onsuccess = () => { if (r.result > 0) { cached++; c._cachedFlag = true; } if (--remaining === 0) finish(); };
-        r.onerror = () => { if (--remaining === 0) finish(); };
+        r.onsuccess = () => { if (r.result > 0) cached++; if (--remaining === 0) resolve(cached === clips.length); };
+        r.onerror = () => { if (--remaining === 0) resolve(cached === clips.length); };
       });
     });
-  } catch (e) { console.warn('[tts-diag] ttsCheckMade 오류:', e); return false; }
+  } catch (e) { return false; }
+}
+/* 이미 만든 책인지 확인. 현재 vocabLang 으로 전부 캐시됐는지 보고, 아니면 반대 언어도 확인.
+   본문 클립은 언어 무관이라, 한쪽 언어로 전부 만들어져 있으면 그 언어를 채택(_tts.vocabLang)하고 true.
+   → 만들 때 어떤 언어였든(새로고침으로 리셋돼도) 다시 들어오면 바로 재생 가능. */
+async function ttsCheckMade() {
+  const langs = (_tts.vocabLang === 'en') ? ['en', 'native'] : ['native', 'en'];
+  for (const lang of langs) {
+    const clips = ttsBuildClips('both', lang);
+    if (!clips.length) continue;
+    const ok = await ttsAllCached(clips);
+    console.log(`[tts-diag] ttsCheckMade lang=${lang}: ${ok ? '전부 캐시(made)' : '일부 없음'}`);
+    if (ok) { _tts.vocabLang = lang; return true; }
+  }
+  return false;
 }
 
 /* --- 플레이어 바 3단계(설정 → 생성중 → 재생) 전환 --- */
@@ -3854,16 +3855,10 @@ function ttsCycleSpeed() {
   if (_tts.audio) _tts.audio.playbackRate = _tts.speed;
   ttsUpdateBar();
 }
-/* 플레이어의 해설 언어 토글 — 화면 학습단어 표기와 동일한 _studyMeaningLang 사용.
-   setStudyMeaningLang 이 renderBook 을 부르므로, 그 동안 바를 닫지 않도록 _ttsPreserveBar 로 감싼다. */
+/* 플레이어의 단어설명 언어 토글 — 화면 표기(_studyMeaningLang)와 분리된 _tts.vocabLang 만 변경.
+   renderBook 을 부르지 않으므로 바가 닫히지 않는다. */
 function ttsSetMeaningLang(lang) {
-  _ttsPreserveBar = true;
-  try {
-    if (typeof setStudyMeaningLang === 'function') setStudyMeaningLang(lang);
-    else _studyMeaningLang = lang;
-  } finally {
-    _ttsPreserveBar = false;
-  }
+  _tts.vocabLang = (lang === 'en') ? 'en' : 'native';
   ttsUpdateBar();
   ttsRebuildAndRestart();
 }
@@ -3929,7 +3924,7 @@ function ttsUpdateBar() {
     const r = document.querySelector(`input[name="${name}"][value="${val}"]`);
     if (r) r.checked = true;
   };
-  setRadio('ttsLang', _studyMeaningLang);
+  setRadio('ttsLang', _tts.vocabLang);
   setRadio('ttsNarrator', _tts.narratorGender);
   setRadio('ttsTeacher', _tts.teacherGender);
   const spd = document.getElementById('ttsSpeedBtn');
