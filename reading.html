@@ -3718,20 +3718,30 @@ function ttsToolbarToggle() {
    한 트랜잭션에서 count 로 가볍게 확인(블롭 역직렬화 없음). */
 async function ttsCheckMade() {
   const clips = ttsBuildClips('both');
-  if (clips.length === 0) return false;
+  if (clips.length === 0) { console.log('[tts-diag] ttsCheckMade: 클립 0개 (페이지 없음)'); return false; }
   try {
     const db = await ttsOpenDB();
     return await new Promise((resolve) => {
       const store = db.transaction(TTS_STORE, 'readonly').objectStore(TTS_STORE);
       let remaining = clips.length;
-      let allHit = true;
+      let cached = 0;
+      const finish = () => {
+        const allHit = (cached === clips.length);
+        /* 진단 로그: 캐시된 개수/전체 + 현재 설정. 원인(실패 몇 개 / 설정 불일치 / 저장 실패) 구분용 */
+        console.log(`[tts-diag] ttsCheckMade: 캐시 ${cached}/${clips.length}  설정(낭독=${_tts.narratorGender}, 단어=${_tts.teacherGender}, 언어=${_studyMeaningLang}, v=${TTS_CACHE_VERSION}) → made=${allHit}`);
+        if (!allHit) {
+          const missing = clips.filter((c) => !c._cachedFlag).slice(0, 5).map((c) => `${c.kind}:${c.cacheKey}`);
+          console.log('[tts-diag] 누락 클립 예시(최대5):', missing);
+        }
+        resolve(allHit);
+      };
       clips.forEach((c) => {
         const r = store.count(c.cacheKey);
-        r.onsuccess = () => { if (r.result === 0) allHit = false; if (--remaining === 0) resolve(allHit); };
-        r.onerror = () => { allHit = false; if (--remaining === 0) resolve(allHit); };
+        r.onsuccess = () => { if (r.result > 0) { cached++; c._cachedFlag = true; } if (--remaining === 0) finish(); };
+        r.onerror = () => { if (--remaining === 0) finish(); };
       });
     });
-  } catch (e) { return false; }
+  } catch (e) { console.warn('[tts-diag] ttsCheckMade 오류:', e); return false; }
 }
 
 /* --- 플레이어 바 3단계(설정 → 생성중 → 재생) 전환 --- */
