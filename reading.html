@@ -1583,7 +1583,7 @@
         <span class="tts-spacer"></span>
         <button class="tts-speed-btn" id="ttsSpeedBtn" onclick="ttsCycleSpeed()" title="배속">1×</button>
         <button class="tts-dl-btn" id="ttsDownloadBtn" onclick="ttsDownloadBook()" title="책 전체 오디오 다운로드">⬇</button>
-        <button class="tts-close-btn" onclick="ttsStop()" aria-label="닫기">✕</button>
+        <button class="tts-close-btn" onclick="ttsStopAndClose()" aria-label="정지하고 닫기">✕</button>
       </div>
       <div class="tts-row tts-row-opts">
         <!-- 재생 모드 -->
@@ -2812,8 +2812,8 @@ function setLoadingPhase(key) {
 
 /* --- 북 뷰어 렌더 --- */
 function renderBook() {
-  /* 다른 책/새 책을 그릴 때 이전 읽어주기 재생을 정지 */
-  if (typeof ttsStop === 'function') ttsStop();
+  /* 다른 책/새 책을 그릴 때 이전 읽어주기 재생을 정지하고 바를 닫음 */
+  if (typeof ttsStop === 'function') { ttsStop(); ttsShowBar(false); }
   const track = document.getElementById('pageTrack');
   /* 페이지 번호 배지는 renderPageContent 내부에서 본문 다음 위치에 그림 — 외부에서 별도 삽입 X */
   track.innerHTML = _pages.map((p, i) => `<div class="page" data-page-idx="${i}">${renderPageContent(p, i)}</div>`).join('');
@@ -3635,12 +3635,13 @@ function ttsToggle() {
   if (_tts.active && _tts.paused) { ttsResume(); return; }
   ttsStartFromCurrentPage();
 }
-/* 툴바 🔊 버튼 — 플레이어 바 열기/닫기 토글.
-   바가 열려 있으면 정지하고 닫음, 닫혀 있으면 열면서 재생 시작. */
+/* 툴바 🔊 버튼 — 플레이어 바 보이기/숨기기 전용. 재생/정지와 무관.
+   숨겨도 재생은 계속됨(패널 닫고 본문 읽으며 듣기 가능). 재생 제어는 바 안의 ▶ 로만. */
 function ttsToolbarToggle() {
   const bar = document.getElementById('ttsPlayerBar');
-  if (bar && !bar.hidden) ttsStop();
-  else ttsStartFromCurrentPage();
+  if (!bar) return;
+  bar.hidden = !bar.hidden;
+  ttsUpdateBar();
 }
 function ttsStartFromCurrentPage() {
   ttsInit();
@@ -3652,7 +3653,6 @@ function ttsStartFromCurrentPage() {
   _tts.pos = start;
   _tts.active = true;
   _tts.paused = false;
-  ttsShowBar(true);
   ttsStartPrefetch();
   ttsPlayCurrent();
 }
@@ -3667,11 +3667,17 @@ function ttsResume() {
   if (_tts.audio && _tts.audio.src) { _tts.audio.play().catch(() => {}); ttsStartPrefetch(); }
   else ttsPlayCurrent();
 }
+/* 재생 정지 — 바 표시 상태는 건드리지 않음(표시/숨김은 툴바·✕ 담당). */
 function ttsStop() {
   _tts.active = false;
   _tts.paused = false;
   if (_tts.audio) { _tts.audio.pause(); if (_tts.audio._url) { URL.revokeObjectURL(_tts.audio._url); _tts.audio._url = null; } _tts.audio.removeAttribute('src'); }
   ttsHighlight(null);
+  ttsUpdateBar();
+}
+/* 바 안의 ✕ — 재생을 멈추고 바를 닫음 */
+function ttsStopAndClose() {
+  ttsStop();
   ttsShowBar(false);
   ttsUpdateBar();
 }
@@ -3756,8 +3762,9 @@ function ttsSetBuffering(on) {
 function ttsUpdateBar() {
   const playBtn = document.getElementById('ttsPlayPauseBtn');
   if (playBtn) playBtn.textContent = (_tts.active && !_tts.paused) ? '⏸' : '▶';
+  const barEl = document.getElementById('ttsPlayerBar');
   const toolbarBtn = document.getElementById('ttsToolbarBtn');
-  if (toolbarBtn) toolbarBtn.classList.toggle('active', _tts.active);
+  if (toolbarBtn) toolbarBtn.classList.toggle('active', !!(barEl && !barEl.hidden));
   /* 모드 버튼 active */
   ['body', 'both', 'vocab'].forEach((m) => {
     const b = document.getElementById(`ttsMode_${m}`);
@@ -3781,7 +3788,7 @@ function ttsUpdateBar() {
 
 /* --- 새로 올리기 (세션 초기화) --- */
 function resetReading() {
-  ttsStop();
+  ttsStop(); ttsShowBar(false);
   _pages = [];
   _currentIdx = 0;
   _showTranslated = false;
@@ -3801,7 +3808,7 @@ function resetReading() {
 /* 책 목록(또는 책 뷰어 fresh 모드) 에서 뒤로가기 → 업로드 화면으로 복귀.
    책 뷰어도 같이 숨겨야 fresh 뷰어에서 호출되었을 때 화면이 정상 전환됨. */
 function backToUpload() {
-  ttsStop();
+  ttsStop(); ttsShowBar(false);
   document.getElementById('bookListArea').hidden = true;
   document.getElementById('bookViewer').hidden = true;
   document.getElementById('loadingArea').hidden = true;
