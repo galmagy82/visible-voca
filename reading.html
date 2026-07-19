@@ -3442,6 +3442,38 @@ function ttsVocabText(item, original, lang) {
 function ttsMakeClip(kind, pageIdx, itemIdx, text, role, gender) {
   return { kind, pageIdx, itemIdx, text, role, gender, cacheKey: `${role}:${gender}:${ttsHash(text)}` };
 }
+/* 긴 본문 분할 — Gemini TTS 는 긴 입력에서 낭독 뒤에 과도한 무음/이상 출력을 낸다
+   (실측: 400·800자 정상, 1200자↑ 깨짐). 그래서 문장 경계로 maxLen(≈600자) 이하 조각으로
+   나눠 각각을 별도 본문 클립으로 생성한다. 한 문장이 maxLen 을 넘으면 공백 기준으로 강제 분할. */
+function ttsChunkText(text, maxLen) {
+  const clean = String(text).replace(/\s+/g, ' ').trim();
+  if (!clean) return [];
+  if (clean.length <= maxLen) return [clean];
+  const chunks = [];
+  let buf = '';
+  const sentences = clean.match(/[^.!?]*[.!?]+(?:["'”’)\]]*)|\S[^.!?]*$/g) || [clean];
+  const flush = () => { if (buf.trim()) { chunks.push(buf.trim()); buf = ''; } };
+  for (let s of sentences) {
+    s = s.trim();
+    if (!s) continue;
+    if (s.length > maxLen) {
+      /* 한 문장이 너무 길면 공백 기준으로 쪼갬 */
+      flush();
+      let cur = '';
+      for (const w of s.split(' ')) {
+        if ((cur + ' ' + w).trim().length > maxLen) { if (cur) chunks.push(cur.trim()); cur = w; }
+        else cur = (cur + ' ' + w).trim();
+      }
+      if (cur) buf = cur;
+      continue;
+    }
+    if ((buf + ' ' + s).trim().length > maxLen) flush();
+    buf = (buf + ' ' + s).trim();
+  }
+  flush();
+  return chunks;
+}
+
 /* 현재 모드/설정 기준으로 책 전체 클립 배열 생성 */
 function ttsBuildClips() {
   const clips = [];
@@ -3449,7 +3481,10 @@ function ttsBuildClips() {
   _pages.forEach((p, pi) => {
     if (!p || p.error || p.no_text || !p.original) return;
     if (_tts.mode === 'body' || _tts.mode === 'both') {
-      clips.push(ttsMakeClip('body', pi, -1, String(p.original).trim(), 'narrator', _tts.narratorGender));
+      /* 본문은 ~600자 이하 조각으로 나눠 각각 클립 생성(긴 본문 무음/이상 방지) */
+      ttsChunkText(p.original, 600).forEach((chunk) => {
+        clips.push(ttsMakeClip('body', pi, -1, chunk, 'narrator', _tts.narratorGender));
+      });
     }
     if (_tts.mode === 'vocab' || _tts.mode === 'both') {
       const items = Array.isArray(p.study_items) ? p.study_items : [];
