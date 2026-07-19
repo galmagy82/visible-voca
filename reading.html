@@ -2860,8 +2860,9 @@ function setLoadingPhase(key) {
 
 /* --- 북 뷰어 렌더 --- */
 function renderBook() {
-  /* 다른 책/새 책을 그릴 때 이전 읽어주기 재생을 정지·바 닫음·생성상태 리셋 */
-  if (typeof ttsStop === 'function') { ttsStop(); ttsShowBar(false); _tts.made = false; ttsSetUiState('setup'); }
+  /* 다른 책/새 책을 그릴 때 이전 읽어주기 재생을 정지·바 닫음·생성상태 리셋.
+     단어설명 언어 토글 등 "같은 책 재렌더"에서는 _ttsPreserveBar 로 이 정리를 건너뛴다. */
+  if (typeof ttsStop === 'function' && !_ttsPreserveBar) { ttsStop(); ttsShowBar(false); _tts.made = false; ttsSetUiState('setup'); }
   /* 이미 만든 책이면 미리 감지 → 듣기 열 때 곧바로 재생 단계로 (음성 만들기 건너뜀) */
   if (typeof ttsCheckMade === 'function') ttsCheckMade().then((ok) => { if (ok) _tts.made = true; });
   const track = document.getElementById('pageTrack');
@@ -3420,6 +3421,8 @@ const _tts = {
   makeCancel: false,    // 생성 취소 플래그
 };
 /* TTS 성별 → 프리셋 음성(엣지 함수와 동일). 표시용으로만 사용, 실제 매핑은 서버가 수행. */
+/* 언어 토글 등으로 renderBook 재렌더가 일어날 때 플레이어 바를 닫지 않도록 하는 가드 */
+let _ttsPreserveBar = false;
 const TTS_DB_NAME = 'wordfeel-tts';
 const TTS_STORE = 'clips';
 /* 캐시 버전 — 오디오 생성 방식(무음 트림/발화 검사 등)이 바뀌면 올려서 기존 캐시 무효화.
@@ -3842,10 +3845,16 @@ function ttsCycleSpeed() {
   if (_tts.audio) _tts.audio.playbackRate = _tts.speed;
   ttsUpdateBar();
 }
-/* 플레이어의 해설 언어 토글 — 화면 학습단어 표기와 동일한 _studyMeaningLang 사용 */
+/* 플레이어의 해설 언어 토글 — 화면 학습단어 표기와 동일한 _studyMeaningLang 사용.
+   setStudyMeaningLang 이 renderBook 을 부르므로, 그 동안 바를 닫지 않도록 _ttsPreserveBar 로 감싼다. */
 function ttsSetMeaningLang(lang) {
-  if (typeof setStudyMeaningLang === 'function') setStudyMeaningLang(lang);
-  else _studyMeaningLang = lang;
+  _ttsPreserveBar = true;
+  try {
+    if (typeof setStudyMeaningLang === 'function') setStudyMeaningLang(lang);
+    else _studyMeaningLang = lang;
+  } finally {
+    _ttsPreserveBar = false;
+  }
   ttsUpdateBar();
   ttsRebuildAndRestart();
 }
