@@ -2862,6 +2862,8 @@ function setLoadingPhase(key) {
 function renderBook() {
   /* 다른 책/새 책을 그릴 때 이전 읽어주기 재생을 정지·바 닫음·생성상태 리셋 */
   if (typeof ttsStop === 'function') { ttsStop(); ttsShowBar(false); _tts.made = false; ttsSetUiState('setup'); }
+  /* 이미 만든 책이면 미리 감지 → 듣기 열 때 곧바로 재생 단계로 (음성 만들기 건너뜀) */
+  if (typeof ttsCheckMade === 'function') ttsCheckMade().then((ok) => { if (ok) _tts.made = true; });
   const track = document.getElementById('pageTrack');
   /* 페이지 번호 배지는 renderPageContent 내부에서 본문 다음 위치에 그림 — 외부에서 별도 삽입 X */
   track.innerHTML = _pages.map((p, i) => `<div class="page" data-page-idx="${i}">${renderPageContent(p, i)}</div>`).join('');
@@ -3698,8 +3700,34 @@ function ttsToolbarToggle() {
   bar.hidden = !bar.hidden;
   if (willShow && _tts.uiState !== 'progress') {
     ttsSetUiState(_tts.made ? 'player' : 'setup');
+    /* 설정 단계로 열렸어도, 이미 만든 책(캐시 완비)이면 재생 단계로 자동 전환 */
+    if (!_tts.made) {
+      ttsCheckMade().then((ok) => {
+        if (ok && !bar.hidden && _tts.uiState === 'setup') { _tts.made = true; ttsSetUiState('player'); }
+      });
+    }
   }
   ttsUpdateBar();
+}
+
+/* 현재 설정으로 책 전체(both) 클립이 모두 캐시돼 있으면 true(=이미 만든 책).
+   한 트랜잭션에서 count 로 가볍게 확인(블롭 역직렬화 없음). */
+async function ttsCheckMade() {
+  const clips = ttsBuildClips('both');
+  if (clips.length === 0) return false;
+  try {
+    const db = await ttsOpenDB();
+    return await new Promise((resolve) => {
+      const store = db.transaction(TTS_STORE, 'readonly').objectStore(TTS_STORE);
+      let remaining = clips.length;
+      let allHit = true;
+      clips.forEach((c) => {
+        const r = store.count(c.cacheKey);
+        r.onsuccess = () => { if (r.result === 0) allHit = false; if (--remaining === 0) resolve(allHit); };
+        r.onerror = () => { allHit = false; if (--remaining === 0) resolve(allHit); };
+      });
+    });
+  } catch (e) { return false; }
 }
 
 /* --- 플레이어 바 3단계(설정 → 생성중 → 재생) 전환 --- */
