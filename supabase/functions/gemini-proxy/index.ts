@@ -806,7 +806,9 @@ async function callGeminiReadingTtsOnce(text: string, voiceName: string, style: 
   })
   if (!res.ok) {
     const err = await res.text()
-    throw new Error(`API ${res.status}: ${err.slice(0, 200)}`)
+    const e = new Error(`API ${res.status}: ${err.slice(0, 200)}`)
+    ;(e as { status?: number }).status = res.status
+    throw e
   }
   const data = await res.json()
   const part = data.candidates?.[0]?.content?.parts?.[0]
@@ -824,32 +826,68 @@ async function callGeminiReadingTtsOnce(text: string, voiceName: string, style: 
   return { audio, mimeType: mime, sampleRate, durationSec }
 }
 
-/* 재시도 + 길이 sanity check 래퍼.
-   preview 모델(gemini-2.5-flash-preview-tts)이 불안정 — 500/finishReason=OTHER/네트워크 오류,
-   그리고 드물게 텍스트 대비 몇 배 긴 비정상 오디오(글리치)를 낸다. 두 경우 모두 재생성.
-   예상 길이 ≈ 글자수/12(초당 ~12자). 실제가 예상의 3배+10초 초과면 이상치로 보고 재시도. */
+/* base64 PCM(16bit LE mono) 앞뒤 무음 트림 + 실제 발화 길이 측정.
+   preview 모델이 드물게 낭독 뒤 긴 무음을 붙이거나(사용자가 겪은 "무음 지속") 일부만 읽는데,
+   ① 끝쪽 무음을 잘라내 dead-air 를 없애고 ② 발화 구간 길이(speechSec)를 재서 이상 판정에 쓴다.
+   반환: { b64: 트림된 오디오, speechSec: 발화 구간 초 } */
+function trimPcmSilence(b64: string, sampleRate: number): { b64: string; speechSec: number } {
+  const bin = atob(b64)
+  const bytes = new Uint8Array(bin.length)
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+  const samples = new Int16Array(bytes.buffer, 0, Math.floor(bytes.length / 2))
+  const THRESH = 500  // 무음 판정 진폭 임계(16bit 최대 32768 기준)
+  let firstNZ = -1, lastNZ = -1
+  for (let i = 0; i < samples.length; i++) { if (Math.abs(samples[i]) > THRESH) { firstNZ = i; break } }
+  for (let i = samples.length - 1; i >= 0; i--) { if (Math.abs(samples[i]) > THRESH) { lastNZ = i; break } }
+  if (firstNZ < 0 || lastNZ < 0) return { b64, speechSec: 0 }  // 전부 무음 → 원본 그대로(재생성 유도)
+  const start = Math.max(0, firstNZ - Math.floor(sampleRate * 0.05))       // 앞 여유 50ms
+  const end = Math.min(samples.length, lastNZ + 1 + Math.floor(sampleRate * 0.25))  // 뒤 여유 250ms
+  const trimmed = samples.subarray(start, end)
+  const outBytes = new Uint8Array(trimmed.buffer, trimmed.byteOffset, trimmed.length * 2)
+  let s = ''
+  for (let i = 0; i < outBytes.length; i++) s += String.fromCharCode(outBytes[i])
+  return { b64: btoa(s), speechSec: (lastNZ - firstNZ) / sampleRate }
+}
+
+/* 재시도 + 무음 트림 + 발화 길이 sanity check 래퍼.
+   preview 모델(gemini-2.5-flash-preview-tts) 불안정 대응:
+   - 500/finishReason=OTHER/네트워크 오류 → 재시도
+   - 끝쪽 무음 트림
+   - 발화 길이 이상(전부 무음 / 텍스트 대비 너무 짧음=일부만 읽음 / 너무 김=글리치) → 재생성
+   예상 발화 길이 ≈ 글자수/12(초당 ~12자). 짧은 단어 클립은 편차가 커서 too-short 검사 제외. */
 async function callGeminiReadingTts(text: string, role: string, gender: string, apiKey: string) {
   const voiceName = READING_TTS_VOICES[gender] || READING_TTS_VOICES.female
   const style = READING_TTS_STYLES[role] || READING_TTS_STYLES.narrator
   const expectedSec = text.length / 12
+  const checkShort = text.length > 150
   const MAX = 4
-  let last: Awaited<ReturnType<typeof callGeminiReadingTtsOnce>> | null = null
+  let last: { audio: string; mimeType: string; sampleRate: number } | null = null
   for (let attempt = 1; attempt <= MAX; attempt++) {
     try {
       const r = await callGeminiReadingTtsOnce(text, voiceName, style, apiKey)
-      last = r
-      /* 길이 이상치 & 아직 재시도 여유 있으면 재생성 (마지막 시도면 있는 그대로 수용) */
-      if (r.durationSec > expectedSec * 3 + 10 && attempt < MAX) {
-        console.warn(`[reading-tts] duration anomaly ${r.durationSec.toFixed(1)}s (expected ~${expectedSec.toFixed(1)}s), regenerating (attempt ${attempt})`)
+      const { b64, speechSec } = trimPcmSilence(r.audio, r.sampleRate)
+      const trimmed = { audio: b64, mimeType: r.mimeType, sampleRate: r.sampleRate }
+      last = trimmed
+      const allSilent = speechSec <= 0.3
+      const tooShort = checkShort && speechSec < expectedSec * 0.5
+      const tooLong = speechSec > expectedSec * 3 + 10
+      if ((allSilent || tooShort || tooLong) && attempt < MAX) {
+        console.warn(`[reading-tts] anomaly speech=${speechSec.toFixed(1)}s expected~${expectedSec.toFixed(1)}s (silent=${allSilent} short=${tooShort} long=${tooLong}), regenerating (attempt ${attempt})`)
         await new Promise((res) => setTimeout(res, 800))
         continue
       }
-      return { audio: r.audio, mimeType: r.mimeType, sampleRate: r.sampleRate }
+      return trimmed
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e)
+      const status = (e as { status?: number })?.status
+      /* 429(quota 초과)는 재시도해도 회복 안 되고 quota 만 낭비 → 즉시 중단하고 상태 전파 */
+      if (status === 429 || /\b429\b|quota/i.test(msg)) {
+        if (last) return last
+        throw e
+      }
       if (attempt === MAX) {
-        /* 마지막까지 오류 — 이전에 받아둔 오디오(길이 이상치라도)라도 있으면 반환 */
-        if (last) return { audio: last.audio, mimeType: last.mimeType, sampleRate: last.sampleRate }
+        /* 마지막까지 오류 — 이전에 받아둔 오디오라도 있으면 반환 */
+        if (last) return last
         throw new Error(`Gemini reading-tts failed after ${MAX} attempts: ${msg}`)
       }
       console.warn(`[reading-tts] attempt ${attempt} failed (${msg}), retrying`)
@@ -857,7 +895,7 @@ async function callGeminiReadingTts(text: string, role: string, gender: string, 
     }
   }
   /* 논리상 도달 불가 — 타입 만족용 폴백 */
-  if (last) return { audio: last.audio, mimeType: last.mimeType, sampleRate: last.sampleRate }
+  if (last) return last
   throw new Error('Gemini reading-tts: unreachable')
 }
 
@@ -1071,9 +1109,12 @@ Deno.serve(async (req) => {
     /* TS strict 모드에서 catch 변수는 unknown 타입이므로 메시지 추출 시 타입 가드 필요 */
     console.error("Edge Function error:", err)
     const message = err instanceof Error ? err.message : "Internal server error"
+    /* quota(429) 는 클라이언트가 구분해 재시도 안 하도록 500 대신 429 로 내려보냄 */
+    const errStatus = (err as { status?: number })?.status
+    const httpStatus = (errStatus === 429 || /\b429\b|quota/i.test(message)) ? 429 : 500
     return new Response(
       JSON.stringify({ error: message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: httpStatus, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     )
   }
 })

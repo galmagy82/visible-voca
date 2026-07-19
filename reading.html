@@ -3596,13 +3596,16 @@ async function ttsFetch(clip) {
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
-        throw new Error(d.error || `HTTP ${res.status}`);
+        const err = new Error(d.error || `HTTP ${res.status}`);
+        err.status = res.status;
+        throw err;
       }
       const data = await res.json();
       const sampleRate = data.sampleRate || 24000;
       return ttsWavFromPcm(ttsB64ToBytes(data.audio), sampleRate);
     } catch (e) {
-      if (attempt === 1) throw e;
+      /* 429(quota)는 재시도 안 함 — 회복 안 되고 quota 만 낭비 */
+      if ((e && e.status === 429) || attempt === 1) throw e;
       await new Promise((r) => setTimeout(r, 1000));
     }
   }
@@ -3621,7 +3624,7 @@ async function ttsEnsure(clip) {
   return p;
 }
 
-/* --- 백그라운드 프리페치: 현재 위치부터 책 끝까지 순서대로 미리 생성(동시 2) --- */
+/* --- 백그라운드 프리페치: 현재 위치부터 책 끝까지 순서대로 미리 생성(동시 1 — RPM 회피) --- */
 function ttsStartPrefetch() {
   if (_tts.prefetching) return;
   _tts.prefetching = true;
@@ -3630,10 +3633,11 @@ function ttsStartPrefetch() {
     while (_tts.active) {
       const i = idx++;
       if (i >= _tts.clips.length) break;
-      try { await ttsEnsure(_tts.clips[i]); } catch (e) { /* 실패는 재생 시점에 재시도 */ }
+      try { await ttsEnsure(_tts.clips[i]); }
+      catch (e) { if (e && e.status === 429) break; /* 그 외 실패는 재생 시점에 재시도 */ }
     }
   };
-  Promise.all([worker(), worker()]).finally(() => { _tts.prefetching = false; });
+  Promise.all([worker()]).finally(() => { _tts.prefetching = false; });
 }
 
 /* --- 재생 엔진 --- */
@@ -3762,26 +3766,32 @@ function ttsUpdateProgress(done, total) {
 }
 
 /* 🎧 음성 만들기 — 현재 설정(언어·목소리)으로 책 전체(본문+단어) 클립을 미리 생성.
-   진행바 표시 후 완료되면 재생 단계로. 동시 2로 생성, 캐시된 건 즉시 통과. */
+   페이싱: 동시 1개 + 요청 간 간격 → 분당 요청 한도(RPM) 회피. 캐시된 건 즉시 통과.
+   429(quota) 만나면 즉시 중단하고 안내(계속 던져봐야 quota 만 낭비). */
 async function ttsMakeAudio() {
   ttsInit();
   const clips = ttsBuildClips('both');
   if (clips.length === 0) return;
   _tts.makeCancel = false;
   ttsSetUiState('progress');
-  let done = 0;
+  let done = 0, quotaHit = false;
   ttsUpdateProgress(0, clips.length);
-  let idx = 0;
-  const worker = async () => {
-    while (!_tts.makeCancel) {
-      const i = idx++;
-      if (i >= clips.length) break;
-      try { await ttsEnsure(clips[i]); } catch (e) { /* 실패는 재생 시 재시도 */ }
-      done++;
-      ttsUpdateProgress(done, clips.length);
+  for (let i = 0; i < clips.length && !_tts.makeCancel; i++) {
+    try {
+      await ttsEnsure(clips[i]);
+    } catch (e) {
+      if (e && e.status === 429) { quotaHit = true; break; }
+      /* 그 외 실패는 건너뜀(재생 시 재시도) */
     }
-  };
-  await Promise.all([worker(), worker()]);
+    done++;
+    ttsUpdateProgress(done, clips.length);
+    await new Promise((r) => setTimeout(r, 400));  // 요청 간 간격
+  }
+  if (quotaHit) {
+    ttsSetUiState('setup');
+    alert('음성 생성 할당량(quota)을 초과했습니다. 잠시 후 다시 시도해 주세요.');
+    return;
+  }
   if (_tts.makeCancel) { ttsSetUiState('setup'); return; }
   _tts.made = true;
   ttsSetUiState('player');
