@@ -3369,6 +3369,9 @@ const _tts = {
 /* TTS 성별 → 프리셋 음성(엣지 함수와 동일). 표시용으로만 사용, 실제 매핑은 서버가 수행. */
 const TTS_DB_NAME = 'wordfeel-tts';
 const TTS_STORE = 'clips';
+/* 캐시 버전 — 오디오 생성 방식(무음 트림/발화 검사 등)이 바뀌면 올려서 기존 캐시 무효화.
+   v2: 서버 무음 트림 + 발화 길이 sanity check 도입 (기존 무음 클립 재생성). */
+const TTS_CACHE_VERSION = 'v2';
 
 /* --- IndexedDB 캐시 --- */
 function ttsOpenDB() {
@@ -3440,7 +3443,7 @@ function ttsVocabText(item, original, lang) {
 
 /* --- 클립 빌드 --- */
 function ttsMakeClip(kind, pageIdx, itemIdx, text, role, gender) {
-  return { kind, pageIdx, itemIdx, text, role, gender, cacheKey: `${role}:${gender}:${ttsHash(text)}` };
+  return { kind, pageIdx, itemIdx, text, role, gender, cacheKey: `${TTS_CACHE_VERSION}:${role}:${gender}:${ttsHash(text)}` };
 }
 /* 긴 본문 분할 — Gemini TTS 는 긴 입력에서 낭독 뒤에 과도한 무음/이상 출력을 낸다
    (실측: 400·800자 정상, 1200자↑ 깨짐). 그래서 문장 경계로 maxLen(≈600자) 이하 조각으로
