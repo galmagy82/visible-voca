@@ -608,7 +608,7 @@
   .tts-state[hidden] { display: none; }
   /* 음성 만들기 버튼 (강조) */
   .tts-make-btn {
-    padding: 9px 18px; border: none; border-radius: 8px;
+    width: 100%; padding: 11px 18px; border: none; border-radius: 8px;
     background: #5A8A42; color: #FFFFFF; font-size: 14px; font-weight: 700; cursor: pointer;
   }
   .tts-make-btn:hover { background: #4E7A38; }
@@ -623,6 +623,21 @@
   .tts-progress-track { width: 100%; height: 8px; border-radius: 4px; background: #E5E3DF; overflow: hidden; }
   .tts-progress-fill { height: 100%; width: 0%; background: #5A8A42; border-radius: 4px; transition: width 0.3s ease; }
   .tts-progress-count { font-size: 12px; color: #6A6862; }
+  /* 플레이어 바 헤더(제목 + 우상단 닫기) */
+  .tts-bar-header { display: flex; align-items: center; justify-content: space-between; }
+  .tts-bar-title { font-size: 13px; font-weight: 700; color: #4A4844; }
+  .tts-corner-close {
+    width: 28px; height: 28px; border: 1px solid #E5E3DF; border-radius: 6px;
+    background: #FFFFFF; color: #6A6862; font-size: 13px; cursor: pointer; line-height: 1;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .tts-corner-close:hover { background: #EDECEA; }
+  /* 설정 행: 라벨(좌) + 라디오(우) 양끝 정렬 → 우측 빈 공간 제거 */
+  .tts-setting { justify-content: space-between; }
+  .tts-setting-label { font-size: 13px; font-weight: 600; color: #6A6862; }
+  .tts-radios { display: inline-flex; gap: 18px; }
+  .tts-radio { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; color: #4A4844; cursor: pointer; }
+  .tts-radio input { accent-color: #5A8A42; cursor: pointer; margin: 0; }
   .saved-badge {
     font-size: 0.8rem;
     color: #5A8A42;
@@ -1597,43 +1612,46 @@
       </div>
     </div>
 
-    <!-- 읽어주기 플레이어 바 — 3단계: ① 설정 → ② 생성중 → ③ 재생 -->
+    <!-- 읽어주기 플레이어 바 — 헤더(제목+✕) + 3단계: ① 설정 → ② 생성중 → ③ 재생 -->
     <div class="tts-player-bar" id="ttsPlayerBar" hidden>
 
-      <!-- ① 설정: 생성 전 옵션 + 음성 만들기 -->
+      <!-- 공통 헤더: 제목(좌) + 닫기(우상단) -->
+      <div class="tts-bar-header">
+        <span class="tts-bar-title">🔊 읽어주기</span>
+        <button class="tts-corner-close" onclick="ttsCornerClose()" aria-label="닫기">✕</button>
+      </div>
+
+      <!-- ① 설정: 라디오 옵션 + 음성 만들기(전체 너비) -->
       <div class="tts-state" id="ttsSetup">
-        <div class="tts-row tts-row-opts">
-          <span class="tts-optgroup"><span class="tts-optlabel">단어설명 언어</span>
-            <button class="tts-opt" id="ttsLang_native" onclick="ttsSetMeaningLang('native')">한국어</button>
-            <button class="tts-opt" id="ttsLang_en" onclick="ttsSetMeaningLang('en')">English</button>
+        <div class="tts-row tts-setting">
+          <span class="tts-setting-label">단어설명 언어</span>
+          <span class="tts-radios">
+            <label class="tts-radio"><input type="radio" name="ttsLang" value="native" onclick="ttsSetMeaningLang('native')"> 한국어</label>
+            <label class="tts-radio"><input type="radio" name="ttsLang" value="en" onclick="ttsSetMeaningLang('en')"> English</label>
           </span>
         </div>
-        <div class="tts-row tts-row-opts">
-          <span class="tts-optgroup"><span class="tts-optlabel">낭독</span>
-            <button class="tts-opt" id="ttsVoice_narrator_female" onclick="ttsSetGender('narrator','female')">여</button>
-            <button class="tts-opt" id="ttsVoice_narrator_male" onclick="ttsSetGender('narrator','male')">남</button>
-          </span>
-          <span class="tts-optgroup"><span class="tts-optlabel">단어설명</span>
-            <button class="tts-opt" id="ttsVoice_teacher_female" onclick="ttsSetGender('teacher','female')">여</button>
-            <button class="tts-opt" id="ttsVoice_teacher_male" onclick="ttsSetGender('teacher','male')">남</button>
+        <div class="tts-row tts-setting">
+          <span class="tts-setting-label">낭독 목소리</span>
+          <span class="tts-radios">
+            <label class="tts-radio"><input type="radio" name="ttsNarrator" value="female" onclick="ttsSetGender('narrator','female')"> 여</label>
+            <label class="tts-radio"><input type="radio" name="ttsNarrator" value="male" onclick="ttsSetGender('narrator','male')"> 남</label>
           </span>
         </div>
-        <div class="tts-row tts-row-main">
-          <button class="tts-make-btn" id="ttsMakeBtn" onclick="ttsMakeAudio()">🎧 음성 만들기</button>
-          <span class="tts-spacer"></span>
-          <button class="tts-close-btn" onclick="ttsStopAndClose()" aria-label="닫기">✕</button>
+        <div class="tts-row tts-setting">
+          <span class="tts-setting-label">단어설명 목소리</span>
+          <span class="tts-radios">
+            <label class="tts-radio"><input type="radio" name="ttsTeacher" value="female" onclick="ttsSetGender('teacher','female')"> 여</label>
+            <label class="tts-radio"><input type="radio" name="ttsTeacher" value="male" onclick="ttsSetGender('teacher','male')"> 남</label>
+          </span>
         </div>
+        <button class="tts-make-btn" id="ttsMakeBtn" onclick="ttsMakeAudio()">🎧 음성 만들기</button>
       </div>
 
       <!-- ② 생성 중: 진행바 -->
       <div class="tts-state" id="ttsProgress" hidden>
         <div class="tts-row"><span class="tts-progress-label">🎧 음성 생성 중…</span></div>
         <div class="tts-progress-track"><div class="tts-progress-fill" id="ttsProgressFill"></div></div>
-        <div class="tts-row tts-row-main">
-          <span class="tts-progress-count" id="ttsProgressCount">0 / 0</span>
-          <span class="tts-spacer"></span>
-          <button class="tts-close-btn" onclick="ttsCancelMake()">취소</button>
-        </div>
+        <div class="tts-row"><span class="tts-progress-count" id="ttsProgressCount">0 / 0</span></div>
       </div>
 
       <!-- ③ 재생: 실제 플레이어 -->
@@ -1645,7 +1663,6 @@
           <button class="tts-speed-btn" id="ttsSpeedBtn" onclick="ttsCycleSpeed()" title="배속">1×</button>
           <button class="tts-dl-btn" id="ttsDownloadBtn" onclick="ttsDownloadBook()" title="책 전체 오디오 다운로드">⬇</button>
           <button class="tts-remake-btn" id="ttsRemakeBtn" onclick="ttsRemake()">다시 만들기</button>
-          <button class="tts-close-btn" onclick="ttsStopAndClose()" aria-label="정지하고 닫기">✕</button>
         </div>
         <div class="tts-row tts-row-opts">
           <span class="tts-optgroup">
@@ -3882,19 +3899,21 @@ function ttsUpdateBar() {
     if (b) b.classList.toggle('active', _tts.mode === m);
   });
   /* 목소리 성별 버튼 active */
-  ['narrator', 'teacher'].forEach((role) => {
-    ['female', 'male'].forEach((g) => {
-      const b = document.getElementById(`ttsVoice_${role}_${g}`);
-      if (b) b.classList.toggle('active', (role === 'narrator' ? _tts.narratorGender : _tts.teacherGender) === g);
-    });
-  });
+  /* 설정 라디오 버튼 현재 값 반영 */
+  const setRadio = (name, val) => {
+    const r = document.querySelector(`input[name="${name}"][value="${val}"]`);
+    if (r) r.checked = true;
+  };
+  setRadio('ttsLang', _studyMeaningLang);
+  setRadio('ttsNarrator', _tts.narratorGender);
+  setRadio('ttsTeacher', _tts.teacherGender);
   const spd = document.getElementById('ttsSpeedBtn');
   if (spd) spd.textContent = `${_tts.speed}×`;
-  const ml = _studyMeaningLang;
-  ['native', 'en'].forEach((l) => {
-    const b = document.getElementById(`ttsLang_${l}`);
-    if (b) b.classList.toggle('active', ml === l);
-  });
+}
+/* 헤더 ✕ — 생성 중이면 취소까지 하고, 재생을 정지하고 바를 닫는다. */
+function ttsCornerClose() {
+  if (_tts.uiState === 'progress') _tts.makeCancel = true;
+  ttsStopAndClose();
 }
 
 /* --- 새로 올리기 (세션 초기화) --- */
