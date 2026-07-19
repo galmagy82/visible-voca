@@ -1569,7 +1569,7 @@
         <!-- 페이지 순서 편집 — 저장된 책(_currentBookId 있음 + 로그인) 일 때만 표시 -->
         <button class="reorder-pages-btn" id="reorderPagesBtn" onclick="openReorderModal()" data-i18n="readingReorderPagesBtn" hidden>🔀 순서 편집</button>
         <!-- 읽어주기 재생 진입 버튼 — 누르면 아래 플레이어 바가 열리며 재생 시작 -->
-        <button class="tts-toolbar-btn" id="ttsToolbarBtn" onclick="ttsToggle()" title="읽어주기" aria-label="읽어주기">🔊 읽어주기</button>
+        <button class="tts-toolbar-btn" id="ttsToolbarBtn" onclick="ttsToolbarToggle()" title="읽어주기" aria-label="읽어주기">🔊 읽어주기</button>
         <!-- 번역 토글 — UI 언어가 영어이면 숨김 -->
         <button class="translate-toggle" id="translateToggle" onclick="toggleTranslate()"></button>
       </div>
@@ -3596,6 +3596,13 @@ function ttsToggle() {
   if (_tts.active && !_tts.paused) { ttsPause(); return; }
   if (_tts.active && _tts.paused) { ttsResume(); return; }
   ttsStartFromCurrentPage();
+}
+/* 툴바 🔊 버튼 — 플레이어 바 열기/닫기 토글.
+   바가 열려 있으면 정지하고 닫음, 닫혀 있으면 열면서 재생 시작. */
+function ttsToolbarToggle() {
+  const bar = document.getElementById('ttsPlayerBar');
+  if (bar && !bar.hidden) ttsStop();
+  else ttsStartFromCurrentPage();
 }
 function ttsStartFromCurrentPage() {
   ttsInit();
