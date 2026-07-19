@@ -603,6 +603,26 @@
     background: #EAF3E2; border-radius: 8px;
     box-shadow: 0 0 0 2px #5A8A42 inset;
   }
+  /* 3단계 상태 컨테이너 (설정/생성중/재생) */
+  .tts-state { display: flex; flex-direction: column; gap: 8px; }
+  .tts-state[hidden] { display: none; }
+  /* 음성 만들기 버튼 (강조) */
+  .tts-make-btn {
+    padding: 9px 18px; border: none; border-radius: 8px;
+    background: #5A8A42; color: #FFFFFF; font-size: 14px; font-weight: 700; cursor: pointer;
+  }
+  .tts-make-btn:hover { background: #4E7A38; }
+  /* 다시 만들기 버튼 */
+  .tts-remake-btn {
+    padding: 6px 10px; border: 1px solid #D8D6D2; border-radius: 8px;
+    background: #FFFFFF; color: #4A4844; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
+  }
+  .tts-remake-btn:hover { background: #EDECEA; }
+  /* 생성 진행바 */
+  .tts-progress-label { font-size: 13px; font-weight: 600; color: #4A4844; }
+  .tts-progress-track { width: 100%; height: 8px; border-radius: 4px; background: #E5E3DF; overflow: hidden; }
+  .tts-progress-fill { height: 100%; width: 0%; background: #5A8A42; border-radius: 4px; transition: width 0.3s ease; }
+  .tts-progress-count { font-size: 12px; color: #6A6862; }
   .saved-badge {
     font-size: 0.8rem;
     color: #5A8A42;
@@ -1577,41 +1597,65 @@
       </div>
     </div>
 
-    <!-- 읽어주기 플레이어 바 — ▶ 누르면 표시. 재생/모드/목소리/배속/언어/다운로드 컨트롤. -->
+    <!-- 읽어주기 플레이어 바 — 3단계: ① 설정 → ② 생성중 → ③ 재생 -->
     <div class="tts-player-bar" id="ttsPlayerBar" hidden>
-      <div class="tts-row tts-row-main">
-        <button class="tts-play-btn" id="ttsPlayPauseBtn" onclick="ttsToggle()" aria-label="재생/일시정지">▶</button>
-        <span class="tts-buffering" id="ttsBuffering" hidden>오디오 준비 중…</span>
-        <span class="tts-spacer"></span>
-        <button class="tts-speed-btn" id="ttsSpeedBtn" onclick="ttsCycleSpeed()" title="배속">1×</button>
-        <button class="tts-dl-btn" id="ttsDownloadBtn" onclick="ttsDownloadBook()" title="책 전체 오디오 다운로드">⬇</button>
-        <button class="tts-close-btn" onclick="ttsStopAndClose()" aria-label="정지하고 닫기">✕</button>
+
+      <!-- ① 설정: 생성 전 옵션 + 음성 만들기 -->
+      <div class="tts-state" id="ttsSetup">
+        <div class="tts-row tts-row-opts">
+          <span class="tts-optgroup"><span class="tts-optlabel">단어설명 언어</span>
+            <button class="tts-opt" id="ttsLang_native" onclick="ttsSetMeaningLang('native')">한국어</button>
+            <button class="tts-opt" id="ttsLang_en" onclick="ttsSetMeaningLang('en')">English</button>
+          </span>
+        </div>
+        <div class="tts-row tts-row-opts">
+          <span class="tts-optgroup"><span class="tts-optlabel">낭독</span>
+            <button class="tts-opt" id="ttsVoice_narrator_female" onclick="ttsSetGender('narrator','female')">여</button>
+            <button class="tts-opt" id="ttsVoice_narrator_male" onclick="ttsSetGender('narrator','male')">남</button>
+          </span>
+          <span class="tts-optgroup"><span class="tts-optlabel">단어설명</span>
+            <button class="tts-opt" id="ttsVoice_teacher_female" onclick="ttsSetGender('teacher','female')">여</button>
+            <button class="tts-opt" id="ttsVoice_teacher_male" onclick="ttsSetGender('teacher','male')">남</button>
+          </span>
+        </div>
+        <div class="tts-row tts-row-main">
+          <button class="tts-make-btn" id="ttsMakeBtn" onclick="ttsMakeAudio()">🎧 음성 만들기</button>
+          <span class="tts-spacer"></span>
+          <button class="tts-close-btn" onclick="ttsStopAndClose()" aria-label="닫기">✕</button>
+        </div>
       </div>
-      <div class="tts-row tts-row-opts">
-        <!-- 재생 모드 -->
-        <span class="tts-optgroup">
-          <button class="tts-opt" id="ttsMode_body" onclick="ttsSetMode('body')">본문만</button>
-          <button class="tts-opt" id="ttsMode_both" onclick="ttsSetMode('both')">본문+단어</button>
-          <button class="tts-opt" id="ttsMode_vocab" onclick="ttsSetMode('vocab')">단어만</button>
-        </span>
-        <!-- 해설 언어 -->
-        <span class="tts-optgroup">
-          <button class="tts-opt" id="ttsLang_native" onclick="ttsSetMeaningLang('native')">한국어</button>
-          <button class="tts-opt" id="ttsLang_en" onclick="ttsSetMeaningLang('en')">English</button>
-        </span>
+
+      <!-- ② 생성 중: 진행바 -->
+      <div class="tts-state" id="ttsProgress" hidden>
+        <div class="tts-row"><span class="tts-progress-label">🎧 음성 생성 중…</span></div>
+        <div class="tts-progress-track"><div class="tts-progress-fill" id="ttsProgressFill"></div></div>
+        <div class="tts-row tts-row-main">
+          <span class="tts-progress-count" id="ttsProgressCount">0 / 0</span>
+          <span class="tts-spacer"></span>
+          <button class="tts-close-btn" onclick="ttsCancelMake()">취소</button>
+        </div>
       </div>
-      <div class="tts-row tts-row-opts">
-        <!-- 낭독 목소리 -->
-        <span class="tts-optgroup"><span class="tts-optlabel">낭독</span>
-          <button class="tts-opt" id="ttsVoice_narrator_female" onclick="ttsSetGender('narrator','female')">여</button>
-          <button class="tts-opt" id="ttsVoice_narrator_male" onclick="ttsSetGender('narrator','male')">남</button>
-        </span>
-        <!-- 단어설명 목소리 -->
-        <span class="tts-optgroup"><span class="tts-optlabel">단어설명</span>
-          <button class="tts-opt" id="ttsVoice_teacher_female" onclick="ttsSetGender('teacher','female')">여</button>
-          <button class="tts-opt" id="ttsVoice_teacher_male" onclick="ttsSetGender('teacher','male')">남</button>
-        </span>
+
+      <!-- ③ 재생: 실제 플레이어 -->
+      <div class="tts-state" id="ttsPlayer" hidden>
+        <div class="tts-row tts-row-main">
+          <button class="tts-play-btn" id="ttsPlayPauseBtn" onclick="ttsToggle()" aria-label="재생/일시정지">▶</button>
+          <span class="tts-buffering" id="ttsBuffering" hidden>오디오 준비 중…</span>
+          <span class="tts-spacer"></span>
+          <button class="tts-speed-btn" id="ttsSpeedBtn" onclick="ttsCycleSpeed()" title="배속">1×</button>
+          <button class="tts-dl-btn" id="ttsDownloadBtn" onclick="ttsDownloadBook()" title="책 전체 오디오 다운로드">⬇</button>
+          <button class="tts-remake-btn" id="ttsRemakeBtn" onclick="ttsRemake()">다시 만들기</button>
+          <button class="tts-close-btn" onclick="ttsStopAndClose()" aria-label="정지하고 닫기">✕</button>
+        </div>
+        <div class="tts-row tts-row-opts">
+          <span class="tts-optgroup">
+            <button class="tts-opt" id="ttsMode_body" onclick="ttsSetMode('body')">본문만</button>
+            <button class="tts-opt" id="ttsMode_both" onclick="ttsSetMode('both')">본문+단어</button>
+            <button class="tts-opt" id="ttsMode_vocab" onclick="ttsSetMode('vocab')">단어만</button>
+          </span>
+        </div>
       </div>
+
     </div>
 
     <div class="book-stage">
@@ -2814,8 +2858,8 @@ function setLoadingPhase(key) {
 
 /* --- 북 뷰어 렌더 --- */
 function renderBook() {
-  /* 다른 책/새 책을 그릴 때 이전 읽어주기 재생을 정지하고 바를 닫음 */
-  if (typeof ttsStop === 'function') { ttsStop(); ttsShowBar(false); }
+  /* 다른 책/새 책을 그릴 때 이전 읽어주기 재생을 정지·바 닫음·생성상태 리셋 */
+  if (typeof ttsStop === 'function') { ttsStop(); ttsShowBar(false); _tts.made = false; ttsSetUiState('setup'); }
   const track = document.getElementById('pageTrack');
   /* 페이지 번호 배지는 renderPageContent 내부에서 본문 다음 위치에 그림 — 외부에서 별도 삽입 X */
   track.innerHTML = _pages.map((p, i) => `<div class="page" data-page-idx="${i}">${renderPageContent(p, i)}</div>`).join('');
@@ -3359,14 +3403,17 @@ function updateTranslateBtnState() {
 const _tts = {
   active: false,        // 엔진 동작 중(재생 or 일시정지 상태 포함)
   paused: false,
-  mode: 'both',         // 'body' | 'both' | 'vocab'
+  mode: 'both',         // 'both' | 'body' | 'vocab' — 재생 필터(모든 클립은 미리 생성됨)
   narratorGender: 'female',  // 낭독 목소리
   teacherGender: 'male',     // 단어설명 목소리
   speed: 1.0,
-  clips: [],            // 책 전체 클립 디스크립터 배열(현재 모드/설정 기준)
+  clips: [],            // 재생용 클립 배열(현재 모드/설정 기준)
   pos: 0,               // 현재 재생 중 클립 인덱스
   audio: null,          // <audio> 엘리먼트
   prefetching: false,
+  made: false,          // 현재 설정으로 책 전체 음성을 생성 완료했는지
+  uiState: 'setup',     // 'setup' | 'progress' | 'player' — 플레이어 바 표시 단계
+  makeCancel: false,    // 생성 취소 플래그
 };
 /* TTS 성별 → 프리셋 음성(엣지 함수와 동일). 표시용으로만 사용, 실제 매핑은 서버가 수행. */
 const TTS_DB_NAME = 'wordfeel-tts';
@@ -3479,19 +3526,21 @@ function ttsChunkText(text, maxLen) {
   return chunks;
 }
 
-/* 현재 모드/설정 기준으로 책 전체 클립 배열 생성 */
-function ttsBuildClips() {
+/* 클립 배열 생성. modeOverride 미지정 시 현재 재생 모드(_tts.mode) 기준.
+   생성 단계에서는 'both' 로 호출해 본문+단어 전체를 만든다. */
+function ttsBuildClips(modeOverride) {
   const clips = [];
   const lang = _studyMeaningLang;
+  const mode = modeOverride || _tts.mode;
   _pages.forEach((p, pi) => {
     if (!p || p.error || p.no_text || !p.original) return;
-    if (_tts.mode === 'body' || _tts.mode === 'both') {
+    if (mode === 'body' || mode === 'both') {
       /* 본문은 ~600자 이하 조각으로 나눠 각각 클립 생성(긴 본문 무음/이상 방지) */
       ttsChunkText(p.original, 600).forEach((chunk) => {
         clips.push(ttsMakeClip('body', pi, -1, chunk, 'narrator', _tts.narratorGender));
       });
     }
-    if (_tts.mode === 'vocab' || _tts.mode === 'both') {
+    if (mode === 'vocab' || mode === 'both') {
       const items = Array.isArray(p.study_items) ? p.study_items : [];
       items.forEach((it, ii) => {
         const text = ttsVocabText(it, p.original, lang);
@@ -3638,12 +3687,72 @@ function ttsToggle() {
   ttsStartFromCurrentPage();
 }
 /* 툴바 🔊 버튼 — 플레이어 바 보이기/숨기기 전용. 재생/정지와 무관.
-   숨겨도 재생은 계속됨(패널 닫고 본문 읽으며 듣기 가능). 재생 제어는 바 안의 ▶ 로만. */
+   숨겨도 재생은 계속됨(패널 닫고 본문 읽으며 듣기 가능). 재생 제어는 바 안의 ▶ 로만.
+   열 때: 이미 생성 완료면 재생 단계, 아니면 설정 단계(생성 중이면 그대로 유지). */
 function ttsToolbarToggle() {
   const bar = document.getElementById('ttsPlayerBar');
   if (!bar) return;
+  const willShow = bar.hidden;
   bar.hidden = !bar.hidden;
+  if (willShow && _tts.uiState !== 'progress') {
+    ttsSetUiState(_tts.made ? 'player' : 'setup');
+  }
   ttsUpdateBar();
+}
+
+/* --- 플레이어 바 3단계(설정 → 생성중 → 재생) 전환 --- */
+function ttsSetUiState(state) {
+  _tts.uiState = state;
+  const map = { setup: 'ttsSetup', progress: 'ttsProgress', player: 'ttsPlayer' };
+  Object.keys(map).forEach((s) => {
+    const el = document.getElementById(map[s]);
+    if (el) el.hidden = (s !== state);
+  });
+  ttsUpdateBar();
+}
+function ttsUpdateProgress(done, total) {
+  const fill = document.getElementById('ttsProgressFill');
+  const count = document.getElementById('ttsProgressCount');
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  if (fill) fill.style.width = pct + '%';
+  if (count) count.textContent = `${done} / ${total}`;
+}
+
+/* 🎧 음성 만들기 — 현재 설정(언어·목소리)으로 책 전체(본문+단어) 클립을 미리 생성.
+   진행바 표시 후 완료되면 재생 단계로. 동시 2로 생성, 캐시된 건 즉시 통과. */
+async function ttsMakeAudio() {
+  ttsInit();
+  const clips = ttsBuildClips('both');
+  if (clips.length === 0) return;
+  _tts.makeCancel = false;
+  ttsSetUiState('progress');
+  let done = 0;
+  ttsUpdateProgress(0, clips.length);
+  let idx = 0;
+  const worker = async () => {
+    while (!_tts.makeCancel) {
+      const i = idx++;
+      if (i >= clips.length) break;
+      try { await ttsEnsure(clips[i]); } catch (e) { /* 실패는 재생 시 재시도 */ }
+      done++;
+      ttsUpdateProgress(done, clips.length);
+    }
+  };
+  await Promise.all([worker(), worker()]);
+  if (_tts.makeCancel) { ttsSetUiState('setup'); return; }
+  _tts.made = true;
+  ttsSetUiState('player');
+}
+/* 생성 취소 — 설정 단계로 복귀 */
+function ttsCancelMake() {
+  _tts.makeCancel = true;
+  ttsSetUiState('setup');
+}
+/* 다시 만들기 — 재생 정지 후 설정 단계로 (다른 언어/목소리로 재생성) */
+function ttsRemake() {
+  ttsStop();
+  _tts.made = false;
+  ttsSetUiState('setup');
 }
 function ttsStartFromCurrentPage() {
   ttsInit();
@@ -3790,7 +3899,7 @@ function ttsUpdateBar() {
 
 /* --- 새로 올리기 (세션 초기화) --- */
 function resetReading() {
-  ttsStop(); ttsShowBar(false);
+  ttsStop(); ttsShowBar(false); _tts.made = false; ttsSetUiState('setup');
   _pages = [];
   _currentIdx = 0;
   _showTranslated = false;
@@ -3810,7 +3919,7 @@ function resetReading() {
 /* 책 목록(또는 책 뷰어 fresh 모드) 에서 뒤로가기 → 업로드 화면으로 복귀.
    책 뷰어도 같이 숨겨야 fresh 뷰어에서 호출되었을 때 화면이 정상 전환됨. */
 function backToUpload() {
-  ttsStop(); ttsShowBar(false);
+  ttsStop(); ttsShowBar(false); _tts.made = false; ttsSetUiState('setup');
   document.getElementById('bookListArea').hidden = true;
   document.getElementById('bookViewer').hidden = true;
   document.getElementById('loadingArea').hidden = true;
