@@ -1634,11 +1634,10 @@
         <button class="tts-make-btn" id="ttsMakeBtn" onclick="ttsMakeAudio()">🎧 음성 만들기</button>
       </div>
 
-      <!-- ② 생성 중: 진행바 -->
+      <!-- ② 생성 중: 진행바(숫자 카운트 없음) -->
       <div class="tts-state" id="ttsProgress" hidden>
         <div class="tts-row"><span class="tts-progress-label">🎧 음성 생성 중…</span></div>
         <div class="tts-progress-track"><div class="tts-progress-fill" id="ttsProgressFill"></div></div>
-        <div class="tts-row"><span class="tts-progress-count" id="ttsProgressCount">0 / 0</span></div>
       </div>
 
       <!-- ③ 재생: 실제 플레이어 -->
@@ -3747,10 +3746,8 @@ function ttsSetUiState(state) {
 }
 function ttsUpdateProgress(done, total) {
   const fill = document.getElementById('ttsProgressFill');
-  const count = document.getElementById('ttsProgressCount');
   const pct = total ? Math.round((done / total) * 100) : 0;
   if (fill) fill.style.width = pct + '%';
-  if (count) count.textContent = `${done} / ${total}`;
 }
 
 /* 🎧 음성 만들기 — 현재 설정(언어·목소리)으로 책 전체(본문+단어) 클립을 미리 생성.
