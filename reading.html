@@ -569,6 +569,8 @@
     border: 1px solid #D8D6D2; border-radius: 12px; background: #FBFAF8;
     display: flex; flex-direction: column; gap: 8px;
   }
+  /* hidden 속성이 display:flex 에 눌리지 않도록 — 우선순위 높은 규칙으로 확실히 숨김 */
+  .tts-player-bar[hidden] { display: none; }
   .tts-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .tts-row-main { gap: 10px; }
   .tts-spacer { flex: 1; }
