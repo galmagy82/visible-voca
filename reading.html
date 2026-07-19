@@ -554,6 +554,53 @@
     transition: background 0.2s;
   }
   .reorder-pages-btn:hover { background: #EDECEA; }
+
+  /* ===== 읽어주기(TTS) 툴바 버튼 + 플레이어 바 ===== */
+  .tts-toolbar-btn {
+    padding: 6px 12px; border: 1px solid #D8D6D2; border-radius: 8px;
+    background: #F5F4F1; color: #4A4844; font-size: 13px; font-weight: 600;
+    cursor: pointer; white-space: nowrap;
+  }
+  .tts-toolbar-btn:hover { background: #EDECEA; }
+  .tts-toolbar-btn.active { background: #5A8A42; color: #FFFFFF; border-color: #5A8A42; }
+
+  .tts-player-bar {
+    margin: 8px 0 4px; padding: 10px 12px;
+    border: 1px solid #D8D6D2; border-radius: 12px; background: #FBFAF8;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .tts-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .tts-row-main { gap: 10px; }
+  .tts-spacer { flex: 1; }
+  .tts-play-btn {
+    width: 40px; height: 40px; border-radius: 50%; border: none;
+    background: #5A8A42; color: #FFFFFF; font-size: 16px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .tts-play-btn:hover { background: #4E7A38; }
+  .tts-buffering { font-size: 12px; color: #9C7A2A; }
+  .tts-speed-btn, .tts-dl-btn, .tts-close-btn {
+    padding: 6px 10px; border: 1px solid #D8D6D2; border-radius: 8px;
+    background: #FFFFFF; color: #4A4844; font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .tts-speed-btn:hover, .tts-dl-btn:hover, .tts-close-btn:hover { background: #EDECEA; }
+  .tts-dl-btn:disabled { opacity: 0.55; cursor: default; }
+  .tts-optgroup {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px; border: 1px solid #E5E3DF; border-radius: 8px; background: #FFFFFF;
+  }
+  .tts-optlabel { font-size: 11px; color: #9C9892; padding: 0 4px; }
+  .tts-opt {
+    padding: 5px 10px; border: none; border-radius: 6px; background: transparent;
+    color: #6A6862; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
+  }
+  .tts-opt:hover { background: #F0EFEC; }
+  .tts-opt.active { background: #5A8A42; color: #FFFFFF; }
+  /* 재생 중인 단어 강조 */
+  .study-item-li.tts-playing {
+    background: #EAF3E2; border-radius: 8px;
+    box-shadow: 0 0 0 2px #5A8A42 inset;
+  }
   .saved-badge {
     font-size: 0.8rem;
     color: #5A8A42;
@@ -1521,10 +1568,50 @@
         <button class="save-book-btn" id="saveBookBtn" onclick="openSaveBookModal()" data-i18n="readingSaveBookBtn" hidden>📚 책으로 저장</button>
         <!-- 페이지 순서 편집 — 저장된 책(_currentBookId 있음 + 로그인) 일 때만 표시 -->
         <button class="reorder-pages-btn" id="reorderPagesBtn" onclick="openReorderModal()" data-i18n="readingReorderPagesBtn" hidden>🔀 순서 편집</button>
+        <!-- 읽어주기 재생 진입 버튼 — 누르면 아래 플레이어 바가 열리며 재생 시작 -->
+        <button class="tts-toolbar-btn" id="ttsToolbarBtn" onclick="ttsToggle()" title="읽어주기" aria-label="읽어주기">🔊 읽어주기</button>
         <!-- 번역 토글 — UI 언어가 영어이면 숨김 -->
         <button class="translate-toggle" id="translateToggle" onclick="toggleTranslate()"></button>
       </div>
     </div>
+
+    <!-- 읽어주기 플레이어 바 — ▶ 누르면 표시. 재생/모드/목소리/배속/언어/다운로드 컨트롤. -->
+    <div class="tts-player-bar" id="ttsPlayerBar" hidden>
+      <div class="tts-row tts-row-main">
+        <button class="tts-play-btn" id="ttsPlayPauseBtn" onclick="ttsToggle()" aria-label="재생/일시정지">▶</button>
+        <span class="tts-buffering" id="ttsBuffering" hidden>오디오 준비 중…</span>
+        <span class="tts-spacer"></span>
+        <button class="tts-speed-btn" id="ttsSpeedBtn" onclick="ttsCycleSpeed()" title="배속">1×</button>
+        <button class="tts-dl-btn" id="ttsDownloadBtn" onclick="ttsDownloadBook()" title="책 전체 오디오 다운로드">⬇</button>
+        <button class="tts-close-btn" onclick="ttsStop()" aria-label="닫기">✕</button>
+      </div>
+      <div class="tts-row tts-row-opts">
+        <!-- 재생 모드 -->
+        <span class="tts-optgroup">
+          <button class="tts-opt" id="ttsMode_body" onclick="ttsSetMode('body')">본문만</button>
+          <button class="tts-opt" id="ttsMode_both" onclick="ttsSetMode('both')">본문+단어</button>
+          <button class="tts-opt" id="ttsMode_vocab" onclick="ttsSetMode('vocab')">단어만</button>
+        </span>
+        <!-- 해설 언어 -->
+        <span class="tts-optgroup">
+          <button class="tts-opt" id="ttsLang_native" onclick="ttsSetMeaningLang('native')">한국어</button>
+          <button class="tts-opt" id="ttsLang_en" onclick="ttsSetMeaningLang('en')">English</button>
+        </span>
+      </div>
+      <div class="tts-row tts-row-opts">
+        <!-- 낭독 목소리 -->
+        <span class="tts-optgroup"><span class="tts-optlabel">낭독</span>
+          <button class="tts-opt" id="ttsVoice_narrator_female" onclick="ttsSetGender('narrator','female')">여</button>
+          <button class="tts-opt" id="ttsVoice_narrator_male" onclick="ttsSetGender('narrator','male')">남</button>
+        </span>
+        <!-- 단어설명 목소리 -->
+        <span class="tts-optgroup"><span class="tts-optlabel">단어설명</span>
+          <button class="tts-opt" id="ttsVoice_teacher_female" onclick="ttsSetGender('teacher','female')">여</button>
+          <button class="tts-opt" id="ttsVoice_teacher_male" onclick="ttsSetGender('teacher','male')">남</button>
+        </span>
+      </div>
+    </div>
+
     <div class="book-stage">
       <div class="page-track" id="pageTrack"></div>
     </div>
@@ -2725,6 +2812,8 @@ function setLoadingPhase(key) {
 
 /* --- 북 뷰어 렌더 --- */
 function renderBook() {
+  /* 다른 책/새 책을 그릴 때 이전 읽어주기 재생을 정지 */
+  if (typeof ttsStop === 'function') ttsStop();
   const track = document.getElementById('pageTrack');
   /* 페이지 번호 배지는 renderPageContent 내부에서 본문 다음 위치에 그림 — 외부에서 별도 삽입 X */
   track.innerHTML = _pages.map((p, i) => `<div class="page" data-page-idx="${i}">${renderPageContent(p, i)}</div>`).join('');
@@ -3256,8 +3345,398 @@ function updateTranslateBtnState() {
     : ((typeof t === 'function') ? t('readingTranslate') : '번역');
 }
 
+/* ============================================================================
+   ===== 읽어주기 (TTS) 엔진 =================================================
+   조각(segmented) 방식: 페이지당 본문 클립 1개 + 단어 클립 N개를 각각 생성.
+   - 오디오는 엣지 함수 reading-tts 로 생성(PCM) → 브라우저에서 WAV 로 감싸 재생.
+   - IndexedDB 캐싱 → 재청취 무료. 콘텐츠 주소 방식 키(role+gender+텍스트해시)라
+     같은 텍스트/목소리는 책이 달라도 캐시 재사용.
+   - 백그라운드로 앞쪽 클립들을 미리 생성(prefetch) → 자동진행 시 끊김 최소화.
+   - 목소리: 낭독/단어설명 각각 남(Algieba)/여(Aoede) 토글. 초기값 낭독=여, 설명=남.
+   - 오디오 포맷은 v1 에서 WAV(무압축) — 어디서나 재생. 압축(Opus/MP3)은 후속 최적화. */
+const _tts = {
+  active: false,        // 엔진 동작 중(재생 or 일시정지 상태 포함)
+  paused: false,
+  mode: 'both',         // 'body' | 'both' | 'vocab'
+  narratorGender: 'female',  // 낭독 목소리
+  teacherGender: 'male',     // 단어설명 목소리
+  speed: 1.0,
+  clips: [],            // 책 전체 클립 디스크립터 배열(현재 모드/설정 기준)
+  pos: 0,               // 현재 재생 중 클립 인덱스
+  audio: null,          // <audio> 엘리먼트
+  prefetching: false,
+};
+/* TTS 성별 → 프리셋 음성(엣지 함수와 동일). 표시용으로만 사용, 실제 매핑은 서버가 수행. */
+const TTS_DB_NAME = 'wordfeel-tts';
+const TTS_STORE = 'clips';
+
+/* --- IndexedDB 캐시 --- */
+function ttsOpenDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(TTS_DB_NAME, 1);
+    req.onupgradeneeded = () => req.result.createObjectStore(TTS_STORE);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function ttsCacheGet(key) {
+  try {
+    const db = await ttsOpenDB();
+    return await new Promise((resolve) => {
+      const r = db.transaction(TTS_STORE, 'readonly').objectStore(TTS_STORE).get(key);
+      r.onsuccess = () => resolve(r.result || null);
+      r.onerror = () => resolve(null);
+    });
+  } catch (e) { return null; }
+}
+async function ttsCachePut(key, blob) {
+  try {
+    const db = await ttsOpenDB();
+    await new Promise((resolve) => {
+      const tx = db.transaction(TTS_STORE, 'readwrite');
+      tx.objectStore(TTS_STORE).put(blob, key);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => resolve();
+    });
+  } catch (e) { /* 캐시 실패는 무시 — 재생은 계속 */ }
+}
+
+/* --- 텍스트 유틸 --- */
+/* 문자열 해시(djb2) — 캐시 키용 */
+function ttsHash(s) {
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
+  return (h >>> 0).toString(36);
+}
+/* 본문에서 surface 를 포함하는 문장 추출 — 단어 클립의 "본문에서 — 예문" 용 */
+function ttsFindExample(original, surface) {
+  if (!original || !surface) return '';
+  const text = String(original).replace(/\s+/g, ' ').trim();
+  const idx = text.toLowerCase().indexOf(surface.toLowerCase());
+  if (idx < 0) return '';
+  let start = 0;
+  for (let i = idx; i > 0; i--) {
+    if (/[.!?]/.test(text[i - 1])) { start = i; break; }
+  }
+  let end = text.length;
+  for (let i = idx + surface.length; i < text.length; i++) {
+    if (/[.!?]/.test(text[i])) { end = i + 1; break; }
+  }
+  return text.slice(start, end).trim();
+}
+/* 단어 클립 낭독 텍스트: "단어. 뜻. 본문에서 — 예문 [신호어], 예문"
+   예문은 2번(반복 학습), 두 번째 앞에 해설 언어에 맞는 신호어. */
+function ttsVocabText(item, original, lang) {
+  const surface = (item.surface || '').trim();
+  if (!surface) return '';
+  const meaning = (pickStudyMeaning(item, lang) || '').trim();
+  const example = ttsFindExample(original, surface);
+  const inText = (lang === 'en') ? 'In the text' : '본문에서';
+  const cue = (lang === 'en') ? 'Once more' : '다시 한번';
+  let s = `${surface}. ${meaning}.`;
+  if (example) s += ` ${inText} — ${example} ${cue}, ${example}`;
+  return s;
+}
+
+/* --- 클립 빌드 --- */
+function ttsMakeClip(kind, pageIdx, itemIdx, text, role, gender) {
+  return { kind, pageIdx, itemIdx, text, role, gender, cacheKey: `${role}:${gender}:${ttsHash(text)}` };
+}
+/* 현재 모드/설정 기준으로 책 전체 클립 배열 생성 */
+function ttsBuildClips() {
+  const clips = [];
+  const lang = _studyMeaningLang;
+  _pages.forEach((p, pi) => {
+    if (!p || p.error || p.no_text || !p.original) return;
+    if (_tts.mode === 'body' || _tts.mode === 'both') {
+      clips.push(ttsMakeClip('body', pi, -1, String(p.original).trim(), 'narrator', _tts.narratorGender));
+    }
+    if (_tts.mode === 'vocab' || _tts.mode === 'both') {
+      const items = Array.isArray(p.study_items) ? p.study_items : [];
+      items.forEach((it, ii) => {
+        const text = ttsVocabText(it, p.original, lang);
+        if (text) clips.push(ttsMakeClip('vocab', pi, ii, text, 'teacher', _tts.teacherGender));
+      });
+    }
+  });
+  return clips;
+}
+
+/* --- 오디오 생성(엣지 함수) + WAV 변환 --- */
+/* base64 PCM(16bit mono) → WAV Blob */
+function ttsWavFromPcm(pcm, sampleRate) {
+  const channels = 1, bits = 16;
+  const byteRate = sampleRate * channels * bits / 8, blockAlign = channels * bits / 8;
+  const buf = new ArrayBuffer(44 + pcm.length);
+  const dv = new DataView(buf);
+  const wStr = (o, s) => { for (let i = 0; i < s.length; i++) dv.setUint8(o + i, s.charCodeAt(i)); };
+  wStr(0, 'RIFF'); dv.setUint32(4, 36 + pcm.length, true); wStr(8, 'WAVE'); wStr(12, 'fmt ');
+  dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, channels, true);
+  dv.setUint32(24, sampleRate, true); dv.setUint32(28, byteRate, true); dv.setUint16(32, blockAlign, true);
+  dv.setUint16(34, bits, true); wStr(36, 'data'); dv.setUint32(40, pcm.length, true);
+  new Uint8Array(buf, 44).set(pcm);
+  return new Blob([buf], { type: 'audio/wav' });
+}
+function ttsB64ToBytes(b64) {
+  const bin = atob(b64);
+  const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return arr;
+}
+/* WAV Blob → PCM 바이트 + sampleRate (다운로드 병합용) */
+async function ttsWavToPcm(blob) {
+  const buf = await blob.arrayBuffer();
+  const dv = new DataView(buf);
+  const sampleRate = dv.getUint32(24, true);
+  return { pcm: new Uint8Array(buf, 44), sampleRate };
+}
+/* 엣지 함수 호출 → WAV Blob. 네트워크 오류 시 1회 재시도(서버도 자체 재시도함). */
+async function ttsFetch(clip) {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetch(EDGE_FUNCTION_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reading-tts', userId: getUserId(), text: clip.text, role: clip.role, gender: clip.gender }),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.error || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      const sampleRate = data.sampleRate || 24000;
+      return ttsWavFromPcm(ttsB64ToBytes(data.audio), sampleRate);
+    } catch (e) {
+      if (attempt === 1) throw e;
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+  }
+}
+/* 캐시 우선 조회 → 없으면 생성. 동일 키 동시 요청은 in-flight 프로미스로 합침. */
+const _ttsInflight = new Map();
+async function ttsEnsure(clip) {
+  const key = clip.cacheKey;
+  const cached = await ttsCacheGet(key);
+  if (cached) return cached;
+  if (_ttsInflight.has(key)) return _ttsInflight.get(key);
+  const p = ttsFetch(clip)
+    .then(async (blob) => { await ttsCachePut(key, blob); _ttsInflight.delete(key); return blob; })
+    .catch((e) => { _ttsInflight.delete(key); throw e; });
+  _ttsInflight.set(key, p);
+  return p;
+}
+
+/* --- 백그라운드 프리페치: 현재 위치부터 책 끝까지 순서대로 미리 생성(동시 2) --- */
+function ttsStartPrefetch() {
+  if (_tts.prefetching) return;
+  _tts.prefetching = true;
+  let idx = _tts.pos;
+  const worker = async () => {
+    while (_tts.active) {
+      const i = idx++;
+      if (i >= _tts.clips.length) break;
+      try { await ttsEnsure(_tts.clips[i]); } catch (e) { /* 실패는 재생 시점에 재시도 */ }
+    }
+  };
+  Promise.all([worker(), worker()]).finally(() => { _tts.prefetching = false; });
+}
+
+/* --- 재생 엔진 --- */
+function ttsInit() {
+  if (_tts.audio) return;
+  const a = new Audio();
+  a.addEventListener('ended', () => { _tts.pos++; ttsPlayCurrent(); });
+  a.addEventListener('error', () => { /* 재생 오류 시 다음으로 */ if (_tts.active && !_tts.paused) { _tts.pos++; ttsPlayCurrent(); } });
+  _tts.audio = a;
+}
+async function ttsPlayCurrent() {
+  if (!_tts.active || _tts.paused) return;
+  const clip = _tts.clips[_tts.pos];
+  if (!clip) { ttsStop(); return; }
+  /* 뷰어를 해당 페이지로 이동 + 하이라이트 */
+  if (clip.pageIdx !== _currentIdx) goTo(clip.pageIdx);
+  ttsHighlight(clip);
+  ttsUpdateBar();
+  let blob;
+  try {
+    ttsSetBuffering(true);
+    blob = await ttsEnsure(clip);
+  } catch (e) {
+    console.warn('[tts] 클립 생성 실패, 건너뜀:', e && e.message);
+    ttsSetBuffering(false);
+    if (!_tts.active || _tts.paused) return;
+    _tts.pos++;
+    return ttsPlayCurrent();
+  }
+  if (!_tts.active || _tts.paused) { ttsSetBuffering(false); return; }
+  /* 재생 대기 중 pos 가 바뀌었으면(설정 변경 등) 이 재생 무시 */
+  if (_tts.clips[_tts.pos] !== clip) { ttsSetBuffering(false); return; }
+  ttsSetBuffering(false);
+  const a = _tts.audio;
+  if (a._url) URL.revokeObjectURL(a._url);
+  a._url = URL.createObjectURL(blob);
+  a.src = a._url;
+  a.playbackRate = _tts.speed;
+  a.play().catch(() => {});
+}
+function ttsHighlight(clip) {
+  document.querySelectorAll('.study-item-li.tts-playing').forEach((el) => el.classList.remove('tts-playing'));
+  if (clip && clip.kind === 'vocab') {
+    const el = document.getElementById(`study-item-${clip.pageIdx}-${clip.itemIdx}`);
+    if (el) {
+      const d = el.closest('details');
+      if (d && !d.open) d.open = true;
+      el.classList.add('tts-playing');
+    }
+  }
+}
+
+/* --- 컨트롤 --- */
+function ttsToggle() {
+  if (_tts.active && !_tts.paused) { ttsPause(); return; }
+  if (_tts.active && _tts.paused) { ttsResume(); return; }
+  ttsStartFromCurrentPage();
+}
+function ttsStartFromCurrentPage() {
+  ttsInit();
+  _tts.clips = ttsBuildClips();
+  if (_tts.clips.length === 0) return;
+  /* 현재 보고 있는 페이지의 첫 클립부터 시작 */
+  let start = _tts.clips.findIndex((c) => c.pageIdx >= _currentIdx);
+  if (start < 0) start = 0;
+  _tts.pos = start;
+  _tts.active = true;
+  _tts.paused = false;
+  ttsShowBar(true);
+  ttsStartPrefetch();
+  ttsPlayCurrent();
+}
+function ttsPause() {
+  _tts.paused = true;
+  if (_tts.audio) _tts.audio.pause();
+  ttsUpdateBar();
+}
+function ttsResume() {
+  _tts.paused = false;
+  ttsUpdateBar();
+  if (_tts.audio && _tts.audio.src) { _tts.audio.play().catch(() => {}); ttsStartPrefetch(); }
+  else ttsPlayCurrent();
+}
+function ttsStop() {
+  _tts.active = false;
+  _tts.paused = false;
+  if (_tts.audio) { _tts.audio.pause(); if (_tts.audio._url) { URL.revokeObjectURL(_tts.audio._url); _tts.audio._url = null; } _tts.audio.removeAttribute('src'); }
+  ttsHighlight(null);
+  ttsShowBar(false);
+  ttsUpdateBar();
+}
+/* 모드/목소리/언어 변경 → 클립 재빌드 후 현재 페이지부터 재개 */
+function ttsRebuildAndRestart() {
+  if (!_tts.active) return;
+  const curPage = (_tts.clips[_tts.pos] || {}).pageIdx || _currentIdx;
+  if (_tts.audio) _tts.audio.pause();
+  _tts.clips = ttsBuildClips();
+  let start = _tts.clips.findIndex((c) => c.pageIdx >= curPage);
+  if (start < 0) start = 0;
+  _tts.pos = start;
+  _tts.paused = false;
+  ttsStartPrefetch();
+  ttsPlayCurrent();
+}
+function ttsSetMode(m) { _tts.mode = m; ttsUpdateBar(); ttsRebuildAndRestart(); }
+function ttsSetGender(role, g) {
+  if (role === 'narrator') _tts.narratorGender = g; else _tts.teacherGender = g;
+  ttsUpdateBar();
+  ttsRebuildAndRestart();
+}
+function ttsCycleSpeed() {
+  const steps = [0.75, 1.0, 1.25, 1.5];
+  const i = steps.indexOf(_tts.speed);
+  _tts.speed = steps[(i + 1) % steps.length];
+  if (_tts.audio) _tts.audio.playbackRate = _tts.speed;
+  ttsUpdateBar();
+}
+/* 플레이어의 해설 언어 토글 — 화면 학습단어 표기와 동일한 _studyMeaningLang 사용 */
+function ttsSetMeaningLang(lang) {
+  if (typeof setStudyMeaningLang === 'function') setStudyMeaningLang(lang);
+  else _studyMeaningLang = lang;
+  ttsUpdateBar();
+  ttsRebuildAndRestart();
+}
+
+/* --- 다운로드: 책 전체 클립을 재생 순서대로 병합한 WAV 한 개 --- */
+async function ttsDownloadBook() {
+  const clips = ttsBuildClips();
+  if (clips.length === 0) return;
+  const btn = document.getElementById('ttsDownloadBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '준비 중…'; }
+  try {
+    const parts = [];
+    let sampleRate = 24000;
+    for (let i = 0; i < clips.length; i++) {
+      if (btn) btn.textContent = `준비 ${i + 1}/${clips.length}`;
+      const blob = await ttsEnsure(clips[i]);
+      const { pcm, sampleRate: sr } = await ttsWavToPcm(blob);
+      sampleRate = sr;
+      parts.push(pcm);
+      /* 클립 사이 0.4초 무음 */
+      parts.push(new Uint8Array(Math.floor(sampleRate * 0.4) * 2));
+    }
+    let total = 0; parts.forEach((p) => { total += p.length; });
+    const merged = new Uint8Array(total);
+    let off = 0; parts.forEach((p) => { merged.set(p, off); off += p.length; });
+    const wav = ttsWavFromPcm(merged, sampleRate);
+    const url = URL.createObjectURL(wav);
+    const a = document.createElement('a');
+    const title = (_currentBookTitle || 'reading').replace(/[^\w가-힣.-]+/g, '_');
+    a.href = url; a.download = `${title}.wav`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  } catch (e) {
+    alert('다운로드 준비 중 오류: ' + (e && e.message ? e.message : e));
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '⬇'; }
+  }
+}
+
+/* --- 플레이어 바 UI --- */
+function ttsShowBar(show) {
+  const bar = document.getElementById('ttsPlayerBar');
+  if (bar) bar.hidden = !show;
+}
+function ttsSetBuffering(on) {
+  const el = document.getElementById('ttsBuffering');
+  if (el) el.hidden = !on;
+}
+function ttsUpdateBar() {
+  const playBtn = document.getElementById('ttsPlayPauseBtn');
+  if (playBtn) playBtn.textContent = (_tts.active && !_tts.paused) ? '⏸' : '▶';
+  const toolbarBtn = document.getElementById('ttsToolbarBtn');
+  if (toolbarBtn) toolbarBtn.classList.toggle('active', _tts.active);
+  /* 모드 버튼 active */
+  ['body', 'both', 'vocab'].forEach((m) => {
+    const b = document.getElementById(`ttsMode_${m}`);
+    if (b) b.classList.toggle('active', _tts.mode === m);
+  });
+  /* 목소리 성별 버튼 active */
+  ['narrator', 'teacher'].forEach((role) => {
+    ['female', 'male'].forEach((g) => {
+      const b = document.getElementById(`ttsVoice_${role}_${g}`);
+      if (b) b.classList.toggle('active', (role === 'narrator' ? _tts.narratorGender : _tts.teacherGender) === g);
+    });
+  });
+  const spd = document.getElementById('ttsSpeedBtn');
+  if (spd) spd.textContent = `${_tts.speed}×`;
+  const ml = _studyMeaningLang;
+  ['native', 'en'].forEach((l) => {
+    const b = document.getElementById(`ttsLang_${l}`);
+    if (b) b.classList.toggle('active', ml === l);
+  });
+}
+
 /* --- 새로 올리기 (세션 초기화) --- */
 function resetReading() {
+  ttsStop();
   _pages = [];
   _currentIdx = 0;
   _showTranslated = false;
@@ -3277,6 +3756,7 @@ function resetReading() {
 /* 책 목록(또는 책 뷰어 fresh 모드) 에서 뒤로가기 → 업로드 화면으로 복귀.
    책 뷰어도 같이 숨겨야 fresh 뷰어에서 호출되었을 때 화면이 정상 전환됨. */
 function backToUpload() {
+  ttsStop();
   document.getElementById('bookListArea').hidden = true;
   document.getElementById('bookViewer').hidden = true;
   document.getElementById('loadingArea').hidden = true;
