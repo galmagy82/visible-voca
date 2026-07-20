@@ -9,6 +9,10 @@ import { createClient } from "@supabase/supabase-js"
    사용량 제한 없이 텍스트·이미지 모두 이 키로 처리한다. */
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY")!
 
+/* Cloud Text-to-Speech 전용 키 (읽어주기 TTS). Gemini 키와 별도 — Cloud TTS API 만 허용된 키.
+   미설정 시 GEMINI_API_KEY 로 폴백하지만 그 키는 보통 Cloud TTS 미허용이라 실패한다. */
+const GOOGLE_TTS_KEY = Deno.env.get("GOOGLE_TTS_KEY") || GEMINI_API_KEY
+
 /* Supabase 서비스 클라이언트 (RLS 우회하여 user_usage 테이블 접근) */
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -767,136 +771,47 @@ Do NOT add commentary. Return ONLY the JSON object.`
   }
 }
 
-/* === Reading 읽어주기(TTS) — 텍스트 1조각 → 음성 오디오(PCM base64)
-   조각(segmented) 방식: 본문 클립(role=narrator) / 단어 클립(role=teacher) 을 각각 생성.
-   - 목소리는 성별(gender)로 지정 — 낭독/단어설명 각각 사용자가 남/여 선택.
-   - 본문/단어설명 구분은 voice 가 아니라 role 별 스타일 프롬프트(낭독체/설명체)로 처리.
-   반환: { audio: base64 PCM, mimeType, sampleRate } — 클라이언트가 WAV 로 감싸 재생/캐싱한다. */
-const READING_TTS_MODEL = 'gemini-2.5-flash-preview-tts'
-/* 성별 → 프리셋 음성 (2026-07-19 샘플 청취로 확정) */
-const READING_TTS_VOICES: Record<string, string> = {
-  female: 'Aoede',
-  male: 'Algieba',
-}
-/* role 별 스타일 지시문 — 내용에 맞춰 톤은 변하되 무작위 드리프트는 temperature 로 억제 */
-const READING_TTS_STYLES: Record<string, string> = {
-  narrator: 'Read the following aloud as a warm, engaging storyteller narrating a novel. Match the mood of the text — build quiet tension in dramatic moments and stay gentle in calm ones. Keep a steady, natural pace.',
-  teacher: 'Read the following aloud clearly and calmly, like a friendly language teacher going over vocabulary. Keep an even, encouraging tone.',
-}
+/* === Reading 읽어주기(TTS) — 텍스트 1조각 → 음성 오디오(MP3 base64)
+   Google Cloud Text-to-Speech(Chirp3-HD) 사용. preview Gemini TTS 의 낮은 quota(RPD 100)를
+   벗어나기 위해 정식(GA) Cloud TTS 로 전환(2026-07-21). 클라이언트가 목소리 이름(voice)을
+   넘기면 en-US-Chirp3-HD-<voice> 로 합성. 본문/단어설명 모두 en-US 음성 — 단어의 한글 뜻도
+   en 음성이 읽어 운율이 약간 어색하지만, 조각/이어붙이기 없이 단순함을 택함(사용자 결정).
+   반환: { audio: base64 MP3, mimeType: 'audio/mpeg' } */
+const CLOUD_TTS_URL = 'https://texttospeech.googleapis.com/v1/text:synthesize'
+/* 허용 목소리 — 사용자 샘플 청취 후 선별한 6개(여3/남3). 그 외 값은 기본값으로 폴백. */
+const CLOUD_TTS_VOICES = new Set(['Aoede', 'Callirrhoe', 'Despina', 'Algieba', 'Enceladus', 'Rasalgethi'])
+const CLOUD_TTS_DEFAULT = 'Aoede'
 
-/* 1회 TTS 호출 — 실패/빈오디오면 throw. durationSec 은 base64 길이로 추정한 재생 길이. */
-async function callGeminiReadingTtsOnce(text: string, voiceName: string, style: string, apiKey: string) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${READING_TTS_MODEL}:generateContent?key=${apiKey}`
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      /* 스타일 지시문 + 실제 낭독할 텍스트 결합 */
-      contents: [{ parts: [{ text: `${style}\n\n${text}` }] }],
-      generationConfig: {
-        /* 오디오 출력 모드 — 음성(PCM) 반환 */
-        responseModalities: ['AUDIO'],
-        /* temperature 낮게 — 요청 간 어투 드리프트 최소화 */
-        temperature: 0.6,
-        speechConfig: {
-          voiceConfig: { prebuiltVoiceConfig: { voiceName } },
-        },
-      },
-    }),
-  })
-  if (!res.ok) {
-    const err = await res.text()
-    const e = new Error(`API ${res.status}: ${err.slice(0, 200)}`)
-    ;(e as { status?: number }).status = res.status
-    throw e
-  }
-  const data = await res.json()
-  const part = data.candidates?.[0]?.content?.parts?.[0]
-  const audio = part?.inlineData?.data
-  const mime = part?.inlineData?.mimeType || 'audio/L16;rate=24000'
-  if (!audio) {
-    const reason = data.candidates?.[0]?.finishReason || 'unknown'
-    throw new Error(`empty audio (finishReason=${reason})`)
-  }
-  const rateMatch = /rate=(\d+)/.exec(mime)
-  const sampleRate = rateMatch ? parseInt(rateMatch[1], 10) : 24000
-  /* base64 길이 → PCM 바이트 추정 → 재생 길이(초). 16bit mono 기준 bytes/(rate*2). */
-  const approxBytes = Math.floor(audio.length * 3 / 4)
-  const durationSec = approxBytes / (sampleRate * 2)
-  return { audio, mimeType: mime, sampleRate, durationSec }
-}
-
-/* base64 PCM(16bit LE mono) 앞뒤 무음 트림 + 실제 발화 길이 측정.
-   preview 모델이 드물게 낭독 뒤 긴 무음을 붙이거나(사용자가 겪은 "무음 지속") 일부만 읽는데,
-   ① 끝쪽 무음을 잘라내 dead-air 를 없애고 ② 발화 구간 길이(speechSec)를 재서 이상 판정에 쓴다.
-   반환: { b64: 트림된 오디오, speechSec: 발화 구간 초 } */
-function trimPcmSilence(b64: string, sampleRate: number): { b64: string; speechSec: number } {
-  const bin = atob(b64)
-  const bytes = new Uint8Array(bin.length)
-  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
-  const samples = new Int16Array(bytes.buffer, 0, Math.floor(bytes.length / 2))
-  const THRESH = 500  // 무음 판정 진폭 임계(16bit 최대 32768 기준)
-  let firstNZ = -1, lastNZ = -1
-  for (let i = 0; i < samples.length; i++) { if (Math.abs(samples[i]) > THRESH) { firstNZ = i; break } }
-  for (let i = samples.length - 1; i >= 0; i--) { if (Math.abs(samples[i]) > THRESH) { lastNZ = i; break } }
-  if (firstNZ < 0 || lastNZ < 0) return { b64, speechSec: 0 }  // 전부 무음 → 원본 그대로(재생성 유도)
-  const start = Math.max(0, firstNZ - Math.floor(sampleRate * 0.05))       // 앞 여유 50ms
-  const end = Math.min(samples.length, lastNZ + 1 + Math.floor(sampleRate * 0.25))  // 뒤 여유 250ms
-  const trimmed = samples.subarray(start, end)
-  const outBytes = new Uint8Array(trimmed.buffer, trimmed.byteOffset, trimmed.length * 2)
-  let s = ''
-  for (let i = 0; i < outBytes.length; i++) s += String.fromCharCode(outBytes[i])
-  return { b64: btoa(s), speechSec: (lastNZ - firstNZ) / sampleRate }
-}
-
-/* 재시도 + 무음 트림 + 발화 길이 sanity check 래퍼.
-   preview 모델(gemini-2.5-flash-preview-tts) 불안정 대응:
-   - 500/finishReason=OTHER/네트워크 오류 → 재시도
-   - 끝쪽 무음 트림
-   - 발화 길이 이상(전부 무음 / 텍스트 대비 너무 짧음=일부만 읽음 / 너무 김=글리치) → 재생성
-   예상 발화 길이 ≈ 글자수/12(초당 ~12자). 짧은 단어 클립은 편차가 커서 too-short 검사 제외. */
-async function callGeminiReadingTts(text: string, role: string, gender: string, apiKey: string) {
-  const voiceName = READING_TTS_VOICES[gender] || READING_TTS_VOICES.female
-  const style = READING_TTS_STYLES[role] || READING_TTS_STYLES.narrator
-  const expectedSec = text.length / 12
-  const checkShort = text.length > 150
-  const MAX = 4
-  let last: { audio: string; mimeType: string; sampleRate: number } | null = null
+async function callCloudTts(text: string, voice: string, apiKey: string) {
+  const voiceName = CLOUD_TTS_VOICES.has(voice) ? voice : CLOUD_TTS_DEFAULT
+  const url = `${CLOUD_TTS_URL}?key=${apiKey}`
+  const MAX = 2
   for (let attempt = 1; attempt <= MAX; attempt++) {
-    try {
-      const r = await callGeminiReadingTtsOnce(text, voiceName, style, apiKey)
-      const { b64, speechSec } = trimPcmSilence(r.audio, r.sampleRate)
-      const trimmed = { audio: b64, mimeType: r.mimeType, sampleRate: r.sampleRate }
-      last = trimmed
-      const allSilent = speechSec <= 0.3
-      const tooShort = checkShort && speechSec < expectedSec * 0.5
-      const tooLong = speechSec > expectedSec * 3 + 10
-      if ((allSilent || tooShort || tooLong) && attempt < MAX) {
-        console.warn(`[reading-tts] anomaly speech=${speechSec.toFixed(1)}s expected~${expectedSec.toFixed(1)}s (silent=${allSilent} short=${tooShort} long=${tooLong}), regenerating (attempt ${attempt})`)
-        await new Promise((res) => setTimeout(res, 800))
-        continue
-      }
-      return trimmed
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e)
-      const status = (e as { status?: number })?.status
-      /* 429(quota 초과)는 재시도해도 회복 안 되고 quota 만 낭비 → 즉시 중단하고 상태 전파 */
-      if (status === 429 || /\b429\b|quota/i.test(msg)) {
-        if (last) return last
-        throw e
-      }
-      if (attempt === MAX) {
-        /* 마지막까지 오류 — 이전에 받아둔 오디오라도 있으면 반환 */
-        if (last) return last
-        throw new Error(`Gemini reading-tts failed after ${MAX} attempts: ${msg}`)
-      }
-      console.warn(`[reading-tts] attempt ${attempt} failed (${msg}), retrying`)
-      await new Promise((res) => setTimeout(res, 1200 * attempt))
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        input: { text },
+        voice: { languageCode: 'en-US', name: `en-US-Chirp3-HD-${voiceName}` },
+        audioConfig: { audioEncoding: 'MP3' },
+      }),
+    })
+    if (res.ok) {
+      const data = await res.json()
+      const audio = data.audioContent
+      if (!audio) throw new Error('Cloud TTS: empty audioContent')
+      return { audio, mimeType: 'audio/mpeg' }
     }
+    const errText = await res.text()
+    /* 4xx(429 quota 포함)는 재시도 무의미 → 즉시 중단하고 상태 전파. 5xx 만 1회 재시도. */
+    if (res.status < 500 || attempt === MAX) {
+      const e = new Error(`Cloud TTS API ${res.status}: ${errText.slice(0, 200)}`)
+      ;(e as { status?: number }).status = res.status
+      throw e
+    }
+    await new Promise((r) => setTimeout(r, 800))
   }
-  /* 논리상 도달 불가 — 타입 만족용 폴백 */
-  if (last) return last
-  throw new Error('Gemini reading-tts: unreachable')
+  throw new Error('Cloud TTS: unreachable')
 }
 
 /* 사용량 증가: 최초 검색 시 row 생성, 이후 검색 시 trial_count +1 */
@@ -1063,9 +978,8 @@ Deno.serve(async (req) => {
         break
       }
       case "reading-tts": {
-        /* 읽어주기 — 텍스트 1조각 → 음성.
-           role: 'narrator'(본문) | 'teacher'(단어설명) — 스타일 결정.
-           gender: 'female'(Aoede) | 'male'(Algieba) — 목소리 결정.
+        /* 읽어주기 — 텍스트 1조각 → 음성(MP3). Cloud TTS(Chirp3-HD) 사용.
+           voice: 목소리 이름(Aoede/Algieba 등). 허용 외 값은 서버에서 기본값 폴백.
            베타 무제한 기간이라 별도 크레딧 차감은 미적용 — 정식 출시 시 TTS 크레딧 정책 추가 예정. */
         const text: string = typeof body.text === "string" ? body.text : ""
         if (!text) {
@@ -1074,9 +988,8 @@ Deno.serve(async (req) => {
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           )
         }
-        const role: string = (body.role === "teacher") ? "teacher" : "narrator"
-        const gender: string = (body.gender === "male") ? "male" : "female"
-        result = await callGeminiReadingTts(text, role, gender, apiKey)
+        const voice: string = typeof body.voice === "string" ? body.voice : "Aoede"
+        result = await callCloudTts(text, voice, GOOGLE_TTS_KEY)
         break
       }
       case "credit-init": {

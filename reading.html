@@ -629,6 +629,11 @@
   .tts-radios { display: inline-flex; gap: 18px; }
   .tts-radio { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; color: #4A4844; cursor: pointer; }
   .tts-radio input { accent-color: #5A8A42; cursor: pointer; margin: 0; }
+  /* 목소리 선택 드롭다운 */
+  .tts-select {
+    padding: 5px 8px; border: 1px solid #D8D6D2; border-radius: 8px;
+    background: #FFFFFF; color: #4A4844; font-size: 13px; font-weight: 600; cursor: pointer;
+  }
   /* 목소리 그룹과 언어 사이 간격 */
   .tts-setting-gap { margin-top: 8px; }
   .saved-badge {
@@ -1612,17 +1617,25 @@
       <div class="tts-state" id="ttsSetup">
         <div class="tts-row tts-setting">
           <span class="tts-setting-label">낭독 목소리</span>
-          <span class="tts-radios">
-            <label class="tts-radio"><input type="radio" name="ttsNarrator" value="female" onclick="ttsSetGender('narrator','female')"> 여</label>
-            <label class="tts-radio"><input type="radio" name="ttsNarrator" value="male" onclick="ttsSetGender('narrator','male')"> 남</label>
-          </span>
+          <select class="tts-select" id="ttsNarratorSel" onchange="ttsSetVoice('narrator', this.value)">
+            <option value="Aoede">Aoede (여)</option>
+            <option value="Callirrhoe">Callirrhoe (여)</option>
+            <option value="Despina">Despina (여)</option>
+            <option value="Algieba">Algieba (남)</option>
+            <option value="Enceladus">Enceladus (남)</option>
+            <option value="Rasalgethi">Rasalgethi (남)</option>
+          </select>
         </div>
         <div class="tts-row tts-setting">
           <span class="tts-setting-label">단어설명 목소리</span>
-          <span class="tts-radios">
-            <label class="tts-radio"><input type="radio" name="ttsTeacher" value="female" onclick="ttsSetGender('teacher','female')"> 여</label>
-            <label class="tts-radio"><input type="radio" name="ttsTeacher" value="male" onclick="ttsSetGender('teacher','male')"> 남</label>
-          </span>
+          <select class="tts-select" id="ttsTeacherSel" onchange="ttsSetVoice('teacher', this.value)">
+            <option value="Aoede">Aoede (여)</option>
+            <option value="Callirrhoe">Callirrhoe (여)</option>
+            <option value="Despina">Despina (여)</option>
+            <option value="Algieba">Algieba (남)</option>
+            <option value="Enceladus">Enceladus (남)</option>
+            <option value="Rasalgethi">Rasalgethi (남)</option>
+          </select>
         </div>
         <div class="tts-row tts-setting tts-setting-gap">
           <span class="tts-setting-label">단어설명 언어</span>
@@ -3409,8 +3422,8 @@ const _tts = {
   active: false,        // 엔진 동작 중(재생 or 일시정지 상태 포함)
   paused: false,
   mode: 'both',         // 'both' | 'body' | 'vocab' — 재생 필터(모든 클립은 미리 생성됨)
-  narratorGender: 'female',  // 낭독 목소리
-  teacherGender: 'male',     // 단어설명 목소리
+  narratorVoice: 'Aoede',    // 낭독 목소리 (Chirp3-HD 이름)
+  teacherVoice: 'Algieba',   // 단어설명 목소리
   vocabLang: 'native',       // TTS 단어설명 언어(화면 표기 _studyMeaningLang 과 분리)
   speed: 1.0,
   clips: [],            // 재생용 클립 배열(현재 모드/설정 기준)
@@ -3424,9 +3437,10 @@ const _tts = {
 /* TTS 성별 → 프리셋 음성(엣지 함수와 동일). 표시용으로만 사용, 실제 매핑은 서버가 수행. */
 const TTS_DB_NAME = 'wordfeel-tts';
 const TTS_STORE = 'clips';
-/* 캐시 버전 — 오디오 생성 방식(무음 트림/발화 검사 등)이 바뀌면 올려서 기존 캐시 무효화.
-   v2: 서버 무음 트림 + 발화 길이 sanity check 도입 (기존 무음 클립 재생성). */
-const TTS_CACHE_VERSION = 'v2';
+/* 캐시 버전 — 오디오 생성 방식이 바뀌면 올려서 기존 캐시 무효화.
+   v2: 서버 무음 트림 + 발화 길이 sanity check.
+   v3: 엔진을 Gemini preview TTS → Cloud TTS(Chirp3-HD, MP3)로 교체 + 목소리 이름 기반 키. */
+const TTS_CACHE_VERSION = 'v3';
 
 /* --- IndexedDB 캐시 --- */
 function ttsOpenDB() {
@@ -3497,8 +3511,8 @@ function ttsVocabText(item, original, lang) {
 }
 
 /* --- 클립 빌드 --- */
-function ttsMakeClip(kind, pageIdx, itemIdx, text, role, gender) {
-  return { kind, pageIdx, itemIdx, text, role, gender, cacheKey: `${TTS_CACHE_VERSION}:${role}:${gender}:${ttsHash(text)}` };
+function ttsMakeClip(kind, pageIdx, itemIdx, text, voice) {
+  return { kind, pageIdx, itemIdx, text, voice, cacheKey: `${TTS_CACHE_VERSION}:${voice}:${ttsHash(text)}` };
 }
 /* 긴 본문 분할 — Gemini TTS 는 긴 입력에서 낭독 뒤에 과도한 무음/이상 출력을 낸다
    (실측: 400·800자 정상, 1200자↑ 깨짐). 그래서 문장 경계로 maxLen(≈600자) 이하 조각으로
@@ -3543,72 +3557,43 @@ function ttsBuildClips(modeOverride, langOverride) {
     if (mode === 'body' || mode === 'both') {
       /* 본문은 ~600자 이하 조각으로 나눠 각각 클립 생성(긴 본문 무음/이상 방지) */
       ttsChunkText(p.original, 600).forEach((chunk) => {
-        clips.push(ttsMakeClip('body', pi, -1, chunk, 'narrator', _tts.narratorGender));
+        clips.push(ttsMakeClip('body', pi, -1, chunk, _tts.narratorVoice));
       });
     }
     if (mode === 'vocab' || mode === 'both') {
       const items = Array.isArray(p.study_items) ? p.study_items : [];
       items.forEach((it, ii) => {
         const text = ttsVocabText(it, p.original, lang);
-        if (text) clips.push(ttsMakeClip('vocab', pi, ii, text, 'teacher', _tts.teacherGender));
+        if (text) clips.push(ttsMakeClip('vocab', pi, ii, text, _tts.teacherVoice));
       });
     }
   });
   return clips;
 }
 
-/* --- 오디오 생성(엣지 함수) + WAV 변환 --- */
-/* base64 PCM(16bit mono) → WAV Blob */
-function ttsWavFromPcm(pcm, sampleRate) {
-  const channels = 1, bits = 16;
-  const byteRate = sampleRate * channels * bits / 8, blockAlign = channels * bits / 8;
-  const buf = new ArrayBuffer(44 + pcm.length);
-  const dv = new DataView(buf);
-  const wStr = (o, s) => { for (let i = 0; i < s.length; i++) dv.setUint8(o + i, s.charCodeAt(i)); };
-  wStr(0, 'RIFF'); dv.setUint32(4, 36 + pcm.length, true); wStr(8, 'WAVE'); wStr(12, 'fmt ');
-  dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, channels, true);
-  dv.setUint32(24, sampleRate, true); dv.setUint32(28, byteRate, true); dv.setUint16(32, blockAlign, true);
-  dv.setUint16(34, bits, true); wStr(36, 'data'); dv.setUint32(40, pcm.length, true);
-  new Uint8Array(buf, 44).set(pcm);
-  return new Blob([buf], { type: 'audio/wav' });
-}
+/* --- 오디오 생성(엣지 함수 → Cloud TTS, MP3) --- */
+/* base64 → Uint8Array */
 function ttsB64ToBytes(b64) {
   const bin = atob(b64);
   const arr = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
   return arr;
 }
-/* WAV Blob → PCM 바이트 + sampleRate (다운로드 병합용) */
-async function ttsWavToPcm(blob) {
-  const buf = await blob.arrayBuffer();
-  const dv = new DataView(buf);
-  const sampleRate = dv.getUint32(24, true);
-  return { pcm: new Uint8Array(buf, 44), sampleRate };
-}
-/* 엣지 함수 호출 → WAV Blob. 네트워크 오류 시 1회 재시도(서버도 자체 재시도함). */
+/* 엣지 함수 호출 → MP3 Blob. Cloud TTS 는 MP3 를 그대로 주므로 변환 없이 Blob 으로 감쌈. */
 async function ttsFetch(clip) {
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      const res = await fetch(EDGE_FUNCTION_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'reading-tts', userId: getUserId(), text: clip.text, role: clip.role, gender: clip.gender }),
-      });
-      if (!res.ok) {
-        const d = await res.json().catch(() => ({}));
-        const err = new Error(d.error || `HTTP ${res.status}`);
-        err.status = res.status;
-        throw err;
-      }
-      const data = await res.json();
-      const sampleRate = data.sampleRate || 24000;
-      return ttsWavFromPcm(ttsB64ToBytes(data.audio), sampleRate);
-    } catch (e) {
-      /* 429(quota)는 재시도 안 함 — 회복 안 되고 quota 만 낭비 */
-      if ((e && e.status === 429) || attempt === 1) throw e;
-      await new Promise((r) => setTimeout(r, 1000));
-    }
+  const res = await fetch(EDGE_FUNCTION_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'reading-tts', userId: getUserId(), text: clip.text, voice: clip.voice }),
+  });
+  if (!res.ok) {
+    const d = await res.json().catch(() => ({}));
+    const err = new Error(d.error || `HTTP ${res.status}`);
+    err.status = res.status;
+    throw err;
   }
+  const data = await res.json();
+  return new Blob([ttsB64ToBytes(data.audio)], { type: 'audio/mpeg' });
 }
 /* 캐시 우선 조회 → 없으면 생성. 동일 키 동시 요청은 in-flight 프로미스로 합침. */
 const _ttsInflight = new Map();
@@ -3853,8 +3838,8 @@ function ttsRebuildAndRestart() {
   ttsPlayCurrent();
 }
 function ttsSetMode(m) { _tts.mode = m; ttsUpdateBar(); ttsRebuildAndRestart(); }
-function ttsSetGender(role, g) {
-  if (role === 'narrator') _tts.narratorGender = g; else _tts.teacherGender = g;
+function ttsSetVoice(role, voice) {
+  if (role === 'narrator') _tts.narratorVoice = voice; else _tts.teacherVoice = voice;
   ttsUpdateBar();
   ttsRebuildAndRestart();
 }
@@ -3873,7 +3858,9 @@ function ttsSetMeaningLang(lang) {
   ttsRebuildAndRestart();
 }
 
-/* --- 다운로드: 책 전체 클립을 재생 순서대로 병합한 WAV 한 개 --- */
+/* --- 다운로드: 책 전체 클립을 재생 순서대로 이어붙인 MP3 한 개 ---
+   Cloud TTS 는 MP3 를 주므로, 같은 포맷의 MP3 조각들을 그대로 이어붙이면 대부분 플레이어에서
+   연속 재생된다(MP3 프레임은 독립적). 별도 재인코딩 없이 Blob 결합. */
 async function ttsDownloadBook() {
   const clips = ttsBuildClips();
   if (clips.length === 0) return;
@@ -3881,24 +3868,16 @@ async function ttsDownloadBook() {
   if (btn) { btn.disabled = true; btn.textContent = '준비 중…'; }
   try {
     const parts = [];
-    let sampleRate = 24000;
     for (let i = 0; i < clips.length; i++) {
       if (btn) btn.textContent = `준비 ${i + 1}/${clips.length}`;
       const blob = await ttsEnsure(clips[i]);
-      const { pcm, sampleRate: sr } = await ttsWavToPcm(blob);
-      sampleRate = sr;
-      parts.push(pcm);
-      /* 클립 사이 0.4초 무음 */
-      parts.push(new Uint8Array(Math.floor(sampleRate * 0.4) * 2));
+      parts.push(await blob.arrayBuffer());
     }
-    let total = 0; parts.forEach((p) => { total += p.length; });
-    const merged = new Uint8Array(total);
-    let off = 0; parts.forEach((p) => { merged.set(p, off); off += p.length; });
-    const wav = ttsWavFromPcm(merged, sampleRate);
-    const url = URL.createObjectURL(wav);
+    const mp3 = new Blob(parts, { type: 'audio/mpeg' });
+    const url = URL.createObjectURL(mp3);
     const a = document.createElement('a');
     const title = (_currentBookTitle || 'reading').replace(/[^\w가-힣.-]+/g, '_');
-    a.href = url; a.download = `${title}.wav`;
+    a.href = url; a.download = `${title}.mp3`;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 5000);
   } catch (e) {
@@ -3928,15 +3907,13 @@ function ttsUpdateBar() {
     const b = document.getElementById(`ttsMode_${m}`);
     if (b) b.classList.toggle('active', _tts.mode === m);
   });
-  /* 목소리 성별 버튼 active */
-  /* 설정 라디오 버튼 현재 값 반영 */
-  const setRadio = (name, val) => {
-    const r = document.querySelector(`input[name="${name}"][value="${val}"]`);
-    if (r) r.checked = true;
-  };
-  setRadio('ttsLang', _tts.vocabLang);
-  setRadio('ttsNarrator', _tts.narratorGender);
-  setRadio('ttsTeacher', _tts.teacherGender);
+  /* 설정 값 반영: 언어 라디오 + 목소리 드롭다운 */
+  const langRadio = document.querySelector(`input[name="ttsLang"][value="${_tts.vocabLang}"]`);
+  if (langRadio) langRadio.checked = true;
+  const nSel = document.getElementById('ttsNarratorSel');
+  if (nSel) nSel.value = _tts.narratorVoice;
+  const tSel = document.getElementById('ttsTeacherSel');
+  if (tSel) tSel.value = _tts.teacherVoice;
   const spd = document.getElementById('ttsSpeedBtn');
   if (spd) spd.textContent = `${_tts.speed}×`;
 }
