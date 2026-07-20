@@ -3496,17 +3496,20 @@ function ttsFindExample(original, surface) {
   }
   return text.slice(start, end).trim();
 }
-/* 단어 클립 낭독 텍스트: "단어. 뜻. 본문에서 — 예문 [신호어], 예문"
-   예문은 2번(반복 학습), 두 번째 앞에 해설 언어에 맞는 신호어. */
+/* 단어 클립 낭독 텍스트: "단어. 뜻. 본문에서 — 예문. [신호어]. 예문"
+   예문은 2번(반복 학습). 각 구간을 마침표로 끊어 쉼을 확보한다:
+   - 예문 끝 마침표 보장(없으면 붙임) → 신호어 앞에 쉼
+   - 신호어 뒤도 쉼표 대신 마침표 → 반복 예문이 붙어읽히지 않게 */
 function ttsVocabText(item, original, lang) {
   const surface = (item.surface || '').trim();
   if (!surface) return '';
   const meaning = (pickStudyMeaning(item, lang) || '').trim();
-  const example = ttsFindExample(original, surface);
+  let example = ttsFindExample(original, surface).trim();
+  if (example && !/[.!?…]$/.test(example)) example += '.';  // 예문 마침표 보장
   const inText = (lang === 'en') ? 'In the text' : '본문에서';
   const cue = (lang === 'en') ? 'Once more' : '다시 한번';
   let s = `${surface}. ${meaning}.`;
-  if (example) s += ` ${inText} — ${example} ${cue}, ${example}`;
+  if (example) s += ` ${inText} — ${example} ${cue}. ${example}`;
   return s;
 }
 
