@@ -3439,8 +3439,9 @@ const TTS_DB_NAME = 'wordfeel-tts';
 const TTS_STORE = 'clips';
 /* 캐시 버전 — 오디오 생성 방식이 바뀌면 올려서 기존 캐시 무효화.
    v2: 서버 무음 트림 + 발화 길이 sanity check.
-   v3: 엔진을 Gemini preview TTS → Cloud TTS(Chirp3-HD, MP3)로 교체 + 목소리 이름 기반 키. */
-const TTS_CACHE_VERSION = 'v3';
+   v3: 엔진을 Gemini preview TTS → Cloud TTS(Chirp3-HD, MP3)로 교체 + 목소리 이름 기반 키.
+   v4: 엔진을 Gemini-TTS(gemini-3.1-flash-tts, 표현력↑, 서비스계정)로 재전환 + role 스타일 프롬프트. */
+const TTS_CACHE_VERSION = 'v4';
 
 /* --- IndexedDB 캐시 --- */
 function ttsOpenDB() {
@@ -3515,7 +3516,10 @@ function ttsVocabText(item, original, lang) {
 
 /* --- 클립 빌드 --- */
 function ttsMakeClip(kind, pageIdx, itemIdx, text, voice) {
-  return { kind, pageIdx, itemIdx, text, voice, cacheKey: `${TTS_CACHE_VERSION}:${voice}:${ttsHash(text)}` };
+  /* role: 본문=narrator / 단어=teacher (엣지에서 스타일 프롬프트 선택). 같은 목소리·텍스트라도
+     스타일이 다르면 오디오가 달라지므로 캐시 키에 role 포함. */
+  const role = (kind === 'vocab') ? 'teacher' : 'narrator';
+  return { kind, pageIdx, itemIdx, text, voice, role, cacheKey: `${TTS_CACHE_VERSION}:${voice}:${role}:${ttsHash(text)}` };
 }
 /* 긴 본문 분할 — Gemini TTS 는 긴 입력에서 낭독 뒤에 과도한 무음/이상 출력을 낸다
    (실측: 400·800자 정상, 1200자↑ 깨짐). 그래서 문장 경계로 maxLen(≈600자) 이하 조각으로
@@ -3587,7 +3591,7 @@ async function ttsFetch(clip) {
   const res = await fetch(EDGE_FUNCTION_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'reading-tts', userId: getUserId(), text: clip.text, voice: clip.voice }),
+    body: JSON.stringify({ action: 'reading-tts', userId: getUserId(), text: clip.text, voice: clip.voice, role: clip.role }),
   });
   if (!res.ok) {
     const d = await res.json().catch(() => ({}));

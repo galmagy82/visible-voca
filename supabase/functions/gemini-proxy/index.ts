@@ -9,10 +9,6 @@ import { createClient } from "@supabase/supabase-js"
    사용량 제한 없이 텍스트·이미지 모두 이 키로 처리한다. */
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY")!
 
-/* Cloud Text-to-Speech 전용 키 (읽어주기 TTS). Gemini 키와 별도 — Cloud TTS API 만 허용된 키.
-   미설정 시 GEMINI_API_KEY 로 폴백하지만 그 키는 보통 Cloud TTS 미허용이라 실패한다. */
-const GOOGLE_TTS_KEY = Deno.env.get("GOOGLE_TTS_KEY") || GEMINI_API_KEY
-
 /* Supabase 서비스 클라이언트 (RLS 우회하여 user_usage 테이블 접근) */
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -771,47 +767,102 @@ Do NOT add commentary. Return ONLY the JSON object.`
   }
 }
 
-/* === Reading 읽어주기(TTS) — 텍스트 1조각 → 음성 오디오(MP3 base64)
-   Google Cloud Text-to-Speech(Chirp3-HD) 사용. preview Gemini TTS 의 낮은 quota(RPD 100)를
-   벗어나기 위해 정식(GA) Cloud TTS 로 전환(2026-07-21). 클라이언트가 목소리 이름(voice)을
-   넘기면 en-US-Chirp3-HD-<voice> 로 합성. 본문/단어설명 모두 en-US 음성 — 단어의 한글 뜻도
-   en 음성이 읽어 운율이 약간 어색하지만, 조각/이어붙이기 없이 단순함을 택함(사용자 결정).
-   반환: { audio: base64 MP3, mimeType: 'audio/mpeg' } */
-const CLOUD_TTS_URL = 'https://texttospeech.googleapis.com/v1/text:synthesize'
+/* === Reading 읽어주기(TTS) — Gemini-TTS (Cloud TTS 엔드포인트 + Vertex) ===
+   표현력 있는 Gemini TTS(gemini-3.1-flash-tts)를 씀. Vertex 경유라 API 키 불가 →
+   서비스계정 JSON(secret GOOGLE_TTS_SA_B64, base64 인코딩)으로 OAuth 토큰 발급해 호출.
+   input.prompt 로 낭독체(narrator)/설명체(teacher) 스타일 지정. 반환: MP3 base64.
+   (2026-07-21 Chirp3-HD → Gemini-3.1-flash-tts 로 재전환 — 표현력 개선) */
+const GEMINI_TTS_MODEL = 'gemini-3.1-flash-tts-preview'
 /* 허용 목소리 — 사용자 샘플 청취 후 선별한 6개(여3/남3). 그 외 값은 기본값으로 폴백. */
-const CLOUD_TTS_VOICES = new Set(['Aoede', 'Callirrhoe', 'Despina', 'Algieba', 'Enceladus', 'Rasalgethi'])
-const CLOUD_TTS_DEFAULT = 'Aoede'
+const READING_TTS_VOICES = new Set(['Aoede', 'Callirrhoe', 'Despina', 'Algieba', 'Enceladus', 'Rasalgethi'])
+const READING_TTS_DEFAULT = 'Aoede'
+/* role 별 스타일 프롬프트 — Gemini-TTS 의 input.prompt 로 어투 제어 */
+const READING_TTS_STYLES: Record<string, string> = {
+  narrator: 'Read aloud as a warm, engaging storyteller narrating a novel. Match the mood — build quiet tension in dramatic moments and stay gentle in calm ones. Keep a steady, natural pace.',
+  teacher: 'Read aloud clearly and calmly, like a friendly language teacher going over vocabulary. Keep an even, encouraging tone.',
+}
 
-async function callCloudTts(text: string, voice: string, apiKey: string) {
-  const voiceName = CLOUD_TTS_VOICES.has(voice) ? voice : CLOUD_TTS_DEFAULT
-  const url = `${CLOUD_TTS_URL}?key=${apiKey}`
+/* 서비스계정 JSON 파싱 (secret 은 base64 로 저장 — 개행/특수문자 이스케이프 회피) */
+interface ServiceAccount { client_email: string; private_key: string; project_id: string }
+function getServiceAccount(): ServiceAccount {
+  const b64 = Deno.env.get('GOOGLE_TTS_SA_B64')
+  if (!b64) throw new Error('GOOGLE_TTS_SA_B64 secret 미설정')
+  return JSON.parse(atob(b64))
+}
+function b64urlFromStr(s: string): string {
+  return btoa(s).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
+}
+function b64urlFromBytes(bytes: Uint8Array): string {
+  let s = ''
+  for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i])
+  return btoa(s).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
+}
+function pemToDer(pem: string): Uint8Array {
+  const body = pem.replace(/-----BEGIN [^-]+-----/, '').replace(/-----END [^-]+-----/, '').replace(/\s+/g, '')
+  const bin = atob(body)
+  const der = new Uint8Array(bin.length)
+  for (let i = 0; i < bin.length; i++) der[i] = bin.charCodeAt(i)
+  return der
+}
+/* OAuth 액세스 토큰 캐시 — 매 요청 JWT 서명/토큰발급 반복 방지(대량 생성 시 중요) */
+let _ttsToken: { token: string; exp: number } | null = null
+async function getTtsToken(sa: ServiceAccount): Promise<string> {
+  const now = Math.floor(Date.now() / 1000)
+  if (_ttsToken && _ttsToken.exp - 60 > now) return _ttsToken.token
+  const header = b64urlFromStr(JSON.stringify({ alg: 'RS256', typ: 'JWT' }))
+  const claim = b64urlFromStr(JSON.stringify({
+    iss: sa.client_email,
+    scope: 'https://www.googleapis.com/auth/cloud-platform',
+    aud: 'https://oauth2.googleapis.com/token',
+    iat: now, exp: now + 3600,
+  }))
+  const unsigned = `${header}.${claim}`
+  const key = await crypto.subtle.importKey('pkcs8', pemToDer(sa.private_key), { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign'])
+  const sig = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', key, new TextEncoder().encode(unsigned))
+  const jwt = `${unsigned}.${b64urlFromBytes(new Uint8Array(sig))}`
+  const res = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: jwt }),
+  })
+  const d = await res.json()
+  if (!d.access_token) throw new Error('OAuth 토큰 발급 실패: ' + JSON.stringify(d).slice(0, 200))
+  _ttsToken = { token: d.access_token, exp: now + (d.expires_in || 3600) }
+  return d.access_token
+}
+
+async function callGeminiTts(text: string, voice: string, role: string) {
+  const voiceName = READING_TTS_VOICES.has(voice) ? voice : READING_TTS_DEFAULT
+  const prompt = READING_TTS_STYLES[role] || READING_TTS_STYLES.narrator
+  const sa = getServiceAccount()
   const MAX = 2
   for (let attempt = 1; attempt <= MAX; attempt++) {
-    const res = await fetch(url, {
+    const token = await getTtsToken(sa)
+    const res = await fetch('https://texttospeech.googleapis.com/v1/text:synthesize', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, 'x-goog-user-project': sa.project_id },
       body: JSON.stringify({
-        input: { text },
-        voice: { languageCode: 'en-US', name: `en-US-Chirp3-HD-${voiceName}` },
+        input: { prompt, text },
+        voice: { languageCode: 'en-US', name: voiceName, model_name: GEMINI_TTS_MODEL },
         audioConfig: { audioEncoding: 'MP3' },
       }),
     })
     if (res.ok) {
       const data = await res.json()
       const audio = data.audioContent
-      if (!audio) throw new Error('Cloud TTS: empty audioContent')
+      if (!audio) throw new Error('Gemini TTS: empty audioContent')
       return { audio, mimeType: 'audio/mpeg' }
     }
     const errText = await res.text()
-    /* 4xx(429 quota 포함)는 재시도 무의미 → 즉시 중단하고 상태 전파. 5xx 만 1회 재시도. */
+    /* 401 은 토큰 만료일 수 있음 → 캐시 비우고 1회 재시도. 그 외 4xx(429 포함)는 즉시 중단, 5xx 는 재시도. */
+    if (res.status === 401 && attempt < MAX) { _ttsToken = null; continue }
     if (res.status < 500 || attempt === MAX) {
-      const e = new Error(`Cloud TTS API ${res.status}: ${errText.slice(0, 200)}`)
+      const e = new Error(`Gemini TTS API ${res.status}: ${errText.slice(0, 200)}`)
       ;(e as { status?: number }).status = res.status
       throw e
     }
     await new Promise((r) => setTimeout(r, 800))
   }
-  throw new Error('Cloud TTS: unreachable')
+  throw new Error('Gemini TTS: unreachable')
 }
 
 /* 사용량 증가: 최초 검색 시 row 생성, 이후 검색 시 trial_count +1 */
@@ -989,7 +1040,8 @@ Deno.serve(async (req) => {
           )
         }
         const voice: string = typeof body.voice === "string" ? body.voice : "Aoede"
-        result = await callCloudTts(text, voice, GOOGLE_TTS_KEY)
+        const role: string = (body.role === "teacher") ? "teacher" : "narrator"
+        result = await callGeminiTts(text, voice, role)
         break
       }
       case "credit-init": {
