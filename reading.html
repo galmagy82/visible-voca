@@ -3570,16 +3570,23 @@ function ttsChunkText(text, maxLen) {
   return chunks;
 }
 
+/* 도입부(요약)를 본문처럼 ~600자 조각으로 나눈 intro 클립들 — 긴 요약이 중간에 잘리는 것 방지.
+   _tts.intro 여부는 호출부에서 판단(여기선 introText 만 있으면 조각 반환). 낭독 목소리 + 한국어. */
+function ttsBuildIntroClips() {
+  if (!_tts.introText) return [];
+  return ttsChunkText(_tts.introText, 600).map((chunk) => ttsMakeClip('intro', 0, -1, chunk, _tts.narratorVoice, 'ko-KR'));
+}
+
 /* 클립 배열 생성. modeOverride 미지정 시 현재 재생 모드(_tts.mode) 기준.
    생성 단계에서는 'both' 로 호출해 본문+단어 전체를 만든다. */
 function ttsBuildClips(modeOverride, langOverride) {
   const clips = [];
   const lang = langOverride || _tts.vocabLang;
   const mode = modeOverride || _tts.mode;
-  /* 도입부(책 요약) — 모드와 무관하게, 켜져 있고 요약이 있으면 맨 앞에 1개. 낭독 목소리 + 한국어.
-     pageIdx=0 이라 "처음부터" 재생 시 첫 클립으로 나오고, 중간 페이지부터 시작하면 건너뜀. */
+  /* 도입부(책 요약) — 모드와 무관하게, 켜져 있고 요약이 있으면 맨 앞에 조각들로. 낭독 목소리 + 한국어.
+     pageIdx=0 이라 "처음부터" 재생 시 첫 클립들로 나오고, 중간 페이지부터 시작하면 건너뜀. */
   if (_tts.intro && _tts.introText) {
-    clips.push(ttsMakeClip('intro', 0, -1, _tts.introText, _tts.narratorVoice, 'ko-KR'));
+    ttsBuildIntroClips().forEach((c) => clips.push(c));
   }
   _pages.forEach((p, pi) => {
     if (!p || p.error || p.no_text || !p.original) return;
@@ -3941,8 +3948,8 @@ async function ttsToggleIntro() {
     try {
       if (!_tts.introText) _tts.introText = await ttsFetchSummary();
       if (_tts.introText) {
-        /* 도입부 클립 미리 생성(캐시) — 재생 시 매끄럽게 */
-        await ttsEnsure(ttsMakeClip('intro', 0, -1, _tts.introText, _tts.narratorVoice, 'ko-KR'));
+        /* 도입부 조각들 미리 생성(캐시) — 재생 시 매끄럽게. 동시 생성. */
+        await Promise.all(ttsBuildIntroClips().map((c) => ttsEnsure(c)));
       }
     } catch (e) { /* 무시 — 아래에서 introText 유무로 판정 */ }
     if (btn) { btn.disabled = false; btn.textContent = '도입부'; }
