@@ -3625,7 +3625,8 @@ async function ttsEnsure(clip) {
   return p;
 }
 
-/* --- 백그라운드 프리페치: 현재 위치부터 책 끝까지 순서대로 미리 생성(동시 1 — RPM 회피) --- */
+/* --- 백그라운드 프리페치: 현재 위치부터 책 끝까지 순서대로 미리 생성(동시 3) ---
+   보통은 음성 만들기에서 이미 다 생성돼 캐시 적중이라 빠름. 미생성 클립만 실제 생성. */
 function ttsStartPrefetch() {
   if (_tts.prefetching) return;
   _tts.prefetching = true;
@@ -3638,7 +3639,7 @@ function ttsStartPrefetch() {
       catch (e) { if (e && e.status === 429) break; /* 그 외 실패는 재생 시점에 재시도 */ }
     }
   };
-  Promise.all([worker()]).finally(() => { _tts.prefetching = false; });
+  Promise.all([worker(), worker(), worker()]).finally(() => { _tts.prefetching = false; });
 }
 
 /* --- 재생 엔진 --- */
@@ -3794,7 +3795,7 @@ function ttsUpdateProgress(done, total) {
 }
 
 /* 🎧 음성 만들기 — 현재 설정(언어·목소리)으로 책 전체(본문+단어) 클립을 미리 생성.
-   페이싱: 동시 1개 + 요청 간 간격 → 분당 요청 한도(RPM) 회피. 캐시된 건 즉시 통과.
+   동시 10개 워커풀로 병렬 생성(Cloud/Vertex quota 넉넉 — 실측 10동시 정상). 캐시된 건 즉시 통과.
    429(quota) 만나면 즉시 중단하고 안내(계속 던져봐야 quota 만 낭비). */
 async function ttsMakeAudio() {
   ttsInit();
@@ -3802,19 +3803,24 @@ async function ttsMakeAudio() {
   if (clips.length === 0) return;
   _tts.makeCancel = false;
   ttsSetUiState('progress');
-  let done = 0, quotaHit = false;
+  let done = 0, next = 0, quotaHit = false;
   ttsUpdateProgress(0, clips.length);
-  for (let i = 0; i < clips.length && !_tts.makeCancel; i++) {
-    try {
-      await ttsEnsure(clips[i]);
-    } catch (e) {
-      if (e && e.status === 429) { quotaHit = true; break; }
-      /* 그 외 실패는 건너뜀(재생 시 재시도) */
+  const CONC = 10;
+  const worker = async () => {
+    while (!_tts.makeCancel && !quotaHit) {
+      const i = next++;
+      if (i >= clips.length) break;
+      try {
+        await ttsEnsure(clips[i]);
+      } catch (e) {
+        if (e && e.status === 429) { quotaHit = true; break; }
+        /* 그 외 실패는 건너뜀(재생 시 재시도) */
+      }
+      done++;
+      ttsUpdateProgress(done, clips.length);
     }
-    done++;
-    ttsUpdateProgress(done, clips.length);
-    await new Promise((r) => setTimeout(r, 400));  // 요청 간 간격
-  }
+  };
+  await Promise.all(Array.from({ length: Math.min(CONC, clips.length) }, () => worker()));
   if (quotaHit) {
     ttsSetUiState('setup');
     alert('음성 생성 할당량(quota)을 초과했습니다. 잠시 후 다시 시도해 주세요.');
