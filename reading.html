@@ -586,6 +586,12 @@
     background: #FFFFFF; color: #4A4844; font-size: 13px; font-weight: 600; cursor: pointer;
   }
   .tts-speed-btn:hover, .tts-dl-btn:hover, .tts-close-btn:hover { background: #EDECEA; }
+  /* 이전/다음 페이지·중지 버튼(⏮ ⏭ ⏹) */
+  .tts-nav-btn {
+    padding: 6px 9px; border: 1px solid #D8D6D2; border-radius: 8px;
+    background: #FFFFFF; color: #4A4844; font-size: 14px; cursor: pointer; flex-shrink: 0;
+  }
+  .tts-nav-btn:hover { background: #EDECEA; }
   .tts-dl-btn:disabled { opacity: 0.55; cursor: default; }
   .tts-optgroup {
     display: inline-flex; align-items: center; gap: 4px;
@@ -1656,7 +1662,10 @@
       <!-- ③ 재생: 실제 플레이어 -->
       <div class="tts-state" id="ttsPlayer" hidden>
         <div class="tts-row tts-row-main">
+          <button class="tts-nav-btn" onclick="ttsSkipPage(-1)" title="이전 페이지" aria-label="이전 페이지">⏮</button>
           <button class="tts-play-btn" id="ttsPlayPauseBtn" onclick="ttsToggle()" aria-label="재생/일시정지">▶</button>
+          <button class="tts-nav-btn" onclick="ttsSkipPage(1)" title="다음 페이지" aria-label="다음 페이지">⏭</button>
+          <button class="tts-nav-btn" onclick="ttsStopReset()" title="처음으로" aria-label="처음으로">⏹</button>
           <span class="tts-buffering" id="ttsBuffering" hidden>오디오 준비 중…</span>
           <span class="tts-spacer"></span>
           <button class="tts-speed-btn" id="ttsSpeedBtn" onclick="ttsCycleSpeed()" title="배속">1×</button>
@@ -3811,6 +3820,18 @@ function ttsStartFromCurrentPage() {
   _tts.paused = false;
   ttsStartPrefetch();
   ttsPlayCurrent();
+}
+/* ⏮/⏭ — 이전/다음 페이지로 이동해서 그 페이지부터 재생 */
+function ttsSkipPage(delta) {
+  const target = Math.max(0, Math.min(_pages.length - 1, _currentIdx + delta));
+  goTo(target); window.scrollTo(0, 0);
+  ttsStartFromCurrentPage();
+}
+/* ⏹ — 정지하고 책 맨 처음(1페이지)으로 리셋 (다음 ▶ 는 처음부터) */
+function ttsStopReset() {
+  ttsStop();
+  goTo(0); window.scrollTo(0, 0);
+  ttsUpdateBar();
 }
 function ttsPause() {
   _tts.paused = true;
