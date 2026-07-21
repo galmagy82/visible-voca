@@ -1678,6 +1678,10 @@
             <button class="tts-opt" id="ttsMode_both" onclick="ttsSetMode('both')">본문+단어</button>
             <button class="tts-opt" id="ttsMode_vocab" onclick="ttsSetMode('vocab')">단어만</button>
           </span>
+          <!-- 도입부: 모드와 독립 다중선택(체크). 켜면 처음부터 재생 시 책 요약을 먼저 읽음 -->
+          <span class="tts-optgroup">
+            <button class="tts-opt" id="ttsIntroBtn" onclick="ttsToggleIntro()" title="처음부터 재생 시 책 요약을 먼저 읽어줍니다">＋도입부</button>
+          </span>
         </div>
       </div>
 
@@ -2883,8 +2887,9 @@ function setLoadingPhase(key) {
 
 /* --- 북 뷰어 렌더 --- */
 function renderBook() {
-  /* 다른 책/새 책을 그릴 때 이전 읽어주기 재생을 정지·바 닫음·생성상태 리셋 */
-  if (typeof ttsStop === 'function') { ttsStop(); ttsShowBar(false); _tts.made = false; ttsSetUiState('setup'); }
+  /* 다른 책/새 책을 그릴 때 이전 읽어주기 재생을 정지·바 닫음·생성상태 리셋
+     (도입부도 초기화 — 이 책에 저장돼 있으면 ttsCheckMade → 복원됨) */
+  if (typeof ttsStop === 'function') { ttsStop(); ttsShowBar(false); _tts.made = false; _tts.intro = false; _tts.introText = ''; ttsSetUiState('setup'); }
   /* 이미 만든 책이면 미리 감지 → 듣기 열 때 곧바로 재생 단계로 (음성 만들기 건너뜀) */
   if (typeof ttsCheckMade === 'function') ttsCheckMade().then((ok) => { if (ok) _tts.made = true; });
   const track = document.getElementById('pageTrack');
@@ -3434,6 +3439,8 @@ const _tts = {
   narratorVoice: 'Despina',    // 낭독 목소리 기본값
   teacherVoice: 'Rasalgethi',  // 단어설명 목소리 기본값
   vocabLang: 'native',       // TTS 단어설명 언어(화면 표기 _studyMeaningLang 과 분리)
+  intro: false,              // 도입부(책 요약 나레이션) 재생 여부 — 모드와 독립 다중선택
+  introText: '',             // 생성된 한국어 요약 텍스트(책별)
   speed: 1.0,
   clips: [],            // 재생용 클립 배열(현재 모드/설정 기준)
   pos: 0,               // 현재 재생 중 클립 인덱스
@@ -3524,11 +3531,12 @@ function ttsVocabText(item, original, lang) {
 }
 
 /* --- 클립 빌드 --- */
-function ttsMakeClip(kind, pageIdx, itemIdx, text, voice) {
-  /* role: 본문=narrator / 단어=teacher (엣지에서 스타일 프롬프트 선택). 같은 목소리·텍스트라도
-     스타일이 다르면 오디오가 달라지므로 캐시 키에 role 포함. */
-  const role = (kind === 'vocab') ? 'teacher' : 'narrator';
-  return { kind, pageIdx, itemIdx, text, voice, role, cacheKey: `${TTS_CACHE_VERSION}:${voice}:${role}:${ttsHash(text)}` };
+function ttsMakeClip(kind, pageIdx, itemIdx, text, voice, lang) {
+  /* role: 본문=narrator / 단어=teacher / 도입부=intro (엣지에서 스타일 프롬프트·언어 선택).
+     lang: 도입부만 'ko-KR'(한국어 음성), 나머지 'en-US'. 캐시 키에 role 포함(스타일 다르면 오디오 다름).
+     텍스트가 언어별로 달라 hash 로 자연 구분되므로 lang 은 요청에만 쓰고 키엔 불필요. */
+  const role = (kind === 'vocab') ? 'teacher' : (kind === 'intro') ? 'intro' : 'narrator';
+  return { kind, pageIdx, itemIdx, text, voice, role, lang: lang || 'en-US', cacheKey: `${TTS_CACHE_VERSION}:${voice}:${role}:${ttsHash(text)}` };
 }
 /* 긴 본문 분할 — Gemini TTS 는 긴 입력에서 낭독 뒤에 과도한 무음/이상 출력을 낸다
    (실측: 400·800자 정상, 1200자↑ 깨짐). 그래서 문장 경계로 maxLen(≈600자) 이하 조각으로
@@ -3568,6 +3576,11 @@ function ttsBuildClips(modeOverride, langOverride) {
   const clips = [];
   const lang = langOverride || _tts.vocabLang;
   const mode = modeOverride || _tts.mode;
+  /* 도입부(책 요약) — 모드와 무관하게, 켜져 있고 요약이 있으면 맨 앞에 1개. 낭독 목소리 + 한국어.
+     pageIdx=0 이라 "처음부터" 재생 시 첫 클립으로 나오고, 중간 페이지부터 시작하면 건너뜀. */
+  if (_tts.intro && _tts.introText) {
+    clips.push(ttsMakeClip('intro', 0, -1, _tts.introText, _tts.narratorVoice, 'ko-KR'));
+  }
   _pages.forEach((p, pi) => {
     if (!p || p.error || p.no_text || !p.original) return;
     if (mode === 'body' || mode === 'both') {
@@ -3600,7 +3613,7 @@ async function ttsFetch(clip) {
   const res = await fetch(EDGE_FUNCTION_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'reading-tts', userId: getUserId(), text: clip.text, voice: clip.voice, role: clip.role }),
+    body: JSON.stringify({ action: 'reading-tts', userId: getUserId(), text: clip.text, voice: clip.voice, role: clip.role, lang: clip.lang }),
   });
   if (!res.ok) {
     const d = await res.json().catch(() => ({}));
@@ -3745,7 +3758,7 @@ function ttsSaveMadeSettings() {
   const key = ttsMadeKey();
   if (!key) return;
   try {
-    localStorage.setItem(key, JSON.stringify({ v: TTS_CACHE_VERSION, n: _tts.narratorVoice, t: _tts.teacherVoice, l: _tts.vocabLang }));
+    localStorage.setItem(key, JSON.stringify({ v: TTS_CACHE_VERSION, n: _tts.narratorVoice, t: _tts.teacherVoice, l: _tts.vocabLang, intro: _tts.intro, introText: _tts.introText }));
   } catch (e) { /* 저장 실패는 무시 */ }
 }
 function ttsRestoreMadeSettings() {
@@ -3759,6 +3772,8 @@ function ttsRestoreMadeSettings() {
     if (s.n) _tts.narratorVoice = s.n;
     if (s.t) _tts.teacherVoice = s.t;
     if (s.l) _tts.vocabLang = s.l;
+    _tts.intro = !!s.intro;
+    _tts.introText = s.introText || '';
     return true;
   } catch (e) { return false; }
 }
@@ -3900,6 +3915,46 @@ function ttsRebuildAndRestart() {
   ttsPlayCurrent();
 }
 function ttsSetMode(m) { _tts.mode = m; ttsUpdateBar(); ttsRebuildAndRestart(); }
+
+/* 도입부 요약 생성 — 책 전체 원문을 엣지 reading-summary 로 보내 한국어 요약 텍스트 받기 */
+async function ttsFetchSummary() {
+  const text = _pages.filter((p) => p && p.original && !p.error && !p.no_text).map((p) => p.original).join('\n\n');
+  if (!text.trim()) return '';
+  try {
+    const res = await fetch(EDGE_FUNCTION_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'reading-summary', userId: getUserId(), text }),
+    });
+    if (!res.ok) return '';
+    const d = await res.json();
+    return (d.summary || '').trim();
+  } catch (e) { return ''; }
+}
+/* 도입부 토글 — 켜면 요약 생성(없으면) + 도입부 클립 미리 생성 후 클립 목록에 반영.
+   현재 재생 위치는 유지(같은 클립 cacheKey 기준 재탐색). */
+async function ttsToggleIntro() {
+  const btn = document.getElementById('ttsIntroBtn');
+  const turningOn = !_tts.intro;
+  if (turningOn) {
+    if (btn) { btn.disabled = true; btn.textContent = '도입부 준비…'; }
+    try {
+      if (!_tts.introText) _tts.introText = await ttsFetchSummary();
+      if (_tts.introText) {
+        /* 도입부 클립 미리 생성(캐시) — 재생 시 매끄럽게 */
+        await ttsEnsure(ttsMakeClip('intro', 0, -1, _tts.introText, _tts.narratorVoice, 'ko-KR'));
+      }
+    } catch (e) { /* 무시 — 아래에서 introText 유무로 판정 */ }
+    if (btn) { btn.disabled = false; btn.textContent = '도입부'; }
+    if (!_tts.introText) { alert('도입부 요약 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.'); return; }
+  }
+  const curKey = (_tts.clips[_tts.pos] || {}).cacheKey;
+  _tts.intro = turningOn;
+  _tts.clips = ttsBuildClips();
+  if (curKey) { const p = _tts.clips.findIndex((c) => c.cacheKey === curKey); if (p >= 0) _tts.pos = p; }
+  ttsSaveMadeSettings();
+  ttsUpdateBar();
+}
 function ttsSetVoice(role, voice) {
   if (role === 'narrator') _tts.narratorVoice = voice; else _tts.teacherVoice = voice;
   ttsUpdateBar();
@@ -3969,6 +4024,9 @@ function ttsUpdateBar() {
     const b = document.getElementById(`ttsMode_${m}`);
     if (b) b.classList.toggle('active', _tts.mode === m);
   });
+  /* 도입부 체크 버튼 active */
+  const introBtn = document.getElementById('ttsIntroBtn');
+  if (introBtn) introBtn.classList.toggle('active', _tts.intro);
   /* 설정 값 반영: 언어 라디오 + 목소리 드롭다운 */
   const langRadio = document.querySelector(`input[name="ttsLang"][value="${_tts.vocabLang}"]`);
   if (langRadio) langRadio.checked = true;

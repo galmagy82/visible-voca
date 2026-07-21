@@ -780,6 +780,8 @@ const READING_TTS_DEFAULT = 'Aoede'
 const READING_TTS_STYLES: Record<string, string> = {
   narrator: 'Read aloud as a warm, engaging storyteller narrating a novel. Match the mood — build quiet tension in dramatic moments and stay gentle in calm ones. Keep a steady, natural pace.',
   teacher: 'Read aloud clearly and calmly, like a friendly language teacher going over vocabulary. Keep an even, encouraging tone.',
+  /* 도입부(책 소개 나레이션) — 한국어. 아이에게 책을 소개하듯 따뜻하게. */
+  intro: '따뜻하고 친근한 이야기 안내자처럼, 아이에게 책을 소개하듯 자연스럽게 읽어줘.',
 }
 
 /* 서비스계정 JSON 파싱 (secret 은 base64 로 저장 — 개행/특수문자 이스케이프 회피) */
@@ -830,9 +832,10 @@ async function getTtsToken(sa: ServiceAccount): Promise<string> {
   return d.access_token
 }
 
-async function callGeminiTts(text: string, voice: string, role: string) {
+async function callGeminiTts(text: string, voice: string, role: string, lang: string) {
   const voiceName = READING_TTS_VOICES.has(voice) ? voice : READING_TTS_DEFAULT
   const prompt = READING_TTS_STYLES[role] || READING_TTS_STYLES.narrator
+  const languageCode = (lang === 'ko-KR') ? 'ko-KR' : 'en-US'  // 도입부(한국어)만 ko-KR
   const sa = getServiceAccount()
   const MAX = 2
   for (let attempt = 1; attempt <= MAX; attempt++) {
@@ -842,7 +845,7 @@ async function callGeminiTts(text: string, voice: string, role: string) {
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, 'x-goog-user-project': sa.project_id },
       body: JSON.stringify({
         input: { prompt, text },
-        voice: { languageCode: 'en-US', name: voiceName, model_name: GEMINI_TTS_MODEL },
+        voice: { languageCode, name: voiceName, model_name: GEMINI_TTS_MODEL },
         audioConfig: { audioEncoding: 'MP3' },
       }),
     })
@@ -863,6 +866,29 @@ async function callGeminiTts(text: string, voice: string, role: string) {
     await new Promise((r) => setTimeout(r, 800))
   }
   throw new Error('Gemini TTS: unreachable')
+}
+
+/* 도입부 요약 — 책 전체 영어 텍스트 → 한국어 짧은 요약(인물·이야기). Gemini 텍스트 모델. */
+async function callGeminiSummary(text: string, apiKey: string): Promise<string> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`
+  const prompt = `다음은 영어 책의 전체 텍스트입니다. 이 책에 어떤 인물이 나오고 어떤 이야기인지, 오디오 "도입부 나레이션"용으로 한국어로 짧게(3~4문장) 요약해 주세요.
+- 결말·스포일러는 피하고, 앞으로 읽을 내용에 흥미가 생기도록.
+- 아이에게 책을 소개하듯 자연스러운 구어체.
+- 요약문만 출력(제목·머리말·따옴표 없이).
+
+책 텍스트:
+"""
+${text.slice(0, 20000)}
+"""`
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.7, maxOutputTokens: 1000 } }),
+  })
+  if (!res.ok) throw new Error(`Gemini summary API ${res.status}: ${(await res.text()).slice(0, 150)}`)
+  const data = await res.json()
+  const out = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+  return out.trim()
 }
 
 /* 사용량 증가: 최초 검색 시 row 생성, 이후 검색 시 trial_count +1 */
@@ -1040,8 +1066,21 @@ Deno.serve(async (req) => {
           )
         }
         const voice: string = typeof body.voice === "string" ? body.voice : "Aoede"
-        const role: string = (body.role === "teacher") ? "teacher" : "narrator"
-        result = await callGeminiTts(text, voice, role)
+        const role: string = (body.role === "teacher") ? "teacher" : (body.role === "intro") ? "intro" : "narrator"
+        const ttsLang: string = (body.lang === "ko-KR") ? "ko-KR" : "en-US"
+        result = await callGeminiTts(text, voice, role, ttsLang)
+        break
+      }
+      case "reading-summary": {
+        /* 도입부용 — 책 전체 영어 텍스트 → 한국어 짧은 요약(인물·이야기). */
+        const text: string = typeof body.text === "string" ? body.text : ""
+        if (!text) {
+          return new Response(
+            JSON.stringify({ error: "text is required" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          )
+        }
+        result = { summary: await callGeminiSummary(text, apiKey) }
         break
       }
       case "credit-init": {
@@ -1061,7 +1100,7 @@ Deno.serve(async (req) => {
       }
       default:
         return new Response(
-          JSON.stringify({ error: "Invalid action. Use: search, image, extract, reading-extract, reading-extract-ocr, reading-finalize, reading-tts, credit-init" }),
+          JSON.stringify({ error: "Invalid action. Use: search, image, extract, reading-extract, reading-extract-ocr, reading-finalize, reading-tts, reading-summary, credit-init" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         )
     }
