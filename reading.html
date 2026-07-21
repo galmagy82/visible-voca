@@ -1680,7 +1680,7 @@
           </span>
           <!-- 도입부: 모드와 독립 다중선택(체크). 켜면 처음부터 재생 시 책 요약을 먼저 읽음 -->
           <span class="tts-optgroup">
-            <button class="tts-opt" id="ttsIntroBtn" onclick="ttsToggleIntro()" title="처음부터 재생 시 책 요약을 먼저 읽어줍니다">＋도입부</button>
+            <button class="tts-opt" id="ttsIntroBtn" onclick="ttsToggleIntro()" title="처음부터 재생 시 책 요약을 먼저 읽어줍니다">도입부</button>
           </span>
         </div>
       </div>
@@ -3821,10 +3821,19 @@ function ttsUpdateProgress(done, total) {
    429(quota) 만나면 즉시 중단하고 안내(계속 던져봐야 quota 만 낭비). */
 async function ttsMakeAudio() {
   ttsInit();
-  const clips = ttsBuildClips('both');
-  if (clips.length === 0) return;
+  const bodyClips = ttsBuildClips('both');
+  if (bodyClips.length === 0) return;  // 만들 게 없음(빈 책)
   _tts.makeCancel = false;
   ttsSetUiState('progress');
+  ttsUpdateProgress(0, 1);  // 요약 생성 동안 0%
+  /* 도입부 요약은 책 만들 때 '항상' 새로 생성 → 재생 화면 버튼은 대기 없이 켜기만 하면 됨.
+     매번 새 요약이라 다시 만들기 하면 도입부도 새로(예전에 잘렸던 것도 교체). */
+  _tts.introText = await ttsFetchSummary();
+  if (_tts.makeCancel) { ttsSetUiState('setup'); return; }
+  /* 생성 대상 = 도입부 조각 + 본문/단어 전체. cacheKey 중복 제거(도입부가 겹치는 경우 대비). */
+  const seen = new Set();
+  const clips = ttsBuildIntroClips().concat(bodyClips)
+    .filter((c) => { if (seen.has(c.cacheKey)) return false; seen.add(c.cacheKey); return true; });
   let done = 0, next = 0, quotaHit = false;
   ttsUpdateProgress(0, clips.length);
   const CONC = 10;
@@ -3938,19 +3947,18 @@ async function ttsFetchSummary() {
     return (d.summary || '').trim();
   } catch (e) { return ''; }
 }
-/* 도입부 토글 — 켜면 요약 생성(없으면) + 도입부 클립 미리 생성 후 클립 목록에 반영.
+/* 도입부 토글 — 순수 재생 on/off. 도입부는 '음성 만들기' 때 이미 생성돼 있어 즉시 켜짐.
+   예외: 예전에 만든 책이나 요약 생성이 실패한 경우엔 여기서 폴백으로 생성.
    현재 재생 위치는 유지(같은 클립 cacheKey 기준 재탐색). */
 async function ttsToggleIntro() {
-  const btn = document.getElementById('ttsIntroBtn');
   const turningOn = !_tts.intro;
-  if (turningOn) {
+  /* 요약이 없을 때만(폴백) 생성 — 보통은 음성 만들 때 이미 준비됨 → 대기 없이 토글 */
+  if (turningOn && !_tts.introText) {
+    const btn = document.getElementById('ttsIntroBtn');
     if (btn) { btn.disabled = true; btn.textContent = '도입부 준비…'; }
     try {
-      if (!_tts.introText) _tts.introText = await ttsFetchSummary();
-      if (_tts.introText) {
-        /* 도입부 조각들 미리 생성(캐시) — 재생 시 매끄럽게. 동시 생성. */
-        await Promise.all(ttsBuildIntroClips().map((c) => ttsEnsure(c)));
-      }
+      _tts.introText = await ttsFetchSummary();
+      if (_tts.introText) await Promise.all(ttsBuildIntroClips().map((c) => ttsEnsure(c)));
     } catch (e) { /* 무시 — 아래에서 introText 유무로 판정 */ }
     if (btn) { btn.disabled = false; btn.textContent = '도입부'; }
     if (!_tts.introText) { alert('도입부 요약 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.'); return; }
