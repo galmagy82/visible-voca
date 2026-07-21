@@ -1624,23 +1624,23 @@
         <div class="tts-row tts-setting">
           <span class="tts-setting-label">낭독 목소리</span>
           <select class="tts-select" id="ttsNarratorSel" onchange="ttsSetVoice('narrator', this.value)">
+            <option value="Despina">(여) Despina</option>
             <option value="Aoede">(여) Aoede</option>
             <option value="Callirrhoe">(여) Callirrhoe</option>
-            <option value="Despina">(여) Despina</option>
+            <option value="Rasalgethi">(남) Rasalgethi</option>
             <option value="Algieba">(남) Algieba</option>
             <option value="Enceladus">(남) Enceladus</option>
-            <option value="Rasalgethi">(남) Rasalgethi</option>
           </select>
         </div>
         <div class="tts-row tts-setting">
           <span class="tts-setting-label">단어설명 목소리</span>
           <select class="tts-select" id="ttsTeacherSel" onchange="ttsSetVoice('teacher', this.value)">
+            <option value="Despina">(여) Despina</option>
             <option value="Aoede">(여) Aoede</option>
             <option value="Callirrhoe">(여) Callirrhoe</option>
-            <option value="Despina">(여) Despina</option>
+            <option value="Rasalgethi">(남) Rasalgethi</option>
             <option value="Algieba">(남) Algieba</option>
             <option value="Enceladus">(남) Enceladus</option>
-            <option value="Rasalgethi">(남) Rasalgethi</option>
           </select>
         </div>
         <div class="tts-row tts-setting tts-setting-gap">
@@ -3431,8 +3431,8 @@ const _tts = {
   active: false,        // 엔진 동작 중(재생 or 일시정지 상태 포함)
   paused: false,
   mode: 'both',         // 'both' | 'body' | 'vocab' — 재생 필터(모든 클립은 미리 생성됨)
-  narratorVoice: 'Aoede',    // 낭독 목소리 (Chirp3-HD 이름)
-  teacherVoice: 'Algieba',   // 단어설명 목소리
+  narratorVoice: 'Despina',    // 낭독 목소리 기본값
+  teacherVoice: 'Rasalgethi',  // 단어설명 목소리 기본값
   vocabLang: 'native',       // TTS 단어설명 언어(화면 표기 _studyMeaningLang 과 분리)
   speed: 1.0,
   clips: [],            // 재생용 클립 배열(현재 모드/설정 기준)
@@ -3735,16 +3735,43 @@ async function ttsAllCached(clips) {
     });
   } catch (e) { return false; }
 }
-/* 이미 만든 책인지 확인. 현재 vocabLang 으로 전부 캐시됐는지 보고, 아니면 반대 언어도 확인.
-   본문 클립은 언어 무관이라, 한쪽 언어로 전부 만들어져 있으면 그 언어를 채택(_tts.vocabLang)하고 true.
-   → 만들 때 어떤 언어였든(새로고침으로 리셋돼도) 다시 들어오면 바로 재생 가능. */
+/* --- "만든 설정"(목소리·언어) 저장/복원 ---
+   오디오가 브라우저 로컬(IndexedDB)이라, 어떤 목소리로 만들었는지도 같은 기기 localStorage 에
+   책 ID 기준으로 저장한다. 재진입 시 복원하면, 기본값과 다른 목소리로 만들었어도 캐시가 감지됨.
+   저장된 책(_currentBookId 있음)만 대상 — 미저장 책은 새로고침하면 어차피 사라짐. */
+function ttsMadeKey() { return _currentBookId ? ('tts-made:' + _currentBookId) : null; }
+function ttsSaveMadeSettings() {
+  const key = ttsMadeKey();
+  if (!key) return;
+  try {
+    localStorage.setItem(key, JSON.stringify({ v: TTS_CACHE_VERSION, n: _tts.narratorVoice, t: _tts.teacherVoice, l: _tts.vocabLang }));
+  } catch (e) { /* 저장 실패는 무시 */ }
+}
+function ttsRestoreMadeSettings() {
+  const key = ttsMadeKey();
+  if (!key) return false;
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return false;
+    const s = JSON.parse(raw);
+    if (s.v !== TTS_CACHE_VERSION) return false;  // 엔진/캐시 버전 다르면 무시
+    if (s.n) _tts.narratorVoice = s.n;
+    if (s.t) _tts.teacherVoice = s.t;
+    if (s.l) _tts.vocabLang = s.l;
+    return true;
+  } catch (e) { return false; }
+}
+
+/* 이미 만든 책인지 확인. 먼저 이 책을 만든 설정(목소리·언어)을 복원한 뒤, 그 설정으로 전부
+   캐시됐는지 확인. (언어는 혹시 몰라 양쪽 확인.) → 어떤 목소리·언어로 만들었든 재진입 시 감지. */
 async function ttsCheckMade() {
+  ttsRestoreMadeSettings();  // 이 책을 만든 목소리·언어 복원(저장돼 있으면)
   const langs = (_tts.vocabLang === 'en') ? ['en', 'native'] : ['native', 'en'];
   for (const lang of langs) {
     const clips = ttsBuildClips('both', lang);
     if (!clips.length) continue;
     const ok = await ttsAllCached(clips);
-    console.log(`[tts-diag] ttsCheckMade lang=${lang}: ${ok ? '전부 캐시(made)' : '일부 없음'}`);
+    console.log(`[tts-diag] ttsCheckMade 낭독=${_tts.narratorVoice} 단어=${_tts.teacherVoice} lang=${lang}: ${ok ? '전부 캐시(made)' : '일부 없음'}`);
     if (ok) { _tts.vocabLang = lang; return true; }
   }
   return false;
@@ -3795,6 +3822,7 @@ async function ttsMakeAudio() {
   }
   if (_tts.makeCancel) { ttsSetUiState('setup'); return; }
   _tts.made = true;
+  ttsSaveMadeSettings();  // 이 책을 만든 목소리·언어를 기억(재진입 감지용)
   ttsSetUiState('player');
 }
 /* 생성 취소 — 설정 단계로 복귀 */
