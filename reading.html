@@ -574,7 +574,8 @@
   .tts-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   /* display:flex 가 있어 hidden 속성만으론 안 숨겨짐 — '단어만' 선택 시 하위 옵션 줄 숨김용 */
   .tts-row[hidden] { display: none; }
-  .tts-row-main { gap: 10px; }
+  /* 트랜스포트(⏮▶⏭⏹)만 단독으로 두고 가운데 정렬 — 배속·다운로드·다시 만들기는 맨 아래 줄로 뺐다 */
+  .tts-row-main { gap: 10px; justify-content: center; }
   .tts-spacer { flex: 1; }
   /* 재생은 주 동작이라 초록 원형으로 강조하되, 높이는 이웃 버튼(⏮⏭⏹ ≈31px)에 맞춰
      행이 울퉁불퉁해 보이지 않게 한다(예전 40px 는 혼자 커서 따로 놀았음). */
@@ -1673,9 +1674,6 @@
           <button class="tts-nav-btn" onclick="ttsSkipPage(1)" title="다음 페이지" aria-label="다음 페이지">⏭&#xFE0E;</button>
           <button class="tts-nav-btn" onclick="ttsStopReset()" title="처음으로" aria-label="처음으로">⏹&#xFE0E;</button>
           <span class="tts-buffering" id="ttsBuffering" hidden>오디오 준비 중…</span>
-          <span class="tts-spacer"></span>
-          <button class="tts-speed-btn" id="ttsSpeedBtn" onclick="ttsCycleSpeed()" title="배속">1×</button>
-          <button class="tts-dl-btn" id="ttsDownloadBtn" onclick="ttsDownloadBook()" title="책 전체 오디오 다운로드">⬇</button>
         </div>
         <!-- 최상위 갈래: 책 듣기(본문 재생) vs 단어만 복습. 도입부·단어위치는 '책 듣기'에 딸린 옵션 -->
         <div class="tts-row tts-row-opts">
@@ -1696,10 +1694,12 @@
             <button class="tts-opt" id="ttsVocabPos_inline" onclick="ttsSetVocabPos('inline')">페이지마다</button>
           </span>
         </div>
-        <!-- 다시 만들기는 '전체 재생성'이라 드물고 무거운 동작 — 자주 누르는 트랜스포트에서 떼어
-             맨 아래 오른쪽에 둔다(모바일에서 혼자 줄바꿈돼 재생 컨트롤처럼 보이던 문제도 해소). -->
+        <!-- 부가 동작(배속·다운로드·다시 만들기)을 맨 아래 한 줄에 모아 오른쪽 정렬.
+             자주 누르는 트랜스포트와 분리 — 특히 다시 만들기는 전체 재생성이라 무겁다. -->
         <div class="tts-row tts-row-opts">
           <span class="tts-spacer"></span>
+          <button class="tts-speed-btn" id="ttsSpeedBtn" onclick="ttsCycleSpeed()" title="배속">1×</button>
+          <button class="tts-dl-btn" id="ttsDownloadBtn" onclick="ttsDownloadBook()" title="책 전체 오디오 다운로드">⬇</button>
           <button class="tts-remake-btn" id="ttsRemakeBtn" onclick="ttsRemake()">다시 만들기</button>
         </div>
       </div>
