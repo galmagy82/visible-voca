@@ -776,6 +776,12 @@ const GEMINI_TTS_MODEL = 'gemini-3.1-flash-tts-preview'
 /* 허용 목소리 — 사용자 샘플 청취 후 선별한 6개(여3/남3). 그 외 값은 기본값으로 폴백. */
 const READING_TTS_VOICES = new Set(['Aoede', 'Callirrhoe', 'Despina', 'Algieba', 'Enceladus', 'Rasalgethi'])
 const READING_TTS_DEFAULT = 'Aoede'
+/* 목소리→성별 — 프롬프트에 성별/이름을 명시해 목소리가 가끔 반대 성별로 드리프트하는 것 방지.
+   한/영 혼합 단어설명에서 모델이 종종 성별을 바꿔 읽는 현상 완화용. */
+const READING_TTS_GENDER: Record<string, 'male' | 'female'> = {
+  Aoede: 'female', Callirrhoe: 'female', Despina: 'female',
+  Algieba: 'male', Enceladus: 'male', Rasalgethi: 'male',
+}
 /* role 별 스타일 프롬프트 — Gemini-TTS 의 input.prompt 로 어투 제어 */
 const READING_TTS_STYLES: Record<string, string> = {
   narrator: 'Read aloud as a warm, engaging storyteller narrating a novel. Match the mood — build quiet tension in dramatic moments and stay gentle in calm ones. Keep a steady, natural pace.',
@@ -834,7 +840,11 @@ async function getTtsToken(sa: ServiceAccount): Promise<string> {
 
 async function callGeminiTts(text: string, voice: string, role: string, lang: string) {
   const voiceName = READING_TTS_VOICES.has(voice) ? voice : READING_TTS_DEFAULT
-  const prompt = READING_TTS_STYLES[role] || READING_TTS_STYLES.narrator
+  const gender = READING_TTS_GENDER[voiceName] || 'female'
+  /* 성별/이름 잠금 프리픽스 — 프롬프트 텍스트에도 화자를 고정해 성별 드리프트 억제.
+     한국어 등 비영어 구간에서도 같은 성별을 유지하도록 명시. */
+  const genderLock = `Use the voice named ${voiceName}, a ${gender} voice. Keep this same ${gender} voice consistently from start to finish, including any Korean or non-English words. `
+  const prompt = genderLock + (READING_TTS_STYLES[role] || READING_TTS_STYLES.narrator)
   const languageCode = (lang === 'ko-KR') ? 'ko-KR' : 'en-US'  // 도입부(한국어)만 ko-KR
   const sa = getServiceAccount()
   const MAX = 2
