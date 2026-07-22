@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Sound Preview</title></head>
+<body style="font-family:sans-serif; padding:40px; text-align:center;">
+<h2>Discovery Sound Preview v2</h2>
+<p>강렬한 효과음 비교</p>
+<br>
+<button onclick="playAncientRelic()" style="padding:12px 24px; font-size:16px; margin:8px;">1. 고대 유물 (깊은 울림 + 금속 파열)</button>
+<br>
+<button onclick="playEpicDrop()" style="padding:12px 24px; font-size:16px; margin:8px;">2. 에픽 드롭 (저음 쿵 + 고음 반짝) ★</button>
+<br>
+<button onclick="playMythicDrop()" style="padding:12px 24px; font-size:16px; margin:8px;">3. 신화급 드롭 (이중 임팩트 + 에코)</button>
+<br>
+<button onclick="playDivineDrop()" style="padding:12px 24px; font-size:16px; margin:8px;">4. 신성한 드롭 (천둥 + 천상 화음)</button>
+
+<script>
+/* 1. 고대 유물 — 깊은 울림 + 금속 파열 + 잔향 */
+function playAncientRelic() {
+  const ctx = new AudioContext();
+  const t = ctx.currentTime;
+  /* 깊은 저음 울림 */
+  const sub = ctx.createOscillator();
+  const subGain = ctx.createGain();
+  sub.type = 'sine';
+  sub.frequency.setValueAtTime(55, t);
+  sub.frequency.exponentialRampToValueAtTime(35, t + 0.6);
+  subGain.gain.setValueAtTime(0.5, t);
+  subGain.gain.exponentialRampToValueAtTime(0.001, t + 0.7);
+  sub.connect(subGain).connect(ctx.destination);
+  sub.start(t); sub.stop(t + 0.7);
+  /* 금속 파열 노이즈 */
+  const buf = ctx.createBuffer(1, ctx.sampleRate * 0.2, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.05));
+  const noise = ctx.createBufferSource();
+  const nGain = ctx.createGain();
+  const nFilter = ctx.createBiquadFilter();
+  nFilter.type = 'bandpass';
+  nFilter.frequency.value = 3000;
+  nFilter.Q.value = 2;
+  noise.buffer = buf;
+  nGain.gain.setValueAtTime(0.5, t + 0.05);
+  nGain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+  noise.connect(nFilter).connect(nGain).connect(ctx.destination);
+  noise.start(t + 0.05);
+  /* 금속 공명 화음 */
+  [440, 660, 880, 1320, 1760].forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, t + 0.08);
+    gain.gain.linearRampToValueAtTime(0.1, t + 0.12);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 1.5 + i * 0.1);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t + 0.08); osc.stop(t + 1.5 + i * 0.1);
+  });
+}
+
+/* 2. 에픽 드롭 — 저음 쿵 + 고음 반짝임 */
+function playEpicDrop() {
+  const ctx = new AudioContext();
+  const t = ctx.currentTime;
+  /* 저음 쿵 */
+  const kick = ctx.createOscillator();
+  const kickGain = ctx.createGain();
+  kick.type = 'sine';
+  kick.frequency.setValueAtTime(200, t);
+  kick.frequency.exponentialRampToValueAtTime(40, t + 0.2);
+  kickGain.gain.setValueAtTime(0.5, t);
+  kickGain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+  kick.connect(kickGain).connect(ctx.destination);
+  kick.start(t); kick.stop(t + 0.3);
+  /* 고음 반짝 화음 */
+  [1047, 1319, 1568].forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, t + 0.1);
+    gain.gain.linearRampToValueAtTime(0.2, t + 0.15);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 1.0);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t + 0.1); osc.stop(t + 1.0);
+  });
+}
+
+/* 3. 신화급 드롭 — 이중 임팩트 + 에코 잔향 */
+function playMythicDrop() {
+  const ctx = new AudioContext();
+  const t = ctx.currentTime;
+  /* 첫 번째 임팩트 */
+  const kick1 = ctx.createOscillator();
+  const k1Gain = ctx.createGain();
+  kick1.type = 'sine';
+  kick1.frequency.setValueAtTime(250, t);
+  kick1.frequency.exponentialRampToValueAtTime(50, t + 0.15);
+  k1Gain.gain.setValueAtTime(0.5, t);
+  k1Gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+  kick1.connect(k1Gain).connect(ctx.destination);
+  kick1.start(t); kick1.stop(t + 0.2);
+  /* 두 번째 임팩트 (더 깊게) */
+  const kick2 = ctx.createOscillator();
+  const k2Gain = ctx.createGain();
+  kick2.type = 'sine';
+  kick2.frequency.setValueAtTime(180, t + 0.15);
+  kick2.frequency.exponentialRampToValueAtTime(30, t + 0.45);
+  k2Gain.gain.setValueAtTime(0.6, t + 0.15);
+  k2Gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+  kick2.connect(k2Gain).connect(ctx.destination);
+  kick2.start(t + 0.15); kick2.stop(t + 0.5);
+  /* 노이즈 크래시 */
+  const buf = ctx.createBuffer(1, ctx.sampleRate * 0.3, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.08));
+  const noise = ctx.createBufferSource();
+  const nGain = ctx.createGain();
+  noise.buffer = buf;
+  nGain.gain.setValueAtTime(0.35, t);
+  nGain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+  noise.connect(nGain).connect(ctx.destination);
+  noise.start(t);
+  /* 에코 화음 — 넓게 퍼지는 잔향 */
+  [523, 784, 1047, 1319, 1568].forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, t + 0.2);
+    gain.gain.linearRampToValueAtTime(0.15, t + 0.3);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 1.8);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t + 0.2); osc.stop(t + 1.8);
+  });
+}
+
+/* 4. 신성한 드롭 — 천둥 + 천상 화음 */
+function playDivineDrop() {
+  const ctx = new AudioContext();
+  const t = ctx.currentTime;
+  /* 천둥 — 저음 노이즈 + 진동 */
+  const thunder = ctx.createOscillator();
+  const thGain = ctx.createGain();
+  thunder.type = 'sawtooth';
+  thunder.frequency.setValueAtTime(80, t);
+  thunder.frequency.exponentialRampToValueAtTime(20, t + 0.5);
+  thGain.gain.setValueAtTime(0.4, t);
+  thGain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+  thunder.connect(thGain).connect(ctx.destination);
+  thunder.start(t); thunder.stop(t + 0.5);
+  /* 노이즈 크래시 */
+  const buf = ctx.createBuffer(1, ctx.sampleRate * 0.25, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.06));
+  const noise = ctx.createBufferSource();
+  const nGain = ctx.createGain();
+  const nFilter = ctx.createBiquadFilter();
+  nFilter.type = 'lowpass';
+  nFilter.frequency.value = 2000;
+  noise.buffer = buf;
+  nGain.gain.setValueAtTime(0.5, t);
+  nGain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+  noise.connect(nFilter).connect(nGain).connect(ctx.destination);
+  noise.start(t);
+  /* 천상 화음 — 밝고 넓게 */
+  [659, 880, 1047, 1319, 1568, 2093].forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, t + 0.15);
+    gain.gain.linearRampToValueAtTime(0.12, t + 0.25);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 2.0);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t + 0.15); osc.stop(t + 2.0);
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>테마 프리뷰</title>
+<style>
+  /* 공통 스타일 */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f0f0f0;
+    padding: 32px 20px;
+  }
+  h1 {
+    text-align: center;
+    font-size: 1.6rem;
+    color: #333;
+    margin-bottom: 32px;
+  }
+  .themes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    justify-content: center;
+  }
+
+  /* 각 테마 카드 */
+  .theme-card {
+    width: 320px;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  }
+  .theme-card .theme-name {
+    padding: 14px 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: center;
+    letter-spacing: 0.05em;
+  }
+  .theme-card .theme-body {
+    padding: 24px 20px;
+  }
+  .theme-card .mock-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .theme-card .mock-pos {
+    font-size: 0.85rem;
+    font-style: italic;
+    margin-bottom: 16px;
+  }
+  .theme-card .mock-desc {
+    font-size: 0.9rem;
+    line-height: 1.8;
+    margin-bottom: 16px;
+  }
+  .theme-card .mock-card {
+    padding: 14px 16px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    line-height: 1.7;
+    margin-bottom: 16px;
+  }
+  .theme-card .mock-buttons {
+    display: flex;
+    gap: 8px;
+  }
+  .theme-card .mock-btn {
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    border: none;
+    cursor: default;
+  }
+  .theme-card .mock-input {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    margin-bottom: 16px;
+    outline: none;
+  }
+  .theme-card .mock-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 16px;
+  }
+  .theme-card .mock-tab {
+    padding: 8px 14px;
+    font-size: 0.8rem;
+    cursor: default;
+  }
+
+  /* ===== 1. Morning Meadow ===== */
+  .t-meadow .theme-name { background: #4CAF7D; color: #fff; }
+  .t-meadow .theme-body { background: #FAFAF5; color: #2D3436; }
+  .t-meadow .mock-title { color: #2D3436; }
+  .t-meadow .mock-pos { color: #4CAF7D; }
+  .t-meadow .mock-desc { color: #555; }
+  .t-meadow .mock-card { background: #F0F7F4; border: 1px solid #D5E8DE; color: #444; }
+  .t-meadow .mock-input { background: #F0F7F4; border: 1px solid #C8DDD1; color: #333; }
+  .t-meadow .mock-btn { background: #4CAF7D; color: #fff; }
+  .t-meadow .mock-btn.secondary { background: #E8F0EB; color: #4CAF7D; }
+  .t-meadow .mock-tabs { border-bottom: 2px solid #E0E8E3; }
+  .t-meadow .mock-tab { color: #999; }
+  .t-meadow .mock-tab.active { color: #4CAF7D; border-bottom: 2px solid #4CAF7D; }
+
+  /* ===== 2. Cotton Candy ===== */
+  .t-candy .theme-name { background: #7C5CFC; color: #fff; }
+  .t-candy .theme-body { background: #FFFFFF; color: #1A1A2E; }
+  .t-candy .mock-title { color: #1A1A2E; }
+  .t-candy .mock-pos { color: #7C5CFC; }
+  .t-candy .mock-desc { color: #555; }
+  .t-candy .mock-card { background: #F3F0FF; border: 1px solid #DDD6FE; color: #444; }
+  .t-candy .mock-input { background: #F8F6FF; border: 1px solid #DDD6FE; color: #333; }
+  .t-candy .mock-btn { background: #7C5CFC; color: #fff; }
+  .t-candy .mock-btn.secondary { background: #F3F0FF; color: #7C5CFC; }
+  .t-candy .mock-tabs { border-bottom: 2px solid #EDE9FE; }
+  .t-candy .mock-tab { color: #999; }
+  .t-candy .mock-tab.active { color: #7C5CFC; border-bottom: 2px solid #7C5CFC; }
+
+  /* ===== 3. Ocean Breeze ===== */
+  .t-ocean .theme-name { background: #4A9FE5; color: #fff; }
+  .t-ocean .theme-body { background: #F5F9FC; color: #334155; }
+  .t-ocean .mock-title { color: #1E293B; }
+  .t-ocean .mock-pos { color: #4A9FE5; }
+  .t-ocean .mock-desc { color: #64748B; }
+  .t-ocean .mock-card { background: #FFFFFF; border: 1px solid #D6E4EF; color: #475569; }
+  .t-ocean .mock-input { background: #FFFFFF; border: 1px solid #CBD5E1; color: #334155; }
+  .t-ocean .mock-btn { background: #4A9FE5; color: #fff; }
+  .t-ocean .mock-btn.secondary { background: #EBF4FB; color: #4A9FE5; }
+  .t-ocean .mock-tabs { border-bottom: 2px solid #D6E4EF; }
+  .t-ocean .mock-tab { color: #94A3B8; }
+  .t-ocean .mock-tab.active { color: #4A9FE5; border-bottom: 2px solid #4A9FE5; }
+
+  /* ===== 4. Peach Garden ===== */
+  .t-peach .theme-name { background: #E8725A; color: #fff; }
+  .t-peach .theme-body { background: #FFF8F3; color: #3D2C22; }
+  .t-peach .mock-title { color: #3D2C22; }
+  .t-peach .mock-pos { color: #E8725A; }
+  .t-peach .mock-desc { color: #7A5F52; }
+  .t-peach .mock-card { background: #FFF0EB; border: 1px solid #F5D5C8; color: #5A4038; }
+  .t-peach .mock-input { background: #FFF4EF; border: 1px solid #F0CFC2; color: #3D2C22; }
+  .t-peach .mock-btn { background: #E8725A; color: #fff; }
+  .t-peach .mock-btn.secondary { background: #FFF0EB; color: #E8725A; }
+  .t-peach .mock-tabs { border-bottom: 2px solid #F5DDD4; }
+  .t-peach .mock-tab { color: #BBA49A; }
+  .t-peach .mock-tab.active { color: #E8725A; border-bottom: 2px solid #E8725A; }
+
+  /* ===== 5. Matcha Latte ===== */
+  .t-matcha .theme-name { background: #7BAE5E; color: #fff; }
+  .t-matcha .theme-body { background: #FDFCF8; color: #3A3530; }
+  .t-matcha .mock-title { color: #3A3530; }
+  .t-matcha .mock-pos { color: #7BAE5E; }
+  .t-matcha .mock-desc { color: #6B6358; }
+  .t-matcha .mock-card { background: #F4F6EE; border: 1px solid #DDE2D2; color: #4A4540; }
+  .t-matcha .mock-input { background: #F6F7F1; border: 1px solid #D8DCCE; color: #3A3530; }
+  .t-matcha .mock-btn { background: #7BAE5E; color: #fff; }
+  .t-matcha .mock-btn.secondary { background: #EFF3E8; color: #7BAE5E; }
+  .t-matcha .mock-tabs { border-bottom: 2px solid #DDE2D2; }
+  .t-matcha .mock-tab { color: #A09888; }
+  .t-matcha .mock-tab.active { color: #7BAE5E; border-bottom: 2px solid #7BAE5E; }
+
+  /* ===== 6. Aurora ===== */
+  .t-aurora .theme-name { background: #2EBFA5; color: #fff; }
+  .t-aurora .theme-body { background: #F8F9FA; color: #2D3748; }
+  .t-aurora .mock-title { color: #1A202C; }
+  .t-aurora .mock-pos { color: #2EBFA5; }
+  .t-aurora .mock-desc { color: #5A6577; }
+  .t-aurora .mock-card { background: #EEFBF7; border: 1px solid #C6EDE3; color: #3D4F5F; }
+  .t-aurora .mock-input { background: #F0FAF7; border: 1px solid #C6EDE3; color: #2D3748; }
+  .t-aurora .mock-btn { background: #2EBFA5; color: #fff; }
+  .t-aurora .mock-btn.secondary { background: #EEFBF7; color: #2EBFA5; }
+  .t-aurora .mock-tabs { border-bottom: 2px solid #D5EDE7; }
+  .t-aurora .mock-tab { color: #A0AEC0; }
+  .t-aurora .mock-tab.active { color: #2EBFA5; border-bottom: 2px solid #2EBFA5; }
+
+  /* ===== 7. Sunshine ===== */
+  .t-sunshine .theme-name { background: #E5A431; color: #fff; }
+  .t-sunshine .theme-body { background: #FFFEF7; color: #33302A; }
+  .t-sunshine .mock-title { color: #33302A; }
+  .t-sunshine .mock-pos { color: #3A6EA5; }
+  .t-sunshine .mock-desc { color: #6B6355; }
+  .t-sunshine .mock-card { background: #FFF9E6; border: 1px solid #F0E4B8; color: #4A4538; }
+  .t-sunshine .mock-input { background: #FFFBE8; border: 1px solid #EEE0B0; color: #33302A; }
+  .t-sunshine .mock-btn { background: #E5A431; color: #fff; }
+  .t-sunshine .mock-btn.secondary { background: #FFF5D6; color: #C48D1A; }
+  .t-sunshine .mock-tabs { border-bottom: 2px solid #F0E4B8; }
+  .t-sunshine .mock-tab { color: #B0A890; }
+  .t-sunshine .mock-tab.active { color: #E5A431; border-bottom: 2px solid #E5A431; }
+
+  /* ===== 8. Pastel Lilac (파스텔 연보라) ===== */
+  .t-lilac .theme-name { background: #A78BCA; color: #fff; }
+  .t-lilac .theme-body { background: #FAF8FF; color: #2E2640; }
+  .t-lilac .mock-title { color: #2E2640; }
+  .t-lilac .mock-pos { color: #A78BCA; }
+  .t-lilac .mock-desc { color: #5E5470; }
+  .t-lilac .mock-card { background: #F3EEFA; border: 1px solid #DDD0EE; color: #4A4060; }
+  .t-lilac .mock-input { background: #F5F0FC; border: 1px solid #DDD0EE; color: #2E2640; }
+  .t-lilac .mock-btn { background: #A78BCA; color: #fff; }
+  .t-lilac .mock-btn.secondary { background: #F3EEFA; color: #A78BCA; }
+  .t-lilac .mock-tabs { border-bottom: 2px solid #E5DAF0; }
+  .t-lilac .mock-tab { color: #B0A4BE; }
+  .t-lilac .mock-tab.active { color: #A78BCA; border-bottom: 2px solid #A78BCA; }
+</style>
+</head>
+<body>
+
+<h1>테마 프리뷰</h1>
+
+<div class="themes">
+
+  <!-- 1. Morning Meadow -->
+  <div class="theme-card t-meadow">
+    <div class="theme-name">1. Morning Meadow (아침 초원)</div>
+    <div class="theme-body">
+      <div class="mock-tabs">
+        <div class="mock-tab active">일반검색</div>
+        <div class="mock-tab">사진에서 검색</div>
+        <div class="mock-tab">단어장</div>
+        <div class="mock-tab">Quiz</div>
+      </div>
+      <div class="mock-input" style="border-style:solid;">visual</div>
+      <div class="mock-title">visual</div>
+      <div class="mock-pos">adj · /ˈvɪʒ.u.əl/</div>
+      <div class="mock-desc">"눈으로 직접 보는" 느낌이에요.<br>머릿속이 아니라 눈앞에 펼쳐지는 장면을 떠올려보세요.</div>
+      <div class="mock-card">Visual effects make movies feel real.<br>시각 효과가 영화를 실감 나게 만든다.</div>
+      <div class="mock-buttons">
+        <div class="mock-btn">+ 단어장에 추가</div>
+        <div class="mock-btn secondary">🔊 발음</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Cotton Candy -->
+  <div class="theme-card t-candy">
+    <div class="theme-name">2. Cotton Candy (솜사탕)</div>
+    <div class="theme-body">
+      <div class="mock-tabs">
+        <div class="mock-tab active">일반검색</div>
+        <div class="mock-tab">사진에서 검색</div>
+        <div class="mock-tab">단어장</div>
+        <div class="mock-tab">Quiz</div>
+      </div>
+      <div class="mock-input" style="border-style:solid;">visual</div>
+      <div class="mock-title">visual</div>
+      <div class="mock-pos">adj · /ˈvɪʒ.u.əl/</div>
+      <div class="mock-desc">"눈으로 직접 보는" 느낌이에요.<br>머릿속이 아니라 눈앞에 펼쳐지는 장면을 떠올려보세요.</div>
+      <div class="mock-card">Visual effects make movies feel real.<br>시각 효과가 영화를 실감 나게 만든다.</div>
+      <div class="mock-buttons">
+        <div class="mock-btn">+ 단어장에 추가</div>
+        <div class="mock-btn secondary">🔊 발음</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Ocean Breeze -->
+  <div class="theme-card t-ocean">
+    <div class="theme-name">3. Ocean Breeze (바다 바람)</div>
+    <div class="theme-body">
+      <div class="mock-tabs">
+        <div class="mock-tab active">일반검색</div>
+        <div class="mock-tab">사진에서 검색</div>
+        <div class="mock-tab">단어장</div>
+        <div class="mock-tab">Quiz</div>
+      </div>
+      <div class="mock-input" style="border-style:solid;">visual</div>
+      <div class="mock-title">visual</div>
+      <div class="mock-pos">adj · /ˈvɪʒ.u.əl/</div>
+      <div class="mock-desc">"눈으로 직접 보는" 느낌이에요.<br>머릿속이 아니라 눈앞에 펼쳐지는 장면을 떠올려보세요.</div>
+      <div class="mock-card">Visual effects make movies feel real.<br>시각 효과가 영화를 실감 나게 만든다.</div>
+      <div class="mock-buttons">
+        <div class="mock-btn">+ 단어장에 추가</div>
+        <div class="mock-btn secondary">🔊 발음</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Peach Garden -->
+  <div class="theme-card t-peach">
+    <div class="theme-name">4. Peach Garden (복숭아 정원)</div>
+    <div class="theme-body">
+      <div class="mock-tabs">
+        <div class="mock-tab active">일반검색</div>
+        <div class="mock-tab">사진에서 검색</div>
+        <div class="mock-tab">단어장</div>
+        <div class="mock-tab">Quiz</div>
+      </div>
+      <div class="mock-input" style="border-style:solid;">visual</div>
+      <div class="mock-title">visual</div>
+      <div class="mock-pos">adj · /ˈvɪʒ.u.əl/</div>
+      <div class="mock-desc">"눈으로 직접 보는" 느낌이에요.<br>머릿속이 아니라 눈앞에 펼쳐지는 장면을 떠올려보세요.</div>
+      <div class="mock-card">Visual effects make movies feel real.<br>시각 효과가 영화를 실감 나게 만든다.</div>
+      <div class="mock-buttons">
+        <div class="mock-btn">+ 단어장에 추가</div>
+        <div class="mock-btn secondary">🔊 발음</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Matcha Latte -->
+  <div class="theme-card t-matcha">
+    <div class="theme-name">5. Matcha Latte (말차 라떼)</div>
+    <div class="theme-body">
+      <div class="mock-tabs">
+        <div class="mock-tab active">일반검색</div>
+        <div class="mock-tab">사진에서 검색</div>
+        <div class="mock-tab">단어장</div>
+        <div class="mock-tab">Quiz</div>
+      </div>
+      <div class="mock-input" style="border-style:solid;">visual</div>
+      <div class="mock-title">visual</div>
+      <div class="mock-pos">adj · /ˈvɪʒ.u.əl/</div>
+      <div class="mock-desc">"눈으로 직접 보는" 느낌이에요.<br>머릿속이 아니라 눈앞에 펼쳐지는 장면을 떠올려보세요.</div>
+      <div class="mock-card">Visual effects make movies feel real.<br>시각 효과가 영화를 실감 나게 만든다.</div>
+      <div class="mock-buttons">
+        <div class="mock-btn">+ 단어장에 추가</div>
+        <div class="mock-btn secondary">🔊 발음</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Aurora -->
+  <div class="theme-card t-aurora">
+    <div class="theme-name">6. Aurora (오로라)</div>
+    <div class="theme-body">
+      <div class="mock-tabs">
+        <div class="mock-tab active">일반검색</div>
+        <div class="mock-tab">사진에서 검색</div>
+        <div class="mock-tab">단어장</div>
+        <div class="mock-tab">Quiz</div>
+      </div>
+      <div class="mock-input" style="border-style:solid;">visual</div>
+      <div class="mock-title">visual</div>
+      <div class="mock-pos">adj · /ˈvɪʒ.u.əl/</div>
+      <div class="mock-desc">"눈으로 직접 보는" 느낌이에요.<br>머릿속이 아니라 눈앞에 펼쳐지는 장면을 떠올려보세요.</div>
+      <div class="mock-card">Visual effects make movies feel real.<br>시각 효과가 영화를 실감 나게 만든다.</div>
+      <div class="mock-buttons">
+        <div class="mock-btn">+ 단어장에 추가</div>
+        <div class="mock-btn secondary">🔊 발음</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. Sunshine -->
+  <div class="theme-card t-sunshine">
+    <div class="theme-name">7. Sunshine (선샤인)</div>
+    <div class="theme-body">
+      <div class="mock-tabs">
+        <div class="mock-tab active">일반검색</div>
+        <div class="mock-tab">사진에서 검색</div>
+        <div class="mock-tab">단어장</div>
+        <div class="mock-tab">Quiz</div>
+      </div>
+      <div class="mock-input" style="border-style:solid;">visual</div>
+      <div class="mock-title">visual</div>
+      <div class="mock-pos">adj · /ˈvɪʒ.u.əl/</div>
+      <div class="mock-desc">"눈으로 직접 보는" 느낌이에요.<br>머릿속이 아니라 눈앞에 펼쳐지는 장면을 떠올려보세요.</div>
+      <div class="mock-card">Visual effects make movies feel real.<br>시각 효과가 영화를 실감 나게 만든다.</div>
+      <div class="mock-buttons">
+        <div class="mock-btn">+ 단어장에 추가</div>
+        <div class="mock-btn secondary">🔊 발음</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. Pastel Lilac -->
+  <div class="theme-card t-lilac">
+    <div class="theme-name">8. Pastel Lilac (파스텔 연보라)</div>
+    <div class="theme-body">
+      <div class="mock-tabs">
+        <div class="mock-tab active">일반검색</div>
+        <div class="mock-tab">사진에서 검색</div>
+        <div class="mock-tab">단어장</div>
+        <div class="mock-tab">Quiz</div>
+      </div>
+      <div class="mock-input" style="border-style:solid;">visual</div>
+      <div class="mock-title">visual</div>
+      <div class="mock-pos">adj · /ˈvɪʒ.u.əl/</div>
+      <div class="mock-desc">"눈으로 직접 보는" 느낌이에요.<br>머릿속이 아니라 눈앞에 펼쳐지는 장면을 떠올려보세요.</div>
+      <div class="mock-card">Visual effects make movies feel real.<br>시각 효과가 영화를 실감 나게 만든다.</div>
+      <div class="mock-buttons">
+        <div class="mock-btn">+ 단어장에 추가</div>
+        <div class="mock-btn secondary">🔊 발음</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

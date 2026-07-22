@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>64×80 캐릭터 시험작</title>
+<style>
+  /* -------------------------------------------------------------
+     64×80 픽셀 캐릭터 시험작.
+     목적: Freepik 벡터 원본을 베이스로, 내가 수작업 도트로 만들 때
+           어느 수준까지 나오는지 사용자가 판단할 수 있도록 제시.
+     ------------------------------------------------------------- */
+  body {
+    margin: 0;
+    padding: 40px 20px;
+    background: #2B2B30;
+    color: #DDD;
+    font-family: -apple-system, 'Segoe UI', sans-serif;
+    text-align: center;
+  }
+  h1 { font-size: 20px; font-weight: 500; margin: 0 0 6px; }
+  .caption { color: #999; font-size: 13px; margin-bottom: 30px; }
+  .row {
+    display: flex;
+    justify-content: center;
+    gap: 50px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    margin-bottom: 40px;
+  }
+  .panel { text-align: center; }
+  .panel h3 { margin: 0 0 10px; font-size: 13px; font-weight: 400; color: #BBB; }
+  .panel .size { color: #666; font-size: 11px; margin-top: 6px; }
+  canvas {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    background: #BEBEBE;
+    border: 1px solid #444;
+    display: block;
+  }
+  .icon-row canvas { background: #1A1A1A; }
+  .note {
+    max-width: 600px;
+    margin: 20px auto 0;
+    padding: 16px 20px;
+    background: #1F1F24;
+    border-left: 3px solid #6B8EDB;
+    font-size: 13px;
+    line-height: 1.7;
+    text-align: left;
+    color: #BBB;
+  }
+</style>
+</head>
+<body>
+
+<h1>64×80 픽셀 아트 시험작</h1>
+<p class="caption">기본캐릭터.png(Freepik 벡터 기반)을 참고해 수작업 도트로 재구성</p>
+
+<!-- 5배 확대 / 실제 크기 / 아이콘 크기(32px) 세 가지로 비교 -->
+<div class="row">
+  <div class="panel">
+    <h3>5× 확대 (320×400)</h3>
+    <canvas id="big" width="64" height="80" style="width:320px;height:400px;"></canvas>
+    <div class="size">도트 구조 확인용</div>
+  </div>
+  <div class="panel">
+    <h3>실제 크기 (64×80)</h3>
+    <canvas id="real" width="64" height="80"></canvas>
+    <div class="size">앱 내 배치 시 크기감</div>
+  </div>
+  <div class="panel">
+    <h3>축소 (32×40)</h3>
+    <canvas id="small" width="64" height="80" style="width:32px;height:40px;"></canvas>
+    <div class="size">아이콘 용도 가독성</div>
+  </div>
+</div>
+
+<div class="note">
+  <b>평가 포인트</b><br>
+  1. 64×80 해상도로 캐릭터 외형이 읽히는가<br>
+  2. Freepik 원본과 나란히 놓았을 때 "따로 노는" 느낌이 심한가<br>
+  3. 실제 크기(64×80)에서 얼굴 표정·옷 색상이 구분되는가<br>
+  4. 32×40으로 줄여도 실루엣이 유지되는가<br><br>
+  결과가 별로면 "폐기" 말씀만 주세요 — 이 파일만 삭제하면 됩니다.
+</div>
+
+<script>
+/* ------------------------------------------------------------------
+   팔레트
+   ------------------------------------------------------------------ */
+const P = {
+  H:  '#1A1816', // 머리카락 (거의 검정)
+  S:  '#F8CFA6', // 피부 기본
+  SS: '#DCA479', // 피부 그림자
+  B:  '#C4E2F0', // 셔츠 밝은 파랑
+  D:  '#1B5A97', // 셔츠 아래 띠 + 반바지
+  E:  '#1A1816', // 눈 (머리카락과 동색)
+  OL: '#000000', // 외곽선
+};
+
+/* ------------------------------------------------------------------
+   1픽셀 직사각형 유틸
+   ------------------------------------------------------------------ */
+function rect(ctx, x, y, w, h, c) {
+  ctx.fillStyle = c;
+  ctx.fillRect(x, y, w, h);
+}
+function pset(ctx, x, y, c) {
+  ctx.fillStyle = c;
+  ctx.fillRect(x, y, 1, 1);
+}
+/* 타원을 픽셀 단위로 채움 */
+function fillEllipse(ctx, cx, cy, rx, ry, c) {
+  ctx.fillStyle = c;
+  for (let y = -ry; y <= ry; y++) {
+    for (let x = -rx; x <= rx; x++) {
+      if ((x * x) / (rx * rx) + (y * y) / (ry * ry) <= 1) {
+        ctx.fillRect(cx + x, cy + y, 1, 1);
+      }
+    }
+  }
+}
+
+/* ------------------------------------------------------------------
+   캐릭터 그리기 (64×80)
+   ------------------------------------------------------------------ */
+function drawCharacter(ctx) {
+  const W = 64, H = 80;
+  ctx.clearRect(0, 0, W, H);
+
+  /* --- 머리(피부) --- */
+  fillEllipse(ctx, 32, 22, 13, 14, P.S);
+
+  /* --- 머리카락: 상단만(하단 클리핑) --- */
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, 0, W, 18);
+  ctx.clip();
+  fillEllipse(ctx, 32, 20, 14, 15, P.H);
+  ctx.restore();
+  /* 옆머리 소량 */
+  rect(ctx, 18, 15, 3, 5, P.H);
+  rect(ctx, 43, 15, 3, 5, P.H);
+  /* 정수리 뾰족한 솟음 1 */
+  rect(ctx, 35, 5, 4, 3, P.H);
+  pset(ctx, 38, 4, P.H);
+
+  /* --- 눈 (2×2) --- */
+  rect(ctx, 24, 22, 2, 3, P.E);
+  rect(ctx, 38, 22, 2, 3, P.E);
+
+  /* --- 턱 아래 목 --- */
+  rect(ctx, 28, 34, 8, 3, P.SS);
+
+  /* --- 몸통(셔츠) 본체 --- */
+  rect(ctx, 15, 37, 34, 20, P.B);
+
+  /* --- 셔츠 아래 색 띠 (진한 파랑) --- */
+  rect(ctx, 15, 51, 34, 6, P.D);
+
+  /* --- 팔 (피부) --- */
+  rect(ctx, 12, 38, 3, 17, P.S);
+  rect(ctx, 49, 38, 3, 17, P.S);
+  /* 손 (팔 끝의 약간 넓은 부분) */
+  rect(ctx, 11, 53, 5, 4, P.S);
+  rect(ctx, 48, 53, 5, 4, P.S);
+
+  /* --- 반바지 (진한 파랑) --- */
+  rect(ctx, 17, 57, 30, 11, P.D);
+
+  /* --- 다리 (피부) --- */
+  rect(ctx, 20, 68, 8, 10, P.S); // 왼다리
+  rect(ctx, 36, 68, 8, 10, P.S); // 오른다리
+
+  /* --- 신발(검은 밑부분) --- */
+  rect(ctx, 19, 77, 10, 2, P.E);
+  rect(ctx, 35, 77, 10, 2, P.E);
+
+  /* --- 외곽선: 투명 픽셀과 인접한 색 픽셀을 검정으로 감쌈 --- */
+  addOutline(ctx, W, H);
+}
+
+/* 투명 배경과 접한 모든 색 영역 가장자리에 1px 검정 외곽선 */
+function addOutline(ctx, W, H) {
+  const img = ctx.getImageData(0, 0, W, H);
+  const src = img.data;
+  const out = new Uint8ClampedArray(src);
+  const alpha = (x, y) => {
+    if (x < 0 || x >= W || y < 0 || y >= H) return 0;
+    return src[(y * W + x) * 4 + 3];
+  };
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      if (alpha(x, y) === 0) continue;
+      const isEdge =
+        alpha(x - 1, y) === 0 ||
+        alpha(x + 1, y) === 0 ||
+        alpha(x, y - 1) === 0 ||
+        alpha(x, y + 1) === 0;
+      if (isEdge) {
+        const i = (y * W + x) * 4;
+        out[i] = 0; out[i + 1] = 0; out[i + 2] = 0; out[i + 3] = 255;
+      }
+    }
+  }
+  ctx.putImageData(new ImageData(out, W, H), 0, 0);
+}
+
+/* 세 캔버스에 모두 그림 */
+for (const id of ['big', 'real', 'small']) {
+  const c = document.getElementById(id);
+  const ctx = c.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  drawCharacter(ctx);
+}
+</script>
+</body>
+</html>
