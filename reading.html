@@ -572,6 +572,8 @@
   /* hidden 속성이 display:flex 에 눌리지 않도록 — 우선순위 높은 규칙으로 확실히 숨김 */
   .tts-player-bar[hidden] { display: none; }
   .tts-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  /* display:flex 가 있어 hidden 속성만으론 안 숨겨짐 — '단어만' 선택 시 하위 옵션 줄 숨김용 */
+  .tts-row[hidden] { display: none; }
   .tts-row-main { gap: 10px; }
   .tts-spacer { flex: 1; }
   .tts-play-btn {
@@ -1672,15 +1674,23 @@
           <button class="tts-dl-btn" id="ttsDownloadBtn" onclick="ttsDownloadBook()" title="책 전체 오디오 다운로드">⬇</button>
           <button class="tts-remake-btn" id="ttsRemakeBtn" onclick="ttsRemake()">다시 만들기</button>
         </div>
+        <!-- 최상위 갈래: 책 듣기(본문 재생) vs 단어만 복습. 도입부·단어위치는 '책 듣기'에 딸린 옵션 -->
         <div class="tts-row tts-row-opts">
           <span class="tts-optgroup">
-            <button class="tts-opt" id="ttsMode_body" onclick="ttsSetMode('body')">본문만</button>
-            <button class="tts-opt" id="ttsMode_both" onclick="ttsSetMode('both')">본문+단어</button>
-            <button class="tts-opt" id="ttsMode_vocab" onclick="ttsSetMode('vocab')">단어만</button>
+            <button class="tts-opt" id="ttsPlay_book" onclick="ttsSetPlay('book')">책 듣기</button>
+            <button class="tts-opt" id="ttsPlay_vocab" onclick="ttsSetPlay('vocab')">단어만</button>
           </span>
-          <!-- 도입부: 모드와 독립 다중선택(체크). 켜면 처음부터 재생 시 책 요약을 먼저 읽음 -->
+        </div>
+        <!-- '책 듣기' 하위 옵션 — '단어만' 선택 시 통째로 숨김(단어만엔 도입부·본문 개념이 없음) -->
+        <div class="tts-row tts-row-opts" id="ttsBookOpts">
           <span class="tts-optgroup">
             <button class="tts-opt" id="ttsIntroBtn" onclick="ttsToggleIntro()" title="처음부터 재생 시 책 요약을 먼저 읽어줍니다">도입부</button>
+          </span>
+          <span class="tts-optgroup">
+            <span class="tts-optlabel">단어설명</span>
+            <button class="tts-opt" id="ttsVocabPos_off" onclick="ttsSetVocabPos('off')">끄기</button>
+            <button class="tts-opt" id="ttsVocabPos_end" onclick="ttsSetVocabPos('end')">본문끝</button>
+            <button class="tts-opt" id="ttsVocabPos_inline" onclick="ttsSetVocabPos('inline')">페이지마다</button>
           </span>
         </div>
       </div>
@@ -2889,7 +2899,7 @@ function setLoadingPhase(key) {
 function renderBook() {
   /* 다른 책/새 책을 그릴 때 이전 읽어주기 재생을 정지·바 닫음·생성상태 리셋
      (도입부도 초기화 — 이 책에 저장돼 있으면 ttsCheckMade → 복원됨) */
-  if (typeof ttsStop === 'function') { ttsStop(); ttsShowBar(false); _tts.made = false; _tts.intro = false; _tts.introText = ''; ttsSetUiState('setup'); }
+  if (typeof ttsStop === 'function') { ttsStop(); ttsShowBar(false); _tts.made = false; _tts.intro = false; _tts.introText = ''; _tts.play = 'book'; _tts.vocabPos = 'end'; ttsSetUiState('setup'); }
   /* 이미 만든 책이면 미리 감지 → 듣기 열 때 곧바로 재생 단계로 (음성 만들기 건너뜀) */
   if (typeof ttsCheckMade === 'function') ttsCheckMade().then((ok) => { if (ok) _tts.made = true; });
   const track = document.getElementById('pageTrack');
@@ -3435,7 +3445,9 @@ function updateTranslateBtnState() {
 const _tts = {
   active: false,        // 엔진 동작 중(재생 or 일시정지 상태 포함)
   paused: false,
-  mode: 'both',         // 'both' | 'body' | 'vocab' — 재생 필터(모든 클립은 미리 생성됨)
+  play: 'book',         // 'book'(책 듣기=본문 재생) | 'vocab'(단어만 복습) — 최상위 갈래
+  vocabPos: 'end',      // 'off'(끄기=본문만) | 'end'(본문끝) | 'inline'(페이지마다) — 책 듣기일 때 단어설명 위치
+                        // 모든 클립은 미리 생성되므로 위 선택들은 재생 순서/필터만 바꿈(즉시 전환)
   narratorVoice: 'Despina',    // 낭독 목소리 기본값
   teacherVoice: 'Rasalgethi',  // 단어설명 목소리 기본값
   vocabLang: 'native',       // TTS 단어설명 언어(화면 표기 _studyMeaningLang 과 분리)
@@ -3581,39 +3593,62 @@ function ttsBuildIntroClips() {
   return ttsChunkText(_tts.introText, 600).map((chunk) => ttsMakeClip('intro', 0, -1, chunk, _tts.narratorVoice, 'ko-KR'));
 }
 
-/* 클립 배열 생성. modeOverride 미지정 시 현재 재생 모드(_tts.mode) 기준.
-   생성 단계에서는 'both' 로 호출해 본문+단어 전체를 만든다. */
-function ttsBuildClips(modeOverride, langOverride) {
+/* 클립 배열 생성. 현재 선택(_tts.play / _tts.vocabPos) 기준.
+   genAll==='all' 이면 선택과 무관하게 본문+단어를 전부 만든다(음성 만들기 단계용 — 순서 무관).
+   구성:
+     단어만            → 단어 전체만 (도입부·본문 없음)
+     책 듣기 + 끄기     → [도입부] + 본문 전체
+     책 듣기 + 본문끝   → [도입부] + 본문 전체 → 단어 전체
+     책 듣기 + 페이지마다 → [도입부] + 페이지별(본문 → 그 페이지 단어) */
+function ttsBuildClips(genAll, langOverride) {
   const clips = [];
   const lang = langOverride || _tts.vocabLang;
-  const mode = modeOverride || _tts.mode;
-  /* 도입부(책 요약) — 모드와 무관하게, 켜져 있고 요약이 있으면 맨 앞에 조각들로. 낭독 목소리 + 한국어.
+  const all = (genAll === 'all');
+  const includeBody = all || _tts.play === 'book';
+  const includeVocab = all || _tts.play === 'vocab' || (_tts.play === 'book' && _tts.vocabPos !== 'off');
+  const inline = !all && _tts.play === 'book' && _tts.vocabPos === 'inline';
+  /* 도입부(책 요약) — '책 듣기'일 때만. 단어만 복습엔 도입부가 의미 없어 제외.
+     생성용(all)에선 ttsMakeAudio 가 따로 챙기므로 여기선 뺀다.
      pageIdx=0 이라 "처음부터" 재생 시 첫 클립들로 나오고, 중간 페이지부터 시작하면 건너뜀. */
-  if (_tts.intro && _tts.introText) {
+  if (!all && _tts.play === 'book' && _tts.intro && _tts.introText) {
     ttsBuildIntroClips().forEach((c) => clips.push(c));
   }
-  /* 본문·단어를 따로 모은다 → '본문+단어'는 페이지별 교차가 아니라
-     책 전체 본문 낭독 후 전체 단어설명 순서(낭독체↔설명체 왔다갔다 안 해 덜 산만). */
   const bodyClips = [];
   const vocabClips = [];
+  /* 같은 단어(lemma)가 여러 페이지에 나와도 책 전체에서 1회만 설명 — 반복 낭독 방지 */
+  const seenVocab = new Set();
   _pages.forEach((p, pi) => {
     if (!p || p.error || p.no_text || !p.original) return;
-    if (mode === 'body' || mode === 'both') {
+    const pageBody = [];
+    const pageVocab = [];
+    if (includeBody) {
       /* 본문은 ~600자 이하 조각으로 나눠 각각 클립 생성(긴 본문 무음/이상 방지) */
       ttsChunkText(p.original, 600).forEach((chunk) => {
-        bodyClips.push(ttsMakeClip('body', pi, -1, chunk, _tts.narratorVoice));
+        pageBody.push(ttsMakeClip('body', pi, -1, chunk, _tts.narratorVoice));
       });
     }
-    if (mode === 'vocab' || mode === 'both') {
+    if (includeVocab) {
       const items = Array.isArray(p.study_items) ? p.study_items : [];
       items.forEach((it, ii) => {
+        const key = (it.lemma || it.surface || '').toLowerCase().trim();
+        if (!key || seenVocab.has(key)) return;  // 이미 설명한 단어는 건너뜀
+        seenVocab.add(key);
         const text = ttsVocabText(it, p.original, lang);
-        if (text) vocabClips.push(ttsMakeClip('vocab', pi, ii, text, _tts.teacherVoice));
+        if (text) pageVocab.push(ttsMakeClip('vocab', pi, ii, text, _tts.teacherVoice));
       });
     }
+    if (inline) {
+      pageBody.forEach((c) => clips.push(c));   // 페이지마다: 본문 → 그 페이지 단어
+      pageVocab.forEach((c) => clips.push(c));
+    } else {
+      pageBody.forEach((c) => bodyClips.push(c));
+      pageVocab.forEach((c) => vocabClips.push(c));
+    }
   });
-  bodyClips.forEach((c) => clips.push(c));    // 본문 전체 먼저
-  vocabClips.forEach((c) => clips.push(c));   // 그다음 단어 전체
+  if (!inline) {
+    bodyClips.forEach((c) => clips.push(c));    // 본문 전체 먼저
+    vocabClips.forEach((c) => clips.push(c));   // 그다음 단어 전체
+  }
   return clips;
 }
 
@@ -3785,7 +3820,7 @@ function ttsSaveMadeSettings() {
   const key = ttsMadeKey();
   if (!key) return;
   try {
-    localStorage.setItem(key, JSON.stringify({ v: TTS_CACHE_VERSION, n: _tts.narratorVoice, t: _tts.teacherVoice, l: _tts.vocabLang, intro: _tts.intro, introText: _tts.introText }));
+    localStorage.setItem(key, JSON.stringify({ v: TTS_CACHE_VERSION, n: _tts.narratorVoice, t: _tts.teacherVoice, l: _tts.vocabLang, intro: _tts.intro, introText: _tts.introText, p: _tts.play, vp: _tts.vocabPos }));
   } catch (e) { /* 저장 실패는 무시 */ }
 }
 function ttsRestoreMadeSettings() {
@@ -3801,6 +3836,8 @@ function ttsRestoreMadeSettings() {
     if (s.l) _tts.vocabLang = s.l;
     _tts.intro = !!s.intro;
     _tts.introText = s.introText || '';
+    if (s.p) _tts.play = s.p;          // 책 듣기/단어만
+    if (s.vp) _tts.vocabPos = s.vp;    // 단어설명 위치
     return true;
   } catch (e) { return false; }
 }
@@ -3811,7 +3848,7 @@ async function ttsCheckMade() {
   ttsRestoreMadeSettings();  // 이 책을 만든 목소리·언어 복원(저장돼 있으면)
   const langs = (_tts.vocabLang === 'en') ? ['en', 'native'] : ['native', 'en'];
   for (const lang of langs) {
-    const clips = ttsBuildClips('both', lang);
+    const clips = ttsBuildClips('all', lang);
     if (!clips.length) continue;
     const ok = await ttsAllCached(clips);
     console.log(`[tts-diag] ttsCheckMade 낭독=${_tts.narratorVoice} 단어=${_tts.teacherVoice} lang=${lang}: ${ok ? '전부 캐시(made)' : '일부 없음'}`);
@@ -3841,7 +3878,7 @@ function ttsUpdateProgress(done, total) {
    429(quota) 만나면 즉시 중단하고 안내(계속 던져봐야 quota 만 낭비). */
 async function ttsMakeAudio() {
   ttsInit();
-  const bodyClips = ttsBuildClips('both');
+  const bodyClips = ttsBuildClips('all');
   if (bodyClips.length === 0) return;  // 만들 게 없음(빈 책)
   _tts.makeCancel = false;
   ttsSetUiState('progress');
@@ -3950,7 +3987,10 @@ function ttsRebuildAndRestart() {
   ttsStartPrefetch();
   ttsPlayCurrent();
 }
-function ttsSetMode(m) { _tts.mode = m; ttsUpdateBar(); ttsRebuildAndRestart(); }
+/* 최상위 갈래(책 듣기/단어만) — 모든 클립이 이미 생성돼 있어 즉시 전환 */
+function ttsSetPlay(p) { _tts.play = (p === 'vocab') ? 'vocab' : 'book'; ttsSaveMadeSettings(); ttsUpdateBar(); ttsRebuildAndRestart(); }
+/* 단어설명 위치(끄기/본문끝/페이지마다) — 순서만 바뀌므로 재생성 불필요 */
+function ttsSetVocabPos(v) { _tts.vocabPos = v; ttsSaveMadeSettings(); ttsUpdateBar(); ttsRebuildAndRestart(); }
 
 /* 도입부 요약 생성 — 책 전체 원문을 엣지 reading-summary 로 보내 한국어 요약 텍스트 받기 */
 async function ttsFetchSummary() {
@@ -4054,11 +4094,18 @@ function ttsUpdateBar() {
   const barEl = document.getElementById('ttsPlayerBar');
   const toolbarBtn = document.getElementById('ttsToolbarBtn');
   if (toolbarBtn) toolbarBtn.classList.toggle('active', !!(barEl && !barEl.hidden));
-  /* 모드 버튼 active */
-  ['body', 'both', 'vocab'].forEach((m) => {
-    const b = document.getElementById(`ttsMode_${m}`);
-    if (b) b.classList.toggle('active', _tts.mode === m);
+  /* 최상위 갈래 버튼 active + 단어설명 위치 active */
+  ['book', 'vocab'].forEach((p) => {
+    const b = document.getElementById(`ttsPlay_${p}`);
+    if (b) b.classList.toggle('active', _tts.play === p);
   });
+  ['off', 'end', 'inline'].forEach((v) => {
+    const b = document.getElementById(`ttsVocabPos_${v}`);
+    if (b) b.classList.toggle('active', _tts.vocabPos === v);
+  });
+  /* '단어만'이면 하위 옵션(도입부·단어위치) 줄 자체를 숨김 */
+  const bookOpts = document.getElementById('ttsBookOpts');
+  if (bookOpts) bookOpts.hidden = (_tts.play !== 'book');
   /* 도입부 체크 버튼 active */
   const introBtn = document.getElementById('ttsIntroBtn');
   if (introBtn) introBtn.classList.toggle('active', _tts.intro);
