@@ -3520,12 +3520,16 @@ function ttsFindExample(original, surface) {
 function ttsVocabText(item, original, lang) {
   const surface = (item.surface || '').trim();
   if (!surface) return '';
-  const meaning = (pickStudyMeaning(item, lang) || '').trim();
-  let example = ttsFindExample(original, surface).trim();
+  const word = (item.lemma || surface).trim();  // 읽어줄 단어 = 사전 원형(lemma). 활용형(surface)이 아니라 원형으로 설명
+  /* 뜻의 "~"(목적어 빈칸 표시)를 낭독 가능한 대명사로 치환 — 안 하면 "로부터…"처럼 조사 중간부터
+     읽혀 어색함. 전각 ～(U+FF5E)·∼(U+223C) 포함. 영어 뜻=something, 한국어 뜻=무언가. */
+  const placeholder = (lang === 'en') ? 'something' : '무언가';
+  const meaning = (pickStudyMeaning(item, lang) || '').trim().replace(/[~～∼]/g, placeholder);
+  let example = ttsFindExample(original, surface).trim();  // 예문은 본문의 활용형(surface)으로 찾음(본문 문장엔 활용형이 들어있음)
   if (example && !/[.!?…]$/.test(example)) example += '.';  // 예문 마침표 보장
   const inText = (lang === 'en') ? 'In the text' : '본문에서';
   const cue = (lang === 'en') ? 'Once more' : '다시 한번';
-  let s = `${surface}. ${meaning}.`;
+  let s = `${word}. ${meaning}.`;
   if (example) s += ` ${inText} — ${example} ${cue}. ${example}`;
   return s;
 }
