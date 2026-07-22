@@ -576,9 +576,11 @@
   .tts-row[hidden] { display: none; }
   .tts-row-main { gap: 10px; }
   .tts-spacer { flex: 1; }
+  /* 재생은 주 동작이라 초록 원형으로 강조하되, 높이는 이웃 버튼(⏮⏭⏹ ≈31px)에 맞춰
+     행이 울퉁불퉁해 보이지 않게 한다(예전 40px 는 혼자 커서 따로 놀았음). */
   .tts-play-btn {
-    width: 40px; height: 40px; border-radius: 50%; border: none;
-    background: #5A8A42; color: #FFFFFF; font-size: 16px; cursor: pointer;
+    width: 32px; height: 32px; border-radius: 50%; border: none;
+    background: #5A8A42; color: #FFFFFF; font-size: 13px; cursor: pointer;
     display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   }
   .tts-play-btn:hover { background: #4E7A38; }
