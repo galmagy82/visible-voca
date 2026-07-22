@@ -517,6 +517,8 @@
     display: flex;
     gap: 8px;
     align-items: center;
+    /* 좁은 화면에서 버튼이 찌그러져 글자가 쪼개지는 대신 다음 줄로 넘어가게 */
+    flex-wrap: wrap;
   }
   .translate-toggle {
     padding: 8px 14px;
@@ -563,6 +565,16 @@
   }
   .tts-toolbar-btn:hover { background: #EDECEA; }
   .tts-toolbar-btn.active { background: #5A8A42; color: #FFFFFF; border-color: #5A8A42; }
+
+  /* 툴바 버튼 공통 — 네 버튼이 padding·font-size 가 제각각이라 높이가 안 맞았고,
+     nowrap 이 듣기에만 있어 '번역'이 번/역 으로 세로 분리됐다. 여기서 한 번에 통일한다.
+     (개별 규칙들 뒤에 와야 padding·font-size 를 덮어쓴다) */
+  .translate-toggle, .save-book-btn, .reorder-pages-btn, .tts-toolbar-btn {
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
 
   .tts-player-bar {
     margin: 8px 0 4px; padding: 10px 12px;
@@ -1621,7 +1633,7 @@
         <!-- 책으로 저장 — 새로 올린(미저장) 책일 때만 표시 -->
         <button class="save-book-btn" id="saveBookBtn" onclick="openSaveBookModal()" data-i18n="readingSaveBookBtn" hidden>📚 책으로 저장</button>
         <!-- 페이지 순서 편집 — 저장된 책(_currentBookId 있음 + 로그인) 일 때만 표시 -->
-        <button class="reorder-pages-btn" id="reorderPagesBtn" onclick="openReorderModal()" data-i18n="readingReorderPagesBtn" hidden>🔀 순서 편집</button>
+        <button class="reorder-pages-btn" id="reorderPagesBtn" onclick="openReorderModal()" data-i18n="readingReorderPagesBtn" title="페이지 순서 편집" hidden>🔀 순서</button>
         <!-- 읽어주기 재생 진입 버튼 — 누르면 아래 플레이어 바가 열리며 재생 시작 -->
         <button class="tts-toolbar-btn" id="ttsToolbarBtn" onclick="ttsToolbarToggle()" title="듣기" aria-label="듣기">🔊 듣기</button>
         <!-- 번역 토글 — UI 언어가 영어이면 숨김 -->
@@ -2712,12 +2724,15 @@ function updateBookViewerToolbar() {
   }
   saveBtn.hidden = false;
   const tt = (k, fb) => (typeof t === 'function') ? t(k) : fb;
+  /* 라벨은 툴바 폭 때문에 짧게(제목/저장) 두고, 전체 뜻은 title 툴팁으로 보강 */
   if (_currentBookId != null) {
     saveBtn.setAttribute('data-i18n', 'readingRenameBookBtn');
-    saveBtn.textContent = tt('readingRenameBookBtn', '✏️ 책 제목 붙이기');
+    saveBtn.textContent = tt('readingRenameBookBtn', '✏️ 제목');
+    saveBtn.title = '책 제목 붙이기';
   } else {
+    saveBtn.title = '책으로 저장';
     saveBtn.setAttribute('data-i18n', 'readingSaveBookBtn');
-    saveBtn.textContent = tt('readingSaveBookBtn', '📚 책으로 저장');
+    saveBtn.textContent = tt('readingSaveBookBtn', '📚 저장');
   }
   /* 순서 편집 버튼 — 저장된 책(_currentBookId 있음) + 페이지 2장 이상일 때만 의미 있음 */
   if (reorderBtn) {
