@@ -893,12 +893,21 @@ ${text.slice(0, 20000)}
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.7, maxOutputTokens: 1000 } }),
+    /* maxOutputTokens 에는 thinking 토큰도 포함된다. 1000 이면 2만 자 입력을 생각하는 데
+       예산을 다 써서 요약문이 문장 도중에 잘렸다("…KC는 좋아하는 대통령을"). 넉넉히 확보.
+       실제 생성된 토큰만 과금되므로 한도를 올려도 비용은 늘지 않는다. */
+    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.7, maxOutputTokens: 10000 } }),
   })
   if (!res.ok) throw new Error(`Gemini summary API ${res.status}: ${(await res.text()).slice(0, 150)}`)
   const data = await res.json()
   const out = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
-  return out.trim()
+  return trimToLastSentence(out.trim())
+}
+/* 안전망 — 혹시 또 잘려도 문장 도중에 끝나지 않도록 마지막 완결 문장까지만 남긴다.
+   정상 요약은 이미 문장부호로 끝나므로 그대로 통과한다. 완결 문장이 없으면 원문 유지. */
+function trimToLastSentence(s: string): string {
+  const idx = Math.max(s.lastIndexOf('.'), s.lastIndexOf('!'), s.lastIndexOf('?'), s.lastIndexOf('…'))
+  return idx < 0 ? s : s.slice(0, idx + 1).trim()
 }
 
 /* 사용량 증가: 최초 검색 시 row 생성, 이후 검색 시 trial_count +1 */

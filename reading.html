@@ -4011,10 +4011,18 @@ function ttsStop() {
 /* 모드/목소리/언어 변경 → 클립 재빌드 후 현재 페이지부터 재개 */
 function ttsRebuildAndRestart() {
   if (!_tts.active) return;
-  const curPage = (_tts.clips[_tts.pos] || {}).pageIdx || _currentIdx;
+  const cur = _tts.clips[_tts.pos] || {};
+  const curPage = (cur.pageIdx != null) ? cur.pageIdx : _currentIdx;  // 0 이 falsy 라 || 쓰면 안 됨
   if (_tts.audio) _tts.audio.pause();
   _tts.clips = ttsBuildClips();
-  let start = _tts.clips.findIndex((c) => c.pageIdx >= curPage);
+  /* 듣던 자리를 최대한 유지한다. pageIdx 로만 찾으면 도입부(pageIdx=0)가 맨 앞이라
+     0페이지 재생 중 옵션을 바꿀 때마다 도입부로 되감겼다.
+     ① 같은 클립(cacheKey) → 위치·순서만 바뀐 경우 정확히 이어감
+     ② 같은 논리 클립(kind/page/item) → 목소리·언어가 바뀌어 키가 달라진 경우
+     ③ 그래도 없으면 기존처럼 페이지 기준 근사 */
+  let start = cur.cacheKey ? _tts.clips.findIndex((c) => c.cacheKey === cur.cacheKey) : -1;
+  if (start < 0 && cur.kind) start = _tts.clips.findIndex((c) => c.kind === cur.kind && c.pageIdx === cur.pageIdx && c.itemIdx === cur.itemIdx);
+  if (start < 0) start = _tts.clips.findIndex((c) => c.pageIdx >= curPage);
   if (start < 0) start = 0;
   _tts.pos = start;
   _tts.paused = false;
