@@ -3592,22 +3592,28 @@ function ttsBuildClips(modeOverride, langOverride) {
   if (_tts.intro && _tts.introText) {
     ttsBuildIntroClips().forEach((c) => clips.push(c));
   }
+  /* 본문·단어를 따로 모은다 → '본문+단어'는 페이지별 교차가 아니라
+     책 전체 본문 낭독 후 전체 단어설명 순서(낭독체↔설명체 왔다갔다 안 해 덜 산만). */
+  const bodyClips = [];
+  const vocabClips = [];
   _pages.forEach((p, pi) => {
     if (!p || p.error || p.no_text || !p.original) return;
     if (mode === 'body' || mode === 'both') {
       /* 본문은 ~600자 이하 조각으로 나눠 각각 클립 생성(긴 본문 무음/이상 방지) */
       ttsChunkText(p.original, 600).forEach((chunk) => {
-        clips.push(ttsMakeClip('body', pi, -1, chunk, _tts.narratorVoice));
+        bodyClips.push(ttsMakeClip('body', pi, -1, chunk, _tts.narratorVoice));
       });
     }
     if (mode === 'vocab' || mode === 'both') {
       const items = Array.isArray(p.study_items) ? p.study_items : [];
       items.forEach((it, ii) => {
         const text = ttsVocabText(it, p.original, lang);
-        if (text) clips.push(ttsMakeClip('vocab', pi, ii, text, _tts.teacherVoice));
+        if (text) vocabClips.push(ttsMakeClip('vocab', pi, ii, text, _tts.teacherVoice));
       });
     }
   });
+  bodyClips.forEach((c) => clips.push(c));    // 본문 전체 먼저
+  vocabClips.forEach((c) => clips.push(c));   // 그다음 단어 전체
   return clips;
 }
 
