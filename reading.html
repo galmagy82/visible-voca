@@ -608,6 +608,8 @@
     display: inline-flex; align-items: center; gap: 4px;
     padding: 3px; border: 1px solid #E5E3DF; border-radius: 8px; background: #FFFFFF;
   }
+  /* inline-flex 라 hidden 속성만으론 안 숨겨짐 — '단어만'일 때 책 소개 그룹 숨김용 */
+  .tts-optgroup[hidden] { display: none; }
   .tts-optlabel { font-size: 11px; color: #9C9892; padding: 0 4px; }
   .tts-opt {
     padding: 5px 10px; border: none; border-radius: 6px; background: transparent;
@@ -1687,18 +1689,20 @@
             <span class="tts-buffering" id="ttsBuffering" hidden>오디오 준비 중…</span>
           </span>
         </div>
-        <!-- 최상위 갈래: 책 듣기(본문 재생) vs 단어만 복습. 도입부·단어위치는 '책 듣기'에 딸린 옵션 -->
+        <!-- "무엇을 들을까" 줄: 갈래(책 듣기/단어만) + 책 소개.
+             책 소개는 '책 듣기'에 딸린 토글이라 '단어만'이면 숨긴다(별도 그룹 박스라 사라져도 어색하지 않음).
+             '도입부'가 아니라 '책 소개' — 책의 첫 부분이 아니라 책에 대한 소개(요약)라서. -->
         <div class="tts-row tts-row-opts">
           <span class="tts-optgroup">
             <button class="tts-opt" id="ttsPlay_book" onclick="ttsSetPlay('book')">책 듣기</button>
             <button class="tts-opt" id="ttsPlay_vocab" onclick="ttsSetPlay('vocab')">단어만</button>
           </span>
-        </div>
-        <!-- '책 듣기' 하위 옵션 — '단어만' 선택 시 통째로 숨김(단어만엔 도입부·본문 개념이 없음) -->
-        <div class="tts-row tts-row-opts" id="ttsBookOpts">
-          <span class="tts-optgroup">
-            <button class="tts-opt" id="ttsIntroBtn" onclick="ttsToggleIntro()" title="처음부터 재생 시 책 요약을 먼저 읽어줍니다">도입부</button>
+          <span class="tts-optgroup" id="ttsIntroGroup">
+            <button class="tts-opt" id="ttsIntroBtn" onclick="ttsToggleIntro()" title="처음부터 재생 시 책 소개(요약)를 먼저 읽어줍니다">책 소개</button>
           </span>
+        </div>
+        <!-- '책 듣기' 하위 옵션(단어설명 위치) — '단어만' 선택 시 숨김 -->
+        <div class="tts-row tts-row-opts" id="ttsBookOpts">
           <span class="tts-optgroup">
             <span class="tts-optlabel">단어설명</span>
             <button class="tts-opt" id="ttsVocabPos_off" onclick="ttsSetVocabPos('off')">끄기</button>
@@ -4076,13 +4080,13 @@ async function ttsToggleIntro() {
   /* 요약이 없을 때만(폴백) 생성 — 보통은 음성 만들 때 이미 준비됨 → 대기 없이 토글 */
   if (turningOn && !_tts.introText) {
     const btn = document.getElementById('ttsIntroBtn');
-    if (btn) { btn.disabled = true; btn.textContent = '도입부 준비…'; }
+    if (btn) { btn.disabled = true; btn.textContent = '책 소개 준비…'; }
     try {
       _tts.introText = await ttsFetchSummary();
       if (_tts.introText) await Promise.all(ttsBuildIntroClips().map((c) => ttsEnsure(c)));
     } catch (e) { /* 무시 — 아래에서 introText 유무로 판정 */ }
-    if (btn) { btn.disabled = false; btn.textContent = '도입부'; }
-    if (!_tts.introText) { alert('도입부 요약 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.'); return; }
+    if (btn) { btn.disabled = false; btn.textContent = '책 소개'; }
+    if (!_tts.introText) { alert('책 소개 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.'); return; }
   }
   const curKey = (_tts.clips[_tts.pos] || {}).cacheKey;
   _tts.intro = turningOn;
@@ -4165,9 +4169,12 @@ function ttsUpdateBar() {
     const b = document.getElementById(`ttsVocabPos_${v}`);
     if (b) b.classList.toggle('active', _tts.vocabPos === v);
   });
-  /* '단어만'이면 하위 옵션(도입부·단어위치) 줄 자체를 숨김 */
+  /* '단어만'이면 '책 듣기' 전용 옵션을 숨김 — 단어설명 줄 + 같은 줄의 책 소개 토글 */
+  const isBook = (_tts.play === 'book');
   const bookOpts = document.getElementById('ttsBookOpts');
-  if (bookOpts) bookOpts.hidden = (_tts.play !== 'book');
+  if (bookOpts) bookOpts.hidden = !isBook;
+  const introGroup = document.getElementById('ttsIntroGroup');
+  if (introGroup) introGroup.hidden = !isBook;
   /* 도입부 체크 버튼 active */
   const introBtn = document.getElementById('ttsIntroBtn');
   if (introBtn) introBtn.classList.toggle('active', _tts.intro);
