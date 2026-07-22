@@ -3666,8 +3666,16 @@ function ttsStartPrefetch() {
 function ttsInit() {
   if (_tts.audio) return;
   const a = new Audio();
-  a.addEventListener('ended', () => { _tts.pos++; ttsPlayCurrent(); });
-  a.addEventListener('error', () => { /* 재생 오류 시 다음으로 */ if (_tts.active && !_tts.paused) { _tts.pos++; ttsPlayCurrent(); } });
+  a.addEventListener('ended', () => {
+    const c = _tts.clips[_tts.pos];
+    console.log('[tts-diag] ended kind=', c && c.kind, 'currentTime=', a.currentTime.toFixed(1), 'duration=', (a.duration || 0).toFixed(1));
+    _tts.pos++; ttsPlayCurrent();
+  });
+  a.addEventListener('error', () => {
+    const c = _tts.clips[_tts.pos];
+    console.log('[tts-diag] error kind=', c && c.kind, 'code=', a.error && a.error.code, 'currentTime=', a.currentTime.toFixed(1));
+    /* 재생 오류 시 다음으로 */ if (_tts.active && !_tts.paused) { _tts.pos++; ttsPlayCurrent(); }
+  });
   _tts.audio = a;
 }
 async function ttsPlayCurrent() {
@@ -3698,7 +3706,9 @@ async function ttsPlayCurrent() {
   a._url = URL.createObjectURL(blob);
   a.src = a._url;
   a.playbackRate = _tts.speed;
-  a.play().catch(() => {});
+  console.log('[tts-diag] play kind=', clip.kind, 'pos=', _tts.pos, 'textLen=', clip.text.length, 'blobSize=', blob.size);
+  a.addEventListener('loadedmetadata', function lm() { a.removeEventListener('loadedmetadata', lm); console.log('[tts-diag]   loaded duration=', (a.duration || 0).toFixed(1), 'kind=', clip.kind); });
+  a.play().catch((e) => console.log('[tts-diag] play() rejected:', e && e.message));
 }
 function ttsHighlight(clip) {
   document.querySelectorAll('.study-item-li.tts-playing').forEach((el) => el.classList.remove('tts-playing'));
