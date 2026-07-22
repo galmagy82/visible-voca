@@ -3525,24 +3525,33 @@ function ttsFindExample(original, surface) {
   }
   return text.slice(start, end).trim();
 }
-/* 단어 클립 낭독 텍스트: "단어. 뜻. 본문에서 — 예문. [신호어]. 예문"
-   예문은 2번(반복 학습). 각 구간을 마침표로 끊어 쉼을 확보한다:
+/* 단어 클립 낭독 텍스트: "단어1. 뜻1. [단어2. 뜻2. …] 본문에서 — 예문. [신호어]. 예문"
+   같은 예문(문장)을 공유하는 단어들을 한 클립으로 묶는다 — 한 문장에 학습단어가 2개면
+   예전엔 단어마다 그 문장을 2번씩(합계 4번) 읽었는데, 묶으면 문장은 설계대로 딱 2번만 읽힌다.
+   각 구간을 마침표로 끊어 쉼을 확보한다:
    - 예문 끝 마침표 보장(없으면 붙임) → 신호어 앞에 쉼
    - 신호어 뒤도 쉼표 대신 마침표 → 반복 예문이 붙어읽히지 않게 */
-function ttsVocabText(item, original, lang) {
-  const surface = (item.surface || '').trim();
-  if (!surface) return '';
-  const word = (item.lemma || surface).trim();  // 읽어줄 단어 = 사전 원형(lemma). 활용형(surface)이 아니라 원형으로 설명
+function ttsVocabGroupText(items, example, lang) {
   /* 뜻의 "~"(목적어 빈칸 표시)를 낭독 가능한 대명사로 치환 — 안 하면 "로부터…"처럼 조사 중간부터
      읽혀 어색함. 전각 ～(U+FF5E)·∼(U+223C) 포함. 영어 뜻=something, 한국어 뜻=무언가. */
   const placeholder = (lang === 'en') ? 'something' : '무언가';
-  const meaning = (pickStudyMeaning(item, lang) || '').trim().replace(/[~～∼]/g, placeholder);
-  let example = ttsFindExample(original, surface).trim();  // 예문은 본문의 활용형(surface)으로 찾음(본문 문장엔 활용형이 들어있음)
-  if (example && !/[.!?…]$/.test(example)) example += '.';  // 예문 마침표 보장
-  const inText = (lang === 'en') ? 'In the text' : '본문에서';
-  const cue = (lang === 'en') ? 'Once more' : '다시 한번';
-  let s = `${word}. ${meaning}.`;
-  if (example) s += ` ${inText} — ${example} ${cue}. ${example}`;
+  const parts = [];
+  items.forEach((it) => {
+    const surface = (it.surface || '').trim();
+    if (!surface) return;
+    const word = (it.lemma || surface).trim();  // 읽어줄 단어 = 사전 원형(lemma)
+    const meaning = (pickStudyMeaning(it, lang) || '').trim().replace(/[~～∼]/g, placeholder);
+    parts.push(`${word}. ${meaning}.`);
+  });
+  if (!parts.length) return '';
+  let s = parts.join(' ');
+  let ex = (example || '').trim();
+  if (ex) {
+    if (!/[.!?…]$/.test(ex)) ex += '.';  // 예문 마침표 보장
+    const inText = (lang === 'en') ? 'In the text' : '본문에서';
+    const cue = (lang === 'en') ? 'Once more' : '다시 한번';
+    s += ` ${inText} — ${ex} ${cue}. ${ex}`;
+  }
   return s;
 }
 
@@ -3629,12 +3638,25 @@ function ttsBuildClips(genAll, langOverride) {
     }
     if (includeVocab) {
       const items = Array.isArray(p.study_items) ? p.study_items : [];
+      /* 중복(lemma) 제거 후, 같은 예문 문장을 공유하는 단어들을 한 묶음으로 —
+         한 문장에 학습단어가 여러 개여도 그 문장은 2번만 읽힌다.
+         예문을 못 찾은 단어는 묶을 기준이 없으므로 각자 개별 묶음. */
+      const groups = [];              // { idx: 대표 itemIdx, example, items[] }
+      const byExample = new Map();    // 예문(소문자) → 묶음
       items.forEach((it, ii) => {
         const key = (it.lemma || it.surface || '').toLowerCase().trim();
         if (!key || seenVocab.has(key)) return;  // 이미 설명한 단어는 건너뜀
         seenVocab.add(key);
-        const text = ttsVocabText(it, p.original, lang);
-        if (text) pageVocab.push(ttsMakeClip('vocab', pi, ii, text, _tts.teacherVoice));
+        const ex = ttsFindExample(p.original, (it.surface || '').trim()).trim();
+        const gk = ex ? ex.toLowerCase() : '';
+        if (gk && byExample.has(gk)) { byExample.get(gk).items.push(it); return; }
+        const g = { idx: ii, example: ex, items: [it] };
+        if (gk) byExample.set(gk, g);
+        groups.push(g);
+      });
+      groups.forEach((g) => {
+        const text = ttsVocabGroupText(g.items, g.example, lang);
+        if (text) pageVocab.push(ttsMakeClip('vocab', pi, g.idx, text, _tts.teacherVoice));
       });
     }
     if (inline) {
