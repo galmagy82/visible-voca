@@ -685,10 +685,6 @@
     padding: 8px 10px; border: 1px solid #E5E3DF; border-radius: 10px; background: #FBFAF8;
   }
   .voice-sample-name { font-size: 0.92rem; font-weight: 600; color: #2D2B28; }
-  .voice-sample-badge {
-    font-size: 11px; font-weight: 700; color: #47702F;
-    background: #EAF3E2; border-radius: 999px; padding: 2px 8px;
-  }
   .voice-sample-play {
     margin-left: auto; flex-shrink: 0;
     width: 34px; height: 34px; border-radius: 50%; border: none;
@@ -4244,17 +4240,10 @@ let _sampleAudio = null;   // 한 번에 하나만 재생 — 다른 걸 누르�
 function openVoiceSampleModal() {
   const list = document.getElementById('voiceSampleList');
   if (list) {
-    list.innerHTML = TTS_VOICE_LIST.map((v) => {
-      /* 지금 쓰고 있는 목소리에 배지 — 무엇과 비교 중인지 알 수 있게 */
-      const badges = [];
-      if (_tts.narratorVoice === v.id) badges.push('<span class="voice-sample-badge">낭독</span>');
-      if (_tts.teacherVoice === v.id) badges.push('<span class="voice-sample-badge">단어설명</span>');
-      return `<div class="voice-sample-row">
+    list.innerHTML = TTS_VOICE_LIST.map((v) => `<div class="voice-sample-row">
         <span class="voice-sample-name">${escapeHtml(v.label)}</span>
-        ${badges.join('')}
         <button class="voice-sample-play" id="vsPlay-${v.id}" onclick="playVoiceSample('${v.id}')" aria-label="${escapeHtml(v.label)} 듣기">▶&#xFE0E;</button>
-      </div>`;
-    }).join('');
+      </div>`).join('');
   }
   document.getElementById('voiceSampleModal').hidden = false;
 }
