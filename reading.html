@@ -1692,23 +1692,23 @@
         <div class="tts-row tts-setting">
           <span class="tts-setting-label">낭독 목소리</span>
           <select class="tts-select" id="ttsNarratorSel" onchange="ttsSetVoice('narrator', this.value)">
+            <option value="Callirrhoe">(여) Callirrhoe</option>
             <option value="Despina">(여) Despina</option>
             <option value="Aoede">(여) Aoede</option>
-            <option value="Callirrhoe">(여) Callirrhoe</option>
+            <option value="Enceladus">(남) Enceladus</option>
             <option value="Rasalgethi">(남) Rasalgethi</option>
             <option value="Algieba">(남) Algieba</option>
-            <option value="Enceladus">(남) Enceladus</option>
           </select>
         </div>
         <div class="tts-row tts-setting">
           <span class="tts-setting-label">단어설명 목소리</span>
           <select class="tts-select" id="ttsTeacherSel" onchange="ttsSetVoice('teacher', this.value)">
+            <option value="Callirrhoe">(여) Callirrhoe</option>
             <option value="Despina">(여) Despina</option>
             <option value="Aoede">(여) Aoede</option>
-            <option value="Callirrhoe">(여) Callirrhoe</option>
+            <option value="Enceladus">(남) Enceladus</option>
             <option value="Rasalgethi">(남) Rasalgethi</option>
             <option value="Algieba">(남) Algieba</option>
-            <option value="Enceladus">(남) Enceladus</option>
           </select>
         </div>
         <div class="tts-row tts-setting tts-setting-gap">
@@ -3554,8 +3554,8 @@ const _tts = {
   listen: 'book_vocab', // 'book'(책) | 'book_vocab'(책+단어) | 'vocab'(단어) — 무엇을 들을지
   vocabPos: 'inline',   // 'end'(본문끝) | 'inline'(페이지마다) — '책+단어'일 때 단어설명 위치
                         // 모든 클립은 미리 생성되므로 위 선택들은 재생 순서/필터만 바꿈(즉시 전환)
-  narratorVoice: 'Despina',    // 낭독 목소리 기본값
-  teacherVoice: 'Rasalgethi',  // 단어설명 목소리 기본값
+  narratorVoice: 'Callirrhoe', // 낭독 목소리 기본값
+  teacherVoice: 'Enceladus',   // 단어설명 목소리 기본값
   vocabLang: 'native',       // TTS 단어설명 언어(화면 표기 _studyMeaningLang 과 분리)
   intro: true,               // 인트로(책 요약 나레이션) 재생 여부 — 본문을 듣는 모드에서만 적용
   introText: '',             // 생성된 한국어 요약 텍스트(책별)
@@ -4229,12 +4229,12 @@ function ttsSetMeaningLang(lang) {
    voice-samples/<이름>.mp3 는 미리 만들어 저장소에 포함된 파일 — 즉시 재생되고 API 비용이 없다.
    6개 목소리는 엣지의 허용 목록과 동일해야 한다(엣지: READING_TTS_VOICES). */
 const TTS_VOICE_LIST = [
+  { id: 'Callirrhoe', label: '(여) Callirrhoe' },
   { id: 'Despina', label: '(여) Despina' },
   { id: 'Aoede', label: '(여) Aoede' },
-  { id: 'Callirrhoe', label: '(여) Callirrhoe' },
+  { id: 'Enceladus', label: '(남) Enceladus' },
   { id: 'Rasalgethi', label: '(남) Rasalgethi' },
   { id: 'Algieba', label: '(남) Algieba' },
-  { id: 'Enceladus', label: '(남) Enceladus' },
 ];
 let _sampleAudio = null;   // 한 번에 하나만 재생 — 다른 걸 누르면 이전 것 정지
 function openVoiceSampleModal() {
