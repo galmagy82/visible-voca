@@ -595,6 +595,33 @@
   .tts-side-right { justify-content: flex-start; }
   /* ■ 는 ⏮⏭ 보다 굵고 커 보여 광학적으로 살짝 줄여 균형을 맞춘다 */
   .tts-stop-btn { font-size: 11px; }
+
+  /* 우측 상단 ⋯ 메뉴 — MP3 저장·다시 만들기처럼 드물고 무거운 동작을 접어둔다.
+     ⋯(U+22EF)는 이모지 표현이 없어 안드로이드에서도 흑백으로 그려진다(⚙️ 는 컬러 이모지). */
+  .tts-state { position: relative; }
+  .tts-more-btn {
+    position: absolute; top: 0; right: 0; z-index: 5;
+    padding: 3px 9px; border: 1px solid #D8D6D2; border-radius: 8px;
+    background: #FFFFFF; color: #4A4844; font-size: 13px; font-weight: 600;
+    line-height: 1.5; cursor: pointer; white-space: nowrap;
+  }
+  .tts-more-btn:hover { background: #EDECEA; }
+  .tts-more-btn:disabled { opacity: 0.6; cursor: default; }
+  .tts-more-menu {
+    position: absolute; top: 30px; right: 0; z-index: 10;
+    display: flex; flex-direction: column; gap: 2px;
+    padding: 4px; border: 1px solid #D8D6D2; border-radius: 10px;
+    background: #FFFFFF; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10);
+  }
+  .tts-more-menu[hidden] { display: none; }
+  .tts-more-menu button {
+    padding: 8px 14px; border: none; border-radius: 7px; background: transparent;
+    color: #4A4844; font-size: 13px; font-weight: 600;
+    cursor: pointer; white-space: nowrap; text-align: left;
+  }
+  .tts-more-menu button:hover { background: #F0EFEC; }
+  /* ⋯ 버튼과 겹치지 않도록 첫 줄 오른쪽을 비워둔다 */
+  .tts-row-opts-top { padding-right: 44px; }
   .tts-spacer { flex: 1; }
   /* 재생은 주 동작이라 초록 원형으로 강조하되, 높이는 이웃 버튼(⏮⏭⏹ ≈31px)에 맞춰
      행이 울퉁불퉁해 보이지 않게 한다(예전 40px 는 혼자 커서 따로 놀았음). */
@@ -605,18 +632,17 @@
   }
   .tts-play-btn:hover { background: #4E7A38; }
   .tts-buffering { font-size: 12px; color: #9C7A2A; }
-  .tts-speed-btn, .tts-dl-btn, .tts-close-btn {
+  .tts-speed-btn {
     padding: 6px 10px; border: 1px solid #D8D6D2; border-radius: 8px;
     background: #FFFFFF; color: #4A4844; font-size: 13px; font-weight: 600; cursor: pointer;
   }
-  .tts-speed-btn:hover, .tts-dl-btn:hover, .tts-close-btn:hover { background: #EDECEA; }
+  .tts-speed-btn:hover { background: #EDECEA; }
   /* 이전/다음 페이지·중지 버튼(⏮ ⏭ ⏹) */
   .tts-nav-btn {
     padding: 6px 9px; border: 1px solid #D8D6D2; border-radius: 8px;
     background: #FFFFFF; color: #4A4844; font-size: 14px; cursor: pointer; flex-shrink: 0;
   }
   .tts-nav-btn:hover { background: #EDECEA; }
-  .tts-dl-btn:disabled { opacity: 0.55; cursor: default; }
   .tts-optgroup {
     display: inline-flex; align-items: center; gap: 4px;
     padding: 3px; border: 1px solid #E5E3DF; border-radius: 8px; background: #FFFFFF;
@@ -644,12 +670,6 @@
     background: #FFFFFF; color: #5A8A42; font-size: 14px; font-weight: 700; cursor: pointer;
   }
   .tts-make-btn:hover { background: #EAF3E2; }
-  /* 다시 만들기 버튼 */
-  .tts-remake-btn {
-    padding: 6px 10px; border: 1px solid #D8D6D2; border-radius: 8px;
-    background: #FFFFFF; color: #4A4844; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
-  }
-  .tts-remake-btn:hover { background: #EDECEA; }
   /* 생성 진행바 */
   .tts-progress-label { font-size: 13px; font-weight: 600; color: #4A4844; }
   .tts-progress-track { width: 100%; height: 8px; border-radius: 4px; background: #E5E3DF; overflow: hidden; }
@@ -1687,9 +1707,16 @@
 
       <!-- ③ 재생: 실제 플레이어 -->
       <div class="tts-state" id="ttsPlayer" hidden>
-        <!-- 순서: 설정(무엇을·어떻게 들을지) → 조작(트랜스포트) → 부가 동작.
+        <!-- 우측 상단 더보기 — 드물고 무거운 동작을 접어둔다(특히 다시 만들기는 전체 재생성이라
+             실수로 누르면 손해). 다운로드 진행 상태는 메뉴가 닫히므로 이 버튼 자리에 표시한다. -->
+        <button class="tts-more-btn" id="ttsMoreBtn" onclick="ttsToggleMore(event)" title="더보기" aria-label="더보기">⋯</button>
+        <div class="tts-more-menu" id="ttsMoreMenu" hidden>
+          <button type="button" onclick="ttsCloseMore(); ttsDownloadBook();">MP3 저장</button>
+          <button type="button" onclick="ttsCloseMore(); ttsRemake();">다시 만들기</button>
+        </div>
+        <!-- 순서: 설정(무엇을·어떻게 들을지) → 조작(트랜스포트).
              설정을 먼저 정하고 재생을 누르는 흐름과 맞춘다. -->
-        <div class="tts-row tts-row-opts">
+        <div class="tts-row tts-row-opts tts-row-opts-top">
           <span class="tts-optgroup">
             <!-- '듣기'는 툴바의 🔊 듣기 버튼과 겹쳐 혼동돼서 '범위'로 — 선택지가 어디까지 포함하느냐다 -->
             <span class="tts-optlabel">범위</span>
@@ -1727,15 +1754,6 @@
             <button class="tts-nav-btn tts-stop-btn" onclick="ttsStopReset()" title="처음으로" aria-label="처음으로">■</button>
             <span class="tts-buffering" id="ttsBuffering" hidden>오디오 준비 중…</span>
           </span>
-        </div>
-        <!-- 부가 동작(다운로드·다시 만들기)을 맨 아래 한 줄에 모아 오른쪽 정렬.
-             자주 누르는 트랜스포트와 분리 — 특히 다시 만들기는 전체 재생성이라 무겁다. -->
-        <div class="tts-row tts-row-opts">
-          <span class="tts-spacer"></span>
-          <!-- 맨 화살표(⬇, U+2B07)는 뜻이 모호한 데다 이모지 표현이 있어 안드로이드에서 컬러로 그려졌다.
-               텍스트 라벨로 바꿔 의미를 명확히 하고 렌더링 문제도 없앤다. -->
-          <button class="tts-dl-btn" id="ttsDownloadBtn" onclick="ttsDownloadBook()" title="책 전체 오디오를 MP3 파일로 저장">MP3 저장</button>
-          <button class="tts-remake-btn" id="ttsRemakeBtn" onclick="ttsRemake()">다시 만들기</button>
         </div>
       </div>
 
@@ -4169,15 +4187,34 @@ function ttsSetMeaningLang(lang) {
 /* --- 다운로드: 책 전체 클립을 재생 순서대로 이어붙인 MP3 한 개 ---
    Cloud TTS 는 MP3 를 주므로, 같은 포맷의 MP3 조각들을 그대로 이어붙이면 대부분 플레이어에서
    연속 재생된다(MP3 프레임은 독립적). 별도 재인코딩 없이 Blob 결합. */
+/* ⋯ 메뉴 열기/닫기 — 항목 실행 전에 닫는다 */
+function ttsToggleMore(e) {
+  if (e) e.stopPropagation();
+  const m = document.getElementById('ttsMoreMenu');
+  if (m) m.hidden = !m.hidden;
+}
+function ttsCloseMore() {
+  const m = document.getElementById('ttsMoreMenu');
+  if (m) m.hidden = true;
+}
+/* 메뉴 바깥을 누르면 닫기 */
+document.addEventListener('click', (e) => {
+  const m = document.getElementById('ttsMoreMenu');
+  if (!m || m.hidden) return;
+  if (e.target.closest('#ttsMoreMenu') || e.target.closest('#ttsMoreBtn')) return;
+  m.hidden = true;
+});
+
 async function ttsDownloadBook() {
   const clips = ttsBuildClips();
   if (clips.length === 0) return;
-  const btn = document.getElementById('ttsDownloadBtn');
+  /* 진행 표시는 ⋯ 버튼 자리에 — 메뉴는 닫히므로 메뉴 안 항목에 표시하면 보이지 않는다 */
+  const btn = document.getElementById('ttsMoreBtn');
   if (btn) { btn.disabled = true; btn.textContent = '준비 중…'; }
   try {
     const parts = [];
     for (let i = 0; i < clips.length; i++) {
-      if (btn) btn.textContent = `준비 ${i + 1}/${clips.length}`;
+      if (btn) btn.textContent = `${i + 1}/${clips.length}`;
       const blob = await ttsEnsure(clips[i]);
       parts.push(await blob.arrayBuffer());
     }
@@ -4191,7 +4228,7 @@ async function ttsDownloadBook() {
   } catch (e) {
     alert('다운로드 준비 중 오류: ' + (e && e.message ? e.message : e));
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = 'MP3 저장'; }
+    if (btn) { btn.disabled = false; btn.textContent = '⋯'; }
   }
 }
 
