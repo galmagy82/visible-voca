@@ -672,6 +672,30 @@
     background: #FFFFFF; color: #5A8A42; font-size: 14px; font-weight: 700; cursor: pointer;
   }
   .tts-make-btn:hover { background: #EAF3E2; }
+  /* 목소리 미리듣기 진입 버튼 — 음성 만들기보다 한 단계 낮은 강조(중성 톤) */
+  .tts-sample-btn {
+    align-self: center; padding: 7px 14px; border: 1px solid #D8D6D2; border-radius: 8px;
+    background: #FFFFFF; color: #4A4844; font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .tts-sample-btn:hover { background: #EDECEA; }
+  /* 목소리 미리듣기 모달 — 6개를 한 줄씩 나열해 연달아 비교 */
+  .voice-sample-list { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+  .voice-sample-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px; border: 1px solid #E5E3DF; border-radius: 10px; background: #FBFAF8;
+  }
+  .voice-sample-name { font-size: 0.92rem; font-weight: 600; color: #2D2B28; }
+  .voice-sample-badge {
+    font-size: 11px; font-weight: 700; color: #47702F;
+    background: #EAF3E2; border-radius: 999px; padding: 2px 8px;
+  }
+  .voice-sample-play {
+    margin-left: auto; flex-shrink: 0;
+    width: 34px; height: 34px; border-radius: 50%; border: none;
+    background: #5A8A42; color: #FFFFFF; font-size: 13px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .voice-sample-play:hover { background: #4E7A38; }
   /* 생성 진행바 */
   .tts-progress-label { font-size: 13px; font-weight: 600; color: #4A4844; }
   .tts-progress-track { width: 100%; height: 8px; border-radius: 4px; background: #E5E3DF; overflow: hidden; }
@@ -1698,6 +1722,8 @@
             <label class="tts-radio"><input type="radio" name="ttsLang" value="en" onclick="ttsSetMeaningLang('en')"> English</label>
           </span>
         </div>
+        <!-- 6개 목소리를 한 화면에서 연달아 들어보고 고르도록 — 드롭다운을 바꿔가며 듣는 것보다 비교가 쉽다 -->
+        <button class="tts-sample-btn" onclick="openVoiceSampleModal()">🔊 목소리 미리듣기</button>
         <button class="tts-make-btn" id="ttsMakeBtn" onclick="ttsMakeAudio()">🎧 음성 만들기</button>
       </div>
 
@@ -1848,6 +1874,20 @@
 <!-- 페이지 순서 편집 모달 — 저장된 책 뷰어에서 "🔀 순서 편집" 버튼으로 진입.
      ↑↓ 버튼으로 한 칸씩 이동, 저장 시 reading_books.pages 배열을 새 순서로 UPDATE.
      취소 시 변경 사항 폐기. 작업 내용 보호를 위해 오버레이 빈 영역 클릭으로 닫히지 않음. -->
+<!-- 목소리 미리듣기 — 6개 샘플(voice-samples/*.mp3)을 한 화면에서 눌러 비교.
+     미리 만들어둔 파일이라 대기 없이 즉시 재생되고, 재생 비용도 들지 않는다.
+     듣기 전용: 고르는 건 설정 화면의 드롭다운에서 (행마다 선택 버튼을 붙이면 지저분해짐). -->
+<div class="modal-overlay" id="voiceSampleModal" hidden onclick="if(event.target===this)closeVoiceSampleModal()">
+  <div class="modal-card">
+    <div class="modal-title">목소리 미리듣기</div>
+    <div class="modal-desc">같은 문장을 각 목소리로 들어보고 고르세요.</div>
+    <div class="voice-sample-list" id="voiceSampleList"></div>
+    <div class="modal-btns">
+      <button class="modal-btn modal-btn-primary" onclick="closeVoiceSampleModal()">닫기</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="reorderPagesModal" hidden>
   <div class="modal-card reorder-modal-card">
     <div class="modal-title" data-i18n="readingReorderModalTitle">페이지 순서 편집</div>
@@ -4189,6 +4229,63 @@ function ttsSetMeaningLang(lang) {
 /* --- 다운로드: 책 전체 클립을 재생 순서대로 이어붙인 MP3 한 개 ---
    Cloud TTS 는 MP3 를 주므로, 같은 포맷의 MP3 조각들을 그대로 이어붙이면 대부분 플레이어에서
    연속 재생된다(MP3 프레임은 독립적). 별도 재인코딩 없이 Blob 결합. */
+/* --- 목소리 미리듣기 모달 ---
+   voice-samples/<이름>.mp3 는 미리 만들어 저장소에 포함된 파일 — 즉시 재생되고 API 비용이 없다.
+   6개 목소리는 엣지의 허용 목록과 동일해야 한다(엣지: READING_TTS_VOICES). */
+const TTS_VOICE_LIST = [
+  { id: 'Despina', label: '(여) Despina' },
+  { id: 'Aoede', label: '(여) Aoede' },
+  { id: 'Callirrhoe', label: '(여) Callirrhoe' },
+  { id: 'Rasalgethi', label: '(남) Rasalgethi' },
+  { id: 'Algieba', label: '(남) Algieba' },
+  { id: 'Enceladus', label: '(남) Enceladus' },
+];
+let _sampleAudio = null;   // 한 번에 하나만 재생 — 다른 걸 누르면 이전 것 정지
+function openVoiceSampleModal() {
+  const list = document.getElementById('voiceSampleList');
+  if (list) {
+    list.innerHTML = TTS_VOICE_LIST.map((v) => {
+      /* 지금 쓰고 있는 목소리에 배지 — 무엇과 비교 중인지 알 수 있게 */
+      const badges = [];
+      if (_tts.narratorVoice === v.id) badges.push('<span class="voice-sample-badge">낭독</span>');
+      if (_tts.teacherVoice === v.id) badges.push('<span class="voice-sample-badge">단어설명</span>');
+      return `<div class="voice-sample-row">
+        <span class="voice-sample-name">${escapeHtml(v.label)}</span>
+        ${badges.join('')}
+        <button class="voice-sample-play" id="vsPlay-${v.id}" onclick="playVoiceSample('${v.id}')" aria-label="${escapeHtml(v.label)} 듣기">▶&#xFE0E;</button>
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('voiceSampleModal').hidden = false;
+}
+function closeVoiceSampleModal() {
+  stopVoiceSample();
+  document.getElementById('voiceSampleModal').hidden = true;
+}
+function stopVoiceSample() {
+  if (_sampleAudio) { _sampleAudio.pause(); _sampleAudio = null; }
+  document.querySelectorAll('.voice-sample-play').forEach((b) => { b.textContent = '▶︎'; });
+}
+function playVoiceSample(id) {
+  const wasPlaying = !!(_sampleAudio && _sampleAudio._voice === id);
+  stopVoiceSample();
+  if (wasPlaying) return;  // 재생 중인 걸 다시 누르면 정지만
+  const a = new Audio(`voice-samples/${id}.mp3`);
+  a._voice = id;
+  const btn = document.getElementById(`vsPlay-${id}`);
+  if (btn) btn.textContent = '⏸︎';
+  a.addEventListener('ended', stopVoiceSample);
+  a.addEventListener('error', stopVoiceSample);
+  _sampleAudio = a;
+  a.play().catch(() => stopVoiceSample());
+}
+/* Esc 로 닫기 */
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  const m = document.getElementById('voiceSampleModal');
+  if (m && !m.hidden) closeVoiceSampleModal();
+});
+
 /* ⋯ 메뉴 열기/닫기 — 항목 실행 전에 닫는다 */
 function ttsToggleMore(e) {
   if (e) e.stopPropagation();
