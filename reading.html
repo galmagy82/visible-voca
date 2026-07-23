@@ -2947,7 +2947,7 @@ function renderBook() {
   /* 여기선 makeCancel 을 세우지 않는다 — renderBook 은 같은 책 재렌더(뜻 언어 토글·순서저장 등)
      에서도 불려서, 생성 중 취소돼 버린다. 다른 책으로의 전환은 ttsMakeAudio 의 sameBook() 가드가
      감지해 워커를 멈추고 저장도 건너뛴다. */
-  if (typeof ttsStop === 'function') { ttsStop(); ttsShowBar(false); _tts.made = false; _tts.intro = false; _tts.introText = ''; _tts.listen = 'book_vocab'; _tts.vocabPos = 'end'; ttsSetUiState('setup'); }
+  if (typeof ttsStop === 'function') { ttsStop(); ttsShowBar(false); _tts.made = false; _tts.intro = true; _tts.introText = ''; _tts.listen = 'book_vocab'; _tts.vocabPos = 'inline'; ttsSetUiState('setup'); }
   /* 이미 만든 책이면 미리 감지 → 듣기 열 때 곧바로 재생 단계로 (음성 만들기 건너뜀) */
   if (typeof ttsCheckMade === 'function') ttsCheckMade().then((ok) => { if (ok) _tts.made = true; });
   const track = document.getElementById('pageTrack');
@@ -3494,12 +3494,12 @@ const _tts = {
   active: false,        // 엔진 동작 중(재생 or 일시정지 상태 포함)
   paused: false,
   listen: 'book_vocab', // 'book'(책) | 'book_vocab'(책+단어) | 'vocab'(단어) — 무엇을 들을지
-  vocabPos: 'end',      // 'end'(본문끝) | 'inline'(페이지마다) — '책+단어'일 때 단어설명 위치
+  vocabPos: 'inline',   // 'end'(본문끝) | 'inline'(페이지마다) — '책+단어'일 때 단어설명 위치
                         // 모든 클립은 미리 생성되므로 위 선택들은 재생 순서/필터만 바꿈(즉시 전환)
   narratorVoice: 'Despina',    // 낭독 목소리 기본값
   teacherVoice: 'Rasalgethi',  // 단어설명 목소리 기본값
   vocabLang: 'native',       // TTS 단어설명 언어(화면 표기 _studyMeaningLang 과 분리)
-  intro: false,              // 도입부(책 요약 나레이션) 재생 여부 — 모드와 독립 다중선택
+  intro: true,               // 인트로(책 요약 나레이션) 재생 여부 — 본문을 듣는 모드에서만 적용
   introText: '',             // 생성된 한국어 요약 텍스트(책별)
   speed: 1.0,
   clips: [],            // 재생용 클립 배열(현재 모드/설정 기준)
