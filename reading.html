@@ -1690,6 +1690,8 @@
           <!-- 좌/우 그룹으로 감싸 ▶ 를 정확히 중앙에 둔다(버튼 개수가 좌1·우2 로 달라도 무관).
                글리프 뒤 &#xFE0E;(VS15) = '텍스트 표현' 요청으로 컬러 이모지화 방지. -->
           <span class="tts-side tts-side-left">
+            <!-- 배속은 재생 중 쓰는 설정이라 트랜스포트 옆이 자연스럽고, 좌2:우2 로 ▶ 주변 균형도 잡힌다 -->
+            <button class="tts-speed-btn" id="ttsSpeedBtn" onclick="ttsCycleSpeed()" title="배속">1×</button>
             <button class="tts-nav-btn" onclick="ttsSkipPage(-1)" title="이전 페이지" aria-label="이전 페이지">⏮&#xFE0E;</button>
           </span>
           <button class="tts-play-btn" id="ttsPlayPauseBtn" onclick="ttsToggle()" aria-label="재생/일시정지">▶&#xFE0E;</button>
@@ -1726,8 +1728,9 @@
              자주 누르는 트랜스포트와 분리 — 특히 다시 만들기는 전체 재생성이라 무겁다. -->
         <div class="tts-row tts-row-opts">
           <span class="tts-spacer"></span>
-          <button class="tts-speed-btn" id="ttsSpeedBtn" onclick="ttsCycleSpeed()" title="배속">1×</button>
-          <button class="tts-dl-btn" id="ttsDownloadBtn" onclick="ttsDownloadBook()" title="책 전체 오디오 다운로드">⬇</button>
+          <!-- 맨 화살표(⬇, U+2B07)는 뜻이 모호한 데다 이모지 표현이 있어 안드로이드에서 컬러로 그려졌다.
+               텍스트 라벨로 바꿔 의미를 명확히 하고 렌더링 문제도 없앤다. -->
+          <button class="tts-dl-btn" id="ttsDownloadBtn" onclick="ttsDownloadBook()" title="책 전체 오디오를 MP3 파일로 저장">MP3 저장</button>
           <button class="tts-remake-btn" id="ttsRemakeBtn" onclick="ttsRemake()">다시 만들기</button>
         </div>
       </div>
@@ -4177,7 +4180,7 @@ async function ttsDownloadBook() {
   } catch (e) {
     alert('다운로드 준비 중 오류: ' + (e && e.message ? e.message : e));
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '⬇'; }
+    if (btn) { btn.disabled = false; btn.textContent = 'MP3 저장'; }
   }
 }
 
