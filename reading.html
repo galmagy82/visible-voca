@@ -3962,24 +3962,39 @@ async function ttsMakeAudio() {
   const seen = new Set();
   const clips = ttsBuildIntroClips().concat(bodyClips)
     .filter((c) => { if (seen.has(c.cacheKey)) return false; seen.add(c.cacheKey); return true; });
-  let done = 0, next = 0, quotaHit = false;
-  ttsUpdateProgress(0, clips.length);
+  const total = clips.length;
   const CONC = 10;
-  const worker = async () => {
-    while (!_tts.makeCancel && !quotaHit && sameBook()) {
-      const i = next++;
-      if (i >= clips.length) break;
-      try {
-        await ttsEnsure(clips[i]);
-      } catch (e) {
-        if (e && e.status === 429) { quotaHit = true; break; }
-        /* 그 외 실패는 건너뜀(재생 시 재시도) */
+  let quotaHit = false;
+  /* 생성 패스 1회 — 실패한 클립을 '모아서' 돌려준다.
+     예전엔 실패를 조용히 버리면서도 진행도는 올라가, 진행바가 100% 가 되고 made=true 로 처리됐다.
+     그래서 캐시가 비어 있는데도 '완료'로 보이고, 재진입 때 다시 음성 만들기가 떠 혼란스러웠다.
+     진행도는 '실제로 캐시에 들어간 개수'만 센다. */
+  const runPass = async (list, baseDone) => {
+    const failed = [];
+    let next = 0, done = baseDone;
+    const worker = async () => {
+      while (!_tts.makeCancel && !quotaHit && sameBook()) {
+        const i = next++;
+        if (i >= list.length) break;
+        try {
+          await ttsEnsure(list[i]);
+          done++;
+        } catch (e) {
+          if (e && e.status === 429) { quotaHit = true; break; }
+          failed.push(list[i]);  // 조용히 버리지 않고 재시도 대상으로
+        }
+        ttsUpdateProgress(done, total);
       }
-      done++;
-      ttsUpdateProgress(done, clips.length);
-    }
+    };
+    await Promise.all(Array.from({ length: Math.min(CONC, list.length) }, () => worker()));
+    return failed;
   };
-  await Promise.all(Array.from({ length: Math.min(CONC, clips.length) }, () => worker()));
+  ttsUpdateProgress(0, total);
+  let failed = await runPass(clips, 0);
+  /* 네트워크 등 일시적 오류로 빠진 것들만 한 번 더 — 성공분은 캐시라 재비용 없음 */
+  if (failed.length && !quotaHit && !_tts.makeCancel && sameBook()) {
+    failed = await runPass(failed, total - failed.length);
+  }
   if (!sameBook()) return;  // 다른 책으로 이동 — 저장/화면전환 하지 않음
   if (quotaHit) {
     ttsSetUiState('setup');
@@ -3987,6 +4002,13 @@ async function ttsMakeAudio() {
     return;
   }
   if (_tts.makeCancel) { ttsSetUiState('setup'); return; }
+  if (failed.length) {
+    /* 끝내 실패한 게 남으면 '완료'로 처리하지 않는다 — 그래야 재진입 때 다시 뜨는 이유가 명확해진다.
+       다시 눌러도 이미 만든 건 캐시 통과라 빠르고 추가 비용도 없다. */
+    ttsSetUiState('setup');
+    alert(`${failed.length}개를 만들지 못했습니다.\n'음성 만들기'를 한 번 더 눌러주세요. (이미 만든 것은 건너뜁니다)`);
+    return;
+  }
   _tts.made = true;
   ttsSaveMadeSettings();  // 이 책을 만든 목소리·언어를 기억(재진입 감지용)
   ttsSetUiState('player');
