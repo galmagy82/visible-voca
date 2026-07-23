@@ -623,11 +623,11 @@
   /* ⋯ 버튼과 겹치지 않도록 첫 줄 오른쪽을 비워둔다 */
   .tts-row-opts-top { padding-right: 44px; }
   .tts-spacer { flex: 1; }
-  /* 재생은 주 동작이라 초록 원형으로 강조하되, 높이는 이웃 버튼(⏮⏭⏹ ≈31px)에 맞춰
-     행이 울퉁불퉁해 보이지 않게 한다(예전 40px 는 혼자 커서 따로 놀았음). */
+  /* 재생은 주 동작 — 전용 줄에 위아래 여백까지 있으니 크게 키워 위계를 준다.
+     (예전에 32px 로 줄인 건 작은 버튼들과 한 줄에 섞여 행이 울퉁불퉁해서였는데, 그 조건이 사라졌다) */
   .tts-play-btn {
-    width: 32px; height: 32px; border-radius: 50%; border: none;
-    background: #5A8A42; color: #FFFFFF; font-size: 13px; cursor: pointer;
+    width: 44px; height: 44px; border-radius: 50%; border: none;
+    background: #5A8A42; color: #FFFFFF; font-size: 17px; cursor: pointer;
     display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   }
   .tts-play-btn:hover { background: #4E7A38; }
@@ -639,8 +639,8 @@
   .tts-speed-btn:hover { background: #EDECEA; }
   /* 이전/다음 페이지·중지 버튼(⏮ ⏭ ⏹) */
   .tts-nav-btn {
-    padding: 6px 9px; border: 1px solid #D8D6D2; border-radius: 8px;
-    background: #FFFFFF; color: #4A4844; font-size: 14px; cursor: pointer; flex-shrink: 0;
+    padding: 7px 11px; border: 1px solid #D8D6D2; border-radius: 8px;
+    background: #FFFFFF; color: #4A4844; font-size: 15px; cursor: pointer; flex-shrink: 0;
   }
   .tts-nav-btn:hover { background: #EDECEA; }
   .tts-optgroup {
@@ -655,7 +655,9 @@
     color: #6A6862; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
   }
   .tts-opt:hover { background: #F0EFEC; }
-  .tts-opt.active { background: #5A8A42; color: #FFFFFF; }
+  /* 선택 상태는 '연한 초록 + 초록 글자' — 꽉 찬 초록(#5A8A42)은 재생 버튼만 갖게 해서
+     조작이 옵션에 묻히지 않게 한다. 초록이 '선택됨'과 '누르세요' 두 뜻으로 쓰이던 혼선도 정리. */
+  .tts-opt.active { background: #EAF3E2; color: #47702F; }
   /* 재생 중인 단어 강조 */
   .study-item-li.tts-playing {
     background: #EAF3E2; border-radius: 8px;
