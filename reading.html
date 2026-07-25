@@ -3619,20 +3619,39 @@ function ttsHash(s) {
   return (h >>> 0).toString(36);
 }
 /* 본문에서 surface 를 포함하는 문장 추출 — 단어 클립의 "본문에서 — 예문" 용 */
+/* 문장 끝으로 오인하면 안 되는 약어 — 마침표가 문장 종결이 아닌 경우("...step over Mrs." 방지) */
+const TTS_ABBREV = new Set(['mr', 'mrs', 'ms', 'dr', 'st', 'mt', 'prof', 'sr', 'jr', 'vs', 'no', 'etc', 'ave', 'rd']);
+/* 학습단어가 들어있는 '문장'을 본문에서 뽑는다.
+   - 줄바꿈: 다음 줄이 소문자로 시작하면 OCR 단어 래핑으로 보고 이어붙이고(공백), 대문자로 시작하면
+     경계로 개행 유지 → "CHAPTER 3 / Chickenbone" 같은 제목이 문장에 딸려오지 않게.
+   - 뒤로 스캔은 문장부호(.!?) 우선, 못 찾을 때(=페이지 첫 문장, 앞에 제목만 있는 경우)만 개행으로
+     앞 제목을 잘라낸다. 앞으로 스캔은 문장부호만 봄(개행 무시) → 문장 중간 고유명사 줄바꿈에서 안 잘림.
+   - 약어/이니셜의 마침표는 문장 끝으로 치지 않음. */
 function ttsFindExample(original, surface) {
   if (!original || !surface) return '';
-  const text = String(original).replace(/\s+/g, ' ').trim();
-  const idx = text.toLowerCase().indexOf(surface.toLowerCase());
+  const joined = String(original).replace(/\r/g, '')
+    .replace(/\n[ \t]*/g, (m, off, s) => { const n = s[off + m.length]; return (n && /[a-z]/.test(n)) ? ' ' : '\n'; })
+    .replace(/[ \t]+/g, ' ').trim();
+  const idx = joined.toLowerCase().indexOf(surface.toLowerCase());
   if (idx < 0) return '';
-  let start = 0;
-  for (let i = idx; i > 0; i--) {
-    if (/[.!?]/.test(text[i - 1])) { start = i; break; }
-  }
-  let end = text.length;
-  for (let i = idx + surface.length; i < text.length; i++) {
-    if (/[.!?]/.test(text[i])) { end = i + 1; break; }
-  }
-  return text.slice(start, end).trim();
+  const isEnd = (s, i) => {
+    const c = s[i];
+    if (c === '!' || c === '?') return true;
+    if (c !== '.') return false;
+    let j = i - 1, w = '';
+    while (j >= 0 && /[A-Za-z]/.test(s[j])) { w = s[j] + w; j--; }
+    if (w.length === 1) return false;                  // 이니셜(J. 등)
+    if (TTS_ABBREV.has(w.toLowerCase())) return false; // 약어(Mrs. 등)
+    return true;
+  };
+  /* 뒤로: 문장부호 우선. 못 찾으면(첫 문장) 그때만 개행으로 앞 제목 제거 */
+  let start = 0, foundEnd = false;
+  for (let i = idx - 1; i >= 0; i--) { if (isEnd(joined, i)) { start = i + 1; foundEnd = true; break; } }
+  if (!foundEnd) { for (let i = idx - 1; i >= 0; i--) { if (joined[i] === '\n') { start = i + 1; break; } } }
+  /* 앞으로: 문장부호만(개행 무시) — 제목은 항상 앞에만 있으니 개행 경계가 불필요 */
+  let end = joined.length;
+  for (let i = idx + surface.length; i < joined.length; i++) { if (isEnd(joined, i)) { end = i + 1; break; } }
+  return joined.slice(start, end).replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
 }
 /* 단어 클립 낭독 텍스트: "단어1. 뜻1. [단어2. 뜻2. …] 본문에서 — 예문. [신호어]. 예문"
    같은 예문(문장)을 공유하는 단어들을 한 클립으로 묶는다 — 한 문장에 학습단어가 2개면
