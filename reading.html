@@ -4353,8 +4353,7 @@ function openMp3SaveModal() {
   /* 인트로·단어설명은 해당 범위에서 의미 있을 때만 표시(플레이어의 노출 규칙과 동일) */
   if (_tts.listen !== 'vocab') rows.push(`<li>인트로 : <b>${_tts.intro ? '켜기' : '끄기'}</b></li>`);
   if (_tts.listen === 'book_vocab') rows.push(`<li>단어설명 : <b>${_tts.vocabPos === 'inline' ? '페이지마다' : '본문끝'}</b></li>`);
-  const lang = (_tts.vocabLang === 'en') ? 'English' : '한국어';
-  if (_tts.listen !== 'book') rows.push(`<li>단어설명 언어 : <b>${lang}</b></li>`);
+  /* 단어설명 언어는 만들 때 고정되고 재생/저장 단계에서 바꿀 수 없으므로, 라이브 설정들과 섞지 않는다 */
   const ul = document.getElementById('mp3SaveSummary');
   if (ul) ul.innerHTML = rows.join('');
   document.getElementById('mp3SaveModal').hidden = false;
