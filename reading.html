@@ -3897,9 +3897,10 @@ async function ttsPlayCurrent() {
   if (!_tts.active || _tts.paused) return;
   const clip = _tts.clips[_tts.pos];
   if (!clip) { ttsStop(); return; }
-  /* 뷰어를 해당 페이지로 이동 + 하이라이트 */
+  /* 뷰어를 해당 페이지로 이동 + 하이라이트 + 재생 내용 따라 스크롤 */
   if (clip.pageIdx !== _currentIdx) goTo(clip.pageIdx);
   ttsHighlight(clip);
+  ttsScrollToClip(clip);
   ttsUpdateBar();
   let blob;
   try {
@@ -3936,6 +3937,17 @@ function ttsHighlight(clip) {
       el.classList.add('tts-playing');
     }
   }
+}
+/* 재생 내용을 화면이 따라가게 스크롤 — 본문/도입부는 페이지 위로, 단어는 그 단어를 화면 중앙으로.
+   (따라가기 모드라 재생 중엔 수동 스크롤이 곧 여기서 덮어써진다.) */
+function ttsScrollToClip(clip) {
+  if (!clip) return;
+  if (clip.kind === 'vocab') {
+    const el = document.getElementById(`study-item-${clip.pageIdx}-${clip.itemIdx}`);
+    if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+  }
+  /* 본문/도입부(또는 단어 요소를 못 찾은 경우) → 페이지 맨 위 */
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 /* --- 컨트롤 --- */
