@@ -3955,7 +3955,16 @@ function ttsScrollToClip(clip, pageChanged) {
       const target = window.scrollY + rect.top - window.innerHeight / 2 + rect.height / 2;
       window.scrollTo({ top: Math.max(0, target), behavior });
     } else {
-      window.scrollTo({ top: 0, behavior });  // 본문/도입부(또는 단어 요소 못 찾음) → 맨 위
+      /* 본문/도입부 → 문서 맨 위(top:0)가 아니라 '본문 카드 상단'을 화면 맨 위로.
+         카드 위의 헤더·플레이어 바만큼 위로 스크롤해 읽는 영역을 넓힌다. */
+      const stage = document.querySelector('.book-stage');
+      if (stage) {
+        const rect = stage.getBoundingClientRect();
+        const target = window.scrollY + rect.top - 8;  // 8px 여백
+        window.scrollTo({ top: Math.max(0, target), behavior });
+      } else {
+        window.scrollTo({ top: 0, behavior });
+      }
     }
   };
   if (pageChanged) requestAnimationFrame(() => requestAnimationFrame(doScroll));
