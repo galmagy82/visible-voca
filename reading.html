@@ -693,6 +693,11 @@
   }
   .voice-sample-play:hover { background: #4E7A38; }
   /* 닫기는 목록을 다 들은 뒤 누르는 보조 동작 — 가운데 정렬 + 살짝 작게 */
+  /* MP3 저장 확인 — 현재 설정 값 요약 */
+  .mp3-save-summary { list-style: none; margin: 4px 0 0; padding: 12px 14px; background: #F5F4F1; border-radius: 10px; }
+  .mp3-save-summary li { font-size: 0.9rem; color: #2D2B28; padding: 3px 0; }
+  .mp3-save-summary li b { color: #47702F; font-weight: 700; }
+  .mp3-save-note { color: #9C7A2A; font-size: 0.85rem; }
   #voiceSampleModal .modal-actions { justify-content: center; }
   #voiceSampleModal .modal-btn { padding: 7px 20px; font-size: 0.85rem; }
   /* 생성 진행바 */
@@ -1738,7 +1743,7 @@
              실수로 누르면 손해). 다운로드 진행 상태는 메뉴가 닫히므로 이 버튼 자리에 표시한다. -->
         <button class="tts-more-btn" id="ttsMoreBtn" onclick="ttsToggleMore(event)" title="더보기" aria-label="더보기">⋯</button>
         <div class="tts-more-menu" id="ttsMoreMenu" hidden>
-          <button type="button" onclick="ttsCloseMore(); ttsDownloadBook();">MP3 저장</button>
+          <button type="button" onclick="ttsCloseMore(); openMp3SaveModal();">MP3 저장</button>
           <button type="button" onclick="ttsCloseMore(); ttsRemake();">다시 만들기</button>
         </div>
         <!-- 순서: 설정(무엇을·어떻게 들을지) → 조작(트랜스포트).
@@ -1895,6 +1900,21 @@
     <div class="modal-actions">
       <button class="modal-btn modal-btn-cancel" onclick="closeReorderModal()" data-i18n="setCancelBtn">취소</button>
       <button class="modal-btn modal-btn-primary" id="reorderSaveBtn" onclick="saveReorder()" data-i18n="setSaveBtn">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- MP3 저장 확인 — 지금 설정(범위·인트로·단어설명) 그대로의 오디오가 저장됨을 미리 알린다.
+     특히 범위=단어면 본문 없이 단어설명만 담기므로, 값을 실제로 보여줘 오해를 막는다. -->
+<div class="modal-overlay" id="mp3SaveModal" hidden onclick="if(event.target===this)closeMp3SaveModal()">
+  <div class="modal-card">
+    <div class="modal-title">MP3로 저장</div>
+    <div class="modal-desc">지금 설정 그대로 오디오 파일을 만들어 저장합니다.</div>
+    <ul class="mp3-save-summary" id="mp3SaveSummary"></ul>
+    <div class="modal-desc" style="margin-top:14px;">설정을 바꾸려면 취소하고 플레이어에서 변경하세요.</div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-cancel" onclick="closeMp3SaveModal()">취소</button>
+      <button class="modal-btn modal-btn-primary" onclick="confirmMp3Save()">저장</button>
     </div>
   </div>
 </div>
@@ -4302,8 +4322,10 @@ function playVoiceSample(id) {
 /* Esc 로 닫기 */
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
-  const m = document.getElementById('voiceSampleModal');
-  if (m && !m.hidden) closeVoiceSampleModal();
+  const vs = document.getElementById('voiceSampleModal');
+  if (vs && !vs.hidden) { closeVoiceSampleModal(); return; }
+  const mp3 = document.getElementById('mp3SaveModal');
+  if (mp3 && !mp3.hidden) closeMp3SaveModal();
 });
 
 /* ⋯ 메뉴 열기/닫기 — 항목 실행 전에 닫는다 */
@@ -4323,6 +4345,22 @@ document.addEventListener('click', (e) => {
   if (e.target.closest('#ttsMoreMenu') || e.target.closest('#ttsMoreBtn')) return;
   m.hidden = true;
 });
+
+/* MP3 저장 확인 모달 — 지금 설정(범위/인트로/단어설명)을 값으로 보여주고 저장 여부를 묻는다 */
+function openMp3SaveModal() {
+  const scope = { book: '책', book_vocab: '책+단어', vocab: '단어 (본문 없음)' }[_tts.listen] || _tts.listen;
+  const rows = [`<li>범위 : <b>${scope}</b></li>`];
+  /* 인트로·단어설명은 해당 범위에서 의미 있을 때만 표시(플레이어의 노출 규칙과 동일) */
+  if (_tts.listen !== 'vocab') rows.push(`<li>인트로 : <b>${_tts.intro ? '켜기' : '끄기'}</b></li>`);
+  if (_tts.listen === 'book_vocab') rows.push(`<li>단어설명 : <b>${_tts.vocabPos === 'inline' ? '페이지마다' : '본문끝'}</b></li>`);
+  const lang = (_tts.vocabLang === 'en') ? 'English' : '한국어';
+  if (_tts.listen !== 'book') rows.push(`<li>단어설명 언어 : <b>${lang}</b></li>`);
+  const ul = document.getElementById('mp3SaveSummary');
+  if (ul) ul.innerHTML = rows.join('');
+  document.getElementById('mp3SaveModal').hidden = false;
+}
+function closeMp3SaveModal() { document.getElementById('mp3SaveModal').hidden = true; }
+function confirmMp3Save() { closeMp3SaveModal(); ttsDownloadBook(); }
 
 async function ttsDownloadBook() {
   const clips = ttsBuildClips();
