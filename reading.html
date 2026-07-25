@@ -3881,6 +3881,7 @@ async function ttsPlayCurrent() {
   if (a._url) URL.revokeObjectURL(a._url);
   a._url = URL.createObjectURL(blob);
   a.src = a._url;
+  a._clipKey = clip.cacheKey;  // 지금 오디오에 실린 클립 — 이어재생(ttsResume) 시 위치 일치 확인용
   a.playbackRate = _tts.speed;
   console.log('[tts-diag] play kind=', clip.kind, 'pos=', _tts.pos, 'textLen=', clip.text.length, 'blobSize=', blob.size);
   a.addEventListener('loadedmetadata', function lm() { a.removeEventListener('loadedmetadata', lm); console.log('[tts-diag]   loaded duration=', (a.duration || 0).toFixed(1), 'kind=', clip.kind); });
@@ -4130,8 +4131,12 @@ function ttsPause() {
 function ttsResume() {
   _tts.paused = false;
   ttsUpdateBar();
-  if (_tts.audio && _tts.audio.src) { _tts.audio.play().catch(() => {}); ttsStartPrefetch(); }
-  else ttsPlayCurrent();
+  /* 오디오에 실린 클립이 '지금 위치'의 클립과 같을 때만 이어재생. 일시정지 중 범위·목소리 등을
+     바꿔 pos 가 다른 클립으로 옮겨갔다면, 옛 오디오를 재생하지 말고 올바른 클립을 새로 재생한다. */
+  const cur = _tts.clips[_tts.pos];
+  if (_tts.audio && _tts.audio.src && cur && _tts.audio._clipKey === cur.cacheKey) {
+    _tts.audio.play().catch(() => {}); ttsStartPrefetch();
+  } else ttsPlayCurrent();
 }
 /* 재생 정지 — 바 표시 상태는 건드리지 않음(표시/숨김은 툴바·✕ 담당). */
 function ttsStop() {
