@@ -1728,12 +1728,12 @@
         </div>
         <!-- 6개 목소리를 한 화면에서 연달아 들어보고 고르도록 — 드롭다운을 바꿔가며 듣는 것보다 비교가 쉽다 -->
         <button class="tts-sample-btn" onclick="openVoiceSampleModal()">목소리 미리듣기</button>
-        <button class="tts-make-btn" id="ttsMakeBtn" onclick="ttsMakeAudio()">음성 만들기</button>
+        <button class="tts-make-btn" id="ttsMakeBtn" onclick="ttsMakeAudio()">오디오 만들기</button>
       </div>
 
       <!-- ② 생성 중: 진행바(숫자 카운트 없음) -->
       <div class="tts-state" id="ttsProgress" hidden>
-        <div class="tts-row"><span class="tts-progress-label">🎧 음성 생성 중…</span></div>
+        <div class="tts-row"><span class="tts-progress-label">🎧 오디오 만드는 중…</span></div>
         <div class="tts-progress-track"><div class="tts-progress-fill" id="ttsProgressFill"></div></div>
       </div>
 
@@ -4151,7 +4151,7 @@ async function ttsMakeAudio() {
   if (!sameBook()) return;  // 다른 책으로 이동 — 저장/화면전환 하지 않음
   if (quotaHit) {
     ttsSetUiState('setup');
-    alert('음성 생성 할당량(quota)을 초과했습니다. 잠시 후 다시 시도해 주세요.');
+    alert('오디오 생성 할당량(quota)을 초과했습니다. 잠시 후 다시 시도해 주세요.');
     return;
   }
   if (_tts.makeCancel) { ttsSetUiState('setup'); return; }
@@ -4159,7 +4159,7 @@ async function ttsMakeAudio() {
     /* 끝내 실패한 게 남으면 '완료'로 처리하지 않는다 — 그래야 재진입 때 다시 뜨는 이유가 명확해진다.
        다시 눌러도 이미 만든 건 캐시 통과라 빠르고 추가 비용도 없다. */
     ttsSetUiState('setup');
-    alert(`${failed.length}개를 만들지 못했습니다.\n'음성 만들기'를 한 번 더 눌러주세요. (이미 만든 것은 건너뜁니다)`);
+    alert(`${failed.length}개를 만들지 못했습니다.\n'오디오 만들기'를 한 번 더 눌러주세요. (이미 만든 것은 건너뜁니다)`);
     return;
   }
   _tts.made = true;
