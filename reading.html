@@ -3789,7 +3789,7 @@ function ttsBuildClips(genAll, langOverride) {
       /* 중복(lemma) 제거 후, 같은 예문 문장을 공유하는 단어들을 한 묶음으로 —
          한 문장에 학습단어가 여러 개여도 그 문장은 2번만 읽힌다.
          예문을 못 찾은 단어는 묶을 기준이 없으므로 각자 개별 묶음. */
-      const groups = [];              // { idx: 대표 itemIdx, example, items[] }
+      const groups = [];              // { idx: 대표 itemIdx, example, items[], idxs: 그룹 단어 인덱스들 }
       const byExample = new Map();    // 예문(소문자) → 묶음
       items.forEach((it, ii) => {
         const key = (it.lemma || it.surface || '').toLowerCase().trim();
@@ -3797,14 +3797,17 @@ function ttsBuildClips(genAll, langOverride) {
         seenVocab.add(key);
         const ex = ttsFindExample(p.original, (it.surface || '').trim()).trim();
         const gk = ex ? ex.toLowerCase() : '';
-        if (gk && byExample.has(gk)) { byExample.get(gk).items.push(it); return; }
-        const g = { idx: ii, example: ex, items: [it] };
+        if (gk && byExample.has(gk)) { const g0 = byExample.get(gk); g0.items.push(it); g0.idxs.push(ii); return; }
+        const g = { idx: ii, example: ex, items: [it], idxs: [ii] };
         if (gk) byExample.set(gk, g);
         groups.push(g);
       });
       groups.forEach((g) => {
         const text = ttsVocabGroupText(g.items, g.example, lang);
-        if (text) pageVocab.push(ttsMakeClip('vocab', pi, g.idx, text, _tts.teacherVoice));
+        if (!text) return;
+        const clip = ttsMakeClip('vocab', pi, g.idx, text, _tts.teacherVoice);
+        clip.groupIdxs = g.idxs;   // 묶인 단어 전부를 하이라이트하기 위해(오디오/캐시엔 영향 없음)
+        pageVocab.push(clip);
       });
     }
     if (inline) {
@@ -3931,12 +3934,16 @@ async function ttsPlayCurrent() {
 function ttsHighlight(clip) {
   document.querySelectorAll('.study-item-li.tts-playing').forEach((el) => el.classList.remove('tts-playing'));
   if (clip && clip.kind === 'vocab') {
-    const el = document.getElementById(`study-item-${clip.pageIdx}-${clip.itemIdx}`);
-    if (el) {
-      const d = el.closest('details');
-      if (d && !d.open) d.open = true;
-      el.classList.add('tts-playing');
-    }
+    /* 한 클립에 여러 단어가 묶여 있으면(같은 예문 공유) 전부 강조 — groupIdxs 없으면 대표 단어만 */
+    const idxs = (clip.groupIdxs && clip.groupIdxs.length) ? clip.groupIdxs : [clip.itemIdx];
+    idxs.forEach((ii) => {
+      const el = document.getElementById(`study-item-${clip.pageIdx}-${ii}`);
+      if (el) {
+        const d = el.closest('details');
+        if (d && !d.open) d.open = true;
+        el.classList.add('tts-playing');
+      }
+    });
   }
 }
 /* 재생 내용을 화면이 따라가게 스크롤 — 본문/도입부는 페이지 위로, 단어는 그 단어를 화면 중앙으로.
