@@ -4144,6 +4144,7 @@ function ttsStop() {
 /* 모드/목소리/언어 변경 → 클립 재빌드 후 현재 페이지부터 재개 */
 function ttsRebuildAndRestart() {
   if (!_tts.active) return;
+  const wasPaused = _tts.paused;  // 일시정지 상태(active=true, paused=true)면 재구성 후에도 멈춤 유지
   const cur = _tts.clips[_tts.pos] || {};
   const curPage = (cur.pageIdx != null) ? cur.pageIdx : _currentIdx;  // 0 이 falsy 라 || 쓰면 안 됨
   if (_tts.audio) _tts.audio.pause();
@@ -4158,6 +4159,9 @@ function ttsRebuildAndRestart() {
   if (start < 0) start = _tts.clips.findIndex((c) => c.pageIdx >= curPage);
   if (start < 0) start = 0;
   _tts.pos = start;
+  /* 멈춰 있었으면 그대로 멈춤 유지 — 옵션만 반영하고, 재생은 사용자가 ▶ 를 다시 누를 때 시작.
+     (예전엔 무조건 paused=false + 재생해서, 일시정지 중 범위 변경만으로 자동 재생됐다) */
+  if (wasPaused) { _tts.paused = true; ttsUpdateBar(); return; }
   _tts.paused = false;
   ttsStartPrefetch();
   ttsPlayCurrent();
