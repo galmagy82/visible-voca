@@ -3947,11 +3947,16 @@ function ttsScrollToClip(clip, pageChanged) {
   if (!clip) return;
   const behavior = pageChanged ? 'auto' : 'smooth';
   const doScroll = () => {
-    if (clip.kind === 'vocab') {
-      const el = document.getElementById(`study-item-${clip.pageIdx}-${clip.itemIdx}`);
-      if (el) { el.scrollIntoView({ behavior, block: 'center' }); return; }
+    /* scrollIntoView 는 overflow:hidden 인 .book-stage 를 스크롤해 본문이 카드에서 잘렸다.
+       그래서 window(문서)만 직접 스크롤한다 — 단어를 화면 중앙에 오도록 문서 Y 를 계산. */
+    const el = (clip.kind === 'vocab') ? document.getElementById(`study-item-${clip.pageIdx}-${clip.itemIdx}`) : null;
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      const target = window.scrollY + rect.top - window.innerHeight / 2 + rect.height / 2;
+      window.scrollTo({ top: Math.max(0, target), behavior });
+    } else {
+      window.scrollTo({ top: 0, behavior });  // 본문/도입부(또는 단어 요소 못 찾음) → 맨 위
     }
-    window.scrollTo({ top: 0, behavior });  // 본문/도입부(또는 단어 요소 못 찾음) → 맨 위
   };
   if (pageChanged) requestAnimationFrame(() => requestAnimationFrame(doScroll));
   else doScroll();
