@@ -847,14 +847,16 @@ async function callGeminiTts(text: string, voice: string, role: string, lang: st
   const prompt = genderLock + (READING_TTS_STYLES[role] || READING_TTS_STYLES.narrator)
   const languageCode = (lang === 'ko-KR') ? 'ko-KR' : 'en-US'  // 도입부(한국어)만 ko-KR
   const sa = getServiceAccount()
-  const MAX = 2
+  const MAX = 3
+  let curText = text
+  let triedPunct = false   // 안전 필터 오탐 우회(마침표 추가)를 이미 한 번 시도했는지
   for (let attempt = 1; attempt <= MAX; attempt++) {
     const token = await getTtsToken(sa)
     const res = await fetch('https://texttospeech.googleapis.com/v1/text:synthesize', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, 'x-goog-user-project': sa.project_id },
       body: JSON.stringify({
-        input: { prompt, text },
+        input: { prompt, text: curText },
         voice: { languageCode, name: voiceName, model_name: GEMINI_TTS_MODEL },
         audioConfig: { audioEncoding: 'MP3' },
       }),
@@ -866,8 +868,16 @@ async function callGeminiTts(text: string, voice: string, role: string, lang: st
       return { audio, mimeType: 'audio/mpeg' }
     }
     const errText = await res.text()
-    /* 401 은 토큰 만료일 수 있음 → 캐시 비우고 1회 재시도. 그 외 4xx(429 포함)는 즉시 중단, 5xx 는 재시도. */
+    /* 401 은 토큰 만료일 수 있음 → 캐시 비우고 재시도. */
     if (res.status === 401 && attempt < MAX) { _ttsToken = null; continue }
+    /* Vertex 안전 필터가 문장부호 없는 조각(제목 페이지 등)을 오탐 차단(400 "usage guidelines").
+       끝에 마침표를 붙이면 통과하므로 1회 우회 재시도. 캐시 키는 클라가 '원본' 텍스트로 잡으므로
+       반환 오디오가 원본 키에 저장돼도 무방(마침표만큼의 자연스러운 쉼만 추가). */
+    if (res.status === 400 && !triedPunct && /usage guidelines|safety|blocked|violates/i.test(errText) && !/[.!?…]\s*$/.test(curText)) {
+      triedPunct = true
+      curText = curText.trim() + '.'
+      continue
+    }
     if (res.status < 500 || attempt === MAX) {
       const e = new Error(`Gemini TTS API ${res.status}: ${errText.slice(0, 200)}`)
       ;(e as { status?: number }).status = res.status
