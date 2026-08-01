@@ -556,6 +556,7 @@ Page metadata to exclude:
 - Do NOT extract page numbers or running headers/footers — these are short text fragments printed in the top or bottom MARGIN (outside the main text block), typically in a smaller font, that repeat across pages and contain the page number, book title, chapter name, or author name.
 - DO extract chapter title headings that appear as part of the body content (e.g., a prominent heading at the start of a new chapter, integrated into the main text block at normal or larger font size).
 - The key distinction is POSITION and STYLE, not content — "Chapter 5: The Mystery" in the page margin = running header (omit); the same text as a large heading at the top of the main text block = chapter title (include).
+- Do NOT extract line/paragraph reference numbers — small numbers printed in the side MARGIN beside the start of lines or paragraphs (e.g., "16 17 18 19 20" running down the left margin, or a small superscript like "¹" at a line start), common in reading textbooks for referencing lines. They are reference aids, NOT part of the sentence. Exclude them even when they sit right before the first word of a line — start the line from the actual first word (e.g., "6 I also love..." → "I also love...", "¹ My name is..." → "My name is..."). This applies consistently to every such number on the page.
 
 Tasks:
 1. Extract the original English text exactly as it appears on the page, preserving line breaks (use \\n).
@@ -619,7 +620,16 @@ Do NOT add commentary. Return ONLY the JSON object.`
   const data = await res.json()
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text
   if (!text) throw new Error('Empty response from Gemini')
-  return JSON.parse(text) as { original: string; no_text: boolean; page_number: string | null }
+  const parsed = JSON.parse(text) as { original: string; no_text: boolean; page_number: string | null }
+  if (typeof parsed.original === 'string') parsed.original = stripLineRefNumbers(parsed.original)
+  return parsed
+}
+
+/* 프롬프트 규칙의 결정적 안전장치 — 줄 시작의 참조번호(읽기교재의 줄/문단 번호)를 제거한다.
+   줄 시작 숫자(일반/위첨자) 뒤에 대문자나 여는 따옴표가 오면 참조번호로 보고 제거.
+   "1. You are..."(숫자+마침표=번호 목록)나 "6 apples"(숫자+소문자=수량)는 건드리지 않는다. */
+function stripLineRefNumbers(s: string): string {
+  return s.replace(/^([ \t]*)(?:\d{1,3}|[¹²³⁴⁵⁶⁷⁸⁹⁰]{1,3})[ \t]*(?=["“'‘A-Z])/gm, '$1')
 }
 
 /* === 2-phase 파이프라인: finalize (이미 추출된 텍스트 → 번역 + 학습단어)
