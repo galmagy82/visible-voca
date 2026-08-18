@@ -2047,11 +2047,14 @@ async function initAuth() {
   if (guestSamplesEl && _authUser?.is_anonymous === true) {
     guestSamplesEl.hidden = false;
   }
+  /* 첫 화면을 히스토리에 기록 — push 가 아닌 replace 라서 여기서 back 하면 이전 페이지로 나간다. */
+  replaceScreenState({ rd: 'upload' });
   /* URL 쿼리 ?screen=books → 진입 즉시 My Books 탭으로 진입 (vocabulary 등 다른 페이지에서 탭 클릭 진입용) */
   if (_authUser) {
     const params = new URLSearchParams(location.search);
     if (params.get('screen') === 'books') {
-      showBookList();
+      replaceScreenState({ rd: 'books' });
+      showBookList({ push: false });
     }
   }
   /* 초기 뒤로가기 라벨 — 업로드 화면이므로 "← 메인으로" 로 시작 */
@@ -2780,6 +2783,8 @@ async function handlePhotos(inputEl) {
   renderBook();
   updateBookViewerToolbar();
   updateTopBackLink();
+  /* 미저장(fresh) 뷰어도 히스토리 항목 하나 — back 으로 사진올리기 화면에 돌아갈 수 있게. */
+  pushScreenState({ rd: 'viewer', fresh: true });
   /* 추출 실패 페이지가 있으면 자동으로 모달 노출 — 사용자가 페이지를 일일이 넘기며
      찾지 않도록. saved book 로드(openSavedBook) 에서는 호출 안 함 — 거기엔 error 가 없음. */
   maybeOpenExtractFailedModal();
@@ -2966,13 +2971,15 @@ function updateTopBackLink() {
     link.href = '#';
     link.setAttribute('data-i18n', 'readingBackToBookList');
     link.textContent = tt('readingBackToBookList', 'My Books');
-    link.onclick = (e) => { e.preventDefault(); showBookList(); };
+    /* back 버튼과 동일 경로 — 책을 연 화면(폴더 안 / 메인 그리드)으로 그대로 복귀한다.
+       예전처럼 showBookList() 를 직접 부르면 폴더 안에서 연 책도 항상 메인 그리드로 튕겨났다. */
+    link.onclick = (e) => { e.preventDefault(); goBackScreen(showBookList); };
   } else if (bookViewerVisible) {
     link.style.display = '';
     link.href = '#';
     link.setAttribute('data-i18n', 'readingBackToReadingTutor');
     link.textContent = tt('readingBackToReadingTutor', 'Back');
-    link.onclick = (e) => { e.preventDefault(); resetReading(); };
+    link.onclick = (e) => { e.preventDefault(); goBackScreen(resetReading); };
   } else {
     /* 업로드 화면(또는 로딩 중) — 갈 곳 없음 (메뉴 허브 폐지). backlink 숨김.
        탭 헤더가 위치 정보 제공하므로 시각 군더더기 제거. */
@@ -4474,7 +4481,80 @@ function ttsUpdateBar() {
 }
 
 /* --- 새로 올리기 (세션 초기화) --- */
-function resetReading() {
+/* ===== 화면 ↔ 브라우저 히스토리 동기화 =====
+   이 페이지는 DOM hidden 토글로 4개 화면(사진올리기 / My Books 메인 / 폴더 안 / 책 뷰어)을
+   오가는 단일 페이지다. 히스토리에 아무것도 남기지 않으면 모바일 back 이 곧바로 앱 이탈이
+   되므로, 화면 진입마다 state 를 push 하고 popstate 에서 그 화면을 복원한다.
+
+   state 모양: { rd: 'upload' | 'books' | 'folder' | 'viewer', folderId, bookId, fresh }
+   - rd 키가 없는 state = 이 페이지 진입 이전 항목 → 손대지 않고 브라우저 기본 이탈에 맡긴다.
+   - fresh: 새로 업로드해 만든 미저장 뷰어 (bookId 없음).
+
+   인앱 뒤로가기 UI(상단 백링크, 폴더 안 ← My Books)도 goBackScreen() 으로 history.back() 을
+   태워서 back 버튼과 완전히 같은 경로를 타게 한다 — 두 동선이 갈라지지 않도록. */
+function currentScreenState() {
+  return (history.state && history.state.rd) ? history.state : null;
+}
+
+/* 화면 상태 push. 같은 화면 중복 push 방지 — 연속 클릭/재진입으로 back 이 헛도는 것 차단. */
+function pushScreenState(state) {
+  const st = {
+    rd: state.rd,
+    folderId: state.folderId || null,
+    bookId: state.bookId || null,
+    fresh: !!state.fresh,
+  };
+  const cur = currentScreenState();
+  if (cur && cur.rd === st.rd && cur.folderId === st.folderId && cur.bookId === st.bookId) return;
+  history.pushState(st, '');
+}
+
+/* 앱 진입 시 첫 화면 기록 — push 가 아니라 replace. 첫 화면에서 back 한 번에 이전 페이지로 나가야 함. */
+function replaceScreenState(state) {
+  history.replaceState({
+    rd: state.rd,
+    folderId: state.folderId || null,
+    bookId: state.bookId || null,
+    fresh: !!state.fresh,
+  }, '');
+}
+
+/* 인앱 "뒤로" UI 공통 핸들러 — history.back() 으로 넘겨 popstate 한 곳에서 화면을 되돌린다.
+   우리 state 가 없는 예외 상황(직접 URL 진입 등)에서만 폴백으로 화면을 직접 전환. */
+function goBackScreen(fallback) {
+  if (currentScreenState()) { history.back(); return; }
+  if (typeof fallback === 'function') fallback();
+}
+
+/* popstate 로 되돌아온 화면 복원 — 여기서는 절대 push 하지 않는다(무한 스택 방지). */
+function applyScreenState(st) {
+  if (!st || !st.rd) return;  /* 우리 화면 state 아님 → 브라우저 기본 동작(페이지 이탈) */
+  if (st.rd === 'books' || st.rd === 'folder') {
+    showBookList({ push: false, folderId: st.rd === 'folder' ? st.folderId : null });
+    return;
+  }
+  if (st.rd === 'viewer') {
+    /* 저장된 책이면 다시 로드해 복원. 미저장(fresh) 뷰어는 메모리의 _pages 가 남아 있을 때만
+       복원 가능 — 없으면 업로드 화면으로 폴백. (forward 버튼 등 드문 경로) */
+    if (st.bookId) { openSavedBook(st.bookId, { push: false }); return; }
+    if (_pages.length) {
+      document.getElementById('uploadArea').hidden = true;
+      document.getElementById('bookListArea').hidden = true;
+      document.getElementById('loadingArea').hidden = true;
+      document.getElementById('bookViewer').hidden = false;
+      updateTopBackLink();
+      return;
+    }
+    backToUpload({ push: false });
+    return;
+  }
+  /* upload — 미저장 뷰어에서 나오는 길이면 뷰어 상태까지 초기화(resetReading) */
+  const viewerVisible = !document.getElementById('bookViewer').hidden;
+  if (viewerVisible && !_isSavedView) resetReading({ push: false });
+  else backToUpload({ push: false });
+}
+
+function resetReading(opts = {}) {
   ttsStop(); ttsShowBar(false); _tts.makeCancel = true; _tts.made = false; ttsSetUiState('setup');
   _pages = [];
   _currentIdx = 0;
@@ -4490,11 +4570,12 @@ function resetReading() {
   /* 첫 페인트 깜빡임 차단용 startup-books 클래스 — 사진올리기 화면 노출 시점에 해제. */
   document.documentElement.classList.remove('startup-books');
   updateTopBackLink();
+  if (opts.push !== false) pushScreenState({ rd: 'upload' });
 }
 
 /* 책 목록(또는 책 뷰어 fresh 모드) 에서 뒤로가기 → 업로드 화면으로 복귀.
    책 뷰어도 같이 숨겨야 fresh 뷰어에서 호출되었을 때 화면이 정상 전환됨. */
-function backToUpload() {
+function backToUpload(opts = {}) {
   ttsStop(); ttsShowBar(false); _tts.makeCancel = true; _tts.made = false; ttsSetUiState('setup');
   document.getElementById('bookListArea').hidden = true;
   document.getElementById('bookViewer').hidden = true;
@@ -4503,20 +4584,27 @@ function backToUpload() {
   /* 첫 페인트 깜빡임 차단용 startup-books 클래스 — 사진올리기 화면 노출 시점에 해제. */
   document.documentElement.classList.remove('startup-books');
   updateTopBackLink();
+  if (opts.push !== false) pushScreenState({ rd: 'upload' });
 }
 
 /* ===== 내 책 (저장된 reading_books) ===== */
 
 /* "📚 내 책" 버튼 → 책 목록 화면으로 전환 + 폴더/책 데이터 로드.
-   폴더 진입 상태(_activeFolderId) 는 매 진입마다 reset — 사용자가 다른 탭 갔다 다시 들어오면 메인 그리드로. */
-async function showBookList() {
+   opts.folderId: 폴더 안 화면으로 바로 진입(back 으로 폴더 화면을 복원할 때 사용). 기본은 메인 그리드.
+   opts.push: false 면 히스토리 push 생략 — popstate 복원/목록 갱신 경로에서 사용. */
+async function showBookList(opts = {}) {
   if (!_authUser) return;
+  /* 책 뷰어에서 목록으로 나오는 경우 재생 중이던 TTS 정지 — 안 하면 목록 화면에서 오디오가 계속 흐른다. */
+  ttsStop(); ttsShowBar(false); _tts.makeCancel = true; _tts.made = false; ttsSetUiState('setup');
   document.getElementById('uploadArea').hidden = true;
   document.getElementById('bookViewer').hidden = true;
   document.getElementById('loadingArea').hidden = true;
   document.getElementById('bookListArea').hidden = false;
-  _activeFolderId = null;
+  _activeFolderId = opts.folderId || null;
   updateTopBackLink();
+  if (opts.push !== false) {
+    pushScreenState({ rd: _activeFolderId ? 'folder' : 'books', folderId: _activeFolderId });
+  }
   const content = document.getElementById('bookListContent');
   content.innerHTML = `<div class="book-list-empty">${escapeHtml((typeof t === 'function') ? t('readingLoadingBooks') : '책 목록을 불러오는 중...')}</div>`;
   try {
@@ -4732,16 +4820,21 @@ async function confirmMoveToFolder() {
 function enterFolder(folderId) {
   _activeFolderId = folderId;
   renderBookList(_bookListCache || []);
+  pushScreenState({ rd: 'folder', folderId });
 }
 
-/* 폴더 안에서 ← My Books 클릭 — 메인 그리드로 복귀. */
+/* 폴더 안에서 ← My Books 클릭 — 메인 그리드로 복귀.
+   back 버튼과 같은 경로를 타도록 history.back() 위임 (히스토리 항목도 함께 정리됨). */
 function exitFolder() {
-  _activeFolderId = null;
-  renderBookList(_bookListCache || []);
+  goBackScreen(() => {
+    _activeFolderId = null;
+    renderBookList(_bookListCache || []);
+  });
 }
 
-/* 저장된 책 카드 클릭 → 해당 책 페이지 데이터를 로드해 북 뷰어로 표시 */
-async function openSavedBook(bookId) {
+/* 저장된 책 카드 클릭 → 해당 책 페이지 데이터를 로드해 북 뷰어로 표시.
+   opts.push: false 면 히스토리 push 생략 (popstate 복원 경로). */
+async function openSavedBook(bookId, opts = {}) {
   if (!_authUser) return;
   document.getElementById('bookListArea').hidden = true;
   /* 이전 업로드 잔여 상태(바 채움/카운트 텍스트) 초기화 — DB 단일 fetch 라 페이지별
@@ -4776,11 +4869,13 @@ async function openSavedBook(bookId) {
     renderBook();
     updateBookViewerToolbar();
     updateTopBackLink();
+    /* 로드 성공 후에만 push — 실패 시엔 목록 화면으로 되돌아가므로 뷰어 항목을 남기지 않는다. */
+    if (opts.push !== false) pushScreenState({ rd: 'viewer', bookId, folderId: _currentFolderId });
   } catch (e) {
     console.error('open saved book 실패:', e);
     alert(e?.message || 'load failed');
     document.getElementById('loadingArea').hidden = true;
-    showBookList();
+    showBookList({ push: false, folderId: _activeFolderId });
   }
 }
 
@@ -4793,8 +4888,8 @@ async function deleteBook(bookId) {
       .delete()
       .eq('id', bookId);
     if (error) throw error;
-    /* 목록 다시 로드 */
-    await showBookList();
+    /* 목록 다시 로드 — 현재 보고 있던 화면(메인 그리드 / 폴더 안) 유지, 히스토리도 그대로. */
+    await showBookList({ push: false, folderId: _activeFolderId });
   } catch (e) {
     console.error('delete book 실패:', e);
     alert((typeof t === 'function') ? t('readingDeleteError') : '책 삭제에 실패했어요');
@@ -4870,10 +4965,13 @@ async function confirmDeleteFolder(deleteBooks) {
       .delete()
       .eq('id', folderId);
     if (folderErr) throw folderErr;
-    /* 폴더 화면 빠져나가서 목록 갱신 — _activeFolderId 가 더 이상 유효하지 않으므로 */
+    /* 폴더 화면 빠져나가서 목록 갱신 — _activeFolderId 가 더 이상 유효하지 않으므로.
+       폴더 화면 히스토리 항목도 back() 으로 걷어낸다 (popstate 가 메인 그리드를 다시 로드).
+       폴더 화면이 아닌 곳에서 삭제한 경우엔 그 자리에서 목록만 갱신. */
     _activeFolderId = null;
     closeDeleteFolderModal();
-    await showBookList();
+    if (currentScreenState()?.rd === 'folder') history.back();
+    else await showBookList({ push: false });
   } catch (e) {
     console.error('delete folder 실패:', e);
     alert((typeof t === 'function') ? t('readingDeleteFolderError') : '폴더 삭제에 실패했어요');
@@ -5424,17 +5522,20 @@ function closeGeminaryPopup() {
   }
 }
 
-/* 모바일 back 버튼(및 브라우저 뒤로가기) → 팝업 닫기.
-   openGeminaryPopup 이 push 한 항목이 pop 될 때만 반응한다. */
-window.addEventListener('popstate', () => {
+/* 모바일 back 버튼(및 브라우저 뒤로가기) 단일 처리 지점.
+   우선순위: ① 단어 팝업이 열려 있으면 팝업만 닫기 ② 화면 state 복원 ③ 우리 state 아니면 페이지 이탈. */
+window.addEventListener('popstate', (e) => {
   /* closeGeminaryPopup 이 부른 back — 이미 닫은 뒤라 할 일 없음 */
   if (_popupClosingViaBack) {
     _popupClosingViaBack = false;
     return;
   }
-  if (!_popupHistoryPushed) return;
-  _popupHistoryPushed = false;
-  _closeGeminaryPopupUI();
+  if (_popupHistoryPushed) {
+    _popupHistoryPushed = false;
+    _closeGeminaryPopupUI();
+    return;
+  }
+  applyScreenState(e.state);
 });
 /* 발음 듣기 — 브라우저 내장 SpeechSynthesis (vocabulary.html 의 speak() 와 동일 시그니처).
    책 본문 단어는 영어이므로 lang='en-US' 고정. 추가 API 비용 0, 오프라인 동작. */
