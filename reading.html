@@ -2460,6 +2460,13 @@ async function finalizeReadingPageWithRetry(text, prevTail, nextHead, targetLang
   }
 }
 
+/* 읽을 수 있는 글자(문자·숫자)가 하나라도 있는지 — 문장부호·기호만 있는 텍스트 판별용.
+   봉합 잔여물 검사와 낭독 클립 필터가 같은 기준을 써야 해서 한 곳에 둔다. */
+const HAS_READABLE_TEXT = /[\p{L}\p{N}]/u;
+/* 그림 라벨 줄 — 삽화에 붙은 단어 하나(charros·reata·caballo·piñata 등).
+   문장부호도 하이픈도 없는 단독 단어만 라벨로 본다. 하이픈으로 끝나면("grum-")
+   page-break 하이픈이므로 라벨이 아니라 잘린 본문이다. */
+const LABEL_LINE = /^[\p{L}\p{M}'’]{1,20}$/u;
 /* 페이지 경계 봉합 — phase 1(OCR) 끝나고 phase 2(번역+학습) 시작 전에 한 번 호출.
    원칙: 페이지 A 끝이 종지부호 없이 끝나면(즉 문장이 안 끝났으면) 페이지 B 의 첫 문장을
    페이지 A 끝으로 이동시키고, 사이에 \n 을 넣어 원본 페이지 boundary 의 시각적 줄바꿈을
@@ -2482,8 +2489,18 @@ function stitchPageBoundaries(pages) {
        하이픈(-)은 의도적으로 제외 → page-break 하이픈도 봉합 트리거. */
     const aTrim = a.original.replace(/\s+$/, '');
     if (!aTrim) continue;
-    const lastChar = aTrim.slice(-1);
-    if (/[.!?:;'"”’\)\]]/.test(lastChar)) continue;
+    /* 페이지 끝의 그림 라벨 줄은 문장 완결 판정에서 제외한다. 이 책들은 본문 아래에 삽화
+       단어를 붙이는데(charros / reata / caballo), 라벨엔 마침표가 없어 "문장이 잘렸다"로
+       오인됐고, 그 결과 멀쩡한 다음 페이지 본문을 통째로 끌어와 그 페이지를 비워버렸다.
+       라벨 자체는 화면·학습단어에 그대로 쓰이므로 지우지 않고 판정에서만 뺀다. */
+    const aLines = aTrim.split('\n');
+    let aEnd = aLines.length;
+    while (aEnd > 0 && LABEL_LINE.test(aLines[aEnd - 1].trim())) aEnd--;
+    const aBody = aLines.slice(0, aEnd).join('\n').replace(/\s+$/, '');
+    if (!aBody) continue;   // 페이지 전체가 라벨 — 이어붙일 본문 자체가 없음
+
+    const lastChar = aBody.slice(-1);
+    if (/[.!?:;'"”’\)\]…]/.test(lastChar)) continue;
 
     /* 페이지 B 가 알파벳으로 시작해야 봉합 대상 (숫자·기호 시작이면 헤딩일 가능성).
        대문자/소문자 모두 허용 — A 가 미완성 문장이면 B 의 case 무관하게 연속 처리.
@@ -2492,13 +2509,20 @@ function stitchPageBoundaries(pages) {
     if (!bTrim) continue;
     if (!/^[A-Za-z]/.test(bTrim)) continue;
 
-    /* 페이지 B 의 첫 문장(다음 종지부호 + 닫힘 부호까지) 을 페이지 A 끝으로 이동 */
-    const sentenceMatch = bTrim.match(/^[^.!?]*[.!?][\s'"”’\)\]]*/);
+    /* 페이지 B 의 첫 문장(다음 종지부호 + 닫힘 부호까지) 을 페이지 A 끝으로 이동.
+       말줄임표(". . ." / "..." / "…")는 첫 점에서 끊지 않고 통째로 하나의 종결로 본다 —
+       예전엔 "we eat turkey . . ." 가 "…turkey ." + ". ." 로 갈라져 B 에 찌꺼기가 남았다. */
+    const sentenceMatch = bTrim.match(/^[^.!?…]*(?:\.(?:\s*\.)+|…|[.!?])[\s'"”’\)\]]*/);
     if (!sentenceMatch) continue;
+    const rest = bTrim.slice(sentenceMatch[0].length).replace(/^\s+/, '');
+    /* 봉합하면 B 가 비거나 글자 없는 찌꺼기만 남는 경우엔 취소 — 페이지가 통째로 사라지는
+       사고의 최종 안전망. B 가 한 문장짜리 페이지면 '첫 문장 = 페이지 전부'이므로
+       잘린 문장이 아니라 그 페이지의 온전한 본문으로 보고 그대로 둔다. */
+    if (!HAS_READABLE_TEXT.test(rest)) continue;
     const moved = sentenceMatch[0].replace(/\s+$/, '');
     /* 줄바꿈 보존: 페이지 boundary 의 시각적 줄바꿈을 \n 으로 표현 */
     pages[i].original = aTrim + '\n' + moved;
-    pages[i + 1].original = bTrim.slice(sentenceMatch[0].length).replace(/^\s+/, '');
+    pages[i + 1].original = rest;
   }
 }
 
@@ -3718,8 +3742,6 @@ function ttsMakeClip(kind, pageIdx, itemIdx, text, voice, lang) {
   const role = (kind === 'vocab') ? 'teacher' : (kind === 'intro') ? 'intro' : 'narrator';
   return { kind, pageIdx, itemIdx, text, voice, role, lang: lang || 'en-US', cacheKey: `${TTS_CACHE_VERSION}:${voice}:${role}:${ttsHash(text)}` };
 }
-/* 낭독 가능한 글자가 들어 있는지 판단 — 문장부호·기호만 있는 텍스트 걸러내기용 */
-const TTS_HAS_TEXT = /[\p{L}\p{N}]/u;
 /* 긴 본문 분할 — Gemini TTS 는 긴 입력에서 낭독 뒤에 과도한 무음/이상 출력을 낸다
    (실측: 400·800자 정상, 1200자↑ 깨짐). 그래서 문장 경계로 maxLen(≈600자) 이하 조각으로
    나눠 각각을 별도 본문 클립으로 생성한다. 한 문장이 maxLen 을 넘으면 공백 기준으로 강제 분할. */
@@ -3728,7 +3750,7 @@ function ttsChunkText(text, maxLen) {
   /* 글자·숫자가 하나도 없는 조각(". .", "...", "—" 같은 연출용 페이지)은 낭독 대상이 아니다.
      그대로 보내면 Vertex 안전필터가 400 으로 막아 책 전체 생성이 실패한다(엣지의 마침표 우회도
      이미 '.' 로 끝나 발동하지 않음). 여기서 걸러 API 호출 자체를 안 한다. */
-  if (!clean || !TTS_HAS_TEXT.test(clean)) return [];
+  if (!clean || !HAS_READABLE_TEXT.test(clean)) return [];
   if (clean.length <= maxLen) return [clean];
   const chunks = [];
   let buf = '';
@@ -3752,7 +3774,7 @@ function ttsChunkText(text, maxLen) {
     buf = (buf + ' ' + s).trim();
   }
   flush();
-  return chunks.filter((c) => TTS_HAS_TEXT.test(c));  // 분할 결과에도 같은 기준 적용
+  return chunks.filter((c) => HAS_READABLE_TEXT.test(c));  // 분할 결과에도 같은 기준 적용
 }
 
 /* 도입부(요약)를 본문처럼 ~600자 조각으로 나눈 intro 클립들 — 긴 요약이 중간에 잘리는 것 방지.
