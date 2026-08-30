@@ -3718,12 +3718,17 @@ function ttsMakeClip(kind, pageIdx, itemIdx, text, voice, lang) {
   const role = (kind === 'vocab') ? 'teacher' : (kind === 'intro') ? 'intro' : 'narrator';
   return { kind, pageIdx, itemIdx, text, voice, role, lang: lang || 'en-US', cacheKey: `${TTS_CACHE_VERSION}:${voice}:${role}:${ttsHash(text)}` };
 }
+/* 낭독 가능한 글자가 들어 있는지 판단 — 문장부호·기호만 있는 텍스트 걸러내기용 */
+const TTS_HAS_TEXT = /[\p{L}\p{N}]/u;
 /* 긴 본문 분할 — Gemini TTS 는 긴 입력에서 낭독 뒤에 과도한 무음/이상 출력을 낸다
    (실측: 400·800자 정상, 1200자↑ 깨짐). 그래서 문장 경계로 maxLen(≈600자) 이하 조각으로
    나눠 각각을 별도 본문 클립으로 생성한다. 한 문장이 maxLen 을 넘으면 공백 기준으로 강제 분할. */
 function ttsChunkText(text, maxLen) {
   const clean = String(text).replace(/\s+/g, ' ').trim();
-  if (!clean) return [];
+  /* 글자·숫자가 하나도 없는 조각(". .", "...", "—" 같은 연출용 페이지)은 낭독 대상이 아니다.
+     그대로 보내면 Vertex 안전필터가 400 으로 막아 책 전체 생성이 실패한다(엣지의 마침표 우회도
+     이미 '.' 로 끝나 발동하지 않음). 여기서 걸러 API 호출 자체를 안 한다. */
+  if (!clean || !TTS_HAS_TEXT.test(clean)) return [];
   if (clean.length <= maxLen) return [clean];
   const chunks = [];
   let buf = '';
@@ -3747,7 +3752,7 @@ function ttsChunkText(text, maxLen) {
     buf = (buf + ' ' + s).trim();
   }
   flush();
-  return chunks;
+  return chunks.filter((c) => TTS_HAS_TEXT.test(c));  // 분할 결과에도 같은 기준 적용
 }
 
 /* 도입부(요약)를 본문처럼 ~600자 조각으로 나눈 intro 클립들 — 긴 요약이 중간에 잘리는 것 방지.
