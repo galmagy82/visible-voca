@@ -848,6 +848,35 @@ async function getTtsToken(sa: ServiceAccount): Promise<string> {
   return d.access_token
 }
 
+/* 안전필터 폴백 — Gemini TTS 는 Vertex 를 거쳐 안전필터를 타는데, 표지·속표지·간지처럼
+   페이지 전체가 짧은 조각이면 이를 오탐 차단한다(실측: "Adventures with Words", "Top Secret",
+   "The Red Balloon" 모두 8회 연속 400). 마침표 추가·대소문자 변경·단어 교체 어느 것도 무효고
+   재시도해도 뒤집히지 않아, 텍스트를 손대는 우회로는 해결되지 않는다.
+   Chirp3-HD 는 같은 엔드포인트지만 안전필터를 타지 않고, 목소리 이름 6개가 Gemini TTS 와
+   동일해서 폴백해도 사용자가 고른 목소리가 그대로 유지된다. 다만 스타일 프롬프트(input.prompt)
+   를 지원하지 않으므로 텍스트만 보낸다 — 표현력은 조금 떨어지지만 짧은 표지 문구라 영향이 작다. */
+async function callChirp3Tts(text: string, voiceName: string, languageCode: string, sa: ServiceAccount) {
+  const token = await getTtsToken(sa)
+  const res = await fetch('https://texttospeech.googleapis.com/v1/text:synthesize', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, 'x-goog-user-project': sa.project_id },
+    body: JSON.stringify({
+      input: { text },
+      voice: { languageCode, name: `${languageCode}-Chirp3-HD-${voiceName}` },
+      audioConfig: { audioEncoding: 'MP3' },
+    }),
+  })
+  if (!res.ok) {
+    const errText = await res.text()
+    const e = new Error(`Chirp3-HD fallback ${res.status}: ${errText.slice(0, 200)}`)
+    ;(e as { status?: number }).status = res.status
+    throw e
+  }
+  const data = await res.json()
+  if (!data.audioContent) throw new Error('Chirp3-HD fallback: empty audioContent')
+  return { audio: data.audioContent as string, mimeType: 'audio/mpeg' }
+}
+
 async function callGeminiTts(text: string, voice: string, role: string, lang: string) {
   const voiceName = READING_TTS_VOICES.has(voice) ? voice : READING_TTS_DEFAULT
   const gender = READING_TTS_GENDER[voiceName] || 'female'
@@ -881,13 +910,18 @@ async function callGeminiTts(text: string, voice: string, role: string, lang: st
     /* 401 은 토큰 만료일 수 있음 → 캐시 비우고 재시도. */
     if (res.status === 401 && attempt < MAX) { _ttsToken = null; continue }
     /* Vertex 안전 필터가 문장부호 없는 조각(제목 페이지 등)을 오탐 차단(400 "usage guidelines").
-       끝에 마침표를 붙이면 통과하므로 1회 우회 재시도. 캐시 키는 클라가 '원본' 텍스트로 잡으므로
-       반환 오디오가 원본 키에 저장돼도 무방(마침표만큼의 자연스러운 쉼만 추가). */
-    if (res.status === 400 && !triedPunct && /usage guidelines|safety|blocked|violates/i.test(errText) && !/[.!?…]\s*$/.test(curText)) {
+       끝에 마침표를 붙이면 통과하는 경우가 있으므로 1회 우회 재시도. 캐시 키는 클라가 '원본'
+       텍스트로 잡으므로 반환 오디오가 원본 키에 저장돼도 무방(마침표만큼의 쉼만 추가). */
+    const safetyBlock = res.status === 400 && /usage guidelines|safety|blocked|violates/i.test(errText)
+    if (safetyBlock && !triedPunct && !/[.!?…]\s*$/.test(curText)) {
       triedPunct = true
       curText = curText.trim() + '.'
       continue
     }
+    /* 마침표 우회로도 못 넘긴 차단 → 안전필터 없는 Chirp3-HD 로 재합성.
+       마침표를 덧붙인 curText 가 아니라 '원본' text 를 보낸다 — 우회가 필요 없는 경로라
+       책에 인쇄된 그대로 읽는 게 맞다. */
+    if (safetyBlock) return await callChirp3Tts(text, voiceName, languageCode, sa)
     if (res.status < 500 || attempt === MAX) {
       const e = new Error(`Gemini TTS API ${res.status}: ${errText.slice(0, 200)}`)
       ;(e as { status?: number }).status = res.status
