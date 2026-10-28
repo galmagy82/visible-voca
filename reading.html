@@ -2255,6 +2255,8 @@ async function fileToResizedBase64(file, maxDim = 1536, quality = 0.85) {
       return await fileToResizedBase64Once(file, sequence[attempt], quality);
     } catch (e) {
       lastErr = e;
+      /* 파일 자체를 못 읽는 상태면 해상도를 낮춰도 동일하게 실패 — 300ms 낭비 없이 즉시 포기. */
+      if (e && e.srcUnreadable) break;
       if (attempt < sequence.length - 1) {
         console.warn(`[fileToResizedBase64] attempt ${attempt + 1} failed (dim=${sequence[attempt]}), retrying smaller in 300ms:`, e?.message || e);
         await new Promise((r) => setTimeout(r, 300));
@@ -2303,32 +2305,54 @@ async function fileToResizedBase64Once(file, maxDim, quality) {
 }
 
 /* fileToResizedBase64 의 디코딩 단계만 분리 — 3단계 폴백을 깔끔하게.
-   반환값은 ImageBitmap (close 메서드 있음) 또는 HTMLImageElement (close 없음). */
+   반환값은 ImageBitmap (close 메서드 있음) 또는 HTMLImageElement (close 없음).
+   3단계가 "파일 읽기" 에서 모두 실패하면 File 핸들이 죽은 상태이므로
+   err.srcUnreadable = true 를 붙인다 — 같은 File 로 재시도해도 영구 실패이고,
+   호출 측(재시도 버튼)이 "사진 교체" 로 유도해야 하는 케이스 식별용. */
 async function decodeImageSource(file) {
+  /* 각 단계 실패 원인을 모두 모아 진단 메시지에 합침. 예전에는 createImageBitmap 의
+     실패 원인(e, e2)을 버리고 마지막 FileReader 에러만 노출해 원인이 오히려 가려졌음. */
+  const causes = [];
+  const note = (stage, e) => {
+    const name = (e && e.name) ? e.name : 'Error';
+    const msg = (e && e.message) ? e.message : String(e);
+    causes.push(`${stage}=${name}: ${msg}`);
+  };
   if (typeof createImageBitmap === 'function') {
     try {
       return await createImageBitmap(file, { imageOrientation: 'from-image' });
     } catch (e) {
+      note('bitmap-oriented', e);
       /* 옵션 인자를 거절하는 구형 브라우저 → 옵션 없이 재시도. EXIF 회전은 포기. */
       try {
         return await createImageBitmap(file);
       } catch (e2) {
-        /* 그래도 실패면 legacy 경로로 떨어뜨림 — 실패 원인 메시지는 마지막 단계에서. */
+        note('bitmap', e2);
       }
     }
   }
   /* Legacy 폴백: FileReader + Image. Image.onerror 는 Event 객체라 .message 가 없으므로
      Error 로 변환해 호출 측 진단이 비지 않게. */
-  const dataUrl = await new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error('FileReader failed to read file'));
-    reader.readAsDataURL(file);
-  });
+  let dataUrl;
+  try {
+    dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(reader.error || new Error('FileReader failed'));
+      reader.readAsDataURL(file);
+    });
+  } catch (e) {
+    note('filereader', e);
+    /* 세 경로 전부 "읽기" 에서 실패 → 디코딩 문제가 아니라 파일 접근 불가. */
+    const err = new Error(`source unreadable (size=${(file && file.size) || 0}) ${causes.join(' | ')}`);
+    err.srcUnreadable = true;
+    throw err;
+  }
+  /* 여기 왔으면 파일은 읽혔고 디코딩만 실패 — srcUnreadable 아님(재시도 의미 있음). */
   return await new Promise((resolve, reject) => {
     const im = new Image();
     im.onload = () => resolve(im);
-    im.onerror = () => reject(new Error('Image element failed to decode source'));
+    im.onerror = () => reject(new Error(`Image element failed to decode source ${causes.join(' | ')}`));
     im.src = dataUrl;
   });
 }
@@ -2666,34 +2690,64 @@ async function handlePhotos(inputEl) {
   pushLoadingAdOnce();
   /* 로딩 화면에선 크레딧 배지 숨김 — updateTopBackLink 가 화면 상태 따라 토글 */
   updateTopBackLink();
-  _completedCount = 0;
-  setLoadingPhase('readingPhaseExtract');
+  /* === Phase 0: 사진 → base64 선행 변환 (네트워크 호출을 섞지 않고 전량 먼저)
+     Android Chrome 이 Android Photo Picker 로 넘기는 File 은 일시 content:// URI +
+     브라우저 임시 캐시 사본에 묶여 있어 수명이 짧다. 예전처럼 "디코딩 → OCR 왕복" 을
+     한 워커에 묶어 돌리면 PAGE_CONCURRENCY(6) 를 넘는 7번째 이후 사진은 앞 페이지들의
+     OCR 왕복(수 초~수십 초)이 끝난 뒤에야 처음 읽히는데, 그 시점엔 핸들이 이미 죽어
+     createImageBitmap / FileReader 가 전부 실패했다.
+     (증상: 6장 성공 후 7장부터 실패 / 재시도도 영구 실패 / 같은 사진 재선택은 성공)
+     → 파일 읽기를 네트워크와 완전히 분리해 사진 선택 직후 전량을 base64 로 확보한다.
+     메모리: 기존에도 _pages 가 전체 base64 를 보관했으므로 추가 부담 없음. */
+  setLoadingPhase('readingPhasePrepare');
+  let preparedCount = 0;
   updateLoadingProgress(0, files.length);
-
-  /* === Phase 1: 페이지별 병렬 OCR (이미지 → 원문 텍스트만)
-     Edge Function 의 reading-extract-ocr 액션 호출. 번역·학습단어는 phase 3 에서.
-     PAGE_CONCURRENCY 로 동시성 제한 — Gemini 측 burst 회피. */
-  const ocrSettled = await runWithConcurrency(files, PAGE_CONCURRENCY, async (file) => {
-    let base64Data = null, mimeType = null;
+  const preparedSettled = await runWithConcurrency(files, PAGE_CONCURRENCY, async (file) => {
     try {
       const r = await fileToResizedBase64(file);
-      base64Data = r.data;
-      mimeType = r.mimeType;
+      return { file, base64Data: r.data, mimeType: r.mimeType, errorDetail: null, srcDead: false };
     } catch (e) {
       console.error('preprocess 실패:', e);
+      return {
+        file, base64Data: null, mimeType: null,
+        errorDetail: `[preprocess] ${e?.message || 'image preprocessing failed'}`,
+        /* 파일 핸들이 죽은 케이스 — 같은 사진으로는 복구 불가, 교체만 유효 */
+        srcDead: !!(e && e.srcUnreadable),
+      };
+    } finally {
+      preparedCount++;
+      updateLoadingProgress(preparedCount, files.length);
+    }
+  });
+  const prepared = preparedSettled.map((r) => r.value);
+
+  /* File 핸들 사용 완료 — 이후 파이프라인은 base64 만 쓰므로 여기서 input 을 비운다.
+     (기존엔 전체 파이프라인이 끝난 뒤에 비웠음) */
+  inputEl.value = '';
+
+  _completedCount = 0;
+  setLoadingPhase('readingPhaseExtract');
+  updateLoadingProgress(0, prepared.length);
+
+  /* === Phase 1: 페이지별 병렬 OCR (base64 → 원문 텍스트만)
+     Edge Function 의 reading-extract-ocr 액션 호출. 번역·학습단어는 phase 3 에서.
+     PAGE_CONCURRENCY 로 동시성 제한 — Gemini 측 burst 회피. */
+  const ocrSettled = await runWithConcurrency(prepared, PAGE_CONCURRENCY, async (item) => {
+    /* Phase 0 에서 이미 실패한 페이지는 OCR 스킵 — item.errorDetail 을 그대로 전달 */
+    if (!item.base64Data) {
       _completedCount++;
-      updateLoadingProgress(_completedCount, files.length);
-      return { ok: false, errorDetail: `[preprocess] ${e?.message || 'image preprocessing failed'}`, base64Data: null, mimeType: null, file };
+      updateLoadingProgress(_completedCount, prepared.length);
+      return { ...item, ok: false };
     }
     try {
-      const result = await extractReadingPageOcrWithRetry(base64Data, mimeType);
-      return { ok: true, result, base64Data, mimeType, file };
+      const result = await extractReadingPageOcrWithRetry(item.base64Data, item.mimeType);
+      return { ...item, ok: true, result };
     } catch (e) {
       console.error('reading-extract-ocr 실패:', e);
-      return { ok: false, errorDetail: formatExtractError(e), base64Data, mimeType, file };
+      return { ...item, ok: false, errorDetail: formatExtractError(e) };
     } finally {
       _completedCount++;
-      updateLoadingProgress(_completedCount, files.length);
+      updateLoadingProgress(_completedCount, prepared.length);
     }
   });
 
@@ -2717,6 +2771,8 @@ async function handlePhotos(inputEl) {
       error: 'extract failed',
       errorDetail: v.errorDetail,
       page_number: null,
+      /* 파일 핸들이 죽어 읽기조차 못한 페이지 — 재시도 버튼 숨기고 교체만 노출 */
+      _srcDead: !!v.srcDead,
       _image: image,
     };
   });
@@ -2788,7 +2844,7 @@ async function handlePhotos(inputEl) {
      refreshCreditBadge() 가 user_usage 직접 SELECT 해서 정확한 값으로 갱신. */
   refreshCreditBadge();
 
-  inputEl.value = '';
+  /* inputEl.value 초기화는 Phase 0 직후에 이미 수행 */
   _currentIdx = 0;
   _showTranslated = false;
   /* 새로 추출한 책은 미저장 — 저장 버튼 노출, 저장 배지 숨김 */
@@ -3112,9 +3168,11 @@ function renderPageContent(p, pageIdx) {
     const msg = tt('readingPageError', '이 페이지의 텍스트를 추출하지 못했습니다.');
     const retryLabel = tt('readingRetryPage', '다시 시도');
     const replaceLabel = tt('readingReplacePhoto', '다른 사진으로 교체');
-    /* base64 가 있으면 API 단계만 재시도, 없어도 file 핸들이 있으면 preprocess 부터
-       전체 파이프라인 재시도 가능 → 두 경우 모두 retry 버튼 노출. */
-    const canRetry = !!(p._image && (p._image.base64Data || p._image.file));
+    /* base64 가 있으면 API 단계만 재시도, 없어도 file 핸들이 살아있으면 preprocess 부터
+       전체 파이프라인 재시도 가능 → 두 경우 모두 retry 버튼 노출.
+       단 _srcDead (파일 읽기 자체 실패) 는 같은 File 로 몇 번 눌러도 영구 실패이므로
+       retry 를 숨기고 "다른 사진으로 교체" 만 남긴다 — 교체는 새 핸들을 받으므로 성공. */
+    const canRetry = !!(p._image && (p._image.base64Data || (p._image.file && !p._srcDead)));
     /* 진단 라인 — [status] 또는 [network]/[preprocess] + 서버 메시지. 사용자가 이 줄을
        복사해 보고하면 원인 추적 가능. errorDetail 이 비어있으면 표시 생략. */
     const detailHtml = p.errorDetail
@@ -3183,6 +3241,8 @@ function setPageBusy(pageIdx, label) {
 async function retryPage(pageIdx) {
   const p = _pages[pageIdx];
   if (!p || !p._image || (!p._image.base64Data && !p._image.file)) return;
+  /* 파일 읽기 불가 페이지는 재시도 경로가 없음 — UI 에서도 버튼을 숨기지만 이중 방어 */
+  if (!p._image.base64Data && p._srcDead) return;
   const tt = (k, fb) => (typeof t === 'function') ? t(k) : fb;
   setPageBusy(pageIdx, tt('readingRetryingPage', '재시도 중...'));
   const lang = (typeof getLang === 'function') ? getLang() : 'ko';
@@ -3200,6 +3260,8 @@ async function retryPage(pageIdx) {
         ...p,
         error: 'retry failed',
         errorDetail: `[preprocess] ${e?.message || 'image preprocessing failed'}`,
+        /* 이번엔 파일 핸들이 죽었다면 다음 렌더에서 retry 버튼을 숨김 */
+        _srcDead: !!(e && e.srcUnreadable),
       };
       rerenderPage(pageIdx);
       return;
@@ -3252,6 +3314,7 @@ async function replacePagePhoto(pageIdx) {
         ..._pages[pageIdx],
         error: 'replace failed',
         errorDetail: `[preprocess] ${e?.message || 'image preprocessing failed'}`,
+        _srcDead: !!(e && e.srcUnreadable),
         /* 새 file 도 보관 — 다시 시도가 같은 파일로 preprocess 재시도 가능 */
         _image: { file, base64Data: null, mimeType: null },
       };
