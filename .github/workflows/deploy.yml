@@ -1,4 +1,9 @@
 # GitHub Pages 배포 워크플로우
+# 2026-11-26 변경: build(업로드) / deploy(배포) 두 job 으로 분리 + Pages 액션 버전 상향.
+#   증상: upload-pages-artifact@v3 업로드는 성공하는데 deploy-pages@v4 가
+#         'No artifacts named "github-pages" were found' 로 실패, 재실행해도 동일.
+#   같은 job 안에서 업로드 직후 배포할 때의 문제로 보고됨(actions/deploy-pages#451).
+#   같은 job 구조에서는 재실행해도 아티팩트가 하나 더 쌓일 뿐 복구되지 않는다고 함.
 name: Deploy to GitHub Pages
 
 on:
@@ -11,16 +16,23 @@ permissions:
   id-token: write
 
 jobs:
+  # 1) 저장소 내용을 Pages 아티팩트로 업로드
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: '.'
+
+  # 2) build 가 끝난 뒤 별도 job 에서 배포 — 업로드 직후 같은 job 에서 조회하는 문제 회피
   deploy:
+    needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: '.'
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
