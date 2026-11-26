@@ -1625,7 +1625,12 @@
       <button class="settings-gear-btn" id="readingSettingsBtn" onclick="openReadingSettings()" aria-label="settings" hidden>⚙️</button>
     </div>
     <button class="upload-btn" onclick="onUploadBtnClick()" data-i18n="readingUploadBtn">📂 책 사진 올리기</button>
-    <input type="file" id="photoInput" accept="image/*" multiple style="display:none" onchange="handlePhotos(this)">
+    <!-- accept 에 application/pdf 를 섞은 이유: 안드로이드 Chrome 은 accept 가 이미지/동영상뿐이면
+         Android Photo Picker 를 여는데, 이 경로에서 새로 찍은 사진이 고른 순간부터 읽기 불가
+         (probe@47ms=FAIL NotReadableError) 로 넘어오는 사례 확인(2026-11-26).
+         비이미지 타입을 섞어 예전 방식 파일 선택 창으로 우회. PDF 자체는 처리 못 함(디코딩 실패로 표시됨).
+         교체 버튼(replacePagePhoto 쪽 input.accept)도 같은 값 유지할 것. -->
+    <input type="file" id="photoInput" accept="image/*,application/pdf" multiple style="display:none" onchange="handlePhotos(this)">
     <div class="upload-hint" data-i18n="readingUploadHint">앞페이지부터 차례로 찍은 사진을 올리세요.
 선택한 순서대로 페이지가 됩니다.</div>
     <!-- Guest 전용 체험용 사진 다운로드 — 사진 없는 게스트가 곧바로 업로드 흐름 체험 가능하도록.
@@ -3334,7 +3339,8 @@ async function replacePagePhoto(pageIdx) {
   const tt = (k, fb) => (typeof t === 'function') ? t(k) : fb;
   const input = document.createElement('input');
   input.type = 'file';
-  input.accept = 'image/*';
+  /* Photo Picker 우회 — photoInput 의 accept 주석 참고. 두 곳 값을 같게 유지 */
+  input.accept = 'image/*,application/pdf';
   input.onchange = async () => {
     const file = input.files && input.files[0];
     if (!file) return;
