@@ -2489,6 +2489,58 @@ async function finalizeReadingPageWithRetry(text, prevTail, nextHead, targetLang
   }
 }
 
+/* === 번역 잘림/깨짐 감지 — finalize 결과가 불량이면 1회 재요청하는 데 사용.
+   배경: 대사가 많은 페이지에서 Gemini 가 대사의 닫는 따옴표를 JSON 문자열 끝으로 착각해
+     (1) 첫 문단만 번역하고 끝내거나(잘림), (2) JSON 전체를 번역문 안에 써버림(깨짐).
+     2026-11-26 실측: 같은 페이지 90회 호출 중 잘림 7회·깨짐 1회.
+   판정: 문장 끝 부호 개수 비교 (글자 수 비율은 언어마다 달라서 쓰지 않음).
+     실측 원문 14개 기준 정상 번역 17~18개 / 잘린 번역 2~3개 → "원문의 절반 미만" 이면 잘림.
+   재요청을 서버가 아닌 클라이언트에서 하는 이유: Edge Function 안에서 Gemini 를 두 번 부르면
+     실행 시간 한도에 걸릴 위험이 있음(서버 재시도 버전에서 타임아웃 의심 사례 → 되돌림). */
+
+/* 문장 끝 부호(. ! ? 。 ！ ？ …) 개수.
+   - 말줄임표(". . ." / "..." / "…")는 1개 — 공백 낀 연속 부호를 한 묶음으로 셈
+   - isEnglish=true(원문)면 영어 약어(Mr. Ms. Mrs. Dr. St. Jr. Sr.)의 마침표 제외 —
+     번역하면 사라지는 마침표라 원문 개수만 부풀림 */
+function countSentenceEnders(s, isEnglish) {
+  let t = s || '';
+  if (isEnglish) t = t.replace(/\b(Mrs|Mr|Ms|Dr|St|Jr|Sr)\./g, '$1');
+  const runs = t.match(/[.!?。！？…](?:\s*[.!?。！？…])*/g);
+  return runs ? runs.length : 0;
+}
+
+/* 불량이면 사유 문자열, 정상이면 null */
+function detectBrokenTranslation(original, translated) {
+  const tr = translated || '';
+  /* 깨짐: 번역문 안에 JSON 키가 섞여 들어감 */
+  if (tr.includes('"study_items"') || tr.includes('"translated"')) return 'JSON 조각 섞임';
+  const src = countSentenceEnders(original, true);
+  /* 원문이 짧으면(문장 3개 미만) 개수 비교가 들쭉날쭉해 오판 위험 → 검사 생략 */
+  if (src < 3) return null;
+  const dst = countSentenceEnders(tr, false);
+  if (dst < src / 2) return `번역 잘림 (원문 ${src}문장 / 번역 ${dst}문장)`;
+  return null;
+}
+
+/* finalize + 품질 검사. 불량이면 1회만 재요청하고, 재요청도 불량이거나 실패하면
+   첫 결과를 그대로 반환 — 페이지 전체를 에러로 만드는 것보다 부분 번역이 낫다.
+   네트워크/5xx 재시도는 finalizeReadingPageWithRetry 가 따로 담당. */
+async function finalizeReadingPageChecked(text, prevTail, nextHead, targetLang, geScore, meaningLang) {
+  const first = await finalizeReadingPageWithRetry(text, prevTail, nextHead, targetLang, geScore, meaningLang);
+  const problem = detectBrokenTranslation(text, first.translated);
+  if (!problem) return first;
+  console.warn(`[reading-finalize] ${problem} — 1회 재요청`);
+  try {
+    const second = await finalizeReadingPageWithRetry(text, prevTail, nextHead, targetLang, geScore, meaningLang);
+    const problem2 = detectBrokenTranslation(text, second.translated);
+    if (!problem2) return second;
+    console.warn(`[reading-finalize] 재요청도 불량 (${problem2}) — 첫 결과 사용`);
+  } catch (e) {
+    console.warn('[reading-finalize] 재요청 실패 — 첫 결과 사용:', e);
+  }
+  return first;
+}
+
 /* 읽을 수 있는 글자(문자·숫자)가 하나라도 있는지 — 문장부호·기호만 있는 텍스트 판별용.
    봉합 잔여물 검사와 낭독 클립 필터가 같은 기준을 써야 해서 한 곳에 둔다. */
 const HAS_READABLE_TEXT = /[\p{L}\p{N}]/u;
@@ -2816,7 +2868,8 @@ async function handlePhotos(inputEl) {
     }
     const { prevTail, nextHead } = getBoundaryContext(_pages, idx);
     try {
-      const result = await finalizeReadingPageWithRetry(page.original, prevTail, nextHead, lang, _geScore, _meaningLang);
+      /* 번역 잘림/깨짐 감지 시 1회 재요청 포함 (finalizeReadingPageChecked 주석 참고) */
+      const result = await finalizeReadingPageChecked(page.original, prevTail, nextHead, lang, _geScore, _meaningLang);
       return { ok: true, result, idx };
     } catch (e) {
       console.error(`reading-finalize 실패 (page ${idx + 1}):`, e);
