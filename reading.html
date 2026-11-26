@@ -2614,24 +2614,15 @@ const MAX_PAGES = 30;
    준수한 throughput 을 유지하면서도 429 가 거의 안 뜸. 늘렸을 때 이득은 작고
    실패 위험만 커지므로 이 값에서 안정. */
 const PAGE_CONCURRENCY = 6;
-/* Phase 0(사진 읽기+디코딩) 전용 동시성 — 네트워크 단계와 분리. 반드시 1.
-   안드로이드 Chrome 은 Photo Picker 로 넘긴 원본을 여러 장 동시에 붙잡으면 아직 읽지 않은
-   파일의 백킹 스토어를 놓아버린다. 그러면 createImageBitmap 과 FileReader 가 모두
-   NotReadableError 로 실패하고, 같은 File 로는 영구 복구 불가 → [preprocess] source unreadable.
-   실측(약 4MB·1200만 화소 카메라 사진, 동시 6개):
-     6·7·8장 성공 / 9·10장은 뒤쪽 3장 실패 — 즉 장수가 늘면 재현, 적으면 안 됨
-     스크린샷(수백 KB) 10장은 성공 — 사진 크기도 함께 작용
-     동시성을 1 로 내리면 10장 모두 성공 — 동시 점유량이 제약임이 확정됨
-   주의할 점 둘:
-     - 동시 디코딩 피크 메모리는 범인이 아니다. 6·7·8·9장의 피크는 모두 동시 6개로 동일한데
-       8장은 통과하고 9장은 실패했다. 메모리를 아끼려는 변경으로는 해결되지 않는다.
-     - File 참조를 오래 들고 있는 것도 범인이 아니다. 성공한 테스트에서도 files 배열이
-       10장의 참조를 끝까지 보유했다. 문제는 "동시에 진행되는 읽기" 뿐이다.
-   임계값은 기기 여유 메모리·Chrome 버전에 따라 움직이므로(같은 사진이 며칠 뒤 실패한 사례
-   있음) 1 보다 올리지 말 것. 10장 기준 5~7초 느려지지만 체감 차이가 없어 이 값으로 확정.
-   속도가 문제가 되면 동시성을 올리는 게 아니라, 읽기는 1장씩 유지하면서 바이트만 먼저
-   Blob 으로 선점하고 디코딩만 병렬화하는 구조로 가야 한다.
-   네트워크 단계(OCR/번역)는 PAGE_CONCURRENCY 를 그대로 사용 — 제약과 무관하고 문제도 없음. */
+/* Phase 0(사진 읽기+디코딩) 전용 동시성 — 네트워크 단계와 분리.
+   예전엔 안드로이드의 [preprocess] source unreadable 실패를 "동시에 여러 장 읽기" 탓으로 보고
+   이 값을 1 로 낮췄으나, 2026-11-26 진단으로 원인이 아님이 확인됨:
+     - 동시성 1 에서도, 심지어 1장만 올려도 실패
+     - 사진을 고른 지 47ms 만에 앞 16바이트 읽기조차 NotReadableError
+   실제 원인은 Android Photo Picker(multiple 모드)가 처음부터 읽을 수 없는 파일을 넘긴 것 →
+   photoInput 의 accept 에 PDF 를 섞어 Photo Picker 를 우회해 해결 (photoInput 주석 참고).
+   값 1 은 그대로 둠 — 10장 기준 몇 초 느린 정도라 체감 차이 없고, 올리면 디코딩 피크 메모리만 커짐.
+   네트워크 단계(OCR/번역)는 PAGE_CONCURRENCY 를 그대로 사용. */
 const PREPROCESS_CONCURRENCY = 1;
 /* 페이지 데이터: { original, translated, no_text, error, page_number, study_items: [{surface, type, meaning, example_in_text}] }
    page_number: OCR 이 마진에서 추출한 책 본래 페이지 번호 (string | null). 본문에는 영향 없음, 뷰어 배지/순서 편집 모달 보조 라벨에만 사용. */
@@ -2679,21 +2670,6 @@ async function handlePhotos(inputEl) {
      touch device 판정은 (pointer: coarse) 미디어쿼리 — UA 스니핑보다 신뢰도 높음. */
   const isTouchDevice = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
   const files = Array.from(inputEl.files);
-  /* [진단] 사진 선택 직후 파일 접근 가능 여부 측정 — 2026-11-26 추가.
-     증상: 새로 찍은 사진을 처음 고르면 1장만 올려도 [preprocess] source unreadable,
-           같은 사진을 다시 고르면 성공. 같은 File 로 재시도하면 계속 실패.
-     판별: (A) 고른 순간부터 핸들이 죽어 있음 → probe FAIL
-           (B) 선택~읽기 사이(GE·크레딧 확인, 광고 로드) 대기 중에 죽음 → probe OK 인데 본 읽기 실패
-     결과는 preprocess 실패 시 errorDetail 끝에 [probe@Nms=OK|FAIL(이름)] [read-fail@Nms] 로 붙는다.
-     앞 16바이트만 읽으므로 비용은 무시 가능. 원인이 확정되면 제거하거나 정식 구조로 대체할 것. */
-  const pickT0 = performance.now();
-  const probeMap = new Map();
-  files.forEach((f) => {
-    probeMap.set(f, f.slice(0, 16).arrayBuffer().then(
-      () => `probe@${Math.round(performance.now() - pickT0)}ms=OK`,
-      (e) => `probe@${Math.round(performance.now() - pickT0)}ms=FAIL(${(e && e.name) || 'Error'})`,
-    ));
-  });
   if (!isTouchDevice) {
     files.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
   }
@@ -2730,13 +2706,9 @@ async function handlePhotos(inputEl) {
   /* 로딩 화면에선 크레딧 배지 숨김 — updateTopBackLink 가 화면 상태 따라 토글 */
   updateTopBackLink();
   /* === Phase 0: 사진 → base64 선행 변환 (네트워크 호출을 섞지 않고 전량 먼저)
-     Android Chrome 이 Android Photo Picker 로 넘기는 File 은 일시 content:// URI +
-     브라우저 임시 캐시 사본에 묶여 있어 수명이 짧다. 예전처럼 "디코딩 → OCR 왕복" 을
-     한 워커에 묶어 돌리면 PAGE_CONCURRENCY(6) 를 넘는 7번째 이후 사진은 앞 페이지들의
-     OCR 왕복(수 초~수십 초)이 끝난 뒤에야 처음 읽히는데, 그 시점엔 핸들이 이미 죽어
-     createImageBitmap / FileReader 가 전부 실패했다.
-     (증상: 6장 성공 후 7장부터 실패 / 재시도도 영구 실패 / 같은 사진 재선택은 성공)
-     → 파일 읽기를 네트워크와 완전히 분리해 사진 선택 직후 전량을 base64 로 확보한다.
+     파일 읽기를 네트워크와 분리해 사진 선택 직후 전량을 base64 로 확보한다.
+     (원래는 안드로이드 읽기 실패 대책으로 도입했으나 그 원인은 Photo Picker 였음 — 위
+      PREPROCESS_CONCURRENCY 주석 참고. 구조 자체는 단순하고 문제없어 유지.)
      메모리: 기존에도 _pages 가 전체 base64 를 보관했으므로 추가 부담 없음. */
   setLoadingPhase('readingPhasePrepare');
   let preparedCount = 0;
@@ -2747,12 +2719,9 @@ async function handlePhotos(inputEl) {
       return { file, base64Data: r.data, mimeType: r.mimeType, errorDetail: null, srcDead: false };
     } catch (e) {
       console.error('preprocess 실패:', e);
-      /* [진단] 본 읽기가 실패한 시각(선택 기준 ms) + 선택 직후 probe 결과 */
-      const readFailAt = Math.round(performance.now() - pickT0);
-      const probe = await (probeMap.get(file) || Promise.resolve('probe=none'));
       return {
         file, base64Data: null, mimeType: null,
-        errorDetail: `[preprocess] ${e?.message || 'image preprocessing failed'} [${probe}] [read-fail@${readFailAt}ms]`,
+        errorDetail: `[preprocess] ${e?.message || 'image preprocessing failed'}`,
         /* 파일 핸들이 죽은 케이스 — 같은 사진으로는 복구 불가, 교체만 유효 */
         srcDead: !!(e && e.srcUnreadable),
       };
