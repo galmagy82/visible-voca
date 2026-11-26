@@ -2674,6 +2674,21 @@ async function handlePhotos(inputEl) {
      touch device 판정은 (pointer: coarse) 미디어쿼리 — UA 스니핑보다 신뢰도 높음. */
   const isTouchDevice = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
   const files = Array.from(inputEl.files);
+  /* [진단] 사진 선택 직후 파일 접근 가능 여부 측정 — 2026-11-26 추가.
+     증상: 새로 찍은 사진을 처음 고르면 1장만 올려도 [preprocess] source unreadable,
+           같은 사진을 다시 고르면 성공. 같은 File 로 재시도하면 계속 실패.
+     판별: (A) 고른 순간부터 핸들이 죽어 있음 → probe FAIL
+           (B) 선택~읽기 사이(GE·크레딧 확인, 광고 로드) 대기 중에 죽음 → probe OK 인데 본 읽기 실패
+     결과는 preprocess 실패 시 errorDetail 끝에 [probe@Nms=OK|FAIL(이름)] [read-fail@Nms] 로 붙는다.
+     앞 16바이트만 읽으므로 비용은 무시 가능. 원인이 확정되면 제거하거나 정식 구조로 대체할 것. */
+  const pickT0 = performance.now();
+  const probeMap = new Map();
+  files.forEach((f) => {
+    probeMap.set(f, f.slice(0, 16).arrayBuffer().then(
+      () => `probe@${Math.round(performance.now() - pickT0)}ms=OK`,
+      (e) => `probe@${Math.round(performance.now() - pickT0)}ms=FAIL(${(e && e.name) || 'Error'})`,
+    ));
+  });
   if (!isTouchDevice) {
     files.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
   }
@@ -2727,9 +2742,12 @@ async function handlePhotos(inputEl) {
       return { file, base64Data: r.data, mimeType: r.mimeType, errorDetail: null, srcDead: false };
     } catch (e) {
       console.error('preprocess 실패:', e);
+      /* [진단] 본 읽기가 실패한 시각(선택 기준 ms) + 선택 직후 probe 결과 */
+      const readFailAt = Math.round(performance.now() - pickT0);
+      const probe = await (probeMap.get(file) || Promise.resolve('probe=none'));
       return {
         file, base64Data: null, mimeType: null,
-        errorDetail: `[preprocess] ${e?.message || 'image preprocessing failed'}`,
+        errorDetail: `[preprocess] ${e?.message || 'image preprocessing failed'} [${probe}] [read-fail@${readFailAt}ms]`,
         /* 파일 핸들이 죽은 케이스 — 같은 사진으로는 복구 불가, 교체만 유효 */
         srcDead: !!(e && e.srcUnreadable),
       };
